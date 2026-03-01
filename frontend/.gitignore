@@ -42,3 +42,10 @@ __screenshots__/
 # System files
 .DS_Store
 Thumbs.db
+
+# Optional local-only config/docs
+/eslint.config.js
+/tsconfig.spec.json
+/.prettierrc
+/.editorconfig
+/README.md
