@@ -9,7 +9,7 @@ import { finalize, take } from 'rxjs/operators';
   standalone: true,
   imports: [CommonModule],
   templateUrl: './health.component.html',
-  styleUrl: './health.component.scss'
+  styleUrl: './health.component.css',
 })
 export class HealthComponent {
   private readonly healthService = inject(HealthService);
@@ -29,10 +29,13 @@ export class HealthComponent {
 
     this.healthService
       .fetchHealth()
-      .pipe(take(1), finalize(() => this.loading.set(false)))
+      .pipe(
+        take(1),
+        finalize(() => this.loading.set(false)),
+      )
       .subscribe({
         next: (response) => this.payload.set(response),
-        error: () => this.error.set('Unable to reach backend health endpoint')
+        error: () => this.error.set('Unable to reach backend health endpoint'),
       });
   }
 }
