@@ -23,6 +23,6 @@ describe('App', () => {
     const links = Array.from(compiled.querySelectorAll('nav a')).map((el) =>
       el.textContent?.trim(),
     );
-    expect(links).toEqual(['Home', 'Health']);
+    expect(links).toEqual(['Home', 'Health', 'Trips', 'My Trips', 'Create Trip']);
   });
 });

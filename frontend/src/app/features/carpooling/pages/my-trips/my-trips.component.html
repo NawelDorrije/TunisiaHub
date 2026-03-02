@@ -1,0 +1,37 @@
+<section class="my-trips-page">
+  <h1>My trips</h1>
+
+  @if (!isDriver) {
+    <p class="error">Only DRIVER can access this page. Switch role in the header.</p>
+  }
+
+  @if (errorMessage) {
+    <p class="error">{{ errorMessage }}</p>
+  }
+
+  @if (loading) {
+    <p>Loading...</p>
+  } @else if (isDriver && trips.length === 0) {
+    <p>You have no trips yet. <a routerLink="/carpooling/trips/new">Create one</a>.</p>
+  } @else if (isDriver) {
+    <ul class="trip-grid">
+      @for (trip of trips; track trip.id) {
+        <li class="trip-card">
+          <h3>{{ trip.departurePoint }} → {{ trip.destination }}</h3>
+          <p>{{ formatDateTime(trip.departureDateTime) }}</p>
+          <p>Status: {{ trip.status }}</p>
+          <div class="actions">
+            <a [routerLink]="['/carpooling/trips', trip.id]">Details</a>
+            <button
+              type="button"
+              (click)="cancelTrip(trip.id)"
+              [disabled]="trip.status === 'CANCELLED'"
+            >
+              Cancel
+            </button>
+          </div>
+        </li>
+      }
+    </ul>
+  }
+</section>

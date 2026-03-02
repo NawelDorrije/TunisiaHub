@@ -8,6 +8,7 @@ import lombok.Setter;
 import lombok.experimental.FieldDefaults;
 
 @Entity
+@Table(name = "users")
 @Getter
 @Setter
 @FieldDefaults(level = AccessLevel.PRIVATE)

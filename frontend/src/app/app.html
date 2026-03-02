@@ -1,10 +1,33 @@
 <div class="layout">
   <header class="shell-header">
-    <div class="logo">
-      <span class="accent-dot"></span>
-      <div>
-        <p class="brand">DiscoveryTunisia</p>
-        <p class="tagline">Experience orchestration workspace</p>
+    <div class="header-main">
+      <div class="logo">
+        <span class="accent-dot"></span>
+        <div>
+          <p class="brand">DiscoveryTunisia</p>
+          <p class="tagline">Experience orchestration workspace</p>
+        </div>
+      </div>
+
+      <div class="session-controls">
+        <label>
+          User ID
+          <input
+            type="number"
+            min="1"
+            [ngModel]="userId"
+            (ngModelChange)="onUserIdChange($event)"
+          />
+        </label>
+
+        <label>
+          Role
+          <select [ngModel]="role" (ngModelChange)="onRoleChange($event)">
+            @for (roleOption of roleOptions; track roleOption) {
+              <option [value]="roleOption">{{ roleOption }}</option>
+            }
+          </select>
+        </label>
       </div>
     </div>
     <nav>
@@ -25,6 +48,6 @@
   </main>
 
   <footer class="shell-footer">
-    <small>Frontend scaffold • Angular 17 • SCSS • ESLint • Prettier</small>
+    <small>Frontend scaffold • Angular • Carpooling Trips (Phase 1)</small>
   </footer>
 </div>
