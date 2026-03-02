@@ -1,7 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
-import { RouterLink } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { Trip } from '../../models/trip.model';
 import { TripService } from '../../services/trip.service';
 
@@ -15,6 +15,7 @@ import { TripService } from '../../services/trip.service';
 export class TripListComponent implements OnInit {
   private readonly fb = inject(FormBuilder);
   private readonly tripService = inject(TripService);
+  private readonly route = inject(ActivatedRoute);
 
   protected readonly searchForm = this.fb.group({
     departurePoint: [''],
@@ -25,8 +26,12 @@ export class TripListComponent implements OnInit {
   protected trips: Trip[] = [];
   protected loading = false;
   protected errorMessage = '';
+  protected infoMessage = '';
 
   ngOnInit(): void {
+    this.route.queryParamMap.subscribe((params) => {
+      this.infoMessage = params.get('denied') === 'driver' ? 'Access denied (Driver only).' : '';
+    });
     this.searchTrips();
   }
 
@@ -44,7 +49,7 @@ export class TripListComponent implements OnInit {
       })
       .subscribe({
         next: (trips) => {
-          this.trips = trips;
+          this.trips = trips.filter((trip) => trip.status !== 'CANCELLED');
           this.loading = false;
         },
         error: (error) => {

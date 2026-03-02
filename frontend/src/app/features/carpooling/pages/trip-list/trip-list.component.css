@@ -58,3 +58,11 @@ button {
 .error {
   color: #b42318;
 }
+
+.info {
+  color: #1d4ed8;
+  background: rgba(37, 99, 235, 0.08);
+  border: 1px solid rgba(37, 99, 235, 0.2);
+  border-radius: 0.6rem;
+  padding: 0.6rem 0.8rem;
+}

@@ -36,7 +36,7 @@
         <a
           [routerLink]="link.path"
           routerLinkActive="active"
-          [routerLinkActiveOptions]="{ exact: link.path === '' }"
+          [routerLinkActiveOptions]="{ exact: link.exact }"
         >
           {{ link.label }}
         </a>

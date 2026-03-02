@@ -10,5 +10,7 @@ export const driverRoleGuard: CanActivateFn = () => {
     return true;
   }
 
-  return router.parseUrl('/carpooling/trips');
+  return router.createUrlTree(['/carpooling/trips'], {
+    queryParams: { denied: 'driver' },
+  });
 };

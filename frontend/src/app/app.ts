@@ -15,15 +15,19 @@ export class App {
   protected readonly roleOptions: UserRole[] = ['PASSENGER', 'DRIVER', 'ADMIN'];
 
   protected readonly navLinks = [
-    { label: 'Home', path: '' },
-    { label: 'Trips', path: 'carpooling/trips' },
-    { label: 'My Trips', path: 'carpooling/my-trips' },
-    { label: 'Create Trip', path: 'carpooling/trips/new' },
+    { label: 'Home', path: 'home', exact: true },
+    { label: 'Places', path: 'places', exact: true },
+    { label: 'Events', path: 'events', exact: true },
+    { label: 'Restaurants', path: 'restaurants', exact: true },
+    { label: 'Campings', path: 'campings', exact: true },
+    { label: 'Stays', path: 'stays', exact: true },
+    { label: 'Carpooling', path: 'carpooling', exact: false },
+    { label: 'Shops', path: 'shops', exact: true },
   ];
 
   protected readonly footerLinks = [
-    { label: 'Home', path: '' },
-    { label: 'Trips', path: 'carpooling/trips' },
+    { label: 'Home', path: 'home' },
+    { label: 'Carpooling', path: 'carpooling' },
   ];
 
   protected readonly currentYear = new Date().getFullYear();
