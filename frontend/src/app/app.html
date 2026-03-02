@@ -1,18 +1,42 @@
 <div class="layout">
   <header class="shell-header">
-    <div class="logo">
-      <span class="accent-dot"></span>
+    <div class="header-main">
       <div>
-        <p class="brand">DiscoveryTunisia</p>
-        <p class="tagline">Experience orchestration workspace</p>
+        <div class="logo">
+          <span class="accent-dot"></span>
+          <p class="brand">DiscoveryTunisia</p>
+        </div>
+        <p class="tagline">Shared experience platform</p>
+      </div>
+
+      <div class="session-controls">
+        <label>
+          User ID
+          <input
+            type="number"
+            min="1"
+            [ngModel]="userId"
+            (ngModelChange)="onUserIdChange($event)"
+          />
+        </label>
+
+        <label>
+          Role
+          <select [ngModel]="role" (ngModelChange)="onRoleChange($event)">
+            @for (roleOption of roleOptions; track roleOption) {
+              <option [value]="roleOption">{{ roleOption }}</option>
+            }
+          </select>
+        </label>
       </div>
     </div>
-    <nav>
+
+    <nav class="shell-nav" aria-label="Main navigation">
       @for (link of navLinks; track link.path) {
         <a
           [routerLink]="link.path"
           routerLinkActive="active"
-          [routerLinkActiveOptions]="{ exact: link.path === '' }"
+          [routerLinkActiveOptions]="{ exact: link.exact }"
         >
           {{ link.label }}
         </a>
@@ -25,6 +49,14 @@
   </main>
 
   <footer class="shell-footer">
-    <small>Frontend scaffold • Angular 17 • SCSS • ESLint • Prettier</small>
+    <div class="footer-top">
+      <p class="footer-brand">DiscoveryTunisia</p>
+      <nav class="footer-nav" aria-label="Footer quick links">
+        @for (link of footerLinks; track link.path) {
+          <a [routerLink]="link.path">{{ link.label }}</a>
+        }
+      </nav>
+    </div>
+    <small>© {{ currentYear }} DiscoveryTunisia • Shared experience platform</small>
   </footer>
 </div>

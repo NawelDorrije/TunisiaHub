@@ -1,0 +1,43 @@
+<section class="trip-create-page">
+  <a routerLink="/carpooling/trips">← Back to trips</a>
+  <h1>Publish a trip</h1>
+
+  @if (!isDriver) {
+    <p class="error">Switch role to DRIVER in the header to create a trip.</p>
+  }
+
+  @if (errorMessage) {
+    <p class="error">{{ errorMessage }}</p>
+  }
+
+  <form [formGroup]="form" (ngSubmit)="submit()" class="trip-form">
+    <label>
+      Departure point
+      <input formControlName="departurePoint" type="text" />
+    </label>
+
+    <label>
+      Destination
+      <input formControlName="destination" type="text" />
+    </label>
+
+    <label>
+      Departure date and time
+      <input formControlName="departureDateTime" type="datetime-local" />
+    </label>
+
+    <label>
+      Price (TND)
+      <input formControlName="price" type="number" min="0" step="0.01" />
+    </label>
+
+    <label>
+      Seats total
+      <input formControlName="seatsTotal" type="number" min="1" />
+    </label>
+
+    <button type="submit" [disabled]="loading || !isDriver">
+      {{ loading ? 'Creating...' : 'Create trip' }}
+    </button>
+  </form>
+</section>

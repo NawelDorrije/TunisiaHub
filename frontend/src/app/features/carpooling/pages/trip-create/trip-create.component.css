@@ -1,0 +1,39 @@
+.trip-create-page {
+  padding: 2rem;
+  max-width: 680px;
+}
+
+.trip-form {
+  margin-top: 1rem;
+  display: grid;
+  gap: 0.85rem;
+}
+
+label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+input,
+button {
+  padding: 0.55rem 0.75rem;
+  border: 1px solid #d0d5dd;
+  border-radius: 0.5rem;
+}
+
+button {
+  background: #1d4ed8;
+  color: #fff;
+  border: none;
+  cursor: pointer;
+}
+
+button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.error {
+  color: #b42318;
+}

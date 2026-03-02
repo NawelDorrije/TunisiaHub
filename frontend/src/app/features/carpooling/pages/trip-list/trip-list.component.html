@@ -1,0 +1,53 @@
+<section class="trip-list-page">
+  <header>
+    <p class="eyebrow">Carpooling</p>
+    <h1>Find a ride</h1>
+  </header>
+
+  @if (infoMessage) {
+    <p class="info">{{ infoMessage }}</p>
+  }
+
+  <form [formGroup]="searchForm" (ngSubmit)="searchTrips()" class="search-form">
+    <label>
+      Departure
+      <input type="text" formControlName="departurePoint" placeholder="e.g. Tunis" />
+    </label>
+
+    <label>
+      Destination
+      <input type="text" formControlName="destination" placeholder="e.g. Sousse" />
+    </label>
+
+    <label>
+      Date
+      <input type="date" formControlName="date" />
+    </label>
+
+    <button type="submit">Search</button>
+  </form>
+
+  @if (errorMessage) {
+    <p class="error">{{ errorMessage }}</p>
+  }
+
+  @if (loading) {
+    <p>Loading trips...</p>
+  } @else if (trips.length === 0) {
+    <p>No trips found.</p>
+  } @else {
+    <ul class="trip-grid">
+      @for (trip of trips; track trip.id) {
+        <li>
+          <a [routerLink]="['/carpooling/trips', trip.id]" class="trip-card">
+            <h3>{{ trip.departurePoint }} → {{ trip.destination }}</h3>
+            <p><strong>Departure:</strong> {{ formatDateTime(trip.departureDateTime) }}</p>
+            <p><strong>Price:</strong> {{ trip.price ?? 0 }} TND</p>
+            <p><strong>Seats left:</strong> {{ trip.seatsAvailable }}</p>
+            <p><strong>Status:</strong> {{ trip.status }}</p>
+          </a>
+        </li>
+      }
+    </ul>
+  }
+</section>
