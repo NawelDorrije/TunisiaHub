@@ -24,6 +24,14 @@ export interface TripCreateRequest {
   seatsTotal: number;
 }
 
+export interface TripUpdateRequest {
+  departurePoint: string;
+  destination: string;
+  departureDateTime: string;
+  price: number | null;
+  seatsTotal: number;
+}
+
 export interface TripSearchParams {
   departurePoint?: string;
   destination?: string;
