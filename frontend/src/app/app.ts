@@ -16,11 +16,17 @@ export class App {
 
   protected readonly navLinks = [
     { label: 'Home', path: '' },
-    { label: 'Health', path: 'health' },
     { label: 'Trips', path: 'carpooling/trips' },
     { label: 'My Trips', path: 'carpooling/my-trips' },
     { label: 'Create Trip', path: 'carpooling/trips/new' },
   ];
+
+  protected readonly footerLinks = [
+    { label: 'Home', path: '' },
+    { label: 'Trips', path: 'carpooling/trips' },
+  ];
+
+  protected readonly currentYear = new Date().getFullYear();
 
   constructor(private readonly sessionService: SessionService) {}
 
