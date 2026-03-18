@@ -7,6 +7,9 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.FieldDefaults;
+import org.example.backend_tunisiahub.Entities.Reservation;
+
+import java.util.List;
 
 @Entity
 @Getter
@@ -32,5 +35,9 @@ public class Spot {
     @ManyToOne
     @JsonIgnore
     Camping camping;
+
+    @OneToMany(mappedBy = "spot", cascade = CascadeType.ALL)
+    @JsonIgnore
+    List<Reservation> reservations;
 
 }

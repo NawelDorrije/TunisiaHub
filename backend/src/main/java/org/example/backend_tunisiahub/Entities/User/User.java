@@ -1,11 +1,15 @@
 package org.example.backend_tunisiahub.Entities.User;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.FieldDefaults;
+import org.example.backend_tunisiahub.Entities.Reservation;
+
+import java.util.List;
 
 @Entity
 @Table(name = "users")
@@ -29,4 +33,7 @@ public class User {
     String motDePasse;
     @Enumerated(EnumType.STRING)
     RoleUser role;
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+    @JsonIgnore
+    List<Reservation> reservations;
 }
