@@ -1,8 +1,9 @@
-package org.example.backend_tunisiahub.Services;
+package org.example.backend_tunisiahub.Services.User;
 
 import lombok.RequiredArgsConstructor;
-import org.example.backend_tunisiahub.Entities.User;
-import org.example.backend_tunisiahub.Repositories.UserRepository;
+import org.example.backend_tunisiahub.Entities.User.User;
+import org.example.backend_tunisiahub.Repositories.User.UserRepository;
+import org.example.backend_tunisiahub.Services.Camping.IUserService;
 import org.springframework.stereotype.Service;
 
 import java.util.List;

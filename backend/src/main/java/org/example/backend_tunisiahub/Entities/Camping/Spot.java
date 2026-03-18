@@ -1,5 +1,6 @@
-package org.example.backend_tunisiahub.Entities;
+package org.example.backend_tunisiahub.Entities.Camping;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -8,25 +9,28 @@ import lombok.Setter;
 import lombok.experimental.FieldDefaults;
 
 @Entity
-@Table(name = "users")
 @Getter
 @Setter
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @NoArgsConstructor
-public class User {
+public class Spot {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     Long id;
 
-    String nom;
+    int number;
 
-    String prenom;
+    double size;
 
-    @Column(unique = true)
-    String email;
+    boolean availability;
 
-    String motDePasse;
-    @Enumerated(EnumType.STRING)
-    RoleUser role;
+    double price;
+
+    int maxCapacity;
+
+    @ManyToOne
+    @JsonIgnore
+    Camping camping;
+
 }

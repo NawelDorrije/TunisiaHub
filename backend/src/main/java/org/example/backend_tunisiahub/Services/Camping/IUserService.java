@@ -1,6 +1,6 @@
-package org.example.backend_tunisiahub.Services;
+package org.example.backend_tunisiahub.Services.Camping;
 
-import org.example.backend_tunisiahub.Entities.User;
+import org.example.backend_tunisiahub.Entities.User.User;
 
 import java.util.List;
 
