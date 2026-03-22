@@ -1,5 +1,6 @@
 package org.example.backend_tunisiahub.Services.Camping;
 
+import org.example.backend_tunisiahub.Entities.Camping.DTO.SpotDTO;
 import org.example.backend_tunisiahub.Entities.Camping.Spot;
 
 import java.util.List;
@@ -10,9 +11,9 @@ public interface ISpotService {
 
     Spot retrieveSpot(Long id);
 
-    Spot addSpot(Spot spot);
+    Spot addSpot(SpotDTO spotDTO);
 
     void deleteSpot(Long id);
 
-    Spot modifySpot(Spot spot);
+    Spot updateSpot(Long id, SpotDTO spotDTO);
 }

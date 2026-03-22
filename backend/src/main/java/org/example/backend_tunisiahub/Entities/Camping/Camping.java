@@ -1,6 +1,8 @@
 package org.example.backend_tunisiahub.Entities.Camping;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -40,8 +42,9 @@ public class Camping {
 
     @ElementCollection
     List<String> photos = new ArrayList<>();
+
     @OneToMany(mappedBy = "camping", cascade = CascadeType.ALL)
-    @JsonIgnore
+    @JsonIgnoreProperties("camping") // ignore la référence inverse pour éviter boucle
     List<Spot> spots;
 
 

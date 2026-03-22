@@ -1,0 +1,68 @@
+<div class="container mt-4" *ngIf="!loading && camping">
+
+  <h2>{{ camping.name }}</h2>
+
+  <!-- Camping info -->
+  <div class="card mb-4 shadow-sm">
+    <img
+      [src]="camping.photos[0] || 'assets/default-camping.jpg'"
+      class="card-img-top"
+      alt="Camping image">
+    <div class="card-body">
+      <p><strong>Location:</strong> {{ camping.location }}</p>
+      <p><strong>Type:</strong> {{ camping.campingType }}</p>
+      <p><strong>Price:</strong> {{ camping.price }} TND</p>
+      <p><strong>Available:</strong> {{ camping.startDate }} → {{ camping.endDate }}</p>
+      <p><strong>Description:</strong> {{ camping.description }}</p>
+    </div>
+  </div>
+
+  <!-- List of spots -->
+  <h4>Spots</h4>
+  <div class="row" *ngIf="camping.spots && camping.spots.length > 0; else noSpots">
+    <div class="col-md-4 mb-3" *ngFor="let spot of camping.spots">
+      <div class="card p-3 h-100">
+        <p><strong>Number:</strong> {{ spot.number }}</p>
+        <p><strong>Size:</strong> {{ spot.size }} m²</p>
+        <p>
+          <strong>Availability:</strong>
+          <span *ngIf="spot.availability" class="text-success">✅ Available</span>
+          <span *ngIf="!spot.availability" class="text-danger">❌ Not Available</span>
+        </p>
+        <p><strong>Price:</strong> {{ spot.price }} TND</p>
+        <p><strong>Max Capacity:</strong> {{ spot.maxCapacity }}</p>
+        <button class="btn btn-primary mt-2" (click)="openReservationModal(spot)">
+          Réserver
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <ng-template #noSpots>
+    <p class="text-muted">Aucun spot disponible pour ce camping.</p>
+  </ng-template>
+
+</div>
+
+<div *ngIf="loading" class="text-center mt-4">
+  Loading camping details...
+</div>
+
+<!-- Reservation Modal -->
+<div class="modal fade" #reservationModal tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Confirmer la réservation</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        Êtes-vous sûr de vouloir réserver le spot n°{{ selectedSpot?.number }} ?
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+        <button type="button" class="btn btn-primary" (click)="confirmReservation()">Confirmer</button>
+      </div>
+    </div>
+  </div>
+</div>

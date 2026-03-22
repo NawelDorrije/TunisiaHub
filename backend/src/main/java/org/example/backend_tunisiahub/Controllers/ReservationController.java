@@ -1,6 +1,7 @@
 package org.example.backend_tunisiahub.Controllers;
 
 import lombok.RequiredArgsConstructor;
+import org.example.backend_tunisiahub.Entities.Camping.DTO.ReservationDTO;
 import org.example.backend_tunisiahub.Entities.Reservation;
 import org.example.backend_tunisiahub.Services.IReservationService;
 import org.springframework.web.bind.annotation.*;
@@ -25,8 +26,10 @@ public class ReservationController {
     }
 
     @PostMapping
-    public Reservation createReservation(@RequestBody Reservation reservation) {
-        return reservationService.addReservation(reservation);
+    public Reservation createReservation(
+            @RequestBody ReservationDTO dto
+    ) {
+        return reservationService.addReservationCamping(dto);
     }
 
     @PutMapping

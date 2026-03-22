@@ -1,6 +1,8 @@
 package org.example.backend_tunisiahub.Entities.Camping;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -33,7 +35,8 @@ public class Spot {
     int maxCapacity;
 
     @ManyToOne
-    @JsonIgnore
+    @JoinColumn(name = "camping_id")
+    @JsonIgnoreProperties("spots") // ignore uniquement la liste de spots pour éviter boucle
     Camping camping;
 
     @OneToMany(mappedBy = "spot", cascade = CascadeType.ALL)

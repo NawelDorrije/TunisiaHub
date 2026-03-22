@@ -1,1 +1,80 @@
-<p>camping-list works!</p>
+<div class="container mt-4">
+
+  <h2 class="text-center mb-4">
+    Available Campings
+  </h2>
+
+  <!-- Loading -->
+  <div *ngIf="loading" class="text-center">
+    Loading campings...
+  </div>
+
+  <div class="row">
+
+    <div
+      class="col-md-4 mb-4"
+      *ngFor="let camping of campings">
+
+      <div class="card shadow-sm h-100">
+
+        <!-- Photo -->
+        <img
+          *ngIf="camping.photos && camping.photos.length > 0"
+          [src]="camping.photos[0]"
+          class="card-img-top"
+          alt="Camping image">
+
+        <img
+          *ngIf="!camping.photos || camping.photos.length === 0"
+          src="assets/default-camping.jpg"
+          class="card-img-top"
+          alt="Default image">
+
+        <div class="card-body">
+
+          <h5 class="card-title">
+            {{ camping.name }}
+          </h5>
+
+          <p class="card-text">
+
+            <strong>Location:</strong>
+            {{ camping.location }}
+
+            <br>
+
+            <strong>Type:</strong>
+            {{ camping.campingType }}
+
+            <br>
+
+            <strong>Price:</strong>
+            {{ camping.price }} TND
+
+            <br>
+
+            <strong>Available:</strong>
+
+            {{ camping.startDate }}
+            →
+            {{ camping.endDate }}
+
+          </p>
+
+        </div>
+
+        <div class="card-footer text-center">
+
+        <button class="btn btn-primary" [routerLink]="['/campings/details', camping.id]">
+  View Details
+</button>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+</div>

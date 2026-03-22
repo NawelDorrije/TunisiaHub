@@ -1,4 +1,4 @@
-package org.example.backend_tunisiahub.Services.Camping;
+package org.example.backend_tunisiahub.Services.User;
 
 import org.example.backend_tunisiahub.Entities.User.User;
 

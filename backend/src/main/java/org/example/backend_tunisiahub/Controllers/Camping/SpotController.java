@@ -1,6 +1,7 @@
 package org.example.backend_tunisiahub.Controllers.Camping;
 
 import lombok.RequiredArgsConstructor;
+import org.example.backend_tunisiahub.Entities.Camping.DTO.SpotDTO;
 import org.example.backend_tunisiahub.Entities.Camping.Spot;
 import org.example.backend_tunisiahub.Services.Camping.ISpotService;
 import org.springframework.web.bind.annotation.*;
@@ -25,13 +26,16 @@ public class SpotController {
     }
 
     @PostMapping
-    public Spot createSpot(@RequestBody Spot spot) {
-        return spotService.addSpot(spot);
+    public Spot createSpot(@RequestBody SpotDTO spotDTO) {
+        return spotService.addSpot(spotDTO);
     }
 
-    @PutMapping
-    public Spot updateSpot(@RequestBody Spot spot) {
-        return spotService.modifySpot(spot);
+    @PutMapping("/{id}")
+    public Spot updateSpot(
+            @PathVariable Long id,
+            @RequestBody SpotDTO spotDTO
+    ) {
+        return spotService.updateSpot(id, spotDTO);
     }
 
     @DeleteMapping("/{id}")
