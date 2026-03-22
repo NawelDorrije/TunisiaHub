@@ -29,8 +29,8 @@ public class VehicleController {
 
     @PostMapping
     @Operation(summary = "Create vehicle")
-    public ResponseEntity<VehicleView> createVehicle(@Valid @RequestBody VehicleWriteRequest request,
-                                                     HttpServletRequest httpRequest) {
+    public ResponseEntity<Vehicle> createVehicle(@Valid @RequestBody VehicleWriteRequest request,
+                                                 HttpServletRequest httpRequest) {
         ensureUserRole(httpRequest);
         Long currentUserId = currentUserResolver.getUserId(httpRequest);
         log.info("Create vehicle request received for userId={}, model={}, plateNumber={}, color={}",
@@ -40,35 +40,35 @@ public class VehicleController {
             request.color());
         Vehicle response = vehicleService.createVehicle(toVehicle(request), currentUserId);
         log.info("Create vehicle succeeded for userId={}, vehicleId={}", currentUserId, response.getId());
-        return ResponseEntity.status(HttpStatus.CREATED).body(toView(response));
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     @GetMapping
     @Operation(summary = "List my vehicles")
-    public Page<VehicleView> getMyVehicles(HttpServletRequest request,
-                                           @RequestParam(defaultValue = "0") int page,
-                                           @RequestParam(defaultValue = "10") int size) {
+    public Page<Vehicle> getMyVehicles(HttpServletRequest request,
+                                       @RequestParam(defaultValue = "0") int page,
+                                       @RequestParam(defaultValue = "10") int size) {
         ensureUserRole(request);
         Long currentUserId = currentUserResolver.getUserId(request);
-        return vehicleService.getMyVehicles(currentUserId, PageRequest.of(page, size)).map(this::toView);
+        return vehicleService.getMyVehicles(currentUserId, PageRequest.of(page, size));
     }
 
     @GetMapping("/{id}")
     @Operation(summary = "Get my vehicle details")
-    public VehicleView getVehicle(@PathVariable Long id, HttpServletRequest request) {
+    public Vehicle getVehicle(@PathVariable Long id, HttpServletRequest request) {
         ensureUserRole(request);
         Long currentUserId = currentUserResolver.getUserId(request);
-        return toView(vehicleService.getVehicle(id, currentUserId));
+        return vehicleService.getVehicle(id, currentUserId);
     }
 
     @PutMapping("/{id}")
     @Operation(summary = "Update vehicle")
-    public VehicleView updateVehicle(@PathVariable Long id,
-                                     @Valid @RequestBody VehicleWriteRequest payload,
-                                     HttpServletRequest request) {
+    public Vehicle updateVehicle(@PathVariable Long id,
+                                 @Valid @RequestBody VehicleWriteRequest payload,
+                                 HttpServletRequest request) {
         ensureUserRole(request);
         Long currentUserId = currentUserResolver.getUserId(request);
-        return toView(vehicleService.updateVehicle(id, currentUserId, toVehicle(payload)));
+        return vehicleService.updateVehicle(id, currentUserId, toVehicle(payload));
     }
 
     @DeleteMapping("/{id}")
@@ -95,14 +95,6 @@ public class VehicleController {
         return vehicle;
     }
 
-    private VehicleView toView(Vehicle vehicle) {
-        return new VehicleView(
-                vehicle.getId(),
-                vehicle.getModel(),
-                vehicle.getPlateNumber(),
-                vehicle.getColor()
-        );
-    }
 
     private record VehicleWriteRequest(
             @NotBlank String model,

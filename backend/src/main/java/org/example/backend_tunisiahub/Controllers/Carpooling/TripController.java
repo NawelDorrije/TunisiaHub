@@ -36,8 +36,8 @@ public class TripController {
 
     @PostMapping
     @Operation(summary = "Publish a trip")
-    public ResponseEntity<TripView> createTrip(@Valid @RequestBody TripWriteRequest request,
-                                               HttpServletRequest httpRequest) {
+    public ResponseEntity<Trip> createTrip(@Valid @RequestBody TripWriteRequest request,
+                                           HttpServletRequest httpRequest) {
         Long currentUserId = currentUserResolver.getUserId(httpRequest);
         ensureUserRole(httpRequest);
         log.info("Create trip request received for driverId={}, departure={}, destination={}, departureTime={}",
@@ -47,43 +47,43 @@ public class TripController {
             request.departureDateTime());
         Trip response = tripService.createTrip(toTrip(request), currentUserId);
         log.info("Create trip succeeded for driverId={}, tripId={}", currentUserId, response.getId());
-        return ResponseEntity.status(HttpStatus.CREATED).body(toView(response));
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     @GetMapping
     @Operation(summary = "List current driver trips")
-    public Page<TripView> getMyTrips(HttpServletRequest request,
-                                     @RequestParam(defaultValue = "0") int page,
-                                     @RequestParam(defaultValue = "10") int size) {
+    public Page<Trip> getMyTrips(HttpServletRequest request,
+                                 @RequestParam(defaultValue = "0") int page,
+                                 @RequestParam(defaultValue = "10") int size) {
         Long currentUserId = currentUserResolver.getUserId(request);
         ensureUserRole(request);
-        return tripService.getMyTrips(currentUserId, PageRequest.of(page, size)).map(this::toView);
+        return tripService.getMyTrips(currentUserId, PageRequest.of(page, size));
     }
 
     @GetMapping("/{id}")
     @Operation(summary = "Get current driver trip details")
-    public TripView getTripById(@PathVariable Long id, HttpServletRequest request) {
+    public Trip getTripById(@PathVariable Long id, HttpServletRequest request) {
         Long currentUserId = currentUserResolver.getUserId(request);
         ensureUserRole(request);
-        return toView(tripService.getMyTripById(id, currentUserId));
+        return tripService.getMyTripById(id, currentUserId);
     }
 
     @PatchMapping("/{id}/cancel")
     @Operation(summary = "Cancel trip")
-    public TripView cancelTrip(@PathVariable Long id, HttpServletRequest request) {
+    public Trip cancelTrip(@PathVariable Long id, HttpServletRequest request) {
         Long currentUserId = currentUserResolver.getUserId(request);
         ensureUserRole(request);
-        return toView(tripService.cancelTrip(id, currentUserId));
+        return tripService.cancelTrip(id, currentUserId);
     }
 
     @PutMapping("/{id}")
     @Operation(summary = "Update trip")
-    public TripView updateTrip(@PathVariable Long id,
-                               @Valid @RequestBody TripWriteRequest payload,
-                               HttpServletRequest request) {
+    public Trip updateTrip(@PathVariable Long id,
+                           @Valid @RequestBody TripWriteRequest payload,
+                           HttpServletRequest request) {
         Long currentUserId = currentUserResolver.getUserId(request);
         ensureUserRole(request);
-        return toView(tripService.updateTrip(id, currentUserId, toTrip(payload)));
+        return tripService.updateTrip(id, currentUserId, toTrip(payload));
     }
 
     private Trip toTrip(TripWriteRequest payload) {
@@ -101,21 +101,6 @@ public class TripController {
         return trip;
     }
 
-    private TripView toView(Trip trip) {
-        return new TripView(
-                trip.getId(),
-                trip.getDeparturePoint(),
-                trip.getDestination(),
-            trip.getDepartureDateTime(),
-                trip.getPrice(),
-                trip.getSeatsTotal(),
-                trip.getSeatsAvailable(),
-                trip.getStatus(),
-                trip.getCreatedAt(),
-            trip.getCreatedBy(),
-            trip.getVehicle() != null ? trip.getVehicle().getId() : null
-        );
-    }
 
     private void ensureUserRole(HttpServletRequest request) {
         String role = currentUserResolver.getRole(request);

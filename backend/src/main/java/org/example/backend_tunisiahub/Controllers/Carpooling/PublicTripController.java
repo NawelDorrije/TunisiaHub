@@ -28,40 +28,28 @@ public class PublicTripController {
 
     @GetMapping
     @Operation(summary = "Search public scheduled trips")
-    public Page<PublicTripView> searchTrips(@RequestParam(required = false) String departurePoint,
-                                            @RequestParam(required = false) String destination,
-                                            @RequestParam(required = false)
-                                            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
-                                            @RequestParam(required = false) Integer seatsRequired,
-                                            @RequestParam(defaultValue = "0") int page,
-                                            @RequestParam(defaultValue = "10") int size) {
+        public Page<Trip> searchTrips(@RequestParam(required = false) String departurePoint,
+                      @RequestParam(required = false) String destination,
+                      @RequestParam(required = false)
+                      @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
+                      @RequestParam(required = false) Integer seatsRequired,
+                      @RequestParam(defaultValue = "0") int page,
+                      @RequestParam(defaultValue = "10") int size) {
         return tripService.searchPublicTrips(
-                departurePoint,
-                destination,
-                date,
-                seatsRequired,
-                PageRequest.of(page, size)
-        ).map(this::toPublicView);
-    }
+            departurePoint,
+            destination,
+            date,
+            seatsRequired,
+            PageRequest.of(page, size)
+        );
+        }
 
     @GetMapping("/{id}")
     @Operation(summary = "Get public trip details by id")
-    public PublicTripView getTripById(@PathVariable Long id) {
-        return toPublicView(tripService.getPublicTripById(id));
+    public Trip getTripById(@PathVariable Long id) {
+        return tripService.getPublicTripById(id);
     }
 
-    private PublicTripView toPublicView(Trip trip) {
-        return new PublicTripView(
-                trip.getId(),
-                trip.getDeparturePoint(),
-                trip.getDestination(),
-            trip.getDepartureDateTime(),
-                trip.getPrice(),
-                trip.getSeatsTotal(),
-                trip.getSeatsAvailable(),
-                trip.getStatus()
-        );
-    }
 
     private record PublicTripView(
             Long id,
