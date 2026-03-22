@@ -96,6 +96,7 @@ public class VehicleController {
     }
 
 
+    
     private record VehicleWriteRequest(
             @NotBlank String model,
             @NotBlank String plateNumber,
