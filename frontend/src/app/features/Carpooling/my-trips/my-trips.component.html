@@ -1,0 +1,75 @@
+<div class="container py-4">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h2 class="m-0">My Trips</h2>
+    <a class="btn btn-primary" routerLink="/carpooling/publish"
+      >Publish new trip</a
+    >
+  </div>
+
+  <div class="alert alert-danger" *ngIf="error">{{ error }}</div>
+
+  <div class="card shadow-sm" *ngIf="trips.length > 0; else emptyState">
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0">
+        <thead>
+          <tr>
+            <th>Route</th>
+            <th>Date/time</th>
+            <th>Price</th>
+            <th>Seats available</th>
+            <th>Status</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let trip of trips">
+            <td>{{ trip.departure }} -> {{ trip.destination }}</td>
+            <td>{{ trip.departureDateTime | date: "medium" }}</td>
+            <td>{{ trip.pricePerSeat }} TND</td>
+            <td>{{ trip.seatsAvailable }}/{{ trip.seatsTotal }}</td>
+            <td>{{ trip.status }}</td>
+            <td>
+              <div class="d-flex flex-wrap gap-2 justify-content-end">
+                <button
+                  class="btn btn-sm btn-outline-primary"
+                  (click)="openDetails(trip.id)"
+                >
+                  View details
+                </button>
+                <button
+                  class="btn btn-sm btn-outline-secondary"
+                  (click)="editTrip(trip.id)"
+                >
+                  Edit
+                </button>
+                <button
+                  class="btn btn-sm btn-outline-danger"
+                  (click)="cancelTrip(trip.id)"
+                >
+                  Cancel
+                </button>
+                <button
+                  class="btn btn-sm btn-outline-dark"
+                  (click)="viewPassengers(trip.id)"
+                >
+                  View passengers
+                </button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <ng-template #emptyState>
+    <div class="card shadow-sm">
+      <div class="card-body text-center py-4">
+        <p class="mb-3">You have not published any trip yet.</p>
+        <a class="btn btn-success" routerLink="/carpooling/publish"
+          >Publish your first trip</a
+        >
+      </div>
+    </div>
+  </ng-template>
+</div>

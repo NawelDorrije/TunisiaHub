@@ -1,0 +1,32 @@
+<div class="container py-4">
+  <h2 class="mb-3">Users summary</h2>
+
+  <div class="card shadow-sm" *ngIf="rows.length > 0; else emptyState">
+    <div class="table-responsive">
+      <table class="table table-striped align-middle mb-0">
+        <thead>
+          <tr>
+            <th>User name</th>
+            <th>Trips created</th>
+            <th>Bookings made</th>
+            <th>Complaints submitted</th>
+            <th>Complaints received</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let row of rows">
+            <td>{{ row.userName }}</td>
+            <td>{{ row.tripsCreated }}</td>
+            <td>{{ row.bookingsMade }}</td>
+            <td>{{ row.complaintsSubmitted }}</td>
+            <td>{{ row.complaintsReceived }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <ng-template #emptyState>
+    <div class="alert alert-info">No user activity yet.</div>
+  </ng-template>
+</div>
