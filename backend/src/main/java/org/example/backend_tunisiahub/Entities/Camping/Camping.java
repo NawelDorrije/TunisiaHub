@@ -1,5 +1,6 @@
 package org.example.backend_tunisiahub.Entities.Camping;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -40,6 +41,7 @@ public class Camping {
     @ElementCollection
     List<String> photos = new ArrayList<>();
     @OneToMany(mappedBy = "camping", cascade = CascadeType.ALL)
+    @JsonIgnore
     List<Spot> spots;
 
 

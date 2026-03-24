@@ -1,0 +1,25 @@
+.home-container {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+h1 {
+  font-weight: 700;
+  color: #0d6efd;
+}
+
+/* Cards */
+.service-card {
+  border-radius: 0.8rem;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.service-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+}
+
+.service-icon {
+  font-size: 3rem;
+  color: #0d6efd;
+  display: block;
+}
