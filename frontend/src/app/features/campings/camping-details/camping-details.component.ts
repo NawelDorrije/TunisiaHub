@@ -1,6 +1,4 @@
-import { Component, OnInit, ViewChild, ElementRef, Inject, PLATFORM_ID } from '@angular/core';
-import { isPlatformBrowser } from '@angular/common';
-import { Modal } from 'bootstrap';
+import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { CampingService } from '../../../services/campings/camping.service';
 import { ReservationCampingService } from '../../../services/shared-reservation/reservation-camping.service';
@@ -18,19 +16,14 @@ export class CampingDetailsComponent implements OnInit {
   loading = true;
   selectedSpot?: Spot;
 
-  @ViewChild('reservationModal') reservationModal!: ElementRef;
-  private modalInstance!: Modal;
-
-  isBrowser: boolean;
+  // Variable pour contrôler le popup
+  showReservationPopup = false;
 
   constructor(
     private campingService: CampingService,
     private reservationService: ReservationCampingService,
-    private route: ActivatedRoute,
-    @Inject(PLATFORM_ID) platformId: Object
-  ) {
-    this.isBrowser = isPlatformBrowser(platformId); // ✅ permet de savoir si on est côté navigateur
-  }
+    private route: ActivatedRoute
+  ) {}
 
   ngOnInit(): void {
     const id = Number(this.route.snapshot.params['id']);
@@ -44,29 +37,39 @@ export class CampingDetailsComponent implements OnInit {
     });
   }
 
-  openReservationModal(spot: Spot): void {
-    if (!this.isBrowser) return; // on ne fait rien côté serveur
+  // Ouvrir le "popup"
+  openReservationPopup(spot: Spot) {
     this.selectedSpot = spot;
-    if (!this.modalInstance) {
-      this.modalInstance = new Modal(this.reservationModal.nativeElement);
-    }
-    this.modalInstance.show();
+    this.showReservationPopup = true;
   }
 
-  confirmReservation(): void {
-    if (!this.selectedSpot) return;
- const reservation: Reservation = {
-  startDateCamping: this.camping.startDate,
-  endDateCamping: this.camping.endDate,
-  numberOfPeopleCamping: 1,
-  totalPriceCamping: this.selectedSpot.price,
-  statusCamping: 'PENDING',
-  user: { id: 1 },
-  spot: { id: this.selectedSpot.id! }
-};
+  // Fermer le "popup"
+  closeReservationPopup() {
+    this.showReservationPopup = false;
+  }
+
+  confirmReservation() {
+    if (!this.selectedSpot?.id) return;
+
+    const reservation: Reservation = {
+      startDateCamping: this.camping.startDate,
+      endDateCamping: this.camping.endDate,
+      numberOfPeopleCamping: 1,
+      totalPriceCamping: this.selectedSpot.price,
+      statusCamping: 'PENDING',
+      userId: 1,
+      spotId: this.selectedSpot.id
+    };
+
     this.reservationService.createReservation(reservation).subscribe({
-      next: () => { alert('Réservation confirmée ✅'); this.modalInstance?.hide(); },
-      error: (err) => { console.error(err); alert('Erreur lors de la réservation ❌'); }
+      next: () => {
+        alert('Réservation confirmée ✅');
+        this.closeReservationPopup();
+      },
+      error: (err) => {
+        console.error(err);
+        alert('Erreur lors de la réservation ❌');
+      }
     });
   }
 }

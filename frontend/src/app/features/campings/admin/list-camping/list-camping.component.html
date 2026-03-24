@@ -1,0 +1,78 @@
+<div class="container mt-4">
+
+  <h2 class="mb-3">Camping Management</h2>
+
+  <button class="btn btn-success mb-3" (click)="addCamping()">
+    Add Camping
+  </button>
+
+  <table class="table table-bordered table-striped">
+
+    <thead class="table-dark">
+
+      <tr>
+        <th>ID</th>
+        <th>Name</th>
+        <th>Location</th>
+        <th>Type</th>
+        <th>Price</th>
+        <th>Start Date</th>
+        <th>End Date</th>
+        <th>Actions</th>
+      </tr>
+
+    </thead>
+
+    <tbody>
+
+      <tr *ngFor="let camping of campings">
+
+        <td>{{ camping.id }}</td>
+
+        <td>{{ camping.name }}</td>
+
+        <td>{{ camping.location }}</td>
+
+        <td>{{ camping.campingType }}</td>
+
+        <td>{{ camping.price }} TND</td>
+
+        <td>{{ camping.startDate }}</td>
+
+        <td>{{ camping.endDate }}</td>
+
+        <td>
+
+          <button
+            class="btn btn-primary btn-sm me-2"
+            (click)="editCamping(camping.id)">
+            Edit
+          </button>
+
+          <button
+            class="btn btn-danger btn-sm me-2"
+            (click)="deleteCamping(camping.id)">
+            Delete
+          </button>
+
+          <button
+            class="btn btn-warning btn-sm"
+            (click)="manageSpots(camping.id)">
+            Manage Spots
+          </button>
+
+        </td>
+
+      </tr>
+
+    </tbody>
+
+  </table>
+
+  <div *ngIf="loading" class="text-center">
+
+    Loading campings...
+
+  </div>
+
+</div>

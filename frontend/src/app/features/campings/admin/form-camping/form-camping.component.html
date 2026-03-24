@@ -1,0 +1,168 @@
+<div class="container mt-4">
+
+  <h2>
+    {{ isEditMode ? 'Edit Camping' : 'Add Camping' }}
+  </h2>
+
+  <form [formGroup]="campingForm" (ngSubmit)="onSubmit()">
+
+    <!-- Name -->
+
+    <div class="mb-3">
+
+      <label class="form-label">Name</label>
+
+      <input
+        type="text"
+        class="form-control"
+        formControlName="name">
+
+      <div class="text-danger"
+        *ngIf="campingForm.get('name')?.touched &&
+               campingForm.get('name')?.hasError('required')">
+
+        Name is required
+
+      </div>
+
+      <div class="text-danger"
+        *ngIf="campingForm.get('name')?.hasError('minlength')">
+
+        Name must be at least 3 characters
+
+      </div>
+
+    </div>
+
+    <!-- Location -->
+
+    <div class="mb-3">
+
+      <label class="form-label">Location</label>
+
+      <input
+        type="text"
+        class="form-control"
+        formControlName="location">
+
+    </div>
+
+    <!-- Camping Type -->
+
+    <div class="mb-3">
+
+      <label class="form-label">Camping Type</label>
+
+      <select
+        class="form-control"
+        formControlName="campingType">
+
+        <option value="">Select type</option>
+
+        <option
+          *ngFor="let type of campingTypes"
+          [value]="type">
+
+          {{ type }}
+
+        </option>
+
+      </select>
+
+    </div>
+
+    <!-- Price -->
+
+    <div class="mb-3">
+
+      <label class="form-label">Price</label>
+
+      <input
+        type="number"
+        class="form-control"
+        formControlName="price">
+
+      <div class="text-danger"
+        *ngIf="campingForm.get('price')?.hasError('min')">
+
+        Price must be greater than 0
+
+      </div>
+
+    </div>
+
+    <!-- Description -->
+
+    <div class="mb-3">
+
+      <label class="form-label">Description</label>
+
+      <textarea
+        class="form-control"
+        formControlName="description">
+      </textarea>
+
+      <div class="text-danger"
+        *ngIf="campingForm.get('description')?.hasError('minlength')">
+
+        Description must be at least 10 characters
+
+      </div>
+
+    </div>
+
+    <!-- Start Date -->
+
+    <div class="mb-3">
+
+      <label class="form-label">Start Date</label>
+
+      <input
+        type="date"
+        class="form-control"
+        formControlName="startDate">
+
+    </div>
+
+    <!-- End Date -->
+
+    <div class="mb-3">
+
+      <label class="form-label">End Date</label>
+
+      <input
+        type="date"
+        class="form-control"
+        formControlName="endDate">
+
+      <div class="text-danger"
+        *ngIf="campingForm.errors?.['endDateBeforeStart']">
+
+        End date cannot be before start date
+
+      </div>
+
+    </div>
+
+    <button
+      type="submit"
+      class="btn btn-success"
+      [disabled]="campingForm.invalid">
+
+
+      {{ isEditMode ? 'Update' : 'Create' }}
+
+    </button>
+
+    <button
+      type="button"
+      class="btn btn-secondary ms-2"
+      routerLink="/campings/admin">
+
+      Cancel
+
+    </button>
+
+  </form>
+
+</div>
