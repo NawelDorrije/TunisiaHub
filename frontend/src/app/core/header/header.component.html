@@ -6,8 +6,15 @@
     </a>
 
     <!-- Toggle button pour mobile -->
-    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
-      aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+    <button
+      class="navbar-toggler"
+      type="button"
+      data-bs-toggle="collapse"
+      data-bs-target="#navbarNav"
+      aria-controls="navbarNav"
+      aria-expanded="false"
+      aria-label="Toggle navigation"
+    >
       <span class="navbar-toggler-icon"></span>
     </button>
 
@@ -18,24 +25,41 @@
           <a class="nav-link" routerLink="/">Home</a>
         </li>
         <li class="nav-item dropdown">
-          <a class="nav-link dropdown-toggle" href="#" id="servicesDropdown" role="button" data-bs-toggle="dropdown"
-            aria-expanded="false">
+          <a
+            class="nav-link dropdown-toggle"
+            href="#"
+            id="servicesDropdown"
+            role="button"
+            data-bs-toggle="dropdown"
+            aria-expanded="false"
+          >
             Services
           </a>
           <ul class="dropdown-menu" aria-labelledby="servicesDropdown">
-            <li><a class="dropdown-item" routerLink="/campings">Campings</a></li>
+            <li>
+              <a class="dropdown-item" routerLink="/campings">Campings</a>
+            </li>
             <li><a class="dropdown-item" routerLink="/events">Events</a></li>
-            <li><a class="dropdown-item" routerLink="/shoppings">Shoppings</a></li>
+            <li>
+              <a class="dropdown-item" routerLink="/shoppings">Shoppings</a>
+            </li>
+            <li>
+              <a class="dropdown-item" routerLink="/carpooling">Carpooling</a>
+            </li>
           </ul>
         </li>
         <li class="nav-item">
           <a class="nav-link" routerLink="/contact">Contact Us</a>
         </li>
         <li class="nav-item">
-          <a class="btn btn-outline-primary ms-lg-3" routerLink="/auth/sign-in">Login</a>
+          <a class="btn btn-outline-primary ms-lg-3" routerLink="/auth/sign-in"
+            >Login</a
+          >
         </li>
         <li class="nav-item">
-          <a class="btn btn-primary ms-2 text-white" routerLink="/auth/sign-up">Sign Up</a>
+          <a class="btn btn-primary ms-2 text-white" routerLink="/auth/sign-up"
+            >Sign Up</a
+          >
         </li>
       </ul>
     </div>
