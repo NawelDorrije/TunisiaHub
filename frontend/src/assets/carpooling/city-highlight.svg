@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="700" viewBox="0 0 1200 700">
+  <rect width="1200" height="700" rx="32" fill="#f3e2c4"/>
+  <rect x="70" y="120" width="130" height="430" fill="#d9c39b"/>
+  <rect x="220" y="90" width="140" height="480" fill="#eed8b3"/>
+  <rect x="390" y="130" width="120" height="420" fill="#f0ddb9"/>
+  <rect x="530" y="80" width="150" height="500" fill="#e8d0a4"/>
+  <rect x="710" y="100" width="180" height="470" fill="#dcc098"/>
+  <rect x="920" y="110" width="170" height="460" fill="#d7b98c"/>
+  <path d="M480 700 C520 540 620 420 720 350 C600 360 470 470 350 700 Z" fill="#caa77b"/>
+  <text x="60" y="90" fill="#10224c" font-family="Arial, sans-serif" font-size="44" font-weight="700">Destination</text>
+</svg>
