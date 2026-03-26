@@ -10,7 +10,7 @@ import java.util.List;
 public interface TripRepository extends JpaRepository<Trip, Long> {
     List<Trip> findByStatusIgnoreCaseOrderByDepartureDateTimeAsc(String status);
 
-    List<Trip> findByCreatedByOrderByDepartureDateTimeDesc(String createdBy);
+    List<Trip> findByCreatedByOrDriverIdOrderByDepartureDateTimeDesc(String createdBy, String driverId);
 
     Trip findByIdAndCreatedBy(Long id, String createdBy);
 }

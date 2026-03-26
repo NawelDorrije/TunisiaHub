@@ -45,7 +45,8 @@ public class TripServiceImp implements ITripService {
 
     @Override
     public List<Trip> retrieveMyTrips(Long driverId) {
-        return tripRepository.findByCreatedByOrderByDepartureDateTimeDesc(String.valueOf(driverId));
+        String currentUserId = String.valueOf(driverId);
+        return tripRepository.findByCreatedByOrDriverIdOrderByDepartureDateTimeDesc(currentUserId, currentUserId);
     }
 
     @Override
@@ -61,6 +62,7 @@ public class TripServiceImp implements ITripService {
         trip.setSeatsAvailable(request.getSeatsTotal());
         trip.setStatus(STATUS_SCHEDULED);
         trip.setCreatedBy(String.valueOf(driverId));
+        trip.setDriverId(String.valueOf(driverId));
         trip.setVehicle(resolveVehicle(request.getVehicle(), driverId));
 
         return tripRepository.save(trip);
@@ -71,7 +73,7 @@ public class TripServiceImp implements ITripService {
         validateTrip(request);
 
         Trip trip = tripRepository.findById(tripId).get();
-        if (!String.valueOf(currentUserId).equals(trip.getCreatedBy())) {
+        if (!isOwner(trip, currentUserId)) {
             throw new ApiException(HttpStatus.FORBIDDEN, "You can only edit your own trip");
         }
 
@@ -91,11 +93,16 @@ public class TripServiceImp implements ITripService {
     @Override
     public Trip cancelTrip(Long tripId, Long currentUserId) {
         Trip trip = tripRepository.findById(tripId).get();
-        if (!String.valueOf(currentUserId).equals(trip.getCreatedBy())) {
+        if (!isOwner(trip, currentUserId)) {
             throw new ApiException(HttpStatus.FORBIDDEN, "You can only cancel your own trip");
         }
         trip.setStatus(STATUS_CANCELED);
         return tripRepository.save(trip);
+    }
+
+    private boolean isOwner(Trip trip, Long currentUserId) {
+        String userId = String.valueOf(currentUserId);
+        return userId.equals(trip.getCreatedBy()) || userId.equals(trip.getDriverId());
     }
 
     private Vehicle resolveVehicle(Vehicle vehicle, Long driverId) {
