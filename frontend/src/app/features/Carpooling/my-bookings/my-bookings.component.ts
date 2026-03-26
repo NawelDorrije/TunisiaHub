@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
-import { BookingWithContext } from '../models';
+import { BookingWithContext } from '../../../models/Carpooling/carpooling';
 import { CarpoolingDataService } from '../services/carpooling-data.service';
 
 @Component({

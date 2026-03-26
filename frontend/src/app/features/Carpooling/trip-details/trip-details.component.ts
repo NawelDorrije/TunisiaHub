@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { Trip } from '../models';
+import { Trip } from '../../../models/Carpooling/carpooling';
 import { CarpoolingDataService } from '../services/carpooling-data.service';
 
 @Component({

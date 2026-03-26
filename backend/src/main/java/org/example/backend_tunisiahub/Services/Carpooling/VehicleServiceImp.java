@@ -1,102 +1,78 @@
-package org.example.backend_tunisiahub.carpooling.service;
+package org.example.backend_tunisiahub.Services.Carpooling;
 
-import org.example.backend_tunisiahub.carpooling.entity.Vehicle;
-import org.example.backend_tunisiahub.carpooling.repository.VehicleRepository;
+import lombok.AllArgsConstructor;
+import org.example.backend_tunisiahub.Entities.Carpooling.Vehicle;
+import org.example.backend_tunisiahub.Repositories.Carpooling.VehicleRepository;
 import org.example.backend_tunisiahub.shared.exception.ApiException;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 @Service
-@RequiredArgsConstructor
-@Slf4j
+@AllArgsConstructor
 public class VehicleServiceImp implements IVehicleService {
 
-    private final VehicleRepository vehicleRepository;
+    private VehicleRepository vehicleRepository;
 
-    @Transactional
     @Override
-    public Vehicle createVehicle(Vehicle request, Long ownerId) {
-        if (request == null) {
-            log.warn("Create vehicle failed: request payload is null for ownerId={}", ownerId);
-            throw new ApiException(HttpStatus.BAD_REQUEST, "Vehicle payload is required");
+    public List<Vehicle> retrieveAllVehicles(Long ownerId) {
+        return vehicleRepository.findByOwnerIdOrderByIdDesc(String.valueOf(ownerId));
+    }
+
+    @Override
+    public Vehicle retrieveVehicle(Long id, Long ownerId) {
+        Vehicle vehicle = vehicleRepository.findByIdAndOwnerId(id, String.valueOf(ownerId));
+        if (vehicle == null) {
+            throw new ApiException(HttpStatus.NOT_FOUND, "Vehicle not found");
         }
-        log.debug("Create vehicle validation started for ownerId={}, model={}, plateNumber={}, color={}",
-                ownerId,
-                request.getModel(),
-                request.getPlateNumber(),
-                request.getColor());
-        validateVehiclePayload(request);
-        String normalizedPlate = normalizePlate(request.getPlateNumber());
-        log.debug("Create vehicle normalized plate for ownerId={}: {}", ownerId, normalizedPlate);
-        if (vehicleRepository.existsByPlateNumberIgnoreCase(normalizedPlate)) {
-            log.warn("Create vehicle failed: duplicate plateNumber={} for ownerId={}", normalizedPlate, ownerId);
+        return vehicle;
+    }
+
+    @Override
+    public Vehicle addVehicle(Vehicle request, Long ownerId) {
+        validateVehicle(request);
+        String plateNumber = request.getPlateNumber().trim().toUpperCase();
+        if (vehicleRepository.existsByPlateNumberIgnoreCase(plateNumber)) {
             throw new ApiException(HttpStatus.CONFLICT, "plateNumber already exists");
         }
 
         Vehicle vehicle = new Vehicle();
         vehicle.setModel(request.getModel().trim());
-        vehicle.setPlateNumber(normalizedPlate);
+        vehicle.setPlateNumber(plateNumber);
         vehicle.setColor(request.getColor().trim());
         vehicle.setOwnerId(String.valueOf(ownerId));
 
-        Vehicle saved = vehicleRepository.save(vehicle);
-        log.info("Create vehicle persisted successfully for ownerId={}, vehicleId={}", ownerId, saved.getId());
-        return saved;
+        return vehicleRepository.save(vehicle);
     }
 
-    @Transactional(readOnly = true)
     @Override
-    public Page<Vehicle> getMyVehicles(Long ownerId, Pageable pageable) {
-        return vehicleRepository.findByOwnerIdOrderByIdDesc(String.valueOf(ownerId), pageable);
-    }
+    public Vehicle modifyVehicle(Long id, Long ownerId, Vehicle request) {
+        validateVehicle(request);
+        Vehicle vehicle = retrieveVehicle(id, ownerId);
+        String plateNumber = request.getPlateNumber().trim().toUpperCase();
 
-    @Transactional(readOnly = true)
-    @Override
-    public Vehicle getVehicle(Long id, Long ownerId) {
-        return vehicleRepository.findByIdAndOwnerId(id, String.valueOf(ownerId))
-                .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Vehicle not found"));
-    }
-
-    @Transactional
-    @Override
-    public Vehicle updateVehicle(Long id, Long ownerId, Vehicle request) {
-        if (request == null) {
-            throw new ApiException(HttpStatus.BAD_REQUEST, "Vehicle payload is required");
-        }
-        validateVehiclePayload(request);
-        Vehicle vehicle = vehicleRepository.findByIdAndOwnerId(id, String.valueOf(ownerId))
-                .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Vehicle not found"));
-
-        String normalizedPlate = normalizePlate(request.getPlateNumber());
-        if (vehicleRepository.existsByPlateNumberIgnoreCaseAndIdNot(normalizedPlate, id)) {
+        if (vehicleRepository.existsByPlateNumberIgnoreCaseAndIdNot(plateNumber, id)) {
             throw new ApiException(HttpStatus.CONFLICT, "plateNumber already exists");
         }
 
         vehicle.setModel(request.getModel().trim());
-        vehicle.setPlateNumber(normalizedPlate);
+        vehicle.setPlateNumber(plateNumber);
         vehicle.setColor(request.getColor().trim());
 
         return vehicleRepository.save(vehicle);
     }
 
-    @Transactional
     @Override
-    public void deleteVehicle(Long id, Long ownerId) {
-        Vehicle vehicle = vehicleRepository.findByIdAndOwnerId(id, String.valueOf(ownerId))
-                .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Vehicle not found"));
+    public void removeVehicle(Long id, Long ownerId) {
+        Vehicle vehicle = retrieveVehicle(id, ownerId);
         vehicleRepository.delete(vehicle);
     }
 
-    private String normalizePlate(String plateNumber) {
-        return plateNumber == null ? null : plateNumber.trim().toUpperCase();
-    }
-
-    private void validateVehiclePayload(Vehicle request) {
+    private void validateVehicle(Vehicle request) {
+        if (request == null) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "Vehicle is required");
+        }
         if (request.getModel() == null || request.getModel().isBlank()) {
             throw new ApiException(HttpStatus.BAD_REQUEST, "model is required");
         }

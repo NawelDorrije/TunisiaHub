@@ -1,18 +1,16 @@
-package org.example.backend_tunisiahub.carpooling.repository;
+package org.example.backend_tunisiahub.Repositories.Carpooling;
 
-import org.example.backend_tunisiahub.carpooling.entity.Trip;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
+import org.example.backend_tunisiahub.Entities.Carpooling.Trip;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.stereotype.Repository;
 
 import java.util.List;
-import java.util.Optional;
 
-public interface TripRepository extends JpaRepository<Trip, Long>, JpaSpecificationExecutor<Trip> {
+@Repository
+public interface TripRepository extends JpaRepository<Trip, Long> {
+    List<Trip> findByStatusIgnoreCaseOrderByDepartureDateTimeAsc(String status);
+
     List<Trip> findByCreatedByOrderByDepartureDateTimeDesc(String createdBy);
 
-    Page<Trip> findByCreatedByOrderByDepartureDateTimeDesc(String createdBy, Pageable pageable);
-
-    Optional<Trip> findByIdAndCreatedBy(Long id, String createdBy);
+    Trip findByIdAndCreatedBy(Long id, String createdBy);
 }

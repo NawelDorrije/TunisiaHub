@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { AdminStats } from '../models';
+import { AdminStats } from '../../../models/Carpooling/carpooling';
 import { CarpoolingDataService } from '../services/carpooling-data.service';
 
 @Component({

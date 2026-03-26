@@ -1,114 +1,59 @@
-package org.example.backend_tunisiahub.carpooling.controller;
+package org.example.backend_tunisiahub.Controllers.Carpooling;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotBlank;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.example.backend_tunisiahub.carpooling.entity.Vehicle;
-import org.example.backend_tunisiahub.carpooling.service.IVehicleService;
-import org.example.backend_tunisiahub.shared.exception.ApiException;
+import lombok.AllArgsConstructor;
+import org.example.backend_tunisiahub.Entities.Carpooling.Vehicle;
+import org.example.backend_tunisiahub.Services.Carpooling.IVehicleService;
 import org.example.backend_tunisiahub.shared.security.CurrentUserResolver;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/driver/vehicles")
-@RequiredArgsConstructor
-@Slf4j
+@AllArgsConstructor
 @Tag(name = "Driver Vehicles")
 public class VehicleController {
 
-    private final IVehicleService vehicleService;
-    private final CurrentUserResolver currentUserResolver;
+    IVehicleService vehicleService;
+    CurrentUserResolver currentUserResolver;
 
     @PostMapping
     @Operation(summary = "Create vehicle")
-    public ResponseEntity<Vehicle> createVehicle(@Valid @RequestBody VehicleWriteRequest request,
-                                                 HttpServletRequest httpRequest) {
-        ensureUserRole(httpRequest);
+    public Vehicle addVehicle(@RequestBody Vehicle request, HttpServletRequest httpRequest) {
         Long currentUserId = currentUserResolver.getUserId(httpRequest);
-        log.info("Create vehicle request received for userId={}, model={}, plateNumber={}, color={}",
-            currentUserId,
-            request.model(),
-            request.plateNumber(),
-            request.color());
-        Vehicle response = vehicleService.createVehicle(toVehicle(request), currentUserId);
-        log.info("Create vehicle succeeded for userId={}, vehicleId={}", currentUserId, response.getId());
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+        return vehicleService.addVehicle(request, currentUserId);
     }
 
     @GetMapping
     @Operation(summary = "List my vehicles")
-    public Page<Vehicle> getMyVehicles(HttpServletRequest request,
-                                       @RequestParam(defaultValue = "0") int page,
-                                       @RequestParam(defaultValue = "10") int size) {
-        ensureUserRole(request);
+    public List<Vehicle> retrieveAllVehicles(HttpServletRequest request) {
         Long currentUserId = currentUserResolver.getUserId(request);
-        return vehicleService.getMyVehicles(currentUserId, PageRequest.of(page, size));
+        return vehicleService.retrieveAllVehicles(currentUserId);
     }
 
     @GetMapping("/{id}")
     @Operation(summary = "Get my vehicle details")
-    public Vehicle getVehicle(@PathVariable Long id, HttpServletRequest request) {
-        ensureUserRole(request);
+    public Vehicle retrieveVehicle(@PathVariable Long id, HttpServletRequest request) {
         Long currentUserId = currentUserResolver.getUserId(request);
-        return vehicleService.getVehicle(id, currentUserId);
+        return vehicleService.retrieveVehicle(id, currentUserId);
     }
 
     @PutMapping("/{id}")
     @Operation(summary = "Update vehicle")
-    public Vehicle updateVehicle(@PathVariable Long id,
-                                 @Valid @RequestBody VehicleWriteRequest payload,
+    public Vehicle modifyVehicle(@PathVariable Long id,
+                                 @RequestBody Vehicle payload,
                                  HttpServletRequest request) {
-        ensureUserRole(request);
         Long currentUserId = currentUserResolver.getUserId(request);
-        return vehicleService.updateVehicle(id, currentUserId, toVehicle(payload));
+        return vehicleService.modifyVehicle(id, currentUserId, payload);
     }
 
     @DeleteMapping("/{id}")
     @Operation(summary = "Delete vehicle")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteVehicle(@PathVariable Long id, HttpServletRequest request) {
-        ensureUserRole(request);
         Long currentUserId = currentUserResolver.getUserId(request);
-        vehicleService.deleteVehicle(id, currentUserId);
-    }
-
-    private void ensureUserRole(HttpServletRequest request) {
-        String role = currentUserResolver.getRole(request);
-        if (!"USER".equals(role)) {
-            throw new ApiException(HttpStatus.FORBIDDEN, "Only users with USER role can perform this action");
-        }
-    }
-
-    private Vehicle toVehicle(VehicleWriteRequest payload) {
-        Vehicle vehicle = new Vehicle();
-        vehicle.setModel(payload.model());
-        vehicle.setPlateNumber(payload.plateNumber());
-        vehicle.setColor(payload.color());
-        return vehicle;
-    }
-
-
-    
-    private record VehicleWriteRequest(
-            @NotBlank String model,
-            @NotBlank String plateNumber,
-            @NotBlank String color
-    ) {
-    }
-
-    private record VehicleView(
-            Long id,
-            String model,
-            String plateNumber,
-            String color
-    ) {
+        vehicleService.removeVehicle(id, currentUserId);
     }
 }

@@ -1,35 +1,21 @@
-package org.example.backend_tunisiahub.carpooling.service;
+package org.example.backend_tunisiahub.Services.Carpooling;
 
-import org.example.backend_tunisiahub.carpooling.entity.Trip;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
+import org.example.backend_tunisiahub.Entities.Carpooling.Trip;
 
 import java.time.LocalDate;
 import java.util.List;
 
 public interface ITripService {
 
-    Trip createTrip(Trip request, Long driverId);
+    List<Trip> retrieveAllTrips(String departurePoint, String destination, LocalDate date, Integer seatsRequired);
 
-    List<Trip> searchTrips(String departurePoint, String destination, LocalDate date);
+    Trip retrieveTrip(Long id);
 
-    Page<Trip> searchPublicTrips(String departurePoint,
-                                 String destination,
-                                 LocalDate date,
-                                 Integer seatsRequired,
-                                 Pageable pageable);
+    List<Trip> retrieveMyTrips(Long driverId);
 
-    Trip getTripById(Long id);
+    Trip addTrip(Trip trip, Long driverId);
 
-    Trip getPublicTripById(Long id);
-
-    Page<Trip> getMyTrips(Long driverId, Pageable pageable);
-
-    Trip getMyTripById(Long tripId, Long driverId);
-
-    List<Trip> getMyTripsForLegacyClient(Long driverId);
+    Trip modifyTrip(Long tripId, Trip trip, Long currentUserId);
 
     Trip cancelTrip(Long tripId, Long currentUserId);
-
-    Trip updateTrip(Long tripId, Long currentUserId, Trip request);
 }

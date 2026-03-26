@@ -1,8 +1,7 @@
 import { Component, OnInit } from '@angular/core';
-import { inject } from '@angular/core';
-import { FormBuilder, Validators } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { Trip } from '../models';
+import { Trip } from '../../../models/Carpooling/carpooling';
 import { CarpoolingDataService } from '../services/carpooling-data.service';
 
 @Component({
@@ -11,27 +10,28 @@ import { CarpoolingDataService } from '../services/carpooling-data.service';
   styleUrls: ['./edit-trip.component.css'],
 })
 export class EditTripComponent implements OnInit {
-  private readonly fb = inject(FormBuilder);
-
   trip?: Trip;
   error = '';
   success = '';
 
-  readonly editForm = this.fb.nonNullable.group({
-    departure: ['', [Validators.required]],
-    destination: ['', [Validators.required]],
-    departureDateTime: ['', [Validators.required]],
-    pricePerSeat: [0, [Validators.required, Validators.min(0)]],
-    seatsTotal: [1, [Validators.required, Validators.min(1)]],
-    vehicleInfo: [''],
-    meetingPoint: [''],
-  });
+  editForm!: FormGroup;
 
   constructor(
+    private fb: FormBuilder,
     private readonly route: ActivatedRoute,
     private readonly router: Router,
     private readonly dataService: CarpoolingDataService,
-  ) {}
+  ) {
+    this.editForm = this.fb.group({
+      departure: ['', [Validators.required]],
+      destination: ['', [Validators.required]],
+      departureDateTime: ['', [Validators.required]],
+      pricePerSeat: [0, [Validators.required, Validators.min(0)]],
+      seatsTotal: [1, [Validators.required, Validators.min(1)]],
+      vehicleInfo: [''],
+      meetingPoint: [''],
+    });
+  }
 
   ngOnInit(): void {
     const id = Number(this.route.snapshot.paramMap.get('id'));

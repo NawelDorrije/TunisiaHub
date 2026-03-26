@@ -1,6 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { inject } from '@angular/core';
-import { FormBuilder, Validators } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { CarpoolingDataService } from '../services/carpooling-data.service';
 
@@ -10,21 +9,22 @@ import { CarpoolingDataService } from '../services/carpooling-data.service';
   styleUrls: ['./report-complaint.component.css'],
 })
 export class ReportComplaintComponent implements OnInit {
-  private readonly fb = inject(FormBuilder);
-
   success = '';
   error = '';
 
-  readonly complaintForm = this.fb.nonNullable.group({
-    tripId: [0, [Validators.required, Validators.min(1)]],
-    bookingId: [0],
-    description: ['', [Validators.required, Validators.minLength(10)]],
-  });
+  complaintForm!: FormGroup;
 
   constructor(
+    private fb: FormBuilder,
     private readonly route: ActivatedRoute,
     private readonly dataService: CarpoolingDataService,
-  ) {}
+  ) {
+    this.complaintForm = this.fb.group({
+      tripId: [0, [Validators.required, Validators.min(1)]],
+      bookingId: [0],
+      description: ['', [Validators.required, Validators.minLength(10)]],
+    });
+  }
 
   ngOnInit(): void {
     const tripId = Number(this.route.snapshot.queryParamMap.get('tripId') ?? 0);

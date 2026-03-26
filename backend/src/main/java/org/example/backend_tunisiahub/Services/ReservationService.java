@@ -2,6 +2,7 @@ package org.example.backend_tunisiahub.Services;
 
 import lombok.RequiredArgsConstructor;
 import org.example.backend_tunisiahub.Entities.Reservation;
+import org.example.backend_tunisiahub.Entities.ReservationType;
 import org.example.backend_tunisiahub.Repositories.ReservationRepository;
 import org.springframework.stereotype.Service;
 
@@ -25,6 +26,7 @@ public class ReservationService implements IReservationService {
 
     @Override
     public Reservation addReservation(Reservation reservation) {
+        prepareReservation(reservation);
         return reservationRepository.save(reservation);
     }
 
@@ -35,6 +37,17 @@ public class ReservationService implements IReservationService {
 
     @Override
     public Reservation modifyReservation(Reservation reservation) {
+        prepareReservation(reservation);
         return reservationRepository.save(reservation);
+    }
+
+    private void prepareReservation(Reservation reservation) {
+        if (reservation.getNumberOfPeople() == null) {
+            if (reservation.getType() == ReservationType.TripReservation) {
+                reservation.setNumberOfPeople(1);
+            } else {
+                reservation.setNumberOfPeople(0);
+            }
+        }
     }
 }

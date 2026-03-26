@@ -12,7 +12,7 @@ import {
   ComplaintWithContext,
   Trip,
   TripSearchFilters,
-} from '../models';
+} from '../../../models/Carpooling/carpooling';
 
 interface TripApi {
   id: number;
@@ -23,9 +23,8 @@ interface TripApi {
   seatsTotal: number;
   seatsAvailable: number;
   status: string;
-  createdAt: string;
   createdBy: string;
-  vehicleId?: number;
+  vehicle?: VehicleApi;
 }
 
 interface ReservationApi {
@@ -97,21 +96,17 @@ export class CarpoolingDataService {
   }
 
   getMyTrips(): Observable<Trip[]> {
-    const params = new HttpParams().set('page', 0).set('size', 100);
     return this.http
-      .get<{ content: TripApi[] }>(`${this.baseUrl}/api/driver/trips`, {
-        params,
+      .get<TripApi[]>(`${this.baseUrl}/api/driver/trips`, {
         headers: this.userHeaders(),
       })
       .pipe(
-        map((response) =>
-          (response.content ?? []).map((trip) => this.mapTrip(trip)),
-        ),
+        map((response) => (response ?? []).map((trip) => this.mapTrip(trip))),
       );
   }
 
   searchTrips(filters: TripSearchFilters): Observable<Trip[]> {
-    let params = new HttpParams().set('page', 0).set('size', 100);
+    let params = new HttpParams();
     if (filters.departure) {
       params = params.set('departurePoint', filters.departure);
     }
@@ -126,13 +121,9 @@ export class CarpoolingDataService {
     }
 
     return this.http
-      .get<{
-        content: TripApi[];
-      }>(`${this.baseUrl}/api/carpooling/trips`, { params })
+      .get<TripApi[]>(`${this.baseUrl}/api/carpooling/trips`, { params })
       .pipe(
-        map((response) =>
-          (response.content ?? []).map((trip) => this.mapTrip(trip)),
-        ),
+        map((response) => (response ?? []).map((trip) => this.mapTrip(trip))),
       );
   }
 
@@ -147,7 +138,7 @@ export class CarpoolingDataService {
       departureDateTime: payload.departureDateTime,
       price: payload.pricePerSeat,
       seatsTotal: payload.seatsTotal,
-      vehicleId: payload.vehicleId,
+      vehicle: payload.vehicleId ? { id: payload.vehicleId } : undefined,
     };
 
     return this.http
@@ -197,7 +188,7 @@ export class CarpoolingDataService {
             patch.departureDateTime ?? existing.departureDateTime,
           price: patch.pricePerSeat ?? existing.pricePerSeat,
           seatsTotal: patch.seatsTotal ?? existing.seatsTotal,
-          vehicleId: patch.vehicleId,
+          vehicle: patch.vehicleId ? { id: patch.vehicleId } : undefined,
         };
 
         return this.http
@@ -219,7 +210,7 @@ export class CarpoolingDataService {
 
   cancelTrip(tripId: number): Observable<{ ok: boolean; error?: string }> {
     return this.http
-      .patch<TripApi>(
+      .put<TripApi>(
         `${this.baseUrl}/api/driver/trips/${tripId}/cancel`,
         {},
         { headers: this.userHeaders() },
@@ -413,15 +404,12 @@ export class CarpoolingDataService {
 
   // Vehicle Management API Methods
   getMyVehicles(): Observable<Vehicle[]> {
-    const params = new HttpParams().set('page', 0).set('size', 100);
     return this.http
-      .get<{
-        content: VehicleApi[];
-      }>(`${this.baseUrl}/api/driver/vehicles`, { params, headers: this.userHeaders() })
+      .get<VehicleApi[]>(`${this.baseUrl}/api/driver/vehicles`, {
+        headers: this.userHeaders(),
+      })
       .pipe(
-        map((response) =>
-          (response.content ?? []).map((v) => this.mapVehicle(v)),
-        ),
+        map((response) => (response ?? []).map((v) => this.mapVehicle(v))),
         catchError(() => of([])),
       );
   }
@@ -529,10 +517,10 @@ export class CarpoolingDataService {
       seatsTotal: apiTrip.seatsTotal,
       seatsAvailable: apiTrip.seatsAvailable,
       ownerUserId: Number.isFinite(ownerUserId) ? ownerUserId : 0,
-      vehicleInfo: apiTrip.vehicleId
-        ? `Vehicle #${apiTrip.vehicleId}`
+      vehicleInfo: apiTrip.vehicle?.id
+        ? `Vehicle #${apiTrip.vehicle.id}`
         : undefined,
-      status: apiTrip.status === 'CANCELED' ? 'CANCELED' : 'ACTIVE',
+      status: apiTrip.status?.toUpperCase() === 'CANCELED' ? 'CANCELED' : 'ACTIVE',
     };
   }
 

@@ -1,8 +1,7 @@
 import { Component, OnInit } from '@angular/core';
-import { inject } from '@angular/core';
-import { FormBuilder, Validators } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { Trip } from '../models';
+import { Trip } from '../../../models/Carpooling/carpooling';
 import { CarpoolingDataService } from '../services/carpooling-data.service';
 
 @Component({
@@ -11,25 +10,23 @@ import { CarpoolingDataService } from '../services/carpooling-data.service';
   styleUrls: ['./search-rides.component.css'],
 })
 export class SearchRidesComponent implements OnInit {
-  private readonly fb = inject(FormBuilder);
-
-  readonly searchForm = this.fb.nonNullable.group({
-    departure: [''],
-    destination: [''],
-    date: [''],
-    seatsNeeded: [
-      1,
-      [Validators.required, Validators.min(1), Validators.max(8)],
-    ],
-  });
+  searchForm!: FormGroup;
 
   rides: Trip[] = [];
 
   constructor(
+    private fb: FormBuilder,
     private readonly route: ActivatedRoute,
     private readonly router: Router,
     private readonly dataService: CarpoolingDataService,
-  ) {}
+  ) {
+    this.searchForm = this.fb.group({
+      departure: [''],
+      destination: [''],
+      date: [''],
+      seatsNeeded: [1, [Validators.required, Validators.min(1), Validators.max(8)]],
+    });
+  }
 
   ngOnInit(): void {
     const params = this.route.snapshot.queryParamMap;

@@ -1,18 +1,18 @@
-package org.example.backend_tunisiahub.carpooling.service;
+package org.example.backend_tunisiahub.Services.Carpooling;
 
-import org.example.backend_tunisiahub.carpooling.entity.Vehicle;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
+import org.example.backend_tunisiahub.Entities.Carpooling.Vehicle;
+
+import java.util.List;
 
 public interface IVehicleService {
 
-    Vehicle createVehicle(Vehicle request, Long ownerId);
+    List<Vehicle> retrieveAllVehicles(Long ownerId);
 
-    Page<Vehicle> getMyVehicles(Long ownerId, Pageable pageable);
+    Vehicle retrieveVehicle(Long id, Long ownerId);
 
-    Vehicle getVehicle(Long id, Long ownerId);
+    Vehicle addVehicle(Vehicle request, Long ownerId);
 
-    Vehicle updateVehicle(Long id, Long ownerId, Vehicle request);
+    Vehicle modifyVehicle(Long id, Long ownerId, Vehicle request);
 
-    void deleteVehicle(Long id, Long ownerId);
+    void removeVehicle(Long id, Long ownerId);
 }

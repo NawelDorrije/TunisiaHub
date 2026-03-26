@@ -1,33 +1,42 @@
-package org.example.backend_tunisiahub.carpooling.entity;
+package org.example.backend_tunisiahub.Entities.Carpooling;
 
-import jakarta.persistence.*;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
+import lombok.AccessLevel;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lombok.experimental.FieldDefaults;
 
 import java.util.List;
 
 @Entity
-@Table(name = "vehicles", uniqueConstraints = @UniqueConstraint(columnNames = "plateNumber"))
 @Getter
 @Setter
+@FieldDefaults(level = AccessLevel.PRIVATE)
+@Table(name = "vehicles", uniqueConstraints = @UniqueConstraint(columnNames = "plateNumber"))
+@NoArgsConstructor
 public class Vehicle {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    Long id;
 
-    @Column(nullable = false)
-    private String model;
+    String model;
 
-    @Column(nullable = false, unique = true)
-    private String plateNumber;
+    String plateNumber;
 
-    @Column(nullable = false)
-    private String color;
+    String color;
 
-    @Column(nullable = false)
-    private String ownerId;
+    String ownerId;
 
     @OneToMany(mappedBy = "vehicle")
-    private List<Trip> trips;
+    @JsonIgnore
+    List<Trip> trips;
 }

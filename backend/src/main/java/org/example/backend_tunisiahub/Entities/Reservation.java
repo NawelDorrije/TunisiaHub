@@ -1,12 +1,13 @@
 package org.example.backend_tunisiahub.Entities;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.FieldDefaults;
-import org.example.backend_tunisiahub.carpooling.entity.Trip;
+import org.example.backend_tunisiahub.Entities.Carpooling.Trip;
 import org.example.backend_tunisiahub.Entities.User.User;
 
 import org.example.backend_tunisiahub.Entities.Camping.Spot;
@@ -34,6 +35,9 @@ public class Reservation {
 
     Double totalPrice;
 
+    @Column(name = "number_of_people", nullable = true)
+    Integer numberOfPeople;
+
     @Enumerated(EnumType.STRING)
     ReservationType type;
 
@@ -50,9 +54,11 @@ public class Reservation {
     User user;
 
     @OneToMany(mappedBy = "reservation")
+    @JsonIgnore
     List<Complaint> complaints;
 
     @OneToOne(mappedBy = "reservation")
+    @JsonIgnore
     Review review;
 
 }

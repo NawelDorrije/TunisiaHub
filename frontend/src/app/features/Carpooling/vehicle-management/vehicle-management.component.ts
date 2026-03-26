@@ -61,32 +61,16 @@ export class VehicleManagementComponent implements OnInit {
   }
 
   toggleAddForm(): void {
-    console.debug('[VehicleManagement] Add vehicle button clicked', {
-      wasOpen: this.showAddForm,
-      vehiclesCount: this.vehicles.length,
-    });
     this.showAddForm = !this.showAddForm;
     if (!this.showAddForm) {
-      console.debug(
-        '[VehicleManagement] Add vehicle form closed, resetting form',
-      );
       this.addVehicleForm.reset();
       this.error = '';
-    } else {
-      console.debug('[VehicleManagement] Add vehicle form opened');
     }
   }
 
   addVehicle(): void {
-    console.debug('[VehicleManagement] addVehicle triggered', {
-      formValid: this.addVehicleForm.valid,
-      formValue: this.addVehicleForm.getRawValue(),
-    });
     this.error = '';
     if (this.addVehicleForm.invalid) {
-      console.warn(
-        '[VehicleManagement] addVehicle blocked due to invalid form',
-      );
       this.addVehicleForm.markAllAsTouched();
       return;
     }
@@ -100,10 +84,6 @@ export class VehicleManagementComponent implements OnInit {
       })
       .subscribe({
         next: (vehicle: Vehicle) => {
-          console.info(
-            '[VehicleManagement] Vehicle created successfully',
-            vehicle,
-          );
           this.vehicles.push(vehicle);
           this.addVehicleForm.reset();
           this.showAddForm = false;
@@ -111,7 +91,6 @@ export class VehicleManagementComponent implements OnInit {
           setTimeout(() => (this.successMessage = ''), 3000);
         },
         error: (err: unknown) => {
-          console.error('[VehicleManagement] Vehicle creation failed', err);
           this.error = this.extractErrorMessage(err, 'Failed to add vehicle');
         },
       });

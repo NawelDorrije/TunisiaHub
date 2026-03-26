@@ -1,0 +1,81 @@
+[INFO] Scanning for projects...
+[INFO] 
+[INFO] -------------------< org.example:backend_TunisiaHub >-------------------
+[INFO] Building backend_TunisiaHub 0.0.1-SNAPSHOT
+[INFO]   from pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] >>> spring-boot:3.5.10:run (default-cli) > test-compile @ backend_TunisiaHub >>>
+[INFO] 
+[INFO] --- resources:3.3.1:resources (default-resources) @ backend_TunisiaHub ---
+[INFO] Copying 1 resource from src/main/resources to target/classes
+[INFO] Copying 0 resource from src/main/resources to target/classes
+[INFO] 
+[INFO] --- compiler:3.14.1:compile (default-compile) @ backend_TunisiaHub ---
+[INFO] Nothing to compile - all classes are up to date.
+[INFO] 
+[INFO] --- resources:3.3.1:testResources (default-testResources) @ backend_TunisiaHub ---
+[INFO] Copying 1 resource from src/test/resources to target/test-classes
+[INFO] 
+[INFO] --- compiler:3.14.1:testCompile (default-testCompile) @ backend_TunisiaHub ---
+[INFO] Nothing to compile - all classes are up to date.
+[INFO] 
+[INFO] <<< spring-boot:3.5.10:run (default-cli) < test-compile @ backend_TunisiaHub <<<
+[INFO] 
+[INFO] 
+[INFO] --- spring-boot:3.5.10:run (default-cli) @ backend_TunisiaHub ---
+[INFO] Attaching agents: []
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+
+ :: Spring Boot ::               (v3.5.10)
+
+2026-03-26T01:10:30.943+01:00  INFO 42250 --- [TunisiaHub_backend] [           main] o.e.b.BackendTunisiaHubApplication       : Starting BackendTunisiaHubApplication using Java 21 with PID 42250 (/Users/souhir/final/TunisiaHub/backend/target/classes started by souhir in /Users/souhir/final/TunisiaHub/backend)
+2026-03-26T01:10:30.948+01:00  INFO 42250 --- [TunisiaHub_backend] [           main] o.e.b.BackendTunisiaHubApplication       : No active profile set, falling back to 1 default profile: "default"
+2026-03-26T01:10:32.967+01:00  INFO 42250 --- [TunisiaHub_backend] [           main] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-03-26T01:10:33.244+01:00  INFO 42250 --- [TunisiaHub_backend] [           main] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 251 ms. Found 7 JPA repository interfaces.
+2026-03-26T01:10:34.284+01:00  INFO 42250 --- [TunisiaHub_backend] [           main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port 8089 (http)
+2026-03-26T01:10:34.751+01:00  INFO 42250 --- [TunisiaHub_backend] [           main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2026-03-26T01:10:34.760+01:00  INFO 42250 --- [TunisiaHub_backend] [           main] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/10.1.50]
+2026-03-26T01:10:35.061+01:00  INFO 42250 --- [TunisiaHub_backend] [           main] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext
+2026-03-26T01:10:35.158+01:00  INFO 42250 --- [TunisiaHub_backend] [           main] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 4032 ms
+2026-03-26T01:10:35.640+01:00  INFO 42250 --- [TunisiaHub_backend] [           main] o.hibernate.jpa.internal.util.LogHelper  : HHH000204: Processing PersistenceUnitInfo [name: default]
+2026-03-26T01:10:35.791+01:00  INFO 42250 --- [TunisiaHub_backend] [           main] org.hibernate.Version                    : HHH000412: Hibernate ORM core version 6.6.41.Final
+2026-03-26T01:10:35.860+01:00  INFO 42250 --- [TunisiaHub_backend] [           main] o.h.c.internal.RegionFactoryInitiator    : HHH000026: Second-level cache disabled
+2026-03-26T01:10:36.401+01:00  INFO 42250 --- [TunisiaHub_backend] [           main] o.s.o.j.p.SpringPersistenceUnitInfo      : No LoadTimeWeaver setup: ignoring JPA class transformer
+2026-03-26T01:10:36.450+01:00  INFO 42250 --- [TunisiaHub_backend] [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
+2026-03-26T01:10:37.083+01:00  INFO 42250 --- [TunisiaHub_backend] [           main] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@4449a60b
+2026-03-26T01:10:37.090+01:00  INFO 42250 --- [TunisiaHub_backend] [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.
+2026-03-26T01:10:37.189+01:00  WARN 42250 --- [TunisiaHub_backend] [           main] org.hibernate.dialect.Dialect            : HHH000511: The 5.5.5 version for [org.hibernate.dialect.MySQLDialect] is no longer supported, hence certain features may not work properly. The minimum supported version is 8.0.0. Check the community dialects project for available legacy versions.
+2026-03-26T01:10:37.203+01:00  WARN 42250 --- [TunisiaHub_backend] [           main] org.hibernate.orm.deprecation            : HHH90000025: MySQLDialect does not need to be specified explicitly using 'hibernate.dialect' (remove the property setting and it will be selected by default)
+2026-03-26T01:10:37.228+01:00  INFO 42250 --- [TunisiaHub_backend] [           main] org.hibernate.orm.connections.pooling    : HHH10001005: Database info:
+	Database JDBC URL [Connecting through datasource 'HikariDataSource (HikariPool-1)']
+	Database driver: undefined/unknown
+	Database version: 5.5.5
+	Autocommit mode: undefined/unknown
+	Isolation level: undefined/unknown
+	Minimum pool size: undefined/unknown
+	Maximum pool size: undefined/unknown
+2026-03-26T01:10:39.896+01:00  INFO 42250 --- [TunisiaHub_backend] [           main] o.h.e.t.j.p.i.JtaPlatformInitiator       : HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2026-03-26T01:10:40.159+01:00  INFO 42250 --- [TunisiaHub_backend] [           main] j.LocalContainerEntityManagerFactoryBean : Initialized JPA EntityManagerFactory for persistence unit 'default'
+2026-03-26T01:10:40.967+01:00  WARN 42250 --- [TunisiaHub_backend] [           main] JpaBaseConfiguration$JpaWebConfiguration : spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+2026-03-26T01:10:41.787+01:00  INFO 42250 --- [TunisiaHub_backend] [           main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port 8089 (http) with context path '/'
+2026-03-26T01:10:41.799+01:00  INFO 42250 --- [TunisiaHub_backend] [           main] o.e.b.BackendTunisiaHubApplication       : Started BackendTunisiaHubApplication in 11.865 seconds (process running for 13.071)
+2026-03-26T01:10:41.802+01:00  INFO 42250 --- [TunisiaHub_backend] [ionShutdownHook] o.s.b.w.e.tomcat.GracefulShutdown        : Commencing graceful shutdown. Waiting for active requests to complete
+2026-03-26T01:10:41.802+01:00  WARN 42250 --- [TunisiaHub_backend] [           main] o.s.core.events.SpringDocAppInitializer  : SpringDoc /v3/api-docs endpoint is enabled by default. To disable it in production, set the property 'springdoc.api-docs.enabled=false'
+2026-03-26T01:10:41.802+01:00  WARN 42250 --- [TunisiaHub_backend] [           main] o.s.core.events.SpringDocAppInitializer  : SpringDoc /swagger-ui.html endpoint is enabled by default. To disable it in production, set the property 'springdoc.swagger-ui.enabled=false'
+2026-03-26T01:10:41.809+01:00  INFO 42250 --- [TunisiaHub_backend] [tomcat-shutdown] o.s.b.w.e.tomcat.GracefulShutdown        : Graceful shutdown complete
+2026-03-26T01:10:41.813+01:00  INFO 42250 --- [TunisiaHub_backend] [ionShutdownHook] j.LocalContainerEntityManagerFactoryBean : Closing JPA EntityManagerFactory for persistence unit 'default'
+2026-03-26T01:10:41.816+01:00  INFO 42250 --- [TunisiaHub_backend] [ionShutdownHook] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Shutdown initiated...
+2026-03-26T01:10:41.828+01:00  INFO 42250 --- [TunisiaHub_backend] [ionShutdownHook] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Shutdown completed.
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD SUCCESS
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  17.485 s
+[INFO] Finished at: 2026-03-26T01:10:41+01:00
+[INFO] ------------------------------------------------------------------------

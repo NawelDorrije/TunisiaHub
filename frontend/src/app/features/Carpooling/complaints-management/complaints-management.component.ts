@@ -1,5 +1,8 @@
 import { Component, OnInit } from '@angular/core';
-import { ComplaintStatus, ComplaintWithContext } from '../models';
+import {
+  ComplaintStatus,
+  ComplaintWithContext,
+} from '../../../models/Carpooling/carpooling';
 import { CarpoolingDataService } from '../services/carpooling-data.service';
 
 @Component({

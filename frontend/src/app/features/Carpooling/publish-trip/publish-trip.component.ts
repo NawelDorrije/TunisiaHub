@@ -1,7 +1,6 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, OnInit } from '@angular/core';
-import { inject } from '@angular/core';
-import { FormBuilder, Validators } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import {
   CarpoolingDataService,
@@ -14,22 +13,9 @@ import {
   styleUrls: ['./publish-trip.component.css'],
 })
 export class PublishTripComponent implements OnInit {
-  private readonly fb = inject(FormBuilder);
+  publishForm!: FormGroup;
 
-  readonly publishForm = this.fb.nonNullable.group({
-    departure: ['', [Validators.required]],
-    destination: ['', [Validators.required]],
-    departureDateTime: ['', [Validators.required]],
-    pricePerSeat: [0, [Validators.required, Validators.min(0)]],
-    seatsTotal: [1, [Validators.required, Validators.min(1)]],
-    meetingPoint: [''],
-  });
-
-  vehicleForm = this.fb.nonNullable.group({
-    model: ['', [Validators.required]],
-    plateNumber: ['', [Validators.required]],
-    color: ['', [Validators.required]],
-  });
+  vehicleForm!: FormGroup;
 
   error = '';
   success = '';
@@ -41,9 +27,25 @@ export class PublishTripComponent implements OnInit {
   publishingTrip = false;
 
   constructor(
+    private fb: FormBuilder,
     private readonly dataService: CarpoolingDataService,
     private readonly router: Router,
-  ) {}
+  ) {
+    this.publishForm = this.fb.group({
+      departure: ['', [Validators.required]],
+      destination: ['', [Validators.required]],
+      departureDateTime: ['', [Validators.required]],
+      pricePerSeat: [0, [Validators.required, Validators.min(0)]],
+      seatsTotal: [1, [Validators.required, Validators.min(1)]],
+      meetingPoint: [''],
+    });
+
+    this.vehicleForm = this.fb.group({
+      model: ['', [Validators.required]],
+      plateNumber: ['', [Validators.required]],
+      color: ['', [Validators.required]],
+    });
+  }
 
   ngOnInit(): void {
     this.loadVehicles();
@@ -66,27 +68,15 @@ export class PublishTripComponent implements OnInit {
   }
 
   toggleAddVehicleForm(): void {
-    console.debug('[PublishTrip] Add vehicle button clicked', {
-      wasOpen: this.showAddVehicleForm,
-      vehiclesCount: this.vehicles.length,
-    });
     this.showAddVehicleForm = !this.showAddVehicleForm;
     if (!this.showAddVehicleForm) {
-      console.debug('[PublishTrip] Add vehicle form closed, resetting form');
       this.vehicleForm.reset();
-    } else {
-      console.debug('[PublishTrip] Add vehicle form opened');
     }
   }
 
   addVehicle(): void {
-    console.debug('[PublishTrip] addVehicle triggered', {
-      formValid: this.vehicleForm.valid,
-      formValue: this.vehicleForm.getRawValue(),
-    });
     this.error = '';
     if (this.vehicleForm.invalid) {
-      console.warn('[PublishTrip] addVehicle blocked due to invalid form');
       this.vehicleForm.markAllAsTouched();
       return;
     }
@@ -101,7 +91,6 @@ export class PublishTripComponent implements OnInit {
       })
       .subscribe({
         next: (vehicle) => {
-          console.info('[PublishTrip] Vehicle created successfully', vehicle);
           this.vehicles.push(vehicle);
           this.selectedVehicleId = vehicle.id;
           this.vehicleForm.reset();
@@ -109,7 +98,6 @@ export class PublishTripComponent implements OnInit {
           this.creatingVehicle = false;
         },
         error: (err) => {
-          console.error('[PublishTrip] Vehicle creation failed', err);
           this.error = this.extractErrorMessage(err, 'Failed to add vehicle');
           this.creatingVehicle = false;
         },
