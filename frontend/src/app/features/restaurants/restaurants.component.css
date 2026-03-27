@@ -1,0 +1,30 @@
+/* Add custom styles for restaurants component here */
+
+.btn-outline-info:hover {
+  background-color: #0dcaf0;
+  color: white !important;
+  border-color: #0dcaf0;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(13, 202, 240, 0.4);
+}
+
+.btn-outline-warning:hover {
+  background-color: #ff9800;
+  color: white !important;
+  border-color: #ff9800;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(255, 152, 0, 0.4);
+}
+
+.btn {
+  transition: all 0.3s ease;
+}
+
+.card {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1) !important;
+}

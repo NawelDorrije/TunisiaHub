@@ -1,0 +1,55 @@
+<div class="container py-5">
+  <h2 class="text-center mb-4">List of Restaurants</h2>
+
+  <!-- Check if we have restaurants -->
+  <div *ngIf="restaurants.length === 0" class="text-center text-muted">
+    Loading restaurants...
+  </div>
+
+  <!-- Display restaurant cards -->
+  <div class="row g-4">
+    <div class="col-md-4" *ngFor="let restaurant of restaurants">
+      <div class="card h-100 shadow-sm">
+        <!-- <img [src]="restaurant.imageUrl || 'https://via.placeholder.com/300x200'" class="card-img-top" alt="{{restaurant.name}}"> -->
+        <div class="card-body">
+          <h5 class="card-title">{{ restaurant.name }}</h5>
+          <p class="card-text"><i class="bi bi-geo-alt-fill me-2" style="color: #dc3545;"></i>{{ restaurant.address }}</p>
+          <p class="card-text"><small class="text-muted"><i class="bi bi-telephone-fill me-2" style="color: #28a745;"></i>{{ restaurant.phoneNum }}</small></p>
+        </div>
+        <div class="card-footer text-center d-flex gap-2">
+          <button class="btn btn-outline-info flex-grow-1 d-flex align-items-center justify-content-center gap-2" (click)="viewDetails(restaurant)" style="color: #0dcaf0; border-color: #0dcaf0; font-weight: 500; transition: all 0.3s ease;">
+            <i class="bi bi-info-circle-fill"></i><span>Details</span>
+          </button>
+          <button class="btn btn-outline-warning flex-grow-1 d-flex align-items-center justify-content-center gap-2" (click)="viewMenus(restaurant)" style="color: #ff9800; border-color: #ff9800; font-weight: 500; transition: all 0.3s ease;">
+            <i class="bi bi-cup-hot-fill"></i><span>Menus</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Details Modal -->
+<div class="modal fade" id="detailsModal" *ngIf="showDetailsModal" [style.display]="'block'" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Restaurant Details</h5>
+        <button type="button" class="btn-close" (click)="closeDetailsModal()"></button>
+      </div>
+      <div class="modal-body" *ngIf="selectedRestaurant">
+        <p><strong>ID:</strong> {{ selectedRestaurant.id }}</p>
+        <p><strong>Name:</strong> {{ selectedRestaurant.name }}</p>
+        <p><strong>Address:</strong> {{ selectedRestaurant.address }}</p>
+        <p><strong>Email:</strong> {{ selectedRestaurant.email }}</p>
+        <p><strong>Phone Number:</strong> {{ selectedRestaurant.phoneNum }}</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="closeDetailsModal()">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal backdrop -->
+<div class="modal-backdrop fade" *ngIf="showDetailsModal" [style.display]="'block'"></div>

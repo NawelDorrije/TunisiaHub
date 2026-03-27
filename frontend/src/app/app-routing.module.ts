@@ -25,6 +25,20 @@ const routes: Routes = [
     loadChildren: () =>
       import('./features/auth/auth.module').then((m) => m.AuthModule),
   },
+  {
+    path: 'restaurants',
+    loadChildren: () =>
+      import('./features/restaurants/restaurants.module').then(
+        (m) => m.RestaurantsModule,
+      ),
+  },
+  {
+    path: 'menus',
+    loadChildren: () =>
+      import('./features/menus/menus.module').then(
+        (m) => m.MenusModule,
+      ),
+  },
 
   {
     path: '**',

@@ -1,0 +1,62 @@
+﻿<div class="container py-5">
+  <h2 class="text-center mb-5" style="font-size: 2.5rem; font-weight: 700; color: #2c3e50;">🍽️ Our Menus</h2>
+
+  <!-- Check if we have menus -->
+  <div *ngIf="menus.length === 0" class="text-center text-muted">
+    No menus available for this restaurant.
+  </div>
+
+  <!-- Display menu cards -->
+  <div class="row g-4">
+    <div class="col-md-6" *ngFor="let menu of menus">
+      <div 
+        class="card h-100 shadow-sm menu-card" 
+        [ngClass]="{'selected-menu': selectedMenu?.id === menu.id}"
+        (click)="selectMenu(menu)"
+        [title]="menu.name + ' - ' + menu.type">
+        <div class="card-body text-center">
+          <div class="menu-icon mb-3">
+            <i class="bi" [ngClass]="getMenuIcon(menu.type)" style="font-size: 2rem; color: #d4a574;"></i>
+          </div>
+          <h5 class="card-title" style="font-weight: 600; color: #2c3e50;">{{ menu.name }}</h5>
+          <p class="card-text menu-type"><small style="color: #7f8c8d; font-style: italic;">{{ menu.type }}</small></p>
+          <hr class="my-3" style="border-color: #d4a574;">
+          <p class="card-text" style="font-size: 0.9rem; color: #7f8c8d;">{{ selectedMenuItems.length || menu.items?.length || 0 }} items</p>
+          
+          <!-- Hover preview -->
+          <div class="hover-preview mt-3">
+            <small style="color: #d4a574; font-weight: 500;">✨ Click to view items</small>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Selected Menu Details - Restaurant Menu Style -->
+  <div *ngIf="selectedMenu" class="mt-5 menu-details-section">
+    <div class="menu-header text-center mb-5" style="border-bottom: 3px solid #d4a574; padding-bottom: 20px;">
+      <h2 style="font-size: 2rem; font-weight: 700; color: #2c3e50; margin-bottom: 10px;">{{ selectedMenu.name }}</h2>
+      <p style="color: #7f8c8d; font-style: italic;">{{ selectedMenu.type }}</p>
+      <button class="btn btn-outline-danger btn-sm mt-3" (click)="clearSelection()" style="border-color: #d4a574; color: #d4a574;">
+        <i class="bi bi-x-circle"></i> Close Menu
+      </button>
+    </div>
+    
+    <!-- Menu Items will be displayed here -->
+    <div *ngIf="selectedMenuItems.length > 0" class="menu-items">
+      <div class="menu-item-card" *ngFor="let item of selectedMenuItems" style="margin-bottom: 25px; padding-bottom: 20px; border-bottom: 1px dotted #d4a574;">
+        <div class="menu-item-header mb-2">
+          <h5 style="color: #2c3e50; font-weight: 600; margin-bottom: 0;">{{ item.name }}</h5>
+          <i class="bi bi-star-fill" style="color: #d4a574; font-size: 0.8rem;"></i>
+        </div>
+        <p style="color: #7f8c8d; font-style: italic; margin-bottom: 8px; font-size: 0.95rem;">{{ item.description }}</p>
+        <div style="background-color: #f8f9fa; padding: 10px 12px; border-left: 3px solid #d4a574; border-radius: 4px;">
+          <small style="color: #495057;"><strong>🥘 Ingredients:</strong> {{ item.ingredients }}</small>
+        </div>
+      </div>
+    </div>
+    <div *ngIf="selectedMenuItems.length === 0" class="text-center text-muted mt-4">
+      <p style="font-style: italic;">No items in this menu yet.</p>
+    </div>
+  </div>
+</div>
