@@ -38,4 +38,5 @@ public class CampingController {
     public void deleteCamping(@PathVariable Long id) {
         campingService.deleteCamping(id);
     }
+
 }
