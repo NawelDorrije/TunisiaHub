@@ -2,6 +2,7 @@ package org.example.backend_tunisiahub.Controllers.Restaurant;
 
 import lombok.RequiredArgsConstructor;
 import org.example.backend_tunisiahub.Entities.Restaurant.Menu;
+import org.example.backend_tunisiahub.Entities.Restaurant.MenuType;
 import org.example.backend_tunisiahub.Services.Restaurant.IMenuService;
 import org.springframework.web.bind.annotation.*;
 
@@ -17,6 +18,11 @@ public class MenuController {
     @GetMapping
     public List<Menu> getAllMenus() {
         return menuService.retrieveAllMenus();
+    }
+
+    @GetMapping("/types")
+    public MenuType[] getMenuTypes() {
+        return MenuType.values();
     }
 
     @GetMapping("/get/{id}")

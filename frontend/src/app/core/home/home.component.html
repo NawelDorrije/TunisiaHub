@@ -8,7 +8,12 @@
           <i class="{{service.icon}} service-icon mb-3"></i>
           <h5 class="card-title">{{service.title}}</h5>
           <p class="card-text">{{service.description}}</p>
-          <a [routerLink]="service.link" class="btn btn-primary">Explore</a>
+          <div class="d-flex gap-2">
+            <a [routerLink]="service.link" class="btn btn-primary flex-grow-1">Explore</a>
+            <a *ngIf="service.title === 'Restaurants'" [routerLink]="service.link" class="btn btn-success flex-grow-1" title="Add a new restaurant">
+              <i class="bi bi-plus-circle"></i> Add
+            </a>
+          </div>
         </div>
       </div>
     </div>

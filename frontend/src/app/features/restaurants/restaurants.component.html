@@ -1,14 +1,35 @@
 <div class="container py-5">
-  <h2 class="text-center mb-4">List of Restaurants</h2>
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="text-center flex-grow-1">List of Restaurants</h2>
+    <button class="btn btn-success d-flex align-items-center gap-2" (click)="openAddForm()" style="white-space: nowrap;">
+      <i class="bi bi-plus-circle"></i> Add Restaurant
+    </button>
+  </div>
+
+  <!-- Search by Address -->
+  <div class="mb-4">
+    <div class="input-group">
+      <span class="input-group-text" style="background-color: #d4a574; border-color: #d4a574; color: white;">
+        <i class="bi bi-search"></i>
+      </span>
+      <input 
+        type="text" 
+        class="form-control" 
+        placeholder="Search restaurants by address" 
+        [(ngModel)]="searchAddress"
+        style="border-color: #d4a574;">
+    </div>
+  </div>
 
   <!-- Check if we have restaurants -->
-  <div *ngIf="restaurants.length === 0" class="text-center text-muted">
-    Loading restaurants...
+  <div *ngIf="getFilteredRestaurants().length === 0" class="text-center text-muted">
+    <p *ngIf="restaurants.length === 0">Loading restaurants...</p>
+    <p *ngIf="restaurants.length > 0">No restaurants found matching your search.</p>
   </div>
 
   <!-- Display restaurant cards -->
   <div class="row g-4">
-    <div class="col-md-4" *ngFor="let restaurant of restaurants">
+    <div class="col-md-4" *ngFor="let restaurant of getFilteredRestaurants()">
       <div class="card h-100 shadow-sm">
         <!-- <img [src]="restaurant.imageUrl || 'https://via.placeholder.com/300x200'" class="card-img-top" alt="{{restaurant.name}}"> -->
         <div class="card-body">
@@ -30,7 +51,7 @@
 </div>
 
 <!-- Details Modal -->
-<div class="modal fade" id="detailsModal" *ngIf="showDetailsModal" [style.display]="'block'" tabindex="-1">
+<div class="modal fade" id="detailsModal" [ngClass]="{'show': showDetailsModal}" [style.display]="showDetailsModal ? 'block' : 'none'" tabindex="-1">
   <div class="modal-dialog">
     <div class="modal-content">
       <div class="modal-header">
@@ -52,4 +73,78 @@
 </div>
 
 <!-- Modal backdrop -->
-<div class="modal-backdrop fade" *ngIf="showDetailsModal" [style.display]="'block'"></div>
+<div class="modal-backdrop fade" [ngClass]="{'show': showDetailsModal}" *ngIf="showDetailsModal"></div>
+
+<!-- Add Restaurant Modal -->
+<div class="modal fade" id="addRestaurantModal" [ngClass]="{'show': showAddForm}" [style.display]="showAddForm ? 'block' : 'none'" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Add New Restaurant</h5>
+        <button type="button" class="btn-close" (click)="closeAddForm()" [disabled]="isSubmitting"></button>
+      </div>
+      <div class="modal-body">
+        <form>
+          <div class="mb-3">
+            <label for="restaurantName" class="form-label"><strong>Restaurant Name</strong></label>
+            <input 
+              type="text" 
+              class="form-control" 
+              id="restaurantName" 
+              [(ngModel)]="newRestaurant.name" 
+              name="name"
+              placeholder="Enter restaurant name"
+              [disabled]="isSubmitting"
+              required>
+          </div>
+          <div class="mb-3">
+            <label for="restaurantAddress" class="form-label"><strong>Address</strong></label>
+            <input 
+              type="text" 
+              class="form-control" 
+              id="restaurantAddress" 
+              [(ngModel)]="newRestaurant.address" 
+              name="address"
+              placeholder="Enter restaurant address"
+              [disabled]="isSubmitting"
+              required>
+          </div>
+          <div class="mb-3">
+            <label for="restaurantEmail" class="form-label"><strong>Email</strong></label>
+            <input 
+              type="email" 
+              class="form-control" 
+              id="restaurantEmail" 
+              [(ngModel)]="newRestaurant.email" 
+              name="email"
+              placeholder="Enter restaurant email"
+              [disabled]="isSubmitting"
+              required>
+          </div>
+          <div class="mb-3">
+            <label for="restaurantPhone" class="form-label"><strong>Phone Number</strong></label>
+            <input 
+              type="tel" 
+              class="form-control" 
+              id="restaurantPhone" 
+              [(ngModel)]="newRestaurant.phoneNum" 
+              name="phoneNum"
+              placeholder="Enter restaurant phone number"
+              [disabled]="isSubmitting"
+              required>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="closeAddForm()" [disabled]="isSubmitting">Cancel</button>
+        <button type="button" class="btn btn-primary" (click)="submitAddRestaurant()" [disabled]="isSubmitting">
+          <span *ngIf="!isSubmitting"><i class="bi bi-check-circle"></i> Add Restaurant</span>
+          <span *ngIf="isSubmitting"><i class="bi bi-spinner"></i> Adding...</span>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal backdrop for add form -->
+<div class="modal-backdrop fade" [ngClass]="{'show': showAddForm}" *ngIf="showAddForm"></div>

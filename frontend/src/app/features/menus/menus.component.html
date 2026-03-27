@@ -1,5 +1,10 @@
 ﻿<div class="container py-5">
-  <h2 class="text-center mb-5" style="font-size: 2.5rem; font-weight: 700; color: #2c3e50;">🍽️ Our Menus</h2>
+  <div class="d-flex justify-content-between align-items-center mb-5">
+    <h2 style="font-size: 2.5rem; font-weight: 700; color: #2c3e50; margin: 0;">🍽️ Our Menus</h2>
+    <button class="btn btn-success d-flex align-items-center gap-2" (click)="openAddMenuForm()" style="white-space: nowrap;">
+      <i class="bi bi-plus-circle"></i> Add Menu
+    </button>
+  </div>
 
   <!-- Check if we have menus -->
   <div *ngIf="menus.length === 0" class="text-center text-muted">
@@ -32,31 +37,157 @@
     </div>
   </div>
 
-  <!-- Selected Menu Details - Restaurant Menu Style -->
-  <div *ngIf="selectedMenu" class="mt-5 menu-details-section">
-    <div class="menu-header text-center mb-5" style="border-bottom: 3px solid #d4a574; padding-bottom: 20px;">
-      <h2 style="font-size: 2rem; font-weight: 700; color: #2c3e50; margin-bottom: 10px;">{{ selectedMenu.name }}</h2>
-      <p style="color: #7f8c8d; font-style: italic;">{{ selectedMenu.type }}</p>
-      <button class="btn btn-outline-danger btn-sm mt-3" (click)="clearSelection()" style="border-color: #d4a574; color: #d4a574;">
-        <i class="bi bi-x-circle"></i> Close Menu
-      </button>
-    </div>
-    
-    <!-- Menu Items will be displayed here -->
-    <div *ngIf="selectedMenuItems.length > 0" class="menu-items">
-      <div class="menu-item-card" *ngFor="let item of selectedMenuItems" style="margin-bottom: 25px; padding-bottom: 20px; border-bottom: 1px dotted #d4a574;">
-        <div class="menu-item-header mb-2">
-          <h5 style="color: #2c3e50; font-weight: 600; margin-bottom: 0;">{{ item.name }}</h5>
-          <i class="bi bi-star-fill" style="color: #d4a574; font-size: 0.8rem;"></i>
+  <!-- Menu Items Modal -->
+  <div class="modal fade" id="menuItemsModal" [ngClass]="{'show': selectedMenu}" [style.display]="selectedMenu ? 'block' : 'none'" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header" style="border-bottom: 3px solid #d4a574; flex-direction: column; align-items: center; position: relative;">
+          <button type="button" class="btn-close" (click)="clearSelection()" style="position: absolute; top: 15px; right: 15px;"></button>
+          <button type="button" class="btn btn-success btn-sm d-flex align-items-center gap-2" (click)="openAddItemForm()" style="position: absolute; top: 15px; left: 15px; white-space: nowrap;">
+            <i class="bi bi-plus-circle"></i> Add Item
+          </button>
+          <div style="text-align: center; width: 100%;">
+            <h5 class="modal-title" style="color: #2c3e50; font-weight: 700; margin-bottom: 5px;">{{ selectedMenu?.name }}</h5>
+            <small style="color: #7f8c8d; font-style: italic;">{{ selectedMenu?.type }}</small>
+          </div>
         </div>
-        <p style="color: #7f8c8d; font-style: italic; margin-bottom: 8px; font-size: 0.95rem;">{{ item.description }}</p>
-        <div style="background-color: #f8f9fa; padding: 10px 12px; border-left: 3px solid #d4a574; border-radius: 4px;">
-          <small style="color: #495057;"><strong>🥘 Ingredients:</strong> {{ item.ingredients }}</small>
+        <div class="modal-body" style="background: linear-gradient(135deg, #fff 0%, #f8f9fa 100%); max-height: 500px; overflow-y: auto;">
+          <!-- Menu Items will be displayed here -->
+          <div *ngIf="selectedMenuItems.length > 0" class="menu-items">
+            <div class="menu-item-card" *ngFor="let item of selectedMenuItems" style="margin-bottom: 25px; padding-bottom: 20px; border-bottom: 1px dotted #d4a574;">
+              <div class="menu-item-header mb-2">
+                <h5 style="color: #2c3e50; font-weight: 600; margin-bottom: 0;">{{ item.name }}</h5>
+                <i class="bi bi-star-fill" style="color: #d4a574; font-size: 0.8rem;"></i>
+              </div>
+              <p style="color: #7f8c8d; font-style: italic; margin-bottom: 8px; font-size: 0.95rem;">{{ item.description }}</p>
+              <div style="background-color: #f8f9fa; padding: 10px 12px; border-left: 3px solid #d4a574; border-radius: 4px;">
+                <small style="color: #495057;"><strong>🥘 Ingredients:</strong> {{ item.ingredients }}</small>
+              </div>
+            </div>
+          </div>
+          <div *ngIf="selectedMenuItems.length === 0" class="text-center text-muted mt-4">
+            <p style="font-style: italic;">No items in this menu yet.</p>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" (click)="clearSelection()">Close</button>
         </div>
       </div>
     </div>
-    <div *ngIf="selectedMenuItems.length === 0" class="text-center text-muted mt-4">
-      <p style="font-style: italic;">No items in this menu yet.</p>
+  </div>
+
+  <!-- Modal backdrop for menu items -->
+  <div class="modal-backdrop fade" [ngClass]="{'show': selectedMenu}" *ngIf="selectedMenu"></div>
+
+  <!-- Add Menu Modal -->
+  <div class="modal fade" id="addMenuModal" [ngClass]="{'show': showAddMenuForm}" [style.display]="showAddMenuForm ? 'block' : 'none'" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Add New Menu</h5>
+          <button type="button" class="btn-close" (click)="closeAddMenuForm()" [disabled]="isSubmitting"></button>
+        </div>
+        <div class="modal-body">
+          <form>
+            <div class="mb-3">
+              <label for="menuName" class="form-label"><strong>Menu Name</strong></label>
+              <input 
+                type="text" 
+                class="form-control" 
+                id="menuName" 
+                [(ngModel)]="newMenu.name" 
+                name="name"
+                placeholder="Enter menu name"
+                [disabled]="isSubmitting"
+                required>
+            </div>
+            <div class="mb-3">
+              <label for="menuType" class="form-label"><strong>Menu Type</strong></label>
+              <select 
+                class="form-select" 
+                id="menuType" 
+                [(ngModel)]="newMenu.type" 
+                name="type"
+                [disabled]="isSubmitting"
+                required>
+                <option *ngFor="let type of menuTypes" [value]="type">{{ type | titlecase }}</option>
+              </select>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" (click)="closeAddMenuForm()" [disabled]="isSubmitting">Cancel</button>
+          <button type="button" class="btn btn-primary" (click)="submitAddMenu()" [disabled]="isSubmitting">
+            <span *ngIf="!isSubmitting"><i class="bi bi-check-circle"></i> Add Menu</span>
+            <span *ngIf="isSubmitting"><i class="bi bi-spinner"></i> Adding...</span>
+          </button>
+        </div>
+      </div>
     </div>
   </div>
+
+  <!-- Modal backdrop for add menu form -->
+  <div class="modal-backdrop fade" [ngClass]="{'show': showAddMenuForm}" *ngIf="showAddMenuForm"></div>
+
+  <!-- Add Menu Item Modal -->
+  <div class="modal fade" id="addItemModal" [ngClass]="{'show': showAddItemForm}" [style.display]="showAddItemForm ? 'block' : 'none'" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Add New Item to {{ selectedMenu?.name }}</h5>
+          <button type="button" class="btn-close" (click)="closeAddItemForm()" [disabled]="isSubmittingItem"></button>
+        </div>
+        <div class="modal-body">
+          <form>
+            <div class="mb-3">
+              <label for="itemName" class="form-label"><strong>Item Name</strong></label>
+              <input 
+                type="text" 
+                class="form-control" 
+                id="itemName" 
+                [(ngModel)]="newMenuItem.name" 
+                name="name"
+                placeholder="Enter item name"
+                [disabled]="isSubmittingItem"
+                required>
+            </div>
+            <div class="mb-3">
+              <label for="itemDescription" class="form-label"><strong>Description</strong></label>
+              <textarea 
+                class="form-control" 
+                id="itemDescription" 
+                [(ngModel)]="newMenuItem.description" 
+                name="description"
+                placeholder="Enter item description"
+                rows="3"
+                [disabled]="isSubmittingItem"
+                required></textarea>
+            </div>
+            <div class="mb-3">
+              <label for="itemIngredients" class="form-label"><strong>Ingredients</strong></label>
+              <textarea 
+                class="form-control" 
+                id="itemIngredients" 
+                [(ngModel)]="newMenuItem.ingredients" 
+                name="ingredients"
+                placeholder="Enter ingredients (e.g., tomato, cheese, basil)"
+                rows="3"
+                [disabled]="isSubmittingItem"
+                required></textarea>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" (click)="closeAddItemForm()" [disabled]="isSubmittingItem">Cancel</button>
+          <button type="button" class="btn btn-primary" (click)="submitAddItem()" [disabled]="isSubmittingItem">
+            <span *ngIf="!isSubmittingItem"><i class="bi bi-check-circle"></i> Add Item</span>
+            <span *ngIf="isSubmittingItem"><i class="bi bi-spinner"></i> Adding...</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal backdrop for add item form -->
+  <div class="modal-backdrop fade" [ngClass]="{'show': showAddItemForm}" *ngIf="showAddItemForm"></div>
 </div>

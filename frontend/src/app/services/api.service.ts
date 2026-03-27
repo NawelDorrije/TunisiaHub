@@ -49,5 +49,17 @@ export class ApiService {
   getMenuItemsByMenuId(menuId: number): Observable<any> {
     return this.http.get(`${this.BASE_URL}/api/menu-items/by-menu/${menuId}`);
   }
+
+  addMenu(menu: any): Observable<any> {
+    return this.http.post(`${this.BASE_URL}/api/menus/add`, menu);
+  }
+
+  addMenuItem(menuItem: any): Observable<any> {
+    return this.http.post(`${this.BASE_URL}/api/menu-items/add`, menuItem);
+  }
+
+  getMenuTypes(): Observable<any> {
+    return this.http.get(`${this.BASE_URL}/api/menus/types`);
+  }
 }
 

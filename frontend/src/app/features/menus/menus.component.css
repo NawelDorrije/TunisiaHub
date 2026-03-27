@@ -96,3 +96,21 @@
 hr {
   opacity: 0.5;
 }
+
+/* Modal styling */
+.modal {
+  z-index: 1050;
+}
+
+.modal.show {
+  display: block !important;
+}
+
+.modal-backdrop {
+  z-index: 1040;
+}
+
+.modal-backdrop.show {
+  display: block !important;
+  opacity: 0.5;
+}

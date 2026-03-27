@@ -1,5 +1,6 @@
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 
 import { MenusRoutingModule } from './menus-routing.module';
 import { MenusComponent } from './menus.component';
@@ -13,7 +14,8 @@ import { MenuListComponent } from './menu-list/menu-list.component';
   ],
   imports: [
     CommonModule,
-    MenusRoutingModule
+    MenusRoutingModule,
+    FormsModule
   ]
 })
 export class MenusModule { }

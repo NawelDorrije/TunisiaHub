@@ -28,3 +28,21 @@
   transform: translateY(-4px);
   box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1) !important;
 }
+
+/* Modal styling */
+.modal {
+  z-index: 1050;
+}
+
+.modal.show {
+  display: block !important;
+}
+
+.modal-backdrop {
+  z-index: 1040;
+}
+
+.modal-backdrop.show {
+  display: block !important;
+  opacity: 0.5;
+}

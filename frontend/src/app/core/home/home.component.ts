@@ -5,6 +5,7 @@ interface ServiceCard {
   description: string;
   icon: string;
   link: string;
+  showAddButton?: boolean;
 }
 
 @Component({
