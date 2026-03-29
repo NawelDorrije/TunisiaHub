@@ -2,6 +2,7 @@ import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
 import { NotFoundComponent } from './features/not-found/not-found.component';
 import { HomeComponent } from './core/home/home.component';
+import { AuthGuard } from './features/auth/auth.guard';
 
 const routes: Routes = [
   { path: 'home', component: HomeComponent },
@@ -26,10 +27,10 @@ const routes: Routes = [
       import('./features/auth/auth.module').then((m) => m.AuthModule),
   },
    {
-  path: 'accommodations',
-  loadChildren: () =>
-    import('./features/accommodations/accommodations.module')
-      .then(m => m.AccommodationsModule)
+   path: 'accommodations',
+    loadChildren: () =>
+      import('./features/accommodations/accommodations.module')
+        .then(m => m.AccommodationsModule),
 },
   {
     path: '**',
