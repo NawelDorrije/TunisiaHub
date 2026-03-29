@@ -1,1 +1,108 @@
-<p>lieu-detail works!</p>
+<div class="detail-container" *ngIf="!loading && lieu">
+
+  <!-- Back Button -->
+  <button class="back-btn" (click)="goBack()">← Retour aux lieux</button>
+
+  <!-- Hero Image -->
+  <div class="detail-hero">
+    <img
+  [src]="lieu ? getImageUrl(lieu.image) : 'assets/images/lieux/default.jpg'"
+  [alt]="lieu?.nom"
+  (error)="onImageError($event)"
+/>
+    <div class="hero-overlay">
+      <div class="hero-info">
+        <span class="type-badge">{{ lieu.type }}</span>
+        <h1>{{ lieu.nom }}</h1>
+        <p>📍 {{ lieu.ville }}</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="detail-content">
+
+    <!-- Info Cards -->
+    <div class="info-grid">
+      <div class="info-card">
+        <span class="info-icon">📝</span>
+        <div>
+          <h4>Description</h4>
+          <p>{{ lieu.description }}</p>
+        </div>
+      </div>
+
+      <div class="info-card">
+        <span class="info-icon">🕐</span>
+        <div>
+          <h4>Horaires</h4>
+          <p>{{ lieu.horaires }}</p>
+        </div>
+      </div>
+
+      <div class="info-card">
+        <span class="info-icon">🗺️</span>
+        <div>
+          <h4>Coordonnées</h4>
+          <p>Lat: {{ lieu.latitude }} | Long: {{ lieu.longitude }}</p>
+        </div>
+      </div>
+
+      <div class="info-card">
+        <span class="info-icon">🏷️</span>
+        <div>
+          <h4>Type</h4>
+          <p>{{ lieu.type }}</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Activités Section -->
+    <div class="activites-section">
+      <h2 class="section-title">🎯 Activités disponibles</h2>
+
+      <div *ngIf="activites.length === 0" class="no-activites">
+        <p>Aucune activité disponible pour ce lieu.</p>
+      </div>
+
+      <div class="activites-grid" *ngIf="activites.length > 0">
+        <div class="activite-card" *ngFor="let activite of activites">
+          <div class="activite-header">
+            <h3>{{ activite.nomActivite }}</h3>
+            <span class="disponible-badge" [class.disponible]="activite.disponible" [class.indisponible]="!activite.disponible">
+              {{ activite.disponible ? '✅ Disponible' : '❌ Indisponible' }}
+            </span>
+          </div>
+
+          <p class="activite-desc">{{ activite.description }}</p>
+
+          <div class="activite-details">
+            <div class="detail-item">
+              <span class="detail-label">💰 Prix</span>
+              <span class="detail-value">{{ activite.prix }} TND</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">⏱️ Durée</span>
+              <span class="detail-value">{{ activite.duree }} min</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">👥 Capacité</span>
+              <span class="detail-value">{{ activite.capaciteMax }} pers.</span>
+            </div>
+          </div>
+
+          <button class="reserve-btn" [disabled]="!activite.disponible">
+            {{ activite.disponible ? 'Réserver' : 'Non disponible' }}
+          </button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Loading -->
+<div *ngIf="loading" class="loading-detail">
+  <div class="spinner"></div>
+  <p>Chargement du lieu...</p>
+</div>

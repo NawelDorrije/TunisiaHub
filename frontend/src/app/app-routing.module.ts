@@ -31,10 +31,20 @@ const routes: Routes = [
     import('./features/accommodations/accommodations.module')
       .then(m => m.AccommodationsModule)
 },
+
+  {
+      path: 'trendy-places',
+      loadChildren: () =>
+        import('./features/trendy-places/trendy-places.module')
+          .then(m => m.TrendyPlacesModule)
+    },
   {
     path: '**',
     component: NotFoundComponent,
   },
+  
+  
+
 ];
 
 @NgModule({
