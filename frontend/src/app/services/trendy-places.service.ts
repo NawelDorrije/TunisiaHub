@@ -3,14 +3,13 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { Lieu, ActiviteLieu } from '../models/trendy-places/lieu.model';
 
-@Injectable({
-  providedIn: 'root'
-})
+@Injectable({ providedIn: 'root' })
 export class TrendyPlacesService {
   private BASE_URL = 'http://localhost:8089';
 
   constructor(private http: HttpClient) {}
 
+  // Lieux
   getAllLieux(): Observable<Lieu[]> {
     return this.http.get<Lieu[]>(`${this.BASE_URL}/api/lieux`);
   }
@@ -19,7 +18,36 @@ export class TrendyPlacesService {
     return this.http.get<Lieu>(`${this.BASE_URL}/api/lieux/${id}`);
   }
 
+  createLieu(lieu: Lieu): Observable<Lieu> {
+    return this.http.post<Lieu>(`${this.BASE_URL}/api/lieux`, lieu);
+  }
+
+  updateLieu(id: number, lieu: Lieu): Observable<Lieu> {
+    return this.http.put<Lieu>(`${this.BASE_URL}/api/lieux/${id}`, lieu);
+  }
+
+  deleteLieu(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.BASE_URL}/api/lieux/${id}`);
+  }
+
+  // Activités
+  getAllActivites(): Observable<ActiviteLieu[]> {
+    return this.http.get<ActiviteLieu[]>(`${this.BASE_URL}/api/activites`);
+  }
+
   getActivitesByLieu(lieuId: number): Observable<ActiviteLieu[]> {
     return this.http.get<ActiviteLieu[]>(`${this.BASE_URL}/api/activites/lieu/${lieuId}`);
+  }
+
+  createActivite(activite: ActiviteLieu, lieuId: number): Observable<ActiviteLieu> {
+    return this.http.post<ActiviteLieu>(`${this.BASE_URL}/api/activites/lieu/${lieuId}`, activite);
+  }
+
+  updateActivite(id: number, activite: ActiviteLieu, lieuId: number): Observable<ActiviteLieu> {
+    return this.http.put<ActiviteLieu>(`${this.BASE_URL}/api/activites/${id}/lieu/${lieuId}`, activite);
+  }
+
+  deleteActivite(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.BASE_URL}/api/activites/${id}`);
   }
 }

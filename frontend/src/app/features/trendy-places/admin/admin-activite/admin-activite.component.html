@@ -1,0 +1,137 @@
+<div class="admin-container">
+
+  <!-- Header -->
+  <div class="admin-header">
+    <div>
+      <h1>🎯 Gestion des Activités</h1>
+      <p>{{ activites.length }} activité(s) au total</p>
+    </div>
+    <div class="header-actions">
+      <a routerLink="/trendy-places/admin/lieux" class="btn-secondary">🏛️ Gérer les Lieux</a>
+      <button class="btn-add" (click)="openAdd()">+ Ajouter une activité</button>
+    </div>
+  </div>
+
+  <!-- Messages -->
+  <div class="alert success" *ngIf="successMessage">✅ {{ successMessage }}</div>
+  <div class="alert error" *ngIf="errorMessage">❌ {{ errorMessage }}</div>
+
+  <!-- Modal Form -->
+  <div class="modal-overlay" *ngIf="showForm" (click)="closeForm()">
+    <div class="modal-box" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>{{ isEditing ? '✏️ Modifier l\'activité' : '➕ Ajouter une activité' }}</h2>
+        <button class="close-btn" (click)="closeForm()">✕</button>
+      </div>
+
+      <div class="form-grid">
+        <div class="form-group full">
+          <label>Lieu associé *</label>
+          <select [(ngModel)]="selectedLieuId">
+            <option [value]="0">-- Choisir un lieu --</option>
+            <option *ngFor="let lieu of lieux" [value]="lieu.id">{{ lieu.nom }} ({{ lieu.ville }})</option>
+          </select>
+        </div>
+
+        <div class="form-group full">
+          <label>Nom de l'activité</label>
+          <input type="text" [(ngModel)]="form.nomActivite" placeholder="Nom de l'activité" />
+        </div>
+
+        <div class="form-group">
+          <label>Prix (TND)</label>
+          <input type="number" [(ngModel)]="form.prix" placeholder="25" />
+        </div>
+
+        <div class="form-group">
+          <label>Durée (minutes)</label>
+          <input type="number" [(ngModel)]="form.duree" placeholder="120" />
+        </div>
+
+        <div class="form-group">
+          <label>Capacité max</label>
+          <input type="number" [(ngModel)]="form.capaciteMax" placeholder="20" />
+        </div>
+
+        <div class="form-group">
+          <label>Disponible</label>
+          <select [(ngModel)]="form.disponible">
+            <option [ngValue]="true">✅ Oui</option>
+            <option [ngValue]="false">❌ Non</option>
+          </select>
+        </div>
+
+        <div class="form-group full">
+          <label>Description</label>
+          <textarea [(ngModel)]="form.description" rows="3" placeholder="Description..."></textarea>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn-cancel" (click)="closeForm()">Annuler</button>
+        <button class="btn-save" (click)="submit()">
+          {{ isEditing ? 'Modifier' : 'Ajouter' }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Confirm Delete -->
+  <div class="modal-overlay" *ngIf="confirmDeleteId !== null">
+    <div class="confirm-box">
+      <h3>🗑️ Confirmer la suppression</h3>
+      <p>Cette action est irréversible.</p>
+      <div class="confirm-actions">
+        <button class="btn-cancel" (click)="cancelDelete()">Annuler</button>
+        <button class="btn-delete" (click)="deleteActivite(confirmDeleteId!)">Supprimer</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading -->
+  <div *ngIf="loading" class="loading">
+    <div class="spinner"></div>
+    <p>Chargement...</p>
+  </div>
+
+  <!-- Table -->
+  <div class="table-wrapper" *ngIf="!loading">
+    <table class="admin-table">
+      <thead>
+        <tr>
+          <th>Activité</th>
+          <th>Lieu</th>
+          <th>Prix</th>
+          <th>Durée</th>
+          <th>Capacité</th>
+          <th>Statut</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let activite of activites">
+          <td>
+            <div class="activite-name">{{ activite.nomActivite }}</div>
+            <div class="activite-desc">{{ activite.description }}</div>
+          </td>
+          <td><span class="lieu-badge">🏛️ {{ getLieuNom(activite) }}</span></td>
+          <td><strong>{{ activite.prix }} TND</strong></td>
+          <td>⏱️ {{ activite.duree }} min</td>
+          <td>👥 {{ activite.capaciteMax }} pers.</td>
+          <td>
+            <span class="status-badge" [class.disponible]="activite.disponible" [class.indisponible]="!activite.disponible">
+              {{ activite.disponible ? '✅ Disponible' : '❌ Indisponible' }}
+            </span>
+          </td>
+          <td>
+            <div class="action-btns">
+              <button class="btn-edit" (click)="openEdit(activite)">✏️ Modifier</button>
+              <button class="btn-delete" (click)="confirmDelete(activite.id)">🗑️ Supprimer</button>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+</div>

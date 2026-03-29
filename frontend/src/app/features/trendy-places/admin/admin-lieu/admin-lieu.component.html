@@ -1,0 +1,147 @@
+<div class="admin-container">
+
+  <!-- Header -->
+  <div class="admin-header">
+    <div>
+      <h1>🏛️ Gestion des Lieux</h1>
+      <p>{{ lieux.length }} lieu(x) au total</p>
+    </div>
+    <a routerLink="/trendy-places/admin/activites" class="btn-secondary">🎯 Gérer les Activités</a>
+    <button class="btn-add" (click)="openAdd()">+ Ajouter un lieu</button>
+  </div>
+
+  <!-- Messages -->
+  <div class="alert success" *ngIf="successMessage">✅ {{ successMessage }}</div>
+  <div class="alert error" *ngIf="errorMessage">❌ {{ errorMessage }}</div>
+
+  <!-- Modal Form -->
+  <div class="modal-overlay" *ngIf="showForm" (click)="closeForm()">
+    <div class="modal-box" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>{{ isEditing ? '✏️ Modifier le lieu' : '➕ Ajouter un lieu' }}</h2>
+        <button class="close-btn" (click)="closeForm()">✕</button>
+      </div>
+
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Nom</label>
+          <input type="text" [(ngModel)]="form.nom" placeholder="Nom du lieu" />
+        </div>
+
+        <div class="form-group">
+          <label>Type</label>
+          <select [(ngModel)]="form.type">
+            <option value="">-- Choisir --</option>
+            <option value="Culturel">🏛️ Culturel</option>
+            <option value="Naturel">🌿 Naturel</option>
+            <option value="Historique">🏰 Historique</option>
+            <option value="Sportif">⚽ Sportif</option>
+            <option value="Gastronomique">🍽️ Gastronomique</option>
+            <option value="Artistique">🎨 Artistique</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Ville</label>
+          <input type="text" [(ngModel)]="form.ville" placeholder="Ville" />
+        </div>
+
+        <div class="form-group">
+          <label>Horaires</label>
+          <input type="text" [(ngModel)]="form.horaires" placeholder="08:00 - 22:00" />
+        </div>
+
+        <div class="form-group">
+          <label>Latitude</label>
+          <input type="number" [(ngModel)]="form.latitude" placeholder="36.8702" />
+        </div>
+
+        <div class="form-group">
+          <label>Longitude</label>
+          <input type="number" [(ngModel)]="form.longitude" placeholder="10.3417" />
+        </div>
+
+        <div class="form-group full">
+          <label>Image (nom du fichier ou URL)</label>
+          <input type="text" [(ngModel)]="form.image" placeholder="1.jpg ou https://..." />
+          <div class="image-preview" *ngIf="form.image">
+            <img [src]="getImageUrl(form.image)" alt="preview"
+                 (error)="$any($event.target).src='/assets/images/lieux/default.jpg'" />
+          </div>
+        </div>
+
+        <div class="form-group full">
+          <label>Description</label>
+          <textarea [(ngModel)]="form.description" rows="3" placeholder="Description du lieu..."></textarea>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn-cancel" (click)="closeForm()">Annuler</button>
+        <button class="btn-save" (click)="submit()">
+          {{ isEditing ? 'Modifier' : 'Ajouter' }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Confirm Delete -->
+  <div class="modal-overlay" *ngIf="confirmDeleteId !== null">
+    <div class="confirm-box">
+      <h3>🗑️ Confirmer la suppression</h3>
+      <p>Cette action est irréversible.</p>
+      <div class="confirm-actions">
+        <button class="btn-cancel" (click)="cancelDelete()">Annuler</button>
+        <button class="btn-delete" (click)="deleteLieu(confirmDeleteId!)">Supprimer</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading -->
+  <div *ngIf="loading" class="loading">
+    <div class="spinner"></div>
+    <p>Chargement...</p>
+  </div>
+
+  <!-- Table -->
+  <div class="table-wrapper" *ngIf="!loading">
+    <table class="admin-table">
+      <thead>
+        <tr>
+          <th>Image</th>
+          <th>Nom</th>
+          <th>Type</th>
+          <th>Ville</th>
+          <th>Horaires</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let lieu of lieux">
+          <td>
+            <img
+              [src]="getImageUrl(lieu.image)"
+              [alt]="lieu.nom"
+              class="table-img"
+              (error)="$any($event.target).src='/assets/images/lieux/default.jpg'"
+            />
+          </td>
+          <td>
+            <div class="lieu-name">{{ lieu.nom }}</div>
+            <div class="lieu-desc">{{ lieu.description }}</div>
+          </td>
+          <td><span class="type-badge">{{ lieu.type }}</span></td>
+          <td>📍 {{ lieu.ville }}</td>
+          <td>🕐 {{ lieu.horaires }}</td>
+          <td>
+            <div class="action-btns">
+              <button class="btn-edit" (click)="openEdit(lieu)">✏️ Modifier</button>
+              <button class="btn-delete" (click)="confirmDelete(lieu.id)">🗑️ Supprimer</button>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+</div>
