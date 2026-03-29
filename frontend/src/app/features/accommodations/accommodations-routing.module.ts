@@ -5,13 +5,14 @@ import { UserListAccommodationComponent } from './components/user-list-accommoda
 import { AddAccommodationComponent } from './components/add-accommodation/add-accommodation.component';
 import { EditAccommodationComponent } from './components/edit-accommodation/edit-accommodation.component';
 import { DetailsAccommodationComponent } from './components/details-accommodation/details-accommodation.component';
+import { AdminGuard } from '../auth/admin.guard';
 
 const routes: Routes = [
-  { path: 'admin', component: AdminListAccommodationComponent },
-  { path: 'explore', component: UserListAccommodationComponent },
-  { path: 'add', component: AddAccommodationComponent },
-  { path: 'edit/:id', component: EditAccommodationComponent },
-  { path: 'detail/:id', component: DetailsAccommodationComponent },
+   { path: 'explore', component: UserListAccommodationComponent },                          
+  { path: 'detail/:id', component: DetailsAccommodationComponent },                        
+  { path: 'admin', component: AdminListAccommodationComponent, canActivate: [AdminGuard] },
+  { path: 'add', component: AddAccommodationComponent, canActivate: [AdminGuard] },        
+  { path: 'edit/:id', component: EditAccommodationComponent, canActivate: [AdminGuard] },  
   { path: '', redirectTo: 'explore', pathMatch: 'full' }
 ];
 
