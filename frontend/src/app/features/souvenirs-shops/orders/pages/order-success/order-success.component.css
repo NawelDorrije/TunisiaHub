@@ -1,0 +1,12 @@
+.list-group-item {
+  border-radius: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.list-group-item:last-child {
+  margin-bottom: 0;
+}
+
+.card {
+  border-radius: 1rem;
+}

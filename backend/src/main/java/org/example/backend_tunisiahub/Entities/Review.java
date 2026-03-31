@@ -9,7 +9,8 @@ import lombok.experimental.FieldDefaults;
 
 import java.util.Date;
 
-@Entity
+@Entity(name = "ReservationReview")
+@Table(name = "reservation_reviews")
 @Getter
 @Setter
 @FieldDefaults(level = AccessLevel.PRIVATE)

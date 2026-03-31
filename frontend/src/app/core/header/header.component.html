@@ -41,12 +41,20 @@
             </li>
             <li><a class="dropdown-item" routerLink="/events">Events</a></li>
             <li>
-              <a class="dropdown-item" routerLink="/shoppings">Shoppings</a>
+              <a class="dropdown-item" routerLink="/shops">Shoppings</a>
             </li>
             <li>
               <a class="dropdown-item" routerLink="/carpooling">Carpooling</a>
             </li>
           </ul>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" routerLink="/cart">
+            Cart
+            <ng-container *ngIf="cartCount$ | async as count">
+              <span *ngIf="count > 0" class="badge bg-primary ms-1">{{ count }}</span>
+            </ng-container>
+          </a>
         </li>
         <li class="nav-item">
           <a class="nav-link" routerLink="/contact">Contact Us</a>

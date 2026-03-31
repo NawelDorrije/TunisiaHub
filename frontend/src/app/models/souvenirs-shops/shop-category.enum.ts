@@ -1,0 +1,8 @@
+export enum ShopCategory {
+  SOUVENIRS = 'SOUVENIRS',
+  CLOTHING = 'CLOTHING',
+  JEWELRY = 'JEWELRY',
+  LEATHER = 'LEATHER',
+  ART = 'ART',
+  HOMELIVING = 'HOMELIVING'
+}
