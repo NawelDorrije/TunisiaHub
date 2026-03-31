@@ -3,6 +3,7 @@ import { RouterModule, Routes } from '@angular/router';
 import { NotFoundComponent } from './features/not-found/not-found.component';
 import { HomeComponent } from './core/home/home.component';
 import { CartComponent } from './features/souvenirs-shops/cart/cart.component';
+import { AuthGuard } from './features/auth/auth.guard';
 
 const routes: Routes = [
   { path: 'home', component: HomeComponent },
@@ -56,6 +57,12 @@ const routes: Routes = [
     component: CartComponent,
   },
 
+   {
+   path: 'accommodations',
+    loadChildren: () =>
+      import('./features/accommodations/accommodations.module')
+        .then(m => m.AccommodationsModule),
+},
   {
     path: '**',
     component: NotFoundComponent,
