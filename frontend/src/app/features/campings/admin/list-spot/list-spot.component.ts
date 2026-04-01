@@ -81,7 +81,8 @@ export class ListSpotComponent implements OnInit {
       size: 0,
       availability: true,
       price: 0,
-      maxCapacity: 1
+      maxCapacity: 1,
+      campingId :  this.campingId
     };
 
   }
@@ -95,53 +96,6 @@ export class ListSpotComponent implements OnInit {
     this.selectedSpotId = spot.id;
 
     this.newSpot = { ...spot };
-
-  }
-
-  saveSpot() {
-
-    const dto = {
-      ...this.newSpot,
-      campingId: this.campingId
-    };
-
-    if (this.isEditMode) {
-
-      this.spotService
-        .updateSpot(this.selectedSpotId!, dto)
-        .subscribe({
-
-          next: () => {
-
-            alert("Spot updated successfully");
-
-            this.showForm = false;
-
-            this.loadCamping();
-
-          }
-
-        });
-
-    } else {
-
-      this.spotService
-        .createSpot(dto)
-        .subscribe({
-
-          next: () => {
-
-            alert("Spot created successfully");
-
-            this.showForm = false;
-
-            this.loadCamping();
-
-          }
-
-        });
-
-    }
 
   }
 

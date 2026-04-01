@@ -1,0 +1,56 @@
+.card {
+  box-shadow: 0 10px 25px rgba(25, 118, 210, 0.08);
+  transition: all 0.3s ease;
+}
+
+.card:hover {
+  transform: translateY(-4px);
+}
+
+.form-control,
+.form-select {
+  border-radius: 12px;
+  padding: 10px 14px;
+  font-size: 0.95rem;
+  border: 1.5px solid #dee2e6;
+}
+
+.form-control:focus,
+.form-select:focus {
+  border-color: #1976D2;
+  box-shadow: 0 0 0 0.2rem rgba(25, 118, 210, 0.12);
+}
+
+.input-group-text {
+  background-color: #f8f9fa;
+  border: 1.5px solid #dee2e6;
+  border-right: none;
+  font-size: 1.1rem;
+  padding: 10px 12px;
+}
+
+.btn-primary {
+  background-color: #1976D2;
+  border: none;
+  border-radius: 12px;
+  font-size: 1rem;
+}
+
+.btn-primary:hover {
+  background-color: #1565C0;
+}
+
+.btn-sm {
+  font-size: 0.8rem;
+}
+
+/* Labels plus discrets */
+.form-label {
+  font-size: 0.85rem;
+  color: #495057;
+  margin-bottom: 6px;
+}
+
+.small {
+  font-size: 0.85rem;
+}

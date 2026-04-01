@@ -1,0 +1,183 @@
+<div class="container-fluid py-4 px-3 px-md-4" style="background-color: #F8F9FA; min-height: 100vh;">
+
+  <!-- Header -->
+  <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+    <div>
+      <h1 class="h3 fw-bold text-dark mb-1">
+        <i class="bi bi-geo-alt-fill me-2 text-primary"></i> Gérer les Emplacements
+      </h1>
+      <p class="text-muted small mb-0">Gestion des spots pour ce camping</p>
+    </div>
+
+    <button class="btn btn-primary px-4 py-2 shadow-sm" (click)="openAddForm()">
+      <i class="bi bi-plus-lg me-2"></i> Ajouter un Spot
+    </button>
+  </div>
+
+  <!-- Camping Info + Images Améliorées -->
+  <div *ngIf="camping" class="card border-0 shadow-sm mb-5">
+    <div class="card-body p-4">
+
+      <!-- Informations du Camping -->
+      <div class="row align-items-center mb-4">
+        <div class="col-lg-9">
+          <h4 class="fw-bold mb-2">{{ camping.name }}</h4>
+          <div class="d-flex flex-wrap gap-3 text-muted small">
+            <div><i class="bi bi-geo-alt me-1"></i> {{ camping.location }}</div>
+            <div><i class="bi bi-tag me-1"></i> {{ camping.campingType }}</div>
+            <div><i class="bi bi-currency-exchange me-1"></i> {{ camping.price }} TND / nuit</div>
+          </div>
+        </div>
+        <div class="col-lg-3 text-lg-end">
+          <span class="badge bg-primary px-3 py-2 rounded-pill">{{ camping.campingType }}</span>
+        </div>
+      </div>
+
+      <!-- Section Photos - Visibilité améliorée -->
+      <div>
+        <h5 class="fw-semibold text-dark mb-3 d-flex align-items-center">
+          <i class="bi bi-images me-2 text-primary"></i>
+          Photos du Camping
+        </h5>
+
+        <!-- Images -->
+        <div *ngIf="camping.photos && camping.photos.length > 0; else noImages"
+             class="row g-3">
+          <div class="col-6 col-sm-4 col-md-3 col-lg-3"
+               *ngFor="let photo of camping.photos">
+            <div class="image-container rounded-3 overflow-hidden shadow-sm">
+              <img
+                [src]="getImageUrl(photo)"
+                class="img-fluid w-100"
+                style="height: 230px; object-fit: cover;"
+                alt="Photo du camping"
+              >
+            </div>
+          </div>
+        </div>
+
+        <!-- Message si aucune image -->
+        <ng-template #noImages>
+          <div class="text-center py-5 bg-light rounded-3">
+            <i class="bi bi-image display-1 text-muted opacity-25 mb-3"></i>
+            <p class="mb-1 text-muted">Aucune photo disponible</p>
+            <small class="text-muted">Vous pouvez ajouter des photos depuis la page d'édition du camping.</small>
+          </div>
+        </ng-template>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Liste des Spots -->
+  <div class="card border-0 shadow-sm">
+    <div class="card-header bg-white py-3 border-0 d-flex justify-content-between align-items-center">
+      <h5 class="mb-0 fw-semibold">Liste des Emplacements</h5>
+      <span class="badge bg-secondary px-3 py-1">{{ spots.length || 0 }} spots</span>
+    </div>
+
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-hover mb-0 align-middle">
+          <thead class="table-light">
+            <tr>
+              <th class="ps-4">N° Spot</th>
+              <th>Taille (m²)</th>
+              <th>Disponibilité</th>
+              <th>Prix (TND)</th>
+              <th>Capacité</th>
+              <th class="text-end pe-4">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let spot of spots">
+              <td class="ps-4 fw-medium">{{ spot.number }}</td>
+              <td>{{ spot.size }} m²</td>
+              <td>
+                <span class="badge px-3 py-1"
+                      [ngClass]="spot.availability ? 'bg-success' : 'bg-warning text-dark'">
+                  {{ spot.availability ? 'Disponible' : 'Réservé' }}
+                </span>
+              </td>
+              <td class="fw-semibold">{{ spot.price }} TND</td>
+              <td>{{ spot.maxCapacity }} pers.</td>
+              <td class="text-end pe-4">
+                <button class="btn btn-outline-primary btn-sm me-2" (click)="openEditForm(spot)">
+                  <i class="bi bi-pencil"></i>
+                </button>
+                <button class="btn btn-outline-danger btn-sm" (click)="deleteSpot(spot.id)">
+                  <i class="bi bi-trash"></i>
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ====================== MODAL ====================== -->
+  <div #spotModal class="modal fade" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content border-0 shadow" style="border-radius: 20px;">
+
+        <div class="modal-header border-0 px-4 pt-4 pb-2">
+          <h5 class="modal-title fw-semibold">
+            {{ isEditMode ? 'Modifier le Spot' : 'Ajouter un Spot' }}
+          </h5>
+          <button type="button" class="btn-close" (click)="closeModal()" aria-label="Close"></button>
+        </div>
+
+        <div class="modal-body px-4 py-4">
+          <div class="row g-3">
+            <div class="col-12">
+              <label class="form-label small fw-medium">Numéro du Spot</label>
+              <input type="number" class="form-control"
+                     [(ngModel)]="spotForm.number" placeholder="Ex: 15">
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label small fw-medium">Taille (m²)</label>
+              <input type="number" class="form-control"
+                     [(ngModel)]="spotForm.size" placeholder="60">
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label small fw-medium">Prix par nuit (TND)</label>
+              <input type="number" class="form-control"
+                     [(ngModel)]="spotForm.price" placeholder="135">
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label small fw-medium">Capacité maximale</label>
+              <input type="number" class="form-control"
+                     [(ngModel)]="spotForm.maxCapacity" placeholder="6">
+            </div>
+
+            <div class="col-12">
+              <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox"
+                       [(ngModel)]="spotForm.availability" id="availabilitySwitch">
+                <label class="form-check-label fw-medium" for="availabilitySwitch">
+                  Spot disponible
+                </label>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-footer border-0 px-4 pb-4">
+          <button type="button" class="btn btn-outline-secondary px-4 py-2" (click)="closeModal()">
+            Annuler
+          </button>
+          <button type="button" class="btn btn-primary px-4 py-2" (click)="saveSpot()">
+            <i class="bi bi-check2 me-2"></i>
+            {{ isEditMode ? 'Enregistrer' : 'Ajouter' }}
+          </button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+</div>

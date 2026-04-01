@@ -12,4 +12,6 @@ export interface Spot {
 
   maxCapacity: number;
 
+  campingId?: number ;
+
 }

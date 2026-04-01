@@ -1,0 +1,124 @@
+/* Style bleu cohérent avec les autres pages */
+:root {
+  --primary: #1976D2;
+}
+
+.card {
+  border-radius: 16px;
+  box-shadow: 0 8px 20px rgba(25, 118, 210, 0.08);
+  transition: all 0.3s ease;
+}
+
+.card:hover {
+  transform: translateY(-3px);
+}
+
+.table th {
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 0.82rem;
+  color: #6c757d;
+  letter-spacing: 0.4px;
+}
+
+.btn {
+  border-radius: 12px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.btn-primary {
+  background-color: #1976D2;
+  border: none;
+}
+
+.btn-primary:hover {
+  background-color: #1565C0;
+  transform: translateY(-1px);
+}
+
+.btn-sm {
+  padding: 0.35rem 0.75rem;
+  font-size: 0.9rem;
+}
+
+.form-control {
+  border-radius: 12px;
+  border: 1.5px solid #dee2e6;
+  padding: 10px 14px;
+  font-size: 0.95rem;
+}
+
+.form-control:focus {
+  border-color: #1976D2;
+  box-shadow: 0 0 0 0.2rem rgba(25, 118, 210, 0.12);
+}
+
+.form-label {
+  font-size: 0.85rem;
+  color: #495057;
+  margin-bottom: 5px;
+}
+
+.badge {
+  font-weight: 500;
+  padding: 5px 12px;
+  border-radius: 50px;
+}
+
+.modal-content {
+  border-radius: 20px;
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.12);
+}
+
+
+/* Style principal bleu */
+.btn-primary {
+  background-color: #1976D2;
+  border: none;
+}
+
+.btn-primary:hover {
+  background-color: #1565C0;
+  transform: translateY(-1px);
+}
+
+/* Amélioration visibilité des images */
+.image-container {
+  transition: all 0.4s ease;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+}
+
+.image-container:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 30px rgba(25, 118, 210, 0.18);
+}
+
+.image-container img {
+  transition: transform 0.5s ease;
+}
+
+.image-container:hover img {
+  transform: scale(1.08);
+}
+
+/* Responsive pour images */
+@media (max-width: 576px) {
+  .image-container img {
+    height: 190px;
+  }
+}
+
+.card {
+  border-radius: 16px;
+}
+
+.table th {
+  font-weight: 600;
+  color: #6c757d;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}

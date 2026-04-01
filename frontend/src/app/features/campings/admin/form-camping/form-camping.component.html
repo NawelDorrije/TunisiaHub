@@ -1,168 +1,161 @@
-<div class="container mt-4">
+<div class="container-fluid py-4" style="background-color: #F8F9FA; min-height: 100vh;">
+  <div class="row justify-content-center">
+    <div class="col-12 col-lg-9 col-xl-7">
 
-  <h2>
-    {{ isEditMode ? 'Edit Camping' : 'Add Camping' }}
-  </h2>
-
-  <form [formGroup]="campingForm" (ngSubmit)="onSubmit()">
-
-    <!-- Name -->
-
-    <div class="mb-3">
-
-      <label class="form-label">Name</label>
-
-      <input
-        type="text"
-        class="form-control"
-        formControlName="name">
-
-      <div class="text-danger"
-        *ngIf="campingForm.get('name')?.touched &&
-               campingForm.get('name')?.hasError('required')">
-
-        Name is required
-
+      <!-- Header -->
+      <div class="text-center mb-4">
+        <i class="bi bi-tent-fill display-5 text-primary mb-3"></i>
+        <h1 class="h3 fw-bold text-dark mb-1">
+          {{ isEditMode ? 'Modifier le Camping' : 'Nouveau Camping' }}
+        </h1>
+        <p class="text-muted small">Remplissez les informations ci-dessous</p>
       </div>
 
-      <div class="text-danger"
-        *ngIf="campingForm.get('name')?.hasError('minlength')">
+      <div class="card border-0 shadow-sm" style="border-radius: 20px;">
+        <div class="card-body p-4">
 
-        Name must be at least 3 characters
+          <form [formGroup]="campingForm" (ngSubmit)="onSubmit()">
 
+            <div class="row g-3">
+
+              <!-- Name -->
+              <div class="col-12">
+                <label class="form-label small fw-medium">Nom du Camping</label>
+                <div class="input-group">
+                  <span class="input-group-text"><i class="bi bi-house-door fs-5"></i></span>
+                  <input type="text"
+                         class="form-control"
+                         formControlName="name"
+                         placeholder="Ex: Oasis du Désert">
+                </div>
+                <div class="text-danger mt-1 small"
+                     *ngIf="campingForm.get('name')?.touched && campingForm.get('name')?.invalid">
+                  <div *ngIf="campingForm.get('name')?.hasError('required')">Le nom est obligatoire</div>
+                  <div *ngIf="campingForm.get('name')?.hasError('minlength')">Minimum 3 caractères</div>
+                </div>
+              </div>
+
+              <!-- Price -->
+              <div class="col-md-6">
+                <label class="form-label small fw-medium">Prix par nuit (TND)</label>
+                <div class="input-group">
+                  <span class="input-group-text"><i class="bi bi-currency-dollar fs-5"></i></span>
+                  <input type="number"
+                         class="form-control"
+                         formControlName="price"
+                         placeholder="120">
+                </div>
+                <div class="text-danger mt-1 small"
+                     *ngIf="campingForm.get('price')?.touched && campingForm.get('price')?.invalid">
+                  <div *ngIf="campingForm.get('price')?.hasError('required')">Le prix est obligatoire</div>
+                  <div *ngIf="campingForm.get('price')?.hasError('min')">Le prix doit être supérieur à 0</div>
+                </div>
+              </div>
+
+              <!-- Location -->
+              <div class="col-md-6">
+                <label class="form-label small fw-medium">Localisation</label>
+                <div class="input-group">
+                  <span class="input-group-text"><i class="bi bi-geo-alt fs-5"></i></span>
+                  <input type="text"
+                         class="form-control"
+                         formControlName="location"
+                         placeholder="Ex: Tozeur, Tunisie">
+                </div>
+              </div>
+
+              <!-- Camping Type -->
+              <div class="col-md-6">
+                <label class="form-label small fw-medium">Type de Camping</label>
+                <select class="form-select" formControlName="campingType">
+                  <option value="">Choisir un type</option>
+                  <option *ngFor="let type of campingTypes" [value]="type">{{ type }}</option>
+                </select>
+              </div>
+
+              <!-- Dates -->
+              <div class="col-md-6">
+                <label class="form-label small fw-medium">Dates de disponibilité</label>
+                <div class="row g-2">
+                  <div class="col-6">
+                    <div class="input-group">
+                      <span class="input-group-text"><i class="bi bi-calendar fs-5"></i></span>
+                      <input type="date" class="form-control" formControlName="startDate">
+                    </div>
+                  </div>
+                  <div class="col-6">
+                    <div class="input-group">
+                      <span class="input-group-text"><i class="bi bi-calendar fs-5"></i></span>
+                      <input type="date" class="form-control" formControlName="endDate">
+                    </div>
+                  </div>
+                </div>
+                <div class="text-danger mt-1 small"
+                     *ngIf="campingForm.errors?.['endDateBeforeStart'] ||
+                            (campingForm.get('endDate')?.touched && campingForm.get('endDate')?.invalid)">
+                  La date de fin doit être après la date de début
+                </div>
+              </div>
+
+              <!-- Description -->
+              <div class="col-12">
+                <label class="form-label small fw-medium">Description</label>
+                <textarea class="form-control"
+                          rows="4"
+                          formControlName="description"
+                          placeholder="Décrivez votre camping..."></textarea>
+                <div class="text-danger mt-1 small"
+                     *ngIf="campingForm.get('description')?.touched && campingForm.get('description')?.invalid">
+                  <div *ngIf="campingForm.get('description')?.hasError('required')">La description est obligatoire</div>
+                  <div *ngIf="campingForm.get('description')?.hasError('minlength')">Minimum 10 caractères</div>
+                </div>
+              </div>
+
+              <!-- Photos -->
+              <div class="col-12">
+                <label class="form-label small fw-medium">Photos du Camping</label>
+                <input type="file"
+                       class="form-control"
+                       multiple
+                       accept="image/*"
+                       (change)="onFilesSelected($event)">
+
+                <small class="text-muted mt-2 d-block">
+                  {{ photosPreview.length }} image(s) sélectionnée(s)
+                </small>
+
+                <div class="d-flex flex-wrap gap-2 mt-3" *ngIf="photosPreview.length > 0">
+                  <div *ngFor="let img of photosPreview; let i = index"
+                       class="position-relative rounded-3 overflow-hidden"
+                       style="width: 100px; height: 80px;">
+                    <img [src]="img" class="w-100 h-100 object-fit-cover" alt="preview">
+                    <button type="button"
+                            class="btn btn-sm btn-danger position-absolute top-0 end-0 m-1 p-0"
+                            style="width: 24px; height: 24px;"
+                            (click)="removeImage(i)">
+                      <i class="bi bi-x"></i>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+
+            <!-- Submit Button -->
+            <div class="d-grid mt-4">
+              <button type="submit"
+                      class="btn btn-primary py-2.5 fw-medium"
+                      [disabled]="campingForm.invalid">
+                <i class="bi bi-check2 me-2"></i>
+                {{ isEditMode ? 'Mettre à jour' : 'Créer le Camping' }}
+              </button>
+            </div>
+
+          </form>
+
+        </div>
       </div>
 
     </div>
-
-    <!-- Location -->
-
-    <div class="mb-3">
-
-      <label class="form-label">Location</label>
-
-      <input
-        type="text"
-        class="form-control"
-        formControlName="location">
-
-    </div>
-
-    <!-- Camping Type -->
-
-    <div class="mb-3">
-
-      <label class="form-label">Camping Type</label>
-
-      <select
-        class="form-control"
-        formControlName="campingType">
-
-        <option value="">Select type</option>
-
-        <option
-          *ngFor="let type of campingTypes"
-          [value]="type">
-
-          {{ type }}
-
-        </option>
-
-      </select>
-
-    </div>
-
-    <!-- Price -->
-
-    <div class="mb-3">
-
-      <label class="form-label">Price</label>
-
-      <input
-        type="number"
-        class="form-control"
-        formControlName="price">
-
-      <div class="text-danger"
-        *ngIf="campingForm.get('price')?.hasError('min')">
-
-        Price must be greater than 0
-
-      </div>
-
-    </div>
-
-    <!-- Description -->
-
-    <div class="mb-3">
-
-      <label class="form-label">Description</label>
-
-      <textarea
-        class="form-control"
-        formControlName="description">
-      </textarea>
-
-      <div class="text-danger"
-        *ngIf="campingForm.get('description')?.hasError('minlength')">
-
-        Description must be at least 10 characters
-
-      </div>
-
-    </div>
-
-    <!-- Start Date -->
-
-    <div class="mb-3">
-
-      <label class="form-label">Start Date</label>
-
-      <input
-        type="date"
-        class="form-control"
-        formControlName="startDate">
-
-    </div>
-
-    <!-- End Date -->
-
-    <div class="mb-3">
-
-      <label class="form-label">End Date</label>
-
-      <input
-        type="date"
-        class="form-control"
-        formControlName="endDate">
-
-      <div class="text-danger"
-        *ngIf="campingForm.errors?.['endDateBeforeStart']">
-
-        End date cannot be before start date
-
-      </div>
-
-    </div>
-
-    <button
-      type="submit"
-      class="btn btn-success"
-      [disabled]="campingForm.invalid">
-
-
-      {{ isEditMode ? 'Update' : 'Create' }}
-
-    </button>
-
-    <button
-      type="button"
-      class="btn btn-secondary ms-2"
-      routerLink="/campings/admin">
-
-      Cancel
-
-    </button>
-
-  </form>
-
+  </div>
 </div>

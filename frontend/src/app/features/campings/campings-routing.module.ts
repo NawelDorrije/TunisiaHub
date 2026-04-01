@@ -6,6 +6,7 @@ import { CampingDetailsComponent } from './camping-details/camping-details.compo
 import { ListCampingComponent } from './admin/list-camping/list-camping.component';
 import { FormCampingComponent } from './admin/form-camping/form-camping.component';
 import { ListSpotComponent } from './admin/list-spot/list-spot.component';
+import { DetailsCampingComponent } from './admin/details-camping/details-camping.component';
 
 const routes: Routes = [{ path: '', component: CampingListComponent },
   {path:'', component: CampingListComponent},
@@ -29,7 +30,12 @@ const routes: Routes = [{ path: '', component: CampingListComponent },
   path: 'admin/spots/:campingId',
   component: ListSpotComponent
 }
+,
 
+{
+  path: 'admin/details/:id',
+  component: DetailsCampingComponent
+}
 ];
 @NgModule({
 

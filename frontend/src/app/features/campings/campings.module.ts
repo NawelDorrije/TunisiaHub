@@ -8,7 +8,8 @@ import { ListSpotComponent } from './list-spot/list-spot.component';
 import { CampingDetailsComponent } from './camping-details/camping-details.component';
 import { FormCampingComponent } from './admin/form-camping/form-camping.component';
 import { ListCampingComponent } from './admin/list-camping/list-camping.component';
-import { ReactiveFormsModule } from '@angular/forms';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { DetailsCampingComponent } from './admin/details-camping/details-camping.component';
 
 @NgModule({
   declarations: [
@@ -18,11 +19,13 @@ import { ReactiveFormsModule } from '@angular/forms';
     CampingDetailsComponent,
     FormCampingComponent,
     ListCampingComponent,
+    DetailsCampingComponent,
   ],
   imports: [
     CommonModule,
     CampingsRoutingModule,
-    ReactiveFormsModule
+    ReactiveFormsModule,
+    FormsModule
   ]
 })
 export class CampingsModule { }

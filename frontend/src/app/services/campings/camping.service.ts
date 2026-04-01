@@ -24,13 +24,27 @@ export class CampingService {
   }
 
   // CREATE camping
-  createCamping(camping: Camping): Observable<Camping> {
-    return this.http.post<Camping>(this.API_URL, camping);
+   createCamping(
+    formData: FormData
+  ) {
+
+    return this.http.post(
+      this.API_URL,
+      formData
+    );
+
   }
 
   // UPDATE camping
-  updateCamping(camping: Camping): Observable<Camping> {
-    return this.http.put<Camping>(this.API_URL, camping);
+ updateCamping(
+    formData: FormData
+  ) {
+
+    return this.http.put(
+      this.API_URL,
+      formData
+    );
+
   }
 
   // DELETE camping

@@ -9,7 +9,7 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
-public class CampingService implements ICampingService {
+public class CampingServiceImpl implements ICampingService {
 
     private final CampingRepository campingRepository;
 

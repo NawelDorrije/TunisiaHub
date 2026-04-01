@@ -12,7 +12,7 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
-public class SpotService implements ISpotService {
+public class SpotServiceImpl implements ISpotService {
 
     private final SpotRepository spotRepository;
     private final CampingRepository campingRepository;

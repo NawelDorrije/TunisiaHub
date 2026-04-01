@@ -2,7 +2,11 @@ package org.example.backend_tunisiahub.Configs;
 
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
+import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 @Configuration
 public class WebCorsConfig implements WebMvcConfigurer {
@@ -10,11 +14,29 @@ public class WebCorsConfig implements WebMvcConfigurer {
     @Override
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/api/**")
-                .allowedOrigins("http://localhost:4200") // <-- Angular dev server
+                .allowedOrigins("http://localhost:4200")
                 .allowedMethods("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
                 .allowedHeaders("*")
                 .exposedHeaders("*")
                 .allowCredentials(true)
                 .maxAge(3600);
+    }
+
+    @Override
+    public void addResourceHandlers(ResourceHandlerRegistry registry) {
+
+        Path uploadPath =
+                Paths.get("uploads");
+
+        registry
+                .addResourceHandler("/uploads/**")
+                .addResourceLocations(
+                        "file:" +
+                                uploadPath
+                                        .toAbsolutePath()
+                                        .toString() +
+                                "/"
+                );
+
     }
 }

@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+
 import {
   FormBuilder,
   FormGroup,
@@ -8,7 +9,9 @@ import {
 } from '@angular/forms';
 
 import { ActivatedRoute, Router } from '@angular/router';
+
 import { CampingService } from '../../../../services/campings/camping.service';
+
 import { Camping } from '../../../../models/campings/camping';
 
 @Component({
@@ -24,8 +27,19 @@ export class FormCampingComponent implements OnInit {
 
   campingId?: number;
 
-  // liste des types affichés en minuscule
-  campingTypes = ['tent', 'caravan', 'bungalow'];
+  BASE_URL = "http://localhost:8089";
+
+  campingTypes = [
+    'tent',
+    'caravan',
+    'bungalow'
+  ];
+
+  photosPreview: string[] = [];
+
+  selectedFiles: File[] = [];
+
+  existingPhotos: string[] = [];
 
   constructor(
     private fb: FormBuilder,
@@ -38,7 +52,8 @@ export class FormCampingComponent implements OnInit {
 
     this.initForm();
 
-    const id = this.route.snapshot.params['id'];
+    const id =
+      this.route.snapshot.params['id'];
 
     if (id) {
 
@@ -52,9 +67,10 @@ export class FormCampingComponent implements OnInit {
 
   }
 
-  initForm() {
+initForm() {
 
-    this.campingForm = this.fb.group({
+  this.campingForm =
+    this.fb.group({
 
       name: [
         '',
@@ -66,12 +82,16 @@ export class FormCampingComponent implements OnInit {
 
       location: [
         '',
-        Validators.required
+        [
+          Validators.required
+        ]
       ],
 
       campingType: [
         '',
-        Validators.required
+        [
+          Validators.required
+        ]
       ],
 
       price: [
@@ -92,67 +112,144 @@ export class FormCampingComponent implements OnInit {
 
       startDate: [
         '',
-        Validators.required
+        [
+          Validators.required
+        ]
       ],
 
       endDate: [
         '',
-        Validators.required
-      ],
-
-      photos: [[]],
-
-      spots: [[]]
+        [
+          Validators.required
+        ]
+      ]
 
     },
     {
       validators: this.dateValidator
     });
 
+}
+
+  dateValidator(
+  group: AbstractControl
+): ValidationErrors | null {
+
+  const start =
+    group.get('startDate')?.value;
+
+  const end =
+    group.get('endDate')?.value;
+
+  if (!start || !end)
+    return null;
+
+  if (end < start) {
+
+    group
+      .get('endDate')
+      ?.setErrors({
+        endDateBeforeStart: true
+      });
+
+    return {
+      endDateBeforeStart: true
+    };
+
   }
 
-  // validation End Date >= Start Date
+  return null;
 
-  dateValidator(group: AbstractControl): ValidationErrors | null {
-
-    const start = group.get('startDate')?.value;
-
-    const end = group.get('endDate')?.value;
-
-    if (!start || !end) return null;
-
-    return end < start
-      ? { endDateBeforeStart: true }
-      : null;
-
-  }
+}
 
   loadCamping(id: number) {
 
-    this.campingService.getCampingById(id).subscribe({
+  this.campingService
+    .getCampingById(id)
+    .subscribe({
 
-      next: (camping) => {
+      next: camping => {
+
+        console.log("Photos:", camping.photos);
 
         this.campingForm.patchValue({
 
           ...camping,
 
-          // convertir en minuscule pour l'affichage
-          campingType: camping.campingType.toLowerCase()
+          campingType:
+            camping.campingType.toLowerCase()
 
         });
 
-      },
+        this.existingPhotos =
+          camping.photos || [];
 
-      error: (err) => {
+        this.photosPreview =
+          this.existingPhotos.map(
+            (p: string) => {
 
-        console.error(err);
+              return "http://localhost:8089/" + p;
 
-        alert("Failed to load camping");
+            }
+          );
 
       }
 
     });
+
+}
+
+  onFilesSelected(event: any) {
+
+    const files: FileList =
+      event.target.files;
+
+    if (!files)
+      return;
+
+    for (let i = 0; i < files.length; i++) {
+
+      const file = files[i];
+
+      this.selectedFiles.push(file);
+
+      const reader = new FileReader();
+
+      reader.onload =
+        (e: any) => {
+
+          this.photosPreview.push(
+            e.target.result
+          );
+
+        };
+
+      reader.readAsDataURL(file);
+
+    }
+
+  }
+
+  removeImage(index: number) {
+
+    this.photosPreview.splice(index, 1);
+
+    if (index < this.selectedFiles.length) {
+
+      this.selectedFiles.splice(index, 1);
+
+    }
+    else {
+
+      const existingIndex =
+        index - this.selectedFiles.length;
+
+      this.existingPhotos.splice(
+        existingIndex,
+        1
+      );
+
+    }
 
   }
 
@@ -160,82 +257,108 @@ export class FormCampingComponent implements OnInit {
 
     if (this.campingForm.invalid) {
 
-      this.campingForm.markAllAsTouched();
+      this.campingForm
+        .markAllAsTouched();
 
       return;
 
     }
 
-    const formValue = this.campingForm.value;
+    const formValue =
+      this.campingForm.value;
 
     const camping: Camping = {
 
       ...formValue,
 
-      // convertir en MAJUSCULE pour la base
-      campingType: formValue.campingType.toUpperCase(),
+      campingType:
+        formValue.campingType.toUpperCase(),
 
-      id: this.campingId
+      id: this.campingId,
+
+      photos: this.existingPhotos
 
     };
 
-    if (this.isEditMode) {
+    const formData =
+      new FormData();
 
-      this.updateCamping(camping);
+    formData.append(
 
-    } else {
+      "camping",
 
-      this.createCamping(camping);
+      new Blob(
+        [JSON.stringify(camping)],
+        { type: "application/json" }
+      )
 
-    }
+    );
 
-  }
+    this.selectedFiles
+      .forEach(file => {
 
-  createCamping(camping: Camping) {
+        formData.append(
+          "files",
+          file
+        );
 
-    this.campingService.createCamping(camping).subscribe({
+      });
 
-      next: () => {
+    if (this.isEditMode)
 
-        alert("Camping created successfully");
+      this.updateCamping(formData);
 
-        this.router.navigate(['/campings/admin']);
+    else
 
-      },
-
-      error: (err) => {
-
-        console.error(err);
-
-        alert("Error creating camping");
-
-      }
-
-    });
+      this.createCamping(formData);
 
   }
 
-  updateCamping(camping: Camping) {
+  createCamping(
+    formData: FormData
+  ) {
 
-    this.campingService.updateCamping(camping).subscribe({
+    this.campingService
+      .createCamping(formData)
+      .subscribe({
 
-      next: () => {
+        next: () => {
 
-        alert("Camping updated successfully");
+          alert(
+            "Camping created successfully"
+          );
 
-        this.router.navigate(['/campings/admin']);
+          this.router.navigate(
+            ['/campings/admin']
+          );
 
-      },
+        }
 
-      error: (err) => {
+      });
 
-        console.error(err);
+  }
 
-        alert("Error updating camping");
+  updateCamping(
+    formData: FormData
+  ) {
 
-      }
+    this.campingService
+      .updateCamping(formData)
+      .subscribe({
 
-    });
+        next: () => {
+
+          alert(
+            "Camping updated successfully"
+          );
+
+          this.router.navigate(
+            ['/campings/admin']
+          );
+
+        }
+
+      });
 
   }
 
