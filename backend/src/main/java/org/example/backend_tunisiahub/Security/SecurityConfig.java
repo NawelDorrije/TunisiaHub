@@ -39,6 +39,9 @@ public class SecurityConfig {
                         .requestMatchers("/api/reviews/get/**").permitAll()
                         .requestMatchers("/api/reviews/accommodation/**").permitAll()
                         .requestMatchers("/api/reviews/add/**").permitAll()
+                        .requestMatchers("/api/accommodation-reservations/check-availability/**").permitAll()
+                        .requestMatchers("/api/accommodation-reservations/reserved-dates/**").permitAll()
+
 
                         // Admin only
                         .requestMatchers("/api/accommodations/add").hasRole("ADMIN")
@@ -49,6 +52,8 @@ public class SecurityConfig {
                        // .requestMatchers("/api/reviews/add/**").hasAnyRole("CLIENT", "ADMIN")
                         .requestMatchers("/api/reviews/update/**").hasAnyRole("CLIENT", "ADMIN")
                         .requestMatchers("/api/reviews/delete/**").hasAnyRole("CLIENT", "ADMIN")
+                        .requestMatchers("/api/accommodation-reservations/**").hasAnyRole("CLIENT", "ADMIN")
+                        .requestMatchers("/api/accommodation-reservations/my-reservations").hasAnyRole("CLIENT", "ADMIN")
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);

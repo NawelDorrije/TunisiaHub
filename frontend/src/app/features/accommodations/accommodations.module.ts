@@ -14,7 +14,8 @@ import { ReviewItemComponent } from './components/review-item/review-item.compon
 import { ReviewFormComponent } from './components/review-form/review-form.component';
 import { MapPickerComponent } from './components/map-picker/map-picker.component';
 import { MapWeatherComponent } from './components/map-weather/map-weather.component';
-
+import { ReservationFormComponent } from './components/reservation-form/reservation-form.component';
+import { FormsModule } from '@angular/forms';
 
 @NgModule({
   declarations: [
@@ -27,13 +28,16 @@ import { MapWeatherComponent } from './components/map-weather/map-weather.compon
     ReviewItemComponent,
     ReviewFormComponent,
     MapPickerComponent,
-    MapWeatherComponent
+    MapWeatherComponent,
+    ReservationFormComponent
   ],
   imports: [
     CommonModule,
     ReactiveFormsModule,
     RouterModule,
-    AccommodationsRoutingModule
+    FormsModule,
+    AccommodationsRoutingModule,
+
   ],
   providers:[
     provideHttpClient()

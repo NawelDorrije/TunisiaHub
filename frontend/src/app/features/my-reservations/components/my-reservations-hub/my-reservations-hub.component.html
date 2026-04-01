@@ -1,0 +1,36 @@
+<div class="container py-5">
+  <h2 class="fw-bold mb-2">My Reservations</h2>
+  <p class="text-muted mb-5">Manage all your bookings in one place</p>
+
+  <div class="row g-4">
+    <div class="col-md-4" *ngFor="let category of categories">
+      <div
+        class="card border-0 shadow-sm h-100 category-card"
+        (click)="navigate(category.link)"
+        style="cursor: pointer;"
+      >
+        <div class="card-body text-center py-4">
+          <div
+            class="icon-wrapper mb-3 mx-auto d-flex align-items-center justify-content-center rounded-circle"
+            [class]="'bg-' + category.color + ' bg-opacity-10'"
+            style="width: 70px; height: 70px;"
+          >
+            <i
+              [class]="category.icon + ' fs-2'"
+              [class.text-primary]="category.color === 'primary'"
+              [class.text-success]="category.color === 'success'"
+              [class.text-warning]="category.color === 'warning'"
+              [class.text-danger]="category.color === 'danger'"
+              [class.text-info]="category.color === 'info'"
+            ></i>
+          </div>
+          <h5 class="card-title fw-bold">{{ category.title }}</h5>
+          <p class="card-text text-muted small">{{ category.description }}</p>
+          <span [class]="'btn btn-' + category.color + ' btn-sm'">
+            View Reservations →
+          </span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

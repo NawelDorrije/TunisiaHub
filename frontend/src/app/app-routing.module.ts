@@ -32,6 +32,13 @@ const routes: Routes = [
       import('./features/accommodations/accommodations.module')
         .then(m => m.AccommodationsModule),
 },
+{
+  path: 'my-reservations',
+  loadChildren: () =>
+    import('./features/my-reservations/my-reservations.module')
+      .then(m => m.MyReservationsModule),
+  canActivate: [AuthGuard]
+},
   {
     path: '**',
     component: NotFoundComponent,

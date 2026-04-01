@@ -126,13 +126,24 @@
               [longitude]="accommodation.longitude!"
               [locationName]="accommodation.title"
             ></app-map-weather>
+                        
           </div>
         </div>
       </div>
-
+        
     </div>
-    <app-review-list [accommodationId]="accommodation.id!"></app-review-list>
+    
 
   </div>
+    <div class="mt-4" *ngIf="authService.isLoggedIn() && !authService.isAdmin()">
+      <hr/>
+      <h4 class="fw-bold mb-3">🏨 Reserve this accommodation</h4>
+      <app-reservation-form
+        [accommodationId]="accommodation.id!"
+        [pricePerNight]="accommodation.price"
+        [accommodationTitle]="accommodation.title"
+      ></app-reservation-form>
+    </div>
+   <app-review-list [accommodationId]="accommodation.id!"></app-review-list>
 
 </div>
