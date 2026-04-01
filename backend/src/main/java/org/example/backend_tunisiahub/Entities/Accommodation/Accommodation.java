@@ -38,6 +38,11 @@ public class Accommodation {
 
     @Column(nullable = false)
     int capacite;
+    @Column
+    Double latitude;
+
+    @Column
+    Double longitude;
 
     @ElementCollection
     @CollectionTable(name = "accommodation_photos", joinColumns = @JoinColumn(name = "accommodation_id"))

@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { AccommodationService } from '../../services/accommodation.service';
 import { Accommodation } from '../../../../models/accommodations/accommodation.model';
+import { AuthService } from '../../../auth/services/auth.service';
 
 @Component({
   selector: 'app-details-accommodation',
@@ -18,7 +19,8 @@ export class DetailsAccommodationComponent implements OnInit {
   constructor(
     private accommodationService: AccommodationService,
     private route: ActivatedRoute,
-    private router: Router
+    private router: Router,
+    public authService: AuthService
   ) {}
 
   ngOnInit(): void {

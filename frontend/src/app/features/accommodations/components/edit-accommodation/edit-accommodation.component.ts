@@ -26,7 +26,9 @@ export class EditAccommodationComponent implements OnInit {
     type: new FormControl('', Validators.required),
     price: new FormControl<number | null>(null, [Validators.required, Validators.min(1)]),
     capacite: new FormControl<number | null>(null, [Validators.required, Validators.min(1)]),
-    photos: new FormControl('')
+    photos: new FormControl(''),
+    latitude: new FormControl<number | null>(null),
+    longitude: new FormControl<number | null>(null)
   });
 
   constructor(
@@ -56,7 +58,9 @@ export class EditAccommodationComponent implements OnInit {
           type: data.type,
           price: data.price,
           capacite: data.capacite,
-          photos: data.photos?.join(', ') // array → comma separated string
+          photos: data.photos?.join(', '),
+          latitude: data.latitude ?? null,
+          longitude: data.longitude ?? null // array → comma separated string
         });
         this.isLoading = false;
       },
@@ -97,6 +101,12 @@ export class EditAccommodationComponent implements OnInit {
       }
     });
   }
+  onLocationSelected(event: { lat: number; lng: number }): void {
+  this.editForm.patchValue({
+    latitude: event.lat,
+    longitude: event.lng
+  });
+}
 
   goBack(): void {
     this.router.navigate(['/accommodations/admin']);

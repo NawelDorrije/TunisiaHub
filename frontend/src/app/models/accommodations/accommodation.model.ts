@@ -7,4 +7,6 @@ export interface Accommodation {
   price: number;
   capacite: number;
   photos: string[];
+    latitude?: number;
+  longitude?: number;
 }

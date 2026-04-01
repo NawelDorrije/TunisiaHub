@@ -12,6 +12,8 @@ import { AccommodationsRoutingModule } from './accommodations-routing.module';
 import { ReviewListComponent } from './components/review-list/review-list.component';
 import { ReviewItemComponent } from './components/review-item/review-item.component';
 import { ReviewFormComponent } from './components/review-form/review-form.component';
+import { MapPickerComponent } from './components/map-picker/map-picker.component';
+import { MapWeatherComponent } from './components/map-weather/map-weather.component';
 
 
 @NgModule({
@@ -23,7 +25,9 @@ import { ReviewFormComponent } from './components/review-form/review-form.compon
     UserListAccommodationComponent,
     ReviewListComponent,
     ReviewItemComponent,
-    ReviewFormComponent
+    ReviewFormComponent,
+    MapPickerComponent,
+    MapWeatherComponent
   ],
   imports: [
     CommonModule,

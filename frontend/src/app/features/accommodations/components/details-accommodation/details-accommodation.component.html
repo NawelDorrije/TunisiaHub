@@ -33,6 +33,8 @@
         </button>
         <button
           class="btn btn-primary"
+          *ngIf="authService.isAdmin()"
+
           (click)="goToEdit(accommodation.id!)"
         >
           Edit
@@ -118,7 +120,12 @@
               <p class="text-muted small mb-1">Description</p>
               <p class="text-secondary">{{ accommodation.description }}</p>
             </div>
-
+            <!-- Map + Weather -->
+            <app-map-weather
+              [latitude]="accommodation.latitude!"
+              [longitude]="accommodation.longitude!"
+              [locationName]="accommodation.title"
+            ></app-map-weather>
           </div>
         </div>
       </div>

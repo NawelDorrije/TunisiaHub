@@ -1,6 +1,7 @@
 import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { Review } from '../../../../models/accommodations/review.model';
 import { ReviewService } from '../../services/review.service';
+import { AuthService } from '../../../auth/services/auth.service';
 
 @Component({
   selector: 'app-review-item',
@@ -15,7 +16,10 @@ export class ReviewItemComponent {
 
   errorMessage: string = '';
 
-  constructor(private reviewService: ReviewService) {}
+  constructor(
+    private reviewService: ReviewService,
+    private authService: AuthService
+  ) {}
 
   get stars(): number[] {
     return Array(this.review.rating).fill(0);
@@ -25,11 +29,17 @@ export class ReviewItemComponent {
     return Array(5 - this.review.rating).fill(0);
   }
 
+  // ← check if logged in user owns this review
+  get isOwner(): boolean {
+    const email = this.authService.getEmail();
+    return !!email && !!this.review.user && this.review.user.email === email;
+  }
+
   onEdit(): void {
     this.reviewEdit.emit(this.review);
   }
 
- onDelete(): void {
+  onDelete(): void {
     if (confirm('Are you sure you want to delete this review?')) {
       this.reviewService.deleteReview(this.review.id!).subscribe({
         next: () => {

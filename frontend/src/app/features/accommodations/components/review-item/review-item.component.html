@@ -12,8 +12,8 @@
         <small class="text-muted">{{ review.reviewDate }}</small>
       </div>
 
-      <!-- Actions -->
-      <div class="d-flex gap-2">
+      <!-- Actions — only for owner -->
+      <div class="d-flex gap-2" *ngIf="isOwner">
         <button
           class="btn btn-outline-secondary btn-sm"
           (click)="onEdit()"
@@ -31,14 +31,8 @@
 
     <!-- Stars -->
     <div class="mb-2">
-      <i
-        *ngFor="let star of stars"
-        class="bi bi-star-fill text-warning"
-      ></i>
-      <i
-        *ngFor="let star of emptyStars"
-        class="bi bi-star text-muted"
-      ></i>
+      <i *ngFor="let star of stars" class="bi bi-star-fill text-warning"></i>
+      <i *ngFor="let star of emptyStars" class="bi bi-star text-muted"></i>
     </div>
 
     <!-- Comment -->

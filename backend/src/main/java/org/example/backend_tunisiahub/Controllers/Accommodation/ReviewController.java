@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.example.backend_tunisiahub.Entities.Accommodation.AccommodationReview;
 import org.example.backend_tunisiahub.Services.Accommodation.IReviewService;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -36,14 +37,19 @@ public class ReviewController {
     }
 
     @PostMapping("/add/{accommodationId}")
-    public ResponseEntity<?> createReview(@PathVariable Long accommodationId, @RequestBody AccommodationReview accommodationReview) {
+    public ResponseEntity<?> createReview(
+            @PathVariable Long accommodationId,
+            @RequestBody AccommodationReview review,
+            @AuthenticationPrincipal String email) {
+
         if (accommodationId <= 0) return ResponseEntity.badRequest().body("Invalid accommodation ID");
-        if (accommodationReview.getRating() < 1 || accommodationReview.getRating() > 5)
+        if (review.getRating() < 1 || review.getRating() > 5)
             return ResponseEntity.badRequest().body("Rating must be between 1 and 5");
-        if (accommodationReview.getComment() == null || accommodationReview.getComment().isEmpty())
+        if (review.getComment() == null || review.getComment().isEmpty())
             return ResponseEntity.badRequest().body("Comment is required");
-        AccommodationReview saved = reviewService.addReview(accommodationId, accommodationReview);
-        if (saved == null) return ResponseEntity.status(404).body("Accommodation not found with id: " + accommodationId);
+
+        AccommodationReview saved = reviewService.addReview(accommodationId, review, email);
+        if (saved == null) return ResponseEntity.status(404).body("Accommodation not found");
         return ResponseEntity.status(201).body(saved);
     }
 

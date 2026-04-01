@@ -113,7 +113,22 @@
             placeholder="https://img1.jpg, https://img2.jpg"
           />
         </div>
+        <!-- Map Picker -->
+          <div class="col-md-12">
+            <app-map-picker
+              [latitude]="f['latitude'].value"
+              [longitude]="f['longitude'].value"
+              (locationSelected)="onLocationSelected($event)"
+            ></app-map-picker>
+          </div>
 
+          <!-- Selected coordinates display -->
+          <div class="col-md-6" *ngIf="f['latitude'].value">
+            <div class="alert alert-info mb-0">
+              📍 Lat: {{ f['latitude'].value | number:'1.5-5' }},
+              Lng: {{ f['longitude'].value | number:'1.5-5' }}
+            </div>
+          </div>
         <!-- Buttons -->
         <div class="col-12 d-flex gap-2">
           <button

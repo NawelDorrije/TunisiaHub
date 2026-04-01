@@ -23,7 +23,9 @@ export class AddAccommodationComponent {
     type: new FormControl('', Validators.required),
     price: new FormControl<number | null>(null, [Validators.required, Validators.min(1)]),
     capacite: new FormControl<number | null>(null, [Validators.required, Validators.min(1)]),
-    photos: new FormControl('')
+    photos: new FormControl(''),
+    latitude: new FormControl<number | null>(null),
+    longitude: new FormControl<number | null>(null)
   });
 
   constructor(
@@ -65,6 +67,12 @@ export class AddAccommodationComponent {
       }
     });
   }
+  onLocationSelected(event: { lat: number; lng: number }): void {
+  this.addForm.patchValue({
+    latitude: event.lat,
+    longitude: event.lng
+  });
+}
 
   goBack(): void {
     this.router.navigate(['/accommodations/admin']);

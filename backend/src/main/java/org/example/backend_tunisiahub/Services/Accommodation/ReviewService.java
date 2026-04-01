@@ -2,7 +2,9 @@ package org.example.backend_tunisiahub.Services.Accommodation;
 import lombok.RequiredArgsConstructor;
 import org.example.backend_tunisiahub.Entities.Accommodation.Accommodation;
 import org.example.backend_tunisiahub.Entities.Accommodation.AccommodationReview;
+import org.example.backend_tunisiahub.Entities.User.User;
 import org.example.backend_tunisiahub.Repositories.Accommodation.ReviewRepository;
+import org.example.backend_tunisiahub.Repositories.User.UserRepository;
 import org.springframework.stereotype.Service;
 import java.time.LocalDate;
 import java.util.List;
@@ -12,7 +14,7 @@ public class ReviewService implements IReviewService {
 
     final ReviewRepository reviewRepository;
     final AccommodationService accommodationServiceImp;
-
+    final UserRepository userRepository;
     @Override
     public List<AccommodationReview> retrieveAllReviews() {
         return reviewRepository.findAll();
@@ -24,11 +26,14 @@ public class ReviewService implements IReviewService {
     }
 
     @Override
-    public AccommodationReview addReview(Long accommodationId, AccommodationReview accommodationReview) {
+    public AccommodationReview addReview(Long accommodationId, AccommodationReview review, String email) {
         Accommodation accommodation = accommodationServiceImp.retrieveAccommodation(accommodationId);
-        accommodationReview.setAccommodation(accommodation);
-        accommodationReview.setReviewDate(LocalDate.now());
-        return reviewRepository.save(accommodationReview);
+        if (accommodation == null) return null;
+        User user = userRepository.findByEmail(email);
+        review.setAccommodation(accommodation);
+        review.setUser(user);
+        review.setReviewDate(LocalDate.now());
+        return reviewRepository.save(review);
     }
 
     @Override
