@@ -28,8 +28,6 @@ export class EditTripComponent implements OnInit {
       departureDateTime: ['', [Validators.required]],
       pricePerSeat: [0, [Validators.required, Validators.min(0)]],
       seatsTotal: [1, [Validators.required, Validators.min(1)]],
-      vehicleInfo: [''],
-      meetingPoint: [''],
     });
   }
 
@@ -55,8 +53,6 @@ export class EditTripComponent implements OnInit {
           departureDateTime: this.toDateTimeLocal(trip.departureDateTime),
           pricePerSeat: trip.pricePerSeat,
           seatsTotal: trip.seatsTotal,
-          vehicleInfo: trip.vehicleInfo ?? '',
-          meetingPoint: trip.meetingPoint ?? '',
         });
       },
       error: () => {
@@ -84,10 +80,9 @@ export class EditTripComponent implements OnInit {
       .updateTrip(this.trip.id, {
         departure: form.departure,
         destination: form.destination,
-        departureDateTime: new Date(form.departureDateTime).toISOString(),
+        departureDateTime: `${form.departureDateTime}:00`,
         pricePerSeat: form.pricePerSeat,
         seatsTotal: form.seatsTotal,
-        vehicleInfo: form.vehicleInfo || undefined,
       })
       .subscribe({
         next: (result) => {

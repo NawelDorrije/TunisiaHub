@@ -64,4 +64,129 @@ export class MyTripsComponent implements OnInit {
       },
     });
   }
+
+  formatTripLabel(dateTime: string): string {
+    const tripDate = new Date(dateTime);
+    const today = new Date();
+    const tomorrow = new Date();
+    tomorrow.setDate(today.getDate() + 1);
+
+    if (this.isSameDay(tripDate, today)) {
+      return 'Today';
+    }
+
+    if (this.isSameDay(tripDate, tomorrow)) {
+      return 'Tomorrow';
+    }
+
+    const dayLabels = ['Sun.', 'Mon.', 'Tue.', 'Wed.', 'Thu.', 'Fri.', 'Sat.'];
+    const monthLabels = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
+    ];
+
+    return `${dayLabels[tripDate.getDay()]} ${tripDate.getDate()} ${monthLabels[tripDate.getMonth()]}`;
+  }
+
+  formatTripTime(dateTime: string): string {
+    const tripDate = new Date(dateTime);
+    return this.formatTimeFromDate(tripDate);
+  }
+
+  formatArrivalTime(trip: Trip): string {
+    const startDate = new Date(trip.departureDateTime);
+    const durationMinutes = this.estimateDurationMinutes(trip);
+    const endDate = new Date(startDate.getTime() + durationMinutes * 60000);
+
+    return this.formatTimeFromDate(endDate);
+  }
+
+  formatDurationLabel(trip: Trip): string {
+    const durationMinutes = this.estimateDurationMinutes(trip);
+    const hours = Math.floor(durationMinutes / 60);
+    const minutes = durationMinutes % 60;
+
+    return `${hours}h${`${minutes}`.padStart(2, '0')}`;
+  }
+
+  formatMainPlace(value: string): string {
+    if (!value) {
+      return 'Trip point';
+    }
+
+    const parts = value
+      .split(',')
+      .map((part) => part.trim())
+      .filter((part) => !!part);
+
+    if (parts.length > 0) {
+      return parts[0];
+    }
+
+    return value;
+  }
+
+  formatPlaceDetails(value: string): string {
+    if (!value) {
+      return '';
+    }
+
+    const parts = value
+      .split(',')
+      .map((part) => part.trim())
+      .filter((part) => !!part);
+
+    if (parts.length <= 1) {
+      return '';
+    }
+
+    return parts.slice(1).join(', ');
+  }
+
+  private estimateDurationMinutes(trip: Trip): number {
+    if (trip.durationMinutes && trip.durationMinutes > 0) {
+      return Math.round(Number(trip.durationMinutes));
+    }
+
+    const departure = this.formatMainPlace(trip.departure).toLowerCase();
+    const destination = this.formatMainPlace(trip.destination).toLowerCase();
+
+    if (departure === destination) {
+      return 10;
+    }
+
+    if (
+      trip.departure.toLowerCase().includes(destination) ||
+      trip.destination.toLowerCase().includes(departure)
+    ) {
+      return 15;
+    }
+
+    return 20;
+  }
+
+  private formatTimeFromDate(value: Date): string {
+    const hours = `${value.getHours()}`.padStart(2, '0');
+    const minutes = `${value.getMinutes()}`.padStart(2, '0');
+
+    return `${hours}:${minutes}`;
+  }
+
+  private isSameDay(firstDate: Date, secondDate: Date): boolean {
+    return (
+      firstDate.getFullYear() === secondDate.getFullYear() &&
+      firstDate.getMonth() === secondDate.getMonth() &&
+      firstDate.getDate() === secondDate.getDate()
+    );
+  }
 }

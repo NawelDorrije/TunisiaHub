@@ -18,4 +18,6 @@ public interface ITripService {
     Trip modifyTrip(Long tripId, Trip trip, Long currentUserId);
 
     Trip cancelTrip(Long tripId, Long currentUserId);
+
+    Trip makeTripAvailable(Long tripId, Long currentUserId);
 }

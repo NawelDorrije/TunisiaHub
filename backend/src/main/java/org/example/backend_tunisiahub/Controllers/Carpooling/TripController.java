@@ -6,10 +6,12 @@ import jakarta.servlet.http.HttpServletRequest;
 import lombok.AllArgsConstructor;
 import org.example.backend_tunisiahub.Entities.Carpooling.Trip;
 import org.example.backend_tunisiahub.Services.Carpooling.ITripService;
+import org.example.backend_tunisiahub.Services.Carpooling.RouteSuggestionService;
 import org.example.backend_tunisiahub.shared.security.CurrentUserResolver;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/driver/trips")
@@ -18,6 +20,7 @@ import java.util.List;
 public class TripController {
 
     ITripService tripService;
+    RouteSuggestionService routeSuggestionService;
     CurrentUserResolver currentUserResolver;
 
     @PostMapping
@@ -47,6 +50,13 @@ public class TripController {
         return tripService.cancelTrip(id, currentUserId);
     }
 
+    @PutMapping("/{id}/available")
+    @Operation(summary = "Make trip available again")
+    public Trip makeTripAvailable(@PathVariable Long id, HttpServletRequest request) {
+        Long currentUserId = currentUserResolver.getUserId(request);
+        return tripService.makeTripAvailable(id, currentUserId);
+    }
+
     @PutMapping("/{id}")
     @Operation(summary = "Update trip")
     public Trip modifyTrip(@PathVariable Long id,
@@ -54,5 +64,16 @@ public class TripController {
                            HttpServletRequest request) {
         Long currentUserId = currentUserResolver.getUserId(request);
         return tripService.modifyTrip(id, payload, currentUserId);
+    }
+
+    @GetMapping("/route-suggestions")
+    @Operation(summary = "Get route suggestions between two points")
+    public List<Map<String, Object>> getRouteSuggestions(
+            @RequestParam double startLat,
+            @RequestParam double startLng,
+            @RequestParam double endLat,
+            @RequestParam double endLng
+    ) {
+        return routeSuggestionService.getRouteSuggestions(startLat, startLng, endLat, endLng);
     }
 }

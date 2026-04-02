@@ -16,7 +16,6 @@ import { AdminDashboardComponent } from './admin-dashboard/admin-dashboard.compo
 import { AllBookingsComponent } from './all-bookings/all-bookings.component';
 import { ComplaintsManagementComponent } from './complaints-management/complaints-management.component';
 import { UsersSummaryComponent } from './users-summary/users-summary.component';
-import { VehicleManagementComponent } from './vehicle-management/vehicle-management.component';
 
 @NgModule({
   declarations: [
@@ -34,7 +33,6 @@ import { VehicleManagementComponent } from './vehicle-management/vehicle-managem
     AllBookingsComponent,
     ComplaintsManagementComponent,
     UsersSummaryComponent,
-    VehicleManagementComponent,
   ],
   imports: [
     CommonModule,

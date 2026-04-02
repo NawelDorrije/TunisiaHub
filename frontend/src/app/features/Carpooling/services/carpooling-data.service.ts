@@ -1,7 +1,7 @@
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable, forkJoin, of } from 'rxjs';
-import { catchError, map, switchMap } from 'rxjs/operators';
+import { catchError, map, shareReplay, switchMap } from 'rxjs/operators';
 import {
   AdminStats,
   Booking,
@@ -14,25 +14,32 @@ import {
   TripSearchFilters,
 } from '../../../models/Carpooling/carpooling';
 
+export interface CountryCityData {
+  country: string;
+  cities: string[];
+}
+
 interface TripApi {
   id: number;
-  departurePoint: string;
+  departure: string;
   destination: string;
   departureDateTime: string;
+  durationMinutes?: number;
   price: number;
   seatsTotal: number;
   seatsAvailable: number;
   status: string;
   createdBy: string;
-  vehicle?: VehicleApi;
+  bookingMode?: string;
 }
 
 interface ReservationApi {
   id: number;
   status: string;
-  startDate: string;
-  endDate: string;
+  startDate?: string;
+  endDate?: string;
   totalPrice: number;
+  numberOfPeople?: number;
   type: string;
   trip?: number | { id: number };
 }
@@ -46,19 +53,7 @@ interface ComplaintApi {
   status?: string;
 }
 
-interface VehicleApi {
-  id: number;
-  model: string;
-  plateNumber: string;
-  color: string;
-}
 
-export interface Vehicle {
-  id: number;
-  model: string;
-  plateNumber: string;
-  color: string;
-}
 
 @Injectable({
   providedIn: 'root',
@@ -67,6 +62,7 @@ export class CarpoolingDataService {
   private readonly baseUrl = 'http://localhost:8089';
   private readonly currentUserId = 2;
   private readonly currentRole = 'USER';
+  private countriesAndCities$?: Observable<CountryCityData[]>;
 
   constructor(private readonly http: HttpClient) {}
 
@@ -128,17 +124,17 @@ export class CarpoolingDataService {
   }
 
   publishTrip(
-    payload: Omit<Trip, 'id' | 'ownerUserId' | 'seatsAvailable' | 'status'> & {
-      vehicleId?: number;
-    },
+        payload: Omit<Trip, 'id' | 'ownerUserId' | 'seatsAvailable' | 'status'>,
+
   ): Observable<Trip> {
     const body = {
-      departurePoint: payload.departure,
+      departure: payload.departure,
       destination: payload.destination,
       departureDateTime: payload.departureDateTime,
+      durationMinutes: payload.durationMinutes,
       price: payload.pricePerSeat,
       seatsTotal: payload.seatsTotal,
-      vehicle: payload.vehicleId ? { id: payload.vehicleId } : undefined,
+      bookingMode: payload.bookingMode,
     };
 
     return this.http
@@ -146,6 +142,55 @@ export class CarpoolingDataService {
         headers: this.userHeaders(),
       })
       .pipe(map((trip) => this.mapTrip(trip)));
+  }
+
+  getRouteSuggestions(
+    startLat: number,
+    startLng: number,
+    endLat: number,
+    endLng: number,
+  ): Observable<any[]> {
+    const params = new HttpParams()
+      .set('startLat', startLat)
+      .set('startLng', startLng)
+      .set('endLat', endLat)
+      .set('endLng', endLng);
+
+    return this.http.get<any[]>(`${this.baseUrl}/api/driver/trips/route-suggestions`, {
+      headers: this.userHeaders(),
+      params,
+    });
+  }
+
+  getCountriesAndCities(): Observable<CountryCityData[]> {
+    if (!this.countriesAndCities$) {
+      this.countriesAndCities$ = this.http
+        .get<{ data: CountryCityData[] }>('https://countriesnow.space/api/v0.1/countries')
+        .pipe(
+          map((response) => response.data || []),
+          shareReplay(1),
+        );
+    }
+
+    return this.countriesAndCities$;
+  }
+
+  getLocationCoordinates(query: string, limit: number = 1): Observable<any> {
+    return this.http.get(
+      `https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&namedetails=1&accept-language=en&q=${encodeURIComponent(query)}&limit=${limit}`
+    );
+  }
+
+  getTunisiaLocationSuggestions(query: string, limit: number = 8): Observable<any> {
+    return this.http.get(
+      `https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&namedetails=1&accept-language=en&countrycodes=tn&viewbox=7.4,37.6,11.7,30.1&bounded=1&dedupe=1&q=${encodeURIComponent(query)}&limit=${limit}`
+    );
+  }
+
+  getLocationName(lat: number, lng: number): Observable<any> {
+    return this.http.get(
+      `https://nominatim.openstreetmap.org/reverse?format=json&addressdetails=1&namedetails=1&accept-language=en&lat=${lat}&lon=${lng}`
+    );
   }
 
   canEditTrip(trip: Trip): { allowed: boolean; reason?: string } {
@@ -169,11 +214,12 @@ export class CarpoolingDataService {
         | 'departure'
         | 'destination'
         | 'departureDateTime'
+        | 'durationMinutes'
         | 'pricePerSeat'
         | 'seatsTotal'
-        | 'vehicleInfo'
+        | 'bookingMode'
       >
-    > & { vehicleId?: number },
+    > ,
   ): Observable<{ ok: boolean; error?: string; trip?: Trip }> {
     return this.getTripById(tripId).pipe(
       switchMap((existing) => {
@@ -182,13 +228,14 @@ export class CarpoolingDataService {
         }
 
         const body = {
-          departurePoint: patch.departure ?? existing.departure,
+          departure: patch.departure ?? existing.departure,
           destination: patch.destination ?? existing.destination,
           departureDateTime:
             patch.departureDateTime ?? existing.departureDateTime,
+          durationMinutes: patch.durationMinutes ?? existing.durationMinutes,
           price: patch.pricePerSeat ?? existing.pricePerSeat,
           seatsTotal: patch.seatsTotal ?? existing.seatsTotal,
-          vehicle: patch.vehicleId ? { id: patch.vehicleId } : undefined,
+          bookingMode: patch.bookingMode ?? existing.bookingMode,
         };
 
         return this.http
@@ -226,6 +273,26 @@ export class CarpoolingDataService {
       );
   }
 
+  makeTripAvailable(
+    tripId: number,
+  ): Observable<{ ok: boolean; error?: string }> {
+    return this.http
+      .put<TripApi>(
+        `${this.baseUrl}/api/driver/trips/${tripId}/available`,
+        {},
+        { headers: this.userHeaders() },
+      )
+      .pipe(
+        map(() => ({ ok: true })),
+        catchError((error) =>
+          of({
+            ok: false,
+            error: this.extractError(error, 'Unable to make trip available.'),
+          }),
+        ),
+      );
+  }
+
   bookTrip(
     tripId: number,
     seatsRequested: number,
@@ -244,9 +311,8 @@ export class CarpoolingDataService {
 
         const body = {
           status: 'CONFIRMED',
-          startDate: trip.departureDateTime,
-          endDate: trip.departureDateTime,
           totalPrice: seatsRequested * trip.pricePerSeat,
+          numberOfPeople: seatsRequested,
           type: 'TripReservation',
           trip: { id: trip.id },
         };
@@ -402,50 +468,7 @@ export class CarpoolingDataService {
     );
   }
 
-  // Vehicle Management API Methods
-  getMyVehicles(): Observable<Vehicle[]> {
-    return this.http
-      .get<VehicleApi[]>(`${this.baseUrl}/api/driver/vehicles`, {
-        headers: this.userHeaders(),
-      })
-      .pipe(
-        map((response) => (response ?? []).map((v) => this.mapVehicle(v))),
-        catchError(() => of([])),
-      );
-  }
-
-  createVehicle(vehicle: Omit<Vehicle, 'id'>): Observable<Vehicle> {
-    return this.http
-      .post<VehicleApi>(`${this.baseUrl}/api/driver/vehicles`, vehicle, {
-        headers: this.userHeaders(),
-      })
-      .pipe(map((v) => this.mapVehicle(v)));
-  }
-
-  updateVehicle(id: number, vehicle: Omit<Vehicle, 'id'>): Observable<Vehicle> {
-    return this.http
-      .put<VehicleApi>(`${this.baseUrl}/api/driver/vehicles/${id}`, vehicle, {
-        headers: this.userHeaders(),
-      })
-      .pipe(map((v) => this.mapVehicle(v)));
-  }
-
-  deleteVehicle(id: number): Observable<{ ok: boolean; error?: string }> {
-    return this.http
-      .delete(`${this.baseUrl}/api/driver/vehicles/${id}`, {
-        headers: this.userHeaders(),
-      })
-      .pipe(
-        map(() => ({ ok: true })),
-        catchError((error) =>
-          of({
-            ok: false,
-            error: this.extractError(error, 'Unable to delete vehicle.'),
-          }),
-        ),
-      );
-  }
-
+  
   updateComplaintStatus(
     complaintId: number,
     status: ComplaintStatus,
@@ -510,16 +533,15 @@ export class CarpoolingDataService {
     const ownerUserId = Number(apiTrip.createdBy);
     return {
       id: apiTrip.id,
-      departure: apiTrip.departurePoint,
+      departure: apiTrip.departure,
       destination: apiTrip.destination,
       departureDateTime: apiTrip.departureDateTime,
+      durationMinutes: apiTrip.durationMinutes,
       pricePerSeat: Number(apiTrip.price),
       seatsTotal: apiTrip.seatsTotal,
       seatsAvailable: apiTrip.seatsAvailable,
       ownerUserId: Number.isFinite(ownerUserId) ? ownerUserId : 0,
-      vehicleInfo: apiTrip.vehicle?.id
-        ? `Vehicle #${apiTrip.vehicle.id}`
-        : undefined,
+      bookingMode: apiTrip.bookingMode,
       status: apiTrip.status?.toUpperCase() === 'CANCELED' ? 'CANCELED' : 'ACTIVE',
     };
   }
@@ -529,9 +551,9 @@ export class CarpoolingDataService {
       id: reservation.id,
       tripId: this.extractTripId(reservation),
       passengerUserId: this.currentUserId,
-      seatsBooked: 1,
+      seatsBooked: Number(reservation.numberOfPeople ?? 1),
       totalPrice: Number(reservation.totalPrice ?? 0),
-      bookingDate: reservation.startDate,
+      bookingDate: reservation.startDate || reservation.endDate || new Date().toISOString(),
       status: reservation.status === 'CANCELED' ? 'CANCELED' : 'CONFIRMED',
     };
   }
@@ -548,14 +570,6 @@ export class CarpoolingDataService {
     };
   }
 
-  private mapVehicle(apiVehicle: VehicleApi): Vehicle {
-    return {
-      id: apiVehicle.id,
-      model: apiVehicle.model,
-      plateNumber: apiVehicle.plateNumber,
-      color: apiVehicle.color,
-    };
-  }
 
   private extractTripIds(reservations: ReservationApi[]): number[] {
     return [

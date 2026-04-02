@@ -14,12 +14,12 @@ export interface Trip {
   departure: string;
   destination: string;
   departureDateTime: string;
+  durationMinutes?: number;
   pricePerSeat: number;
   seatsTotal: number;
   seatsAvailable: number;
   ownerUserId: number;
-  vehicleInfo?: string;
-  meetingPoint?: string;
+  bookingMode?: string;
   status: TripStatus;
 }
 

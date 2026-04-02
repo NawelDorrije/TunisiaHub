@@ -2,11 +2,9 @@ package org.example.backend_tunisiahub.Entities;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
-import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import lombok.experimental.FieldDefaults;
 import org.example.backend_tunisiahub.Entities.Carpooling.Trip;
 import org.example.backend_tunisiahub.Entities.User.User;
 
@@ -17,48 +15,49 @@ import java.util.List;
 @Entity
 @Getter
 @Setter
-@FieldDefaults(level = AccessLevel.PRIVATE)
 @NoArgsConstructor
 public class Reservation {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    Long id;
+    private Long id;
 
-    String status;
-
-    @Temporal(TemporalType.DATE)
-    Date startDate;
+    private String status;
 
     @Temporal(TemporalType.DATE)
-    Date endDate;
+    @Column(nullable = true)
+    private Date startDate;
 
-    Double totalPrice;
+    @Temporal(TemporalType.DATE)
+    @Column(nullable = true)
+    private Date endDate;
+
+    private Double totalPrice;
 
     @Column(name = "number_of_people", nullable = true)
-    Integer numberOfPeople;
+    private Integer numberOfPeople;
 
     @Enumerated(EnumType.STRING)
-    ReservationType type;
+    private ReservationType type;
 
     @ManyToOne
     @JoinColumn(name = "trip_id")
-    Trip trip;
+    private Trip trip;
 
     @ManyToOne
     @JoinColumn(name = "spot_id")
-    Spot spot;
+    private Spot spot;
 
     @ManyToOne
     @JoinColumn(name = "user_id")
-    User user;
+    private User user;
 
     @OneToMany(mappedBy = "reservation")
     @JsonIgnore
-    List<Complaint> complaints;
+    private List<Complaint> complaints;
 
     @OneToOne(mappedBy = "reservation")
     @JsonIgnore
-    Review review;
+    private Review review;
 
 }
