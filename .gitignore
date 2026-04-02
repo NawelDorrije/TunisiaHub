@@ -1,5 +1,5 @@
 docs/CARPOOLING_TRIPS_API.md
-logs.txt
-logs1.txt
-Foyer/
-4Arctic6-2526-main-3/
+backend/logs.txt
+frontend/logs1.txt
+test/
+test2/
