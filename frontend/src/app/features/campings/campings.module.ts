@@ -10,6 +10,7 @@ import { FormCampingComponent } from './admin/form-camping/form-camping.componen
 import { ListCampingComponent } from './admin/list-camping/list-camping.component';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { DetailsCampingComponent } from './admin/details-camping/details-camping.component';
+import { ReservationComponent } from './admin/reservation/reservation.component';
 
 @NgModule({
   declarations: [
@@ -20,6 +21,7 @@ import { DetailsCampingComponent } from './admin/details-camping/details-camping
     FormCampingComponent,
     ListCampingComponent,
     DetailsCampingComponent,
+    ReservationComponent,
   ],
   imports: [
     CommonModule,
