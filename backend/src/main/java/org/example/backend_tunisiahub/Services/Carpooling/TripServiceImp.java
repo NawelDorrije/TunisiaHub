@@ -2,9 +2,7 @@ package org.example.backend_tunisiahub.Services.Carpooling;
 
 import lombok.AllArgsConstructor;
 import org.example.backend_tunisiahub.Entities.Carpooling.Trip;
-import org.example.backend_tunisiahub.Entities.Carpooling.Vehicle;
 import org.example.backend_tunisiahub.Repositories.Carpooling.TripRepository;
-import org.example.backend_tunisiahub.Repositories.Carpooling.VehicleRepository;
 import org.example.backend_tunisiahub.shared.exception.ApiException;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -19,9 +17,10 @@ import java.util.List;
 public class TripServiceImp implements ITripService {
 
     private TripRepository tripRepository;
-    private VehicleRepository vehicleRepository;
     private static final String STATUS_SCHEDULED = "scheduled";
     private static final String STATUS_CANCELED = "canceled";
+    private static final String BOOKING_MODE_INSTANT = "instant";
+    private static final String BOOKING_MODE_MANUAL = "manual";
 
     @Override
     public List<Trip> retrieveAllTrips(String departurePoint, String destination, LocalDate date, Integer seatsRequired) {
@@ -29,7 +28,7 @@ public class TripServiceImp implements ITripService {
                 .stream()
                 .filter(trip -> departurePoint == null
                         || departurePoint.isBlank()
-                        || trip.getDeparturePoint().toLowerCase().contains(departurePoint.trim().toLowerCase()))
+                        || trip.getDeparture().toLowerCase().contains(departurePoint.trim().toLowerCase()))
                 .filter(trip -> destination == null
                         || destination.isBlank()
                         || trip.getDestination().toLowerCase().contains(destination.trim().toLowerCase()))
@@ -46,7 +45,7 @@ public class TripServiceImp implements ITripService {
     @Override
     public List<Trip> retrieveMyTrips(Long driverId) {
         String currentUserId = String.valueOf(driverId);
-        return tripRepository.findByCreatedByOrDriverIdOrderByDepartureDateTimeDesc(currentUserId, currentUserId);
+        return tripRepository.findByCreatedByOrderByDepartureDateTimeDesc(currentUserId);
     }
 
     @Override
@@ -54,17 +53,16 @@ public class TripServiceImp implements ITripService {
         validateTrip(request);
 
         Trip trip = new Trip();
-        trip.setDeparturePoint(request.getDeparturePoint().trim());
+        trip.setDeparture(request.getDeparture().trim());
         trip.setDestination(request.getDestination().trim());
         trip.setDepartureDateTime(request.getDepartureDateTime());
+        trip.setDurationMinutes(request.getDurationMinutes());
         trip.setPrice(request.getPrice());
         trip.setSeatsTotal(request.getSeatsTotal());
         trip.setSeatsAvailable(request.getSeatsTotal());
         trip.setStatus(STATUS_SCHEDULED);
+        trip.setBookingMode(normalizeBookingMode(request.getBookingMode()));
         trip.setCreatedBy(String.valueOf(driverId));
-        trip.setDriverId(String.valueOf(driverId));
-        trip.setVehicle(resolveVehicle(request.getVehicle(), driverId));
-
         return tripRepository.save(trip);
     }
 
@@ -77,16 +75,18 @@ public class TripServiceImp implements ITripService {
             throw new ApiException(HttpStatus.FORBIDDEN, "You can only edit your own trip");
         }
 
-        trip.setDeparturePoint(request.getDeparturePoint().trim());
+        trip.setDeparture(request.getDeparture().trim());
         trip.setDestination(request.getDestination().trim());
         trip.setDepartureDateTime(request.getDepartureDateTime());
+        if (request.getDurationMinutes() != null && request.getDurationMinutes() > 0) {
+            trip.setDurationMinutes(request.getDurationMinutes());
+        }
         trip.setPrice(request.getPrice());
         trip.setSeatsTotal(request.getSeatsTotal());
         trip.setSeatsAvailable(request.getSeatsTotal());
-        if (request.getVehicle() != null) {
-            trip.setVehicle(resolveVehicle(request.getVehicle(), currentUserId));
+        if (request.getBookingMode() != null && !request.getBookingMode().isBlank()) {
+            trip.setBookingMode(normalizeBookingMode(request.getBookingMode()));
         }
-
         return tripRepository.save(trip);
     }
 
@@ -100,33 +100,27 @@ public class TripServiceImp implements ITripService {
         return tripRepository.save(trip);
     }
 
-    private boolean isOwner(Trip trip, Long currentUserId) {
-        String userId = String.valueOf(currentUserId);
-        return userId.equals(trip.getCreatedBy()) || userId.equals(trip.getDriverId());
+    @Override
+    public Trip makeTripAvailable(Long tripId, Long currentUserId) {
+        Trip trip = tripRepository.findById(tripId).get();
+        if (!isOwner(trip, currentUserId)) {
+            throw new ApiException(HttpStatus.FORBIDDEN, "You can only update your own trip");
+        }
+        trip.setStatus(STATUS_SCHEDULED);
+        return tripRepository.save(trip);
     }
 
-    private Vehicle resolveVehicle(Vehicle vehicle, Long driverId) {
-        if (vehicle != null && vehicle.getId() != null) {
-            Vehicle existingVehicle = vehicleRepository.findByIdAndOwnerId(vehicle.getId(), String.valueOf(driverId));
-            if (existingVehicle == null) {
-                throw new ApiException(HttpStatus.BAD_REQUEST, "Selected vehicle must belong to the driver");
-            }
-            return existingVehicle;
-        }
-
-        List<Vehicle> vehicles = vehicleRepository.findByOwnerIdOrderByIdDesc(String.valueOf(driverId));
-        if (!vehicles.isEmpty()) {
-            return vehicles.get(0);
-        }
-        return null;
+    private boolean isOwner(Trip trip, Long currentUserId) {
+        String userId = String.valueOf(currentUserId);
+        return userId.equals(trip.getCreatedBy());
     }
 
     private void validateTrip(Trip request) {
         if (request == null) {
             throw new ApiException(HttpStatus.BAD_REQUEST, "Trip is required");
         }
-        if (request.getDeparturePoint() == null || request.getDeparturePoint().isBlank()) {
-            throw new ApiException(HttpStatus.BAD_REQUEST, "departurePoint is required");
+        if (request.getDeparture() == null || request.getDeparture().isBlank()) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "departure is required");
         }
         if (request.getDestination() == null || request.getDestination().isBlank()) {
             throw new ApiException(HttpStatus.BAD_REQUEST, "destination is required");
@@ -141,5 +135,18 @@ public class TripServiceImp implements ITripService {
         if (request.getSeatsTotal() < 1) {
             throw new ApiException(HttpStatus.BAD_REQUEST, "seatsTotal must be greater than 0");
         }
+    }
+
+    private String normalizeBookingMode(String value) {
+        if (value == null || value.isBlank()) {
+            return BOOKING_MODE_MANUAL;
+        }
+
+        String normalized = value.trim().toLowerCase();
+        if (BOOKING_MODE_INSTANT.equals(normalized)) {
+            return BOOKING_MODE_INSTANT;
+        }
+
+        return BOOKING_MODE_MANUAL;
     }
 }
