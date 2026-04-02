@@ -27,19 +27,19 @@ export class ApiService {
   }
 
   getRestaurantById(id: number): Observable<any> {
-    return this.http.get(`${this.BASE_URL}/api/restaurants/${id}`);
+    return this.http.get(`${this.BASE_URL}/api/restaurants/get/${id}`);
   }
 
   addRestaurant(restaurant: any): Observable<any> {
     return this.http.post(`${this.BASE_URL}/api/restaurants/add`, restaurant);
   }
 
-  updateRestaurant(id: number, restaurant: any): Observable<any> {
-    return this.http.put(`${this.BASE_URL}/api/restaurants/update/${id}`, restaurant);
+  updateRestaurant(restaurant: any): Observable<any> {
+    return this.http.put(`${this.BASE_URL}/api/restaurants/update`, restaurant);
   }
 
-  deleteRestaurant(id: number): Observable<any> {
-    return this.http.delete(`${this.BASE_URL}/api/restaurants/delete/${id}`);
+  deleteRestaurant(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.BASE_URL}/api/restaurants/delete/${id}`);
   }
 
   getMenusByRestaurantId(restaurantId: number): Observable<any> {
@@ -54,12 +54,61 @@ export class ApiService {
     return this.http.post(`${this.BASE_URL}/api/menus/add`, menu);
   }
 
+  updateMenu(menu: any): Observable<any> {
+    return this.http.put(`${this.BASE_URL}/api/menus/update`, menu);
+  }
+
+  deleteMenu(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.BASE_URL}/api/menus/delete/${id}`);
+  }
+
   addMenuItem(menuItem: any): Observable<any> {
     return this.http.post(`${this.BASE_URL}/api/menu-items/add`, menuItem);
   }
 
+  updateMenuItem(menuItem: any): Observable<any> {
+    return this.http.put(`${this.BASE_URL}/api/menu-items/update`, menuItem);
+  }
+
+  deleteMenuItem(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.BASE_URL}/api/menu-items/delete/${id}`);
+  }
+
   getMenuTypes(): Observable<any> {
     return this.http.get(`${this.BASE_URL}/api/menus/types`);
+  }
+
+  createReservation(reservation: any): Observable<any> {
+    return this.http.post(`${this.BASE_URL}/api/reservations`, reservation);
+  }
+
+  getAllReservations(): Observable<any[]> {
+    return this.http.get<any[]>(`${this.BASE_URL}/api/reservations`);
+  }
+
+  confirmReservation(reservationId: number, tableIds: number[]): Observable<any> {
+    return this.http.patch(
+      `${this.BASE_URL}/api/reservations/${reservationId}/confirm`,
+      { tableIds },
+    );
+  }
+
+  cancelReservationById(reservationId: number): Observable<any> {
+    return this.http.patch(
+      `${this.BASE_URL}/api/reservations/${reservationId}/cancel`,
+      {},
+    );
+  }
+
+  getTablesByRestaurant(
+    restaurantId: number,
+    status?: string,
+  ): Observable<any[]> {
+    let url = `${this.BASE_URL}/api/restaurant-tables/by-restaurant/${restaurantId}`;
+    if (status) {
+      url += `?status=${encodeURIComponent(status)}`;
+    }
+    return this.http.get<any[]>(url);
   }
 }
 

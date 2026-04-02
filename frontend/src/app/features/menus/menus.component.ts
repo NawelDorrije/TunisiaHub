@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { ApiService } from '../../services/api.service';
 import { ActivatedRoute } from '@angular/router';
+import { AuthService } from '../auth/services/auth.service';
 
 @Component({
   selector: 'app-menus',
@@ -28,11 +29,28 @@ export class MenusComponent implements OnInit {
     menu_id: null
   };
   isSubmittingItem: boolean = false;
+  showEditMenuForm: boolean = false;
+  editMenu: any = { id: null, name: '', type: '', restaurant_id: null as number | null };
+  isSubmittingMenuEdit: boolean = false;
+  showEditItemForm: boolean = false;
+  editMenuItem: any = {
+    id: null,
+    name: '',
+    ingredients: '',
+    description: '',
+    menu_id: null as number | null,
+  };
+  isSubmittingItemEdit: boolean = false;
 
   constructor(
     private api: ApiService,
-    private route: ActivatedRoute
+    private route: ActivatedRoute,
+    private auth: AuthService
   ) {}
+
+  get isAdmin(): boolean {
+    return this.auth.isAdmin();
+  }
 
   ngOnInit(): void {
     // Load menu types from backend
@@ -102,6 +120,7 @@ export class MenusComponent implements OnInit {
   }
 
   openAddMenuForm(): void {
+    if (!this.isAdmin) return;
     this.showAddMenuForm = true;
     this.newMenu = { name: '', type: 'mains', restaurantId: this.restaurantId as number };
   }
@@ -112,6 +131,7 @@ export class MenusComponent implements OnInit {
   }
 
   submitAddMenu(): void {
+    if (!this.isAdmin) return;
     if (!this.newMenu.name || !this.newMenu.type) {
       alert('Please fill in all fields');
       return;
@@ -148,6 +168,7 @@ export class MenusComponent implements OnInit {
   }
 
   openAddItemForm(): void {
+    if (!this.isAdmin) return;
     if (!this.selectedMenu) {
       alert('Please select a menu first');
       return;
@@ -172,6 +193,7 @@ export class MenusComponent implements OnInit {
   }
 
   submitAddItem(): void {
+    if (!this.isAdmin) return;
     if (!this.newMenuItem.name || !this.newMenuItem.ingredients || !this.newMenuItem.description) {
       alert('Please fill in all fields');
       return;
@@ -206,5 +228,145 @@ export class MenusComponent implements OnInit {
         alert('Error adding item. Please try again.');
       }
     );
+  }
+
+  openEditMenuForm(event: Event, menu: any): void {
+    event.stopPropagation();
+    if (!this.isAdmin) return;
+    this.editMenu = {
+      id: menu.id,
+      name: menu.name ?? '',
+      type: menu.type ?? '',
+      restaurant_id: this.restaurantId,
+    };
+    this.showEditMenuForm = true;
+  }
+
+  closeEditMenuForm(): void {
+    this.showEditMenuForm = false;
+    this.editMenu = { id: null, name: '', type: '', restaurant_id: null };
+    this.isSubmittingMenuEdit = false;
+  }
+
+  submitEditMenu(): void {
+    if (!this.isAdmin || this.editMenu.id == null) return;
+    if (!this.editMenu.name || !this.editMenu.type || !this.restaurantId) {
+      alert('Please fill in all fields');
+      return;
+    }
+    this.isSubmittingMenuEdit = true;
+    const payload = {
+      id: this.editMenu.id,
+      name: this.editMenu.name,
+      type: this.editMenu.type,
+      restaurant_id: this.restaurantId,
+    };
+    this.api.updateMenu(payload).subscribe({
+      next: (data: any) => {
+        const idx = this.menus.findIndex((m) => m.id === data.id);
+        if (idx !== -1) this.menus[idx] = data;
+        if (this.selectedMenu?.id === data.id) this.selectedMenu = { ...this.selectedMenu, ...data };
+        this.closeEditMenuForm();
+        alert('Menu updated successfully!');
+      },
+      error: (err: any) => {
+        console.error('Error updating menu:', err);
+        this.isSubmittingMenuEdit = false;
+        alert('Error updating menu. Please try again.');
+      },
+    });
+  }
+
+  confirmDeleteMenu(event: Event, menu: any): void {
+    event.stopPropagation();
+    if (!this.isAdmin) return;
+    if (!confirm(`Delete menu "${menu.name}"? Items in this menu may also be removed.`)) return;
+    this.api.deleteMenu(menu.id).subscribe({
+      next: () => {
+        this.menus = this.menus.filter((m) => m.id !== menu.id);
+        if (this.selectedMenu?.id === menu.id) this.clearSelection();
+        alert('Menu deleted.');
+      },
+      error: (err: any) => {
+        console.error('Error deleting menu:', err);
+        alert('Error deleting menu. Please try again.');
+      },
+    });
+  }
+
+  openEditItemForm(event: Event, item: any): void {
+    event.stopPropagation();
+    if (!this.isAdmin) return;
+    if (!this.selectedMenu?.id) return;
+    this.editMenuItem = {
+      id: item.id,
+      name: item.name ?? '',
+      ingredients: item.ingredients ?? '',
+      description: item.description ?? '',
+      menu_id: item.menu_id ?? this.selectedMenu.id,
+    };
+    this.showEditItemForm = true;
+  }
+
+  closeEditItemForm(): void {
+    this.showEditItemForm = false;
+    this.editMenuItem = {
+      id: null,
+      name: '',
+      ingredients: '',
+      description: '',
+      menu_id: null,
+    };
+    this.isSubmittingItemEdit = false;
+  }
+
+  submitEditMenuItem(): void {
+    if (!this.isAdmin || this.editMenuItem.id == null) return;
+    if (
+      !this.editMenuItem.name ||
+      !this.editMenuItem.ingredients ||
+      !this.editMenuItem.description ||
+      !this.selectedMenu?.id
+    ) {
+      alert('Please fill in all fields');
+      return;
+    }
+    this.isSubmittingItemEdit = true;
+    const payload = {
+      id: this.editMenuItem.id,
+      name: this.editMenuItem.name,
+      ingredients: this.editMenuItem.ingredients,
+      description: this.editMenuItem.description,
+      menu_id: this.selectedMenu.id,
+    };
+    this.api.updateMenuItem(payload).subscribe({
+      next: (data: any) => {
+        const idx = this.selectedMenuItems.findIndex((i) => i.id === data.id);
+        if (idx !== -1) this.selectedMenuItems[idx] = data;
+        this.closeEditItemForm();
+        alert('Item updated successfully!');
+      },
+      error: (err: any) => {
+        console.error('Error updating item:', err);
+        this.isSubmittingItemEdit = false;
+        alert('Error updating item. Please try again.');
+      },
+    });
+  }
+
+  confirmDeleteMenuItem(event: Event, item: any): void {
+    event.stopPropagation();
+    if (!this.isAdmin) return;
+    if (!confirm(`Delete "${item.name}"?`)) return;
+    this.api.deleteMenuItem(item.id).subscribe({
+      next: () => {
+        this.selectedMenuItems = this.selectedMenuItems.filter((i) => i.id !== item.id);
+        alert('Item deleted.');
+      },
+      error: (err: any) => {
+        console.error('Error deleting item:', err);
+        alert('Error deleting item. Please try again.');
+      },
+    });
   }
 }

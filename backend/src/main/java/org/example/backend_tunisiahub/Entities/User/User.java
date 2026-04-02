@@ -30,6 +30,7 @@ public class User {
     @Column(unique = true)
     String email;
 
+    @JsonIgnore
     String motDePasse;
     @Enumerated(EnumType.STRING)
     RoleUser role;

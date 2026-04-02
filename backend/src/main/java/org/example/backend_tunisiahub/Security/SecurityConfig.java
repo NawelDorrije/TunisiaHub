@@ -8,8 +8,10 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -39,6 +41,35 @@ public class SecurityConfig {
                         .requestMatchers("/api/reviews/get/**").permitAll()
                         .requestMatchers("/api/reviews/accommodation/**").permitAll()
                         .requestMatchers("/api/reviews/add/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/restaurants", "/api/restaurants/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/menus", "/api/menus/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/menu-items", "/api/menu-items/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/restaurants/add").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/restaurants/update").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/restaurants/delete/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/api/menus/add").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/menus/update").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/menus/delete/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/api/menu-items/add").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/menu-items/update").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/menu-items/delete/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/api/reservations").hasRole("CLIENT")
+                        .requestMatchers(HttpMethod.GET, "/api/reservations", "/api/reservations/**")
+                                .hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/reservations").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/reservations/**").hasRole("ADMIN")
+                        .requestMatchers(new AntPathRequestMatcher("/api/reservations/*/confirm", "PATCH"))
+                                .hasRole("ADMIN")
+                        .requestMatchers(new AntPathRequestMatcher("/api/reservations/*/cancel", "PATCH"))
+                                .hasRole("ADMIN")
+                        .requestMatchers(new AntPathRequestMatcher("/api/reservations/*/complete", "PATCH"))
+                                .hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/api/restaurant-tables", "/api/restaurant-tables/**")
+                                .hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/api/restaurant-tables/add").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/restaurant-tables/update").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/restaurant-tables/delete/**")
+                                .hasRole("ADMIN")
 
                         // Admin only
                         .requestMatchers("/api/accommodations/add").hasRole("ADMIN")
@@ -64,8 +95,9 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOrigins(List.of("http://localhost:4200"));
-        config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        // Patterns cover both localhost and 127.0.0.1 (different Origins → CORS 403 if only one is listed).
+        config.setAllowedOriginPatterns(List.of("http://localhost:*", "http://127.0.0.1:*"));
+        config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
         config.setAllowedHeaders(List.of("*"));
         config.setAllowCredentials(true);
 

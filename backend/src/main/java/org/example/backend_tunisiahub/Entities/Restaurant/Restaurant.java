@@ -31,4 +31,12 @@ public class Restaurant {
     @JsonIgnore
     List<Menu> menus;
 
+    @OneToMany(mappedBy = "restaurant", cascade = CascadeType.ALL)
+    @JsonIgnore
+    List<RestaurantTable> tables;
+
+    @OneToMany(mappedBy = "restaurant")
+    @JsonIgnore
+    List<org.example.backend_tunisiahub.Entities.Reservation> reservations;
+
 }

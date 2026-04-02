@@ -37,9 +37,9 @@ export class SignInComponent {
       email: this.signInForm.value.email!,
       password: this.signInForm.value.password!
     }).subscribe({
-      next: (response) => {
+      next: () => {
         this.isLoading = false;
-        if (response.role === 'ADMIN') {
+        if (this.authService.isAdmin()) {
           this.router.navigate(['/accommodations/admin']);
         } else {
           this.router.navigate(['/accommodations/explore']);

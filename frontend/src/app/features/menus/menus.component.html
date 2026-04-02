@@ -1,7 +1,7 @@
-﻿<div class="container py-5">
+<div class="container py-5">
   <div class="d-flex justify-content-between align-items-center mb-5">
     <h2 style="font-size: 2.5rem; font-weight: 700; color: #2c3e50; margin: 0;">🍽️ Our Menus</h2>
-    <button class="btn btn-success d-flex align-items-center gap-2" (click)="openAddMenuForm()" style="white-space: nowrap;">
+    <button *ngIf="isAdmin" class="btn btn-success d-flex align-items-center gap-2" (click)="openAddMenuForm()" style="white-space: nowrap;">
       <i class="bi bi-plus-circle"></i> Add Menu
     </button>
   </div>
@@ -33,6 +33,16 @@
             <small style="color: #d4a574; font-weight: 500;">✨ Click to view items</small>
           </div>
         </div>
+        <div *ngIf="isAdmin" class="card-footer bg-white border-top-0 pt-0 pb-3" (click)="$event.stopPropagation()">
+          <div class="d-flex justify-content-center gap-2">
+            <button type="button" class="btn btn-sm btn-outline-secondary" (click)="openEditMenuForm($event, menu)" title="Edit menu">
+              <i class="bi bi-pencil-square"></i>
+            </button>
+            <button type="button" class="btn btn-sm btn-outline-danger" (click)="confirmDeleteMenu($event, menu)" title="Delete menu">
+              <i class="bi bi-trash"></i>
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -43,8 +53,8 @@
       <div class="modal-content">
         <div class="modal-header" style="border-bottom: 3px solid #d4a574; flex-direction: column; align-items: center; position: relative;">
           <button type="button" class="btn-close" (click)="clearSelection()" style="position: absolute; top: 15px; right: 15px;"></button>
-          <button type="button" class="btn btn-success btn-sm d-flex align-items-center gap-2" (click)="openAddItemForm()" style="position: absolute; top: 15px; left: 15px; white-space: nowrap;">
-            <i class="bi bi-plus-circle"></i> Add Item
+          <button *ngIf="isAdmin" type="button" class="btn btn-success btn-sm d-flex align-items-center gap-2" (click)="openAddItemForm()" style="position: absolute; top: 15px; left: 15px; white-space: nowrap;">
+            <i class="bi bi-plus-circle"></i> Add Menu Item
           </button>
           <div style="text-align: center; width: 100%;">
             <h5 class="modal-title" style="color: #2c3e50; font-weight: 700; margin-bottom: 5px;">{{ selectedMenu?.name }}</h5>
@@ -55,9 +65,19 @@
           <!-- Menu Items will be displayed here -->
           <div *ngIf="selectedMenuItems.length > 0" class="menu-items">
             <div class="menu-item-card" *ngFor="let item of selectedMenuItems" style="margin-bottom: 25px; padding-bottom: 20px; border-bottom: 1px dotted #d4a574;">
-              <div class="menu-item-header mb-2">
-                <h5 style="color: #2c3e50; font-weight: 600; margin-bottom: 0;">{{ item.name }}</h5>
-                <i class="bi bi-star-fill" style="color: #d4a574; font-size: 0.8rem;"></i>
+              <div class="menu-item-header mb-2 d-flex justify-content-between align-items-start gap-2">
+                <div class="d-flex align-items-start gap-2 flex-grow-1">
+                  <h5 style="color: #2c3e50; font-weight: 600; margin-bottom: 0;">{{ item.name }}</h5>
+                  <i class="bi bi-star-fill" style="color: #d4a574; font-size: 0.8rem; margin-top: 0.35rem;"></i>
+                </div>
+                <div *ngIf="isAdmin" class="d-flex gap-1 flex-shrink-0">
+                  <button type="button" class="btn btn-sm btn-outline-secondary py-0 px-2" (click)="openEditItemForm($event, item)" title="Edit item">
+                    <i class="bi bi-pencil-square"></i>
+                  </button>
+                  <button type="button" class="btn btn-sm btn-outline-danger py-0 px-2" (click)="confirmDeleteMenuItem($event, item)" title="Delete item">
+                    <i class="bi bi-trash"></i>
+                  </button>
+                </div>
               </div>
               <p style="color: #7f8c8d; font-style: italic; margin-bottom: 8px; font-size: 0.95rem;">{{ item.description }}</p>
               <div style="background-color: #f8f9fa; padding: 10px 12px; border-left: 3px solid #d4a574; border-radius: 4px;">
@@ -79,7 +99,8 @@
   <!-- Modal backdrop for menu items -->
   <div class="modal-backdrop fade" [ngClass]="{'show': selectedMenu}" *ngIf="selectedMenu"></div>
 
-  <!-- Add Menu Modal -->
+  <!-- Add Menu Modal (admin only) -->
+  <ng-container *ngIf="isAdmin">
   <div class="modal fade" id="addMenuModal" [ngClass]="{'show': showAddMenuForm}" [style.display]="showAddMenuForm ? 'block' : 'none'" tabindex="-1">
     <div class="modal-dialog">
       <div class="modal-content">
@@ -190,4 +211,75 @@
 
   <!-- Modal backdrop for add item form -->
   <div class="modal-backdrop fade" [ngClass]="{'show': showAddItemForm}" *ngIf="showAddItemForm"></div>
+
+  <!-- Edit Menu Modal -->
+  <div class="modal fade" id="editMenuModal" [ngClass]="{'show': showEditMenuForm}" [style.display]="showEditMenuForm ? 'block' : 'none'" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Edit Menu</h5>
+          <button type="button" class="btn-close" (click)="closeEditMenuForm()" [disabled]="isSubmittingMenuEdit"></button>
+        </div>
+        <div class="modal-body">
+          <form>
+            <div class="mb-3">
+              <label for="editMenuName" class="form-label"><strong>Menu Name</strong></label>
+              <input type="text" class="form-control" id="editMenuName" [(ngModel)]="editMenu.name" name="editMenuName" [disabled]="isSubmittingMenuEdit" required>
+            </div>
+            <div class="mb-3">
+              <label for="editMenuType" class="form-label"><strong>Menu Type</strong></label>
+              <select class="form-select" id="editMenuType" [(ngModel)]="editMenu.type" name="editMenuType" [disabled]="isSubmittingMenuEdit" required>
+                <option *ngFor="let type of menuTypes" [value]="type">{{ type | titlecase }}</option>
+              </select>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" (click)="closeEditMenuForm()" [disabled]="isSubmittingMenuEdit">Cancel</button>
+          <button type="button" class="btn btn-primary" (click)="submitEditMenu()" [disabled]="isSubmittingMenuEdit">
+            <span *ngIf="!isSubmittingMenuEdit"><i class="bi bi-check-circle"></i> Save changes</span>
+            <span *ngIf="isSubmittingMenuEdit"><i class="bi bi-spinner"></i> Saving...</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="modal-backdrop fade" [ngClass]="{'show': showEditMenuForm}" *ngIf="showEditMenuForm"></div>
+
+  <!-- Edit Menu Item Modal -->
+  <div class="modal fade" id="editItemModal" [ngClass]="{'show': showEditItemForm}" [style.display]="showEditItemForm ? 'block' : 'none'" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Edit item — {{ selectedMenu?.name }}</h5>
+          <button type="button" class="btn-close" (click)="closeEditItemForm()" [disabled]="isSubmittingItemEdit"></button>
+        </div>
+        <div class="modal-body">
+          <form>
+            <div class="mb-3">
+              <label for="editItemName" class="form-label"><strong>Item Name</strong></label>
+              <input type="text" class="form-control" id="editItemName" [(ngModel)]="editMenuItem.name" name="editItemName" [disabled]="isSubmittingItemEdit" required>
+            </div>
+            <div class="mb-3">
+              <label for="editItemDescription" class="form-label"><strong>Description</strong></label>
+              <textarea class="form-control" id="editItemDescription" [(ngModel)]="editMenuItem.description" name="editItemDescription" rows="3" [disabled]="isSubmittingItemEdit" required></textarea>
+            </div>
+            <div class="mb-3">
+              <label for="editItemIngredients" class="form-label"><strong>Ingredients</strong></label>
+              <textarea class="form-control" id="editItemIngredients" [(ngModel)]="editMenuItem.ingredients" name="editItemIngredients" rows="3" [disabled]="isSubmittingItemEdit" required></textarea>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" (click)="closeEditItemForm()" [disabled]="isSubmittingItemEdit">Cancel</button>
+          <button type="button" class="btn btn-primary" (click)="submitEditMenuItem()" [disabled]="isSubmittingItemEdit">
+            <span *ngIf="!isSubmittingItemEdit"><i class="bi bi-check-circle"></i> Save changes</span>
+            <span *ngIf="isSubmittingItemEdit"><i class="bi bi-spinner"></i> Saving...</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="modal-backdrop fade" [ngClass]="{'show': showEditItemForm}" *ngIf="showEditItemForm"></div>
+  </ng-container>
 </div>

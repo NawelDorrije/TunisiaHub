@@ -1,9 +1,14 @@
 <div class="container py-5">
-  <div class="d-flex justify-content-between align-items-center mb-4">
-    <h2 class="text-center flex-grow-1">List of Restaurants</h2>
-    <button class="btn btn-success d-flex align-items-center gap-2" (click)="openAddForm()" style="white-space: nowrap;">
-      <i class="bi bi-plus-circle"></i> Add Restaurant
-    </button>
+  <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+    <h2 class="text-center flex-grow-1 mb-0">List of Restaurants</h2>
+    <div class="d-flex flex-wrap gap-2 justify-content-end">
+      <a *ngIf="isAdmin" routerLink="/restaurants/reservations" class="btn btn-outline-dark d-flex align-items-center gap-2" style="white-space: nowrap;">
+        <i class="bi bi-journal-text"></i> Reservations
+      </a>
+      <button *ngIf="isAdmin" class="btn btn-success d-flex align-items-center gap-2" (click)="openAddForm()" style="white-space: nowrap;">
+        <i class="bi bi-plus-circle"></i> Add Restaurant
+      </button>
+    </div>
   </div>
 
   <!-- Search by Address -->
@@ -37,13 +42,28 @@
           <p class="card-text"><i class="bi bi-geo-alt-fill me-2" style="color: #dc3545;"></i>{{ restaurant.address }}</p>
           <p class="card-text"><small class="text-muted"><i class="bi bi-telephone-fill me-2" style="color: #28a745;"></i>{{ restaurant.phoneNum }}</small></p>
         </div>
-        <div class="card-footer text-center d-flex gap-2">
-          <button class="btn btn-outline-info flex-grow-1 d-flex align-items-center justify-content-center gap-2" (click)="viewDetails(restaurant)" style="color: #0dcaf0; border-color: #0dcaf0; font-weight: 500; transition: all 0.3s ease;">
-            <i class="bi bi-info-circle-fill"></i><span>Details</span>
-          </button>
-          <button class="btn btn-outline-warning flex-grow-1 d-flex align-items-center justify-content-center gap-2" (click)="viewMenus(restaurant)" style="color: #ff9800; border-color: #ff9800; font-weight: 500; transition: all 0.3s ease;">
-            <i class="bi bi-cup-hot-fill"></i><span>Menus</span>
-          </button>
+        <div class="card-footer text-center">
+          <div class="d-flex gap-2">
+            <button class="btn btn-outline-info flex-grow-1 d-flex align-items-center justify-content-center gap-2" (click)="viewDetails(restaurant)" style="color: #0dcaf0; border-color: #0dcaf0; font-weight: 500; transition: all 0.3s ease;">
+              <i class="bi bi-info-circle-fill"></i><span>Details</span>
+            </button>
+            <button class="btn btn-outline-warning flex-grow-1 d-flex align-items-center justify-content-center gap-2" (click)="viewMenus(restaurant)" style="color: #ff9800; border-color: #ff9800; font-weight: 500; transition: all 0.3s ease;">
+              <i class="bi bi-cup-hot-fill"></i><span>Menus</span>
+            </button>
+          </div>
+          <div *ngIf="isClient" class="mt-2 pt-2 border-top">
+            <button type="button" class="btn btn-sm w-100 btn-outline-primary d-flex align-items-center justify-content-center gap-2" (click)="openReservationForm(restaurant)">
+              <i class="bi bi-calendar-check"></i><span>Reserve</span>
+            </button>
+          </div>
+          <div *ngIf="isAdmin" class="d-flex justify-content-center gap-2 mt-2 pt-2 border-top">
+            <button type="button" class="btn btn-sm btn-outline-secondary" (click)="openEditForm(restaurant)" title="Edit restaurant">
+              <i class="bi bi-pencil-square"></i>
+            </button>
+            <button type="button" class="btn btn-sm btn-outline-danger" (click)="confirmDeleteRestaurant(restaurant)" title="Delete restaurant">
+              <i class="bi bi-trash"></i>
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -75,7 +95,45 @@
 <!-- Modal backdrop -->
 <div class="modal-backdrop fade" [ngClass]="{'show': showDetailsModal}" *ngIf="showDetailsModal"></div>
 
-<!-- Add Restaurant Modal -->
+<!-- Reservation modal (client only) -->
+<ng-container *ngIf="isClient">
+  <div class="modal fade" id="reservationModal" [ngClass]="{'show': showReservationForm}" [style.display]="showReservationForm ? 'block' : 'none'" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header" style="border-bottom: 2px solid #d4a574;">
+          <h5 class="modal-title">Reserve — {{ reservationRestaurant?.name }}</h5>
+          <button type="button" class="btn-close" (click)="closeReservationForm()" [disabled]="isSubmittingReservation"></button>
+        </div>
+        <div class="modal-body" *ngIf="reservationRestaurant">
+          <p class="text-muted small mb-3">Your request will be created with status <strong>pending</strong>. The restaurant will confirm and assign a table.</p>
+          <div class="mb-3">
+            <label for="reservationDateTime" class="form-label"><strong>Date &amp; time</strong></label>
+            <input type="datetime-local" class="form-control" id="reservationDateTime" [(ngModel)]="reservationDateTime" name="reservationDateTime" [disabled]="isSubmittingReservation" required>
+          </div>
+          <div class="mb-3">
+            <label for="reservationPartySize" class="form-label"><strong>Party size</strong></label>
+            <input type="number" class="form-control" id="reservationPartySize" [(ngModel)]="reservationPartySize" name="reservationPartySize" min="1" [disabled]="isSubmittingReservation" required>
+          </div>
+          <div class="mb-0">
+            <label for="reservationNotes" class="form-label"><strong>Notes</strong> <span class="text-muted fw-normal">(optional)</span></label>
+            <textarea class="form-control" id="reservationNotes" [(ngModel)]="reservationNotes" name="reservationNotes" rows="3" placeholder="Allergies, occasion, seating preference…" [disabled]="isSubmittingReservation"></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" (click)="closeReservationForm()" [disabled]="isSubmittingReservation">Cancel</button>
+          <button type="button" class="btn btn-primary" style="background-color: #d4a574; border-color: #d4a574;" (click)="submitReservation()" [disabled]="isSubmittingReservation">
+            <span *ngIf="!isSubmittingReservation"><i class="bi bi-calendar-check"></i> Submit request</span>
+            <span *ngIf="isSubmittingReservation"><i class="bi bi-spinner"></i> Sending…</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="modal-backdrop fade" [ngClass]="{'show': showReservationForm}" *ngIf="showReservationForm"></div>
+</ng-container>
+
+<!-- Add Restaurant Modal (admin only) -->
+<ng-container *ngIf="isAdmin">
 <div class="modal fade" id="addRestaurantModal" [ngClass]="{'show': showAddForm}" [style.display]="showAddForm ? 'block' : 'none'" tabindex="-1">
   <div class="modal-dialog">
     <div class="modal-content">
@@ -148,3 +206,44 @@
 
 <!-- Modal backdrop for add form -->
 <div class="modal-backdrop fade" [ngClass]="{'show': showAddForm}" *ngIf="showAddForm"></div>
+
+<!-- Edit Restaurant Modal -->
+<div class="modal fade" id="editRestaurantModal" [ngClass]="{'show': showEditForm}" [style.display]="showEditForm ? 'block' : 'none'" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Edit Restaurant</h5>
+        <button type="button" class="btn-close" (click)="closeEditForm()" [disabled]="isSubmittingEdit"></button>
+      </div>
+      <div class="modal-body">
+        <form>
+          <div class="mb-3">
+            <label for="editRestaurantName" class="form-label"><strong>Restaurant Name</strong></label>
+            <input type="text" class="form-control" id="editRestaurantName" [(ngModel)]="editRestaurant.name" name="editName" [disabled]="isSubmittingEdit" required>
+          </div>
+          <div class="mb-3">
+            <label for="editRestaurantAddress" class="form-label"><strong>Address</strong></label>
+            <input type="text" class="form-control" id="editRestaurantAddress" [(ngModel)]="editRestaurant.address" name="editAddress" [disabled]="isSubmittingEdit" required>
+          </div>
+          <div class="mb-3">
+            <label for="editRestaurantEmail" class="form-label"><strong>Email</strong></label>
+            <input type="email" class="form-control" id="editRestaurantEmail" [(ngModel)]="editRestaurant.email" name="editEmail" [disabled]="isSubmittingEdit" required>
+          </div>
+          <div class="mb-3">
+            <label for="editRestaurantPhone" class="form-label"><strong>Phone Number</strong></label>
+            <input type="tel" class="form-control" id="editRestaurantPhone" [(ngModel)]="editRestaurant.phoneNum" name="editPhoneNum" [disabled]="isSubmittingEdit" required>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="closeEditForm()" [disabled]="isSubmittingEdit">Cancel</button>
+        <button type="button" class="btn btn-primary" (click)="submitEditRestaurant()" [disabled]="isSubmittingEdit">
+          <span *ngIf="!isSubmittingEdit"><i class="bi bi-check-circle"></i> Save changes</span>
+          <span *ngIf="isSubmittingEdit"><i class="bi bi-spinner"></i> Saving...</span>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="modal-backdrop fade" [ngClass]="{'show': showEditForm}" *ngIf="showEditForm"></div>
+</ng-container>
