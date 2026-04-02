@@ -10,9 +10,23 @@ import { Accommodation } from '../../../../models/accommodations/accommodation.m
 })
 export class UserListAccommodationComponent implements OnInit {
 
-  accommodations: Accommodation[] = [];
+  allAccommodations: Accommodation[] = [];
+  filteredAccommodations: Accommodation[] = [];
   errorMessage: string = '';
   isLoading: boolean = true;
+
+  // Filters
+  searchKeyword: string = '';
+  selectedType: string = '';
+  maxPrice: number | null = null;
+  minCapacity: number | null = null;
+  sortOrder: string = '';
+
+  // Available types
+  accommodationTypes: string[] = ['Villa', 'Apartment', 'Hostel', 'Hotel', 'Chalet'];
+
+  // Sidebar toggle for mobile
+  showFilters: boolean = false;
 
   constructor(
     private accommodationService: AccommodationService,
@@ -27,7 +41,8 @@ export class UserListAccommodationComponent implements OnInit {
     this.isLoading = true;
     this.accommodationService.getAllAccommodations().subscribe({
       next: (data) => {
-        this.accommodations = data;
+        this.allAccommodations = data;
+        this.filteredAccommodations = data;
         this.isLoading = false;
       },
       error: () => {
@@ -37,7 +52,68 @@ export class UserListAccommodationComponent implements OnInit {
     });
   }
 
+  applyFilters(): void {
+    let result = [...this.allAccommodations];
+
+    // Search by keyword
+    if (this.searchKeyword.trim()) {
+      const keyword = this.searchKeyword.toLowerCase();
+      result = result.filter(a =>
+        a.title.toLowerCase().includes(keyword) ||
+        a.adresse.toLowerCase().includes(keyword) ||
+        a.description?.toLowerCase().includes(keyword)
+      );
+    }
+
+    // Filter by type
+    if (this.selectedType) {
+      result = result.filter(a => a.type === this.selectedType);
+    }
+
+    // Filter by max price
+    if (this.maxPrice !== null && this.maxPrice > 0) {
+      result = result.filter(a => a.price <= this.maxPrice!);
+    }
+
+    // Filter by min capacity
+    if (this.minCapacity !== null && this.minCapacity > 0) {
+      result = result.filter(a => a.capacite >= this.minCapacity!);
+    }
+
+    // Sort by price
+    if (this.sortOrder === 'asc') {
+      result.sort((a, b) => a.price - b.price);
+    } else if (this.sortOrder === 'desc') {
+      result.sort((a, b) => b.price - a.price);
+    }
+
+    this.filteredAccommodations = result;
+  }
+
+  resetFilters(): void {
+    this.searchKeyword = '';
+    this.selectedType = '';
+    this.maxPrice = null;
+    this.minCapacity = null;
+    this.sortOrder = '';
+    this.filteredAccommodations = [...this.allAccommodations];
+  }
+
+  get activeFiltersCount(): number {
+    let count = 0;
+    if (this.searchKeyword.trim()) count++;
+    if (this.selectedType) count++;
+    if (this.maxPrice) count++;
+    if (this.minCapacity) count++;
+    if (this.sortOrder) count++;
+    return count;
+  }
+
   goToDetail(id: number): void {
     this.router.navigate(['/accommodations/detail', id]);
+  }
+
+  toggleFilters(): void {
+    this.showFilters = !this.showFilters;
   }
 }

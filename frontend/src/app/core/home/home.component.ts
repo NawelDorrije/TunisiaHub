@@ -20,6 +20,6 @@ export class HomeComponent {
     { title: 'Carpooling', description: 'Share rides and save money.', icon: 'bi bi-car-front', link: '/carpooling' },
     { title: 'Restaurants', description: 'Find the best restaurants in town.', icon: 'bi bi-egg-fried', link: '/restaurants' },
     { title: 'Tours', description: 'Book guided tours and experiences.', icon: 'bi bi-compass', link: '/tours' },
-    { title: 'Hotels', description: 'Discover hotels and stays for your trip.', icon: 'bi bi-building', link: '/hotels' },
+    { title: 'Hotels', description: 'Discover hotels and stays for your trip.', icon: 'bi bi-building', link: '/accommodations/explore' },
   ];
 }
