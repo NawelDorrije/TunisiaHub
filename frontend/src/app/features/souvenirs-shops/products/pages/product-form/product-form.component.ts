@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+﻿import { Component, OnInit } from '@angular/core';
 import { NgForm } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Product } from '../../../../../models/souvenirs-shops/product.model';
@@ -8,7 +8,7 @@ import { ImageService } from '../../../../../services/image.service';
 @Component({
   selector: 'app-product-form',
   templateUrl: './product-form.component.html',
-  styleUrl: './product-form.component.css'
+  styleUrls: ['./product-form.component.css']
 })
 export class ProductFormComponent implements OnInit {
   product: Product = {
@@ -158,3 +158,6 @@ export class ProductFormComponent implements OnInit {
     this.router.navigate(['/products']);
   }
 }
+
+
+

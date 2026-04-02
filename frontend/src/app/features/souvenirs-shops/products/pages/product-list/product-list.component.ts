@@ -1,17 +1,19 @@
-import { Component, OnInit } from '@angular/core';
+﻿import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Product } from '../../../../../models/souvenirs-shops/product.model';
 import { ProductService } from '../../../../../services/souvenirs-shops/product.service';
 import { CartService } from '../../../../../services/souvenirs-shops/cart.service';
+import { AuthService } from '../../../../auth/services/auth.service';
 
 @Component({
   selector: 'app-product-list',
   templateUrl: './product-list.component.html',
-  styleUrl: './product-list.component.css'
+  styleUrls: ['./product-list.component.css']
 })
 export class ProductListComponent implements OnInit {
   products: Product[] = [];
   shopId: number | null = null;
+  selectedShopName: string | null = null;
   isLoading = true;
   errorMessage = '';
 
@@ -19,8 +21,17 @@ export class ProductListComponent implements OnInit {
     private route: ActivatedRoute,
     private router: Router,
     private productService: ProductService,
-    private cartService: CartService
+    private cartService: CartService,
+    public authService: AuthService
   ) {}
+
+  get canManageProducts(): boolean {
+    return this.authService.isAdmin() || this.authService.isOwner();
+  }
+
+  get canAddToCart(): boolean {
+    return this.authService.isClient();
+  }
 
   ngOnInit(): void {
     this.route.paramMap.subscribe((params) => {
@@ -41,6 +52,7 @@ export class ProductListComponent implements OnInit {
     request.subscribe({
       next: (data) => {
         this.products = data;
+        this.selectedShopName = this.extractShopName(data);
         this.isLoading = false;
       },
       error: () => {
@@ -65,7 +77,7 @@ export class ProductListComponent implements OnInit {
   }
 
   addToCart(product: Product): void {
-    if (!product.id) {
+    if (!product.id || !this.canAddToCart) {
       return;
     }
     this.cartService.addProduct(product, 1);
@@ -75,6 +87,10 @@ export class ProductListComponent implements OnInit {
     if (product.id) {
       this.router.navigate(['/products', product.id, 'edit']);
     }
+  }
+
+  private extractShopName(products: Product[]): string | null {
+    return products?.[0]?.shop?.name ?? null;
   }
 
   deleteProduct(product: Product): void {
@@ -90,3 +106,6 @@ export class ProductListComponent implements OnInit {
     });
   }
 }
+
+
+

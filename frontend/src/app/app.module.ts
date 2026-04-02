@@ -11,8 +11,8 @@ import { HeaderComponent } from './core/header/header.component';
 import { NotFoundComponent } from './features/not-found/not-found.component';
 import { HomeComponent } from './core/home/home.component';
 import { CartComponent } from './features/souvenirs-shops/cart/cart.component';
-import { HttpClientModule } from '@angular/common/http';
-import { provideHttpClient } from '@angular/common/http';   // ← New import
+import { HTTP_INTERCEPTORS, provideHttpClient, withInterceptorsFromDi } from '@angular/common/http';
+import { AuthInterceptor } from './features/auth/auth.interceptor';
 
 @NgModule({
   declarations: [
@@ -23,8 +23,15 @@ import { provideHttpClient } from '@angular/common/http';   // ← New import
     HomeComponent,
     CartComponent,
   ],
-  imports: [BrowserModule, AppRoutingModule, HttpClientModule],
-  providers: [provideHttpClient()],
+  imports: [BrowserModule, AppRoutingModule],
+  providers: [
+    provideHttpClient(withInterceptorsFromDi()),
+    {
+      provide: HTTP_INTERCEPTORS,
+      useClass: AuthInterceptor,
+      multi: true,
+    },
+  ],
   bootstrap: [AppComponent],
 })
 export class AppModule {}

@@ -1,1 +1,200 @@
-<p>order-list works!</p>
+<div class="order-list-page">
+
+  <!-- Header -->
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Orders</h1>
+      <p class="page-subtitle">
+        {{ activeViewTab === 'client' ? 'Your order history' : 'Orders received in your shop' }}
+      </p>
+    </div>
+    <button class="refresh-btn" (click)="loadOrders()">
+      ↻ Refresh
+    </button>
+  </div>
+
+  <div *ngIf="viewTabs.length > 1" class="orders-view-tabs">
+    <button *ngFor="let tab of viewTabs"
+      type="button"
+      class="tab-btn"
+      [class.active]="activeViewTab === tab.key"
+      (click)="setActiveView(tab.key)">
+      {{ tab.label }}
+    </button>
+  </div>
+
+  <div class="orders-status-tabs">
+    <button *ngFor="let tab of statusTabs"
+      type="button"
+      class="status-tab-btn"
+      [class.active]="activeStatusTab === tab.key"
+      (click)="setActiveStatusTab(tab.key)">
+      {{ tab.label }}
+    </button>
+  </div>
+
+  <div class="orders-filter-panel">
+    <div class="filter-row">
+      <div class="filter-group search-group">
+        <label>Search</label>
+        <input type="text"
+          class="filter-input"
+          placeholder="Search by order id, date, product or shop"
+          [(ngModel)]="searchTerm" />
+      </div>
+
+      <div class="filter-group">
+        <label>Status</label>
+        <select class="filter-select" [(ngModel)]="selectedStatus">
+          <option value="ALL">All statuses</option>
+          <option *ngFor="let status of statusOptions" [value]="status">{{ status }}</option>
+        </select>
+      </div>
+
+      <div class="filter-group">
+        <label>{{ activeViewTab === 'client' ? 'Shop' : 'Customer' }}</label>
+        <select class="filter-select" [(ngModel)]="selectedShopOrCustomer">
+          <option value="">All</option>
+          <option *ngFor="let name of activeViewTab === 'client' ? availableShopNames : availableCustomerNames" [value]="name">{{ name }}</option>
+        </select>
+      </div>
+
+      <div class="filter-group">
+        <label>Date range</label>
+        <select class="filter-select" [(ngModel)]="selectedDateRange">
+          <option value="ALL">All dates</option>
+          <option value="LAST_30_DAYS">Last 30 days</option>
+          <option value="THIS_YEAR">This year</option>
+          <option value="CUSTOM">Custom</option>
+        </select>
+      </div>
+
+      <div *ngIf="selectedDateRange === 'CUSTOM'" class="filter-group custom-date-group">
+        <label>From</label>
+        <input type="date" class="filter-input" [(ngModel)]="customStartDate" />
+        <label>To</label>
+        <input type="date" class="filter-input" [(ngModel)]="customEndDate" />
+      </div>
+
+      <div class="filter-group price-group">
+        <label>Price range</label>
+        <div class="price-inputs">
+          <input type="number" class="filter-input" placeholder="Min" [(ngModel)]="minTotal" />
+          <input type="number" class="filter-input" placeholder="Max" [(ngModel)]="maxTotal" />
+        </div>
+      </div>
+
+      <div class="filter-group">
+        <label>Sort by</label>
+        <select class="filter-select" [(ngModel)]="sortBy">
+          <option value="NEWEST">Newest first</option>
+          <option value="OLDEST">Oldest first</option>
+          <option value="TOTAL_ASC">Total amount ↑</option>
+          <option value="TOTAL_DESC">Total amount ↓</option>
+          <option value="STATUS">Status</option>
+        </select>
+      </div>
+
+      <div class="filter-group action-group">
+        <button type="button" class="action-btn view-btn" (click)="resetFilters()">Reset filters</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading -->
+  <div *ngIf="isLoading" class="loading-state">
+    <div class="spinner"></div>
+    <p>Loading orders...</p>
+  </div>
+
+  <!-- Messages -->
+  <div *ngIf="!isLoading && errorMessage" class="msg-error">{{ errorMessage }}</div>
+  <div *ngIf="!isLoading && actionMessage" class="msg-success">✓ {{ actionMessage }}</div>
+
+  <!-- Empty -->
+  <div *ngIf="!isLoading && orders.length === 0 && !errorMessage" class="empty-state">
+    <div class="empty-icon">📦</div>
+    <h3>No orders yet</h3>
+    <p>Your orders will appear here once placed.</p>
+  </div>
+
+  <div *ngIf="!isLoading && orders.length > 0 && filteredOrders.length === 0" class="empty-state">
+    <div class="empty-icon">🔍</div>
+    <h3>No orders match your filters</h3>
+    <p>Try a different search, status or date range.</p>
+  </div>
+
+  <!-- Orders list -->
+  <div *ngIf="!isLoading && filteredOrders.length > 0" class="orders-list">
+
+    <div *ngFor="let order of filteredOrders" class="order-card">
+
+      <!-- Order card header -->
+      <div class="order-card-header">
+        <div class="order-id-block">
+          <span class="order-shop">{{ order.shop?.name || 'Unknown shop' }}</span>
+        </div>
+        <div class="order-badges">
+          <span class="status-badge" [ngClass]="getStatusClass(order.status)">
+            {{ order.status }}
+          </span>
+          <span class="payment-badge" [ngClass]="getPaymentClass(order.payment?.status)">
+            {{ order.payment?.status || 'NO PAYMENT' }}
+          </span>
+        </div>
+      </div>
+
+      <!-- Order card body -->
+      <div class="order-card-body">
+        <div class="order-meta">
+          <div class="meta-item">
+            <span class="meta-label">{{ authService.isClient() ? 'Shop' : 'Customer' }}</span>
+            <span class="meta-val">{{ authService.isClient() ? (order.shop?.name || 'Unknown shop') : getCustomerName(order) }}</span>
+          </div>
+          <div class="meta-item">
+            <span class="meta-label">Total</span>
+            <span class="meta-val price">{{ order.totalAmount | currency:'TND':'symbol':'1.2-2' }}</span>
+          </div>
+          <div class="meta-item" *ngIf="order.createdAt">
+            <span class="meta-label">Date</span>
+            <span class="meta-val">{{ order.createdAt | date:'mediumDate' }}</span>
+          </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="order-actions">
+          <button class="action-btn view-btn" (click)="viewOrder(order)">
+            View details
+          </button>
+          <button *ngIf="canCancelPending(order)"
+                  class="action-btn danger-btn"
+                  (click)="cancelPendingOrder(order)">
+            Cancel order
+          </button>
+          <button *ngIf="canProcessOrder(order)"
+                  class="action-btn success-btn"
+                  (click)="updateOrderStatus(order, OrderStatus.PROCESSING, 'PROCESSING')">
+            Mark Processing
+          </button>
+          <button *ngIf="canOwnerCancel(order) && order.status === OrderStatus.PENDING"
+                  class="action-btn danger-btn"
+                  (click)="cancelOwnerOrder(order)">
+            Cancel
+          </button>
+          <button *ngIf="canOwnerCancel(order) && order.status !== OrderStatus.PENDING"
+                  class="action-btn danger-btn"
+                  (click)="cancelOwnerOrder(order)">
+            Cancel & Refund
+          </button>
+          <button *ngIf="canCompleteOrder(order)"
+                  class="action-btn complete-btn"
+                  (click)="updateOrderStatus(order, OrderStatus.COMPLETED, 'COMPLETED')">
+            Mark Completed
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</div>

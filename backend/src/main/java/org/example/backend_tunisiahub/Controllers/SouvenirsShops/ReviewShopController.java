@@ -3,7 +3,7 @@ package org.example.backend_tunisiahub.Controllers.SouvenirsShops;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.example.backend_tunisiahub.Entities.SouvenirsShops.Review;
-import org.example.backend_tunisiahub.Services.SouvenirsShops.IReviewService;
+import org.example.backend_tunisiahub.Services.SouvenirsShops.IReviewShopService;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -16,9 +16,9 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api/souvenir-shops/reviews")
 @RequiredArgsConstructor
-public class ReviewController {
+public class ReviewShopController {
 
-    private final IReviewService reviewService;
+    private final IReviewShopService reviewService;
 
     @GetMapping
     public List<Review> getAllReviews() {

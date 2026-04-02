@@ -2,6 +2,7 @@ package org.example.backend_tunisiahub.Controllers.SouvenirsShops;
 
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.example.backend_tunisiahub.Controllers.SouvenirsShops.dto.CreatePaymentRequest;
 import org.example.backend_tunisiahub.Entities.SouvenirsShops.Payment;
 import org.example.backend_tunisiahub.Services.SouvenirsShops.IPaymentService;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -31,13 +32,13 @@ public class PaymentController {
     }
 
     @GetMapping("/order/{orderId}")
-    public Payment getPaymentByOrder(@PathVariable Long orderId) {
-        return paymentService.retrievePaymentByOrder(orderId);
+    public List<Payment> getPaymentsByOrder(@PathVariable Long orderId) {
+        return paymentService.retrievePaymentsByOrder(orderId);
     }
 
     @PostMapping
-    public Payment createPayment(@RequestBody Payment payment) {
-        return paymentService.addPayment(payment);
+    public Payment createPayment(@RequestBody CreatePaymentRequest request) {
+        return paymentService.addPayment(request);
     }
 
     @PutMapping

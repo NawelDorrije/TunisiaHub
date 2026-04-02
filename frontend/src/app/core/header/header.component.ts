@@ -7,24 +7,24 @@ import { AuthService } from '../../features/auth/services/auth.service';
 @Component({
   selector: 'app-header',
   templateUrl: './header.component.html',
-  styleUrl: './header.component.css'
+  styleUrls: ['./header.component.css'] 
 })
 export class HeaderComponent {
+
   cartCount$: Observable<number>;
 
-  constructor(private cartService: CartService) {
+  constructor(
+    private cartService: CartService,
+    public authService: AuthService,
+    private router: Router
+  ) {
     this.cartCount$ = this.cartService.items$.pipe(
       map((items) => items.reduce((total, item) => total + item.quantity, 0))
     );
   }
-}
-  constructor(
-    public authService: AuthService,
-    private router: Router
-  ) {}
 
   logout(): void {
     this.authService.logout();
-    this.router.navigate(['/sign-in']);
+    this.router.navigate(['/auth/sign-in']);
   }
 }

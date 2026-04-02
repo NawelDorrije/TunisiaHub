@@ -1,4 +1,4 @@
-import { AfterViewInit, Component, ElementRef, Inject, OnDestroy, OnInit, PLATFORM_ID, ViewChild } from '@angular/core';
+﻿import { AfterViewInit, Component, ElementRef, Inject, OnDestroy, OnInit, PLATFORM_ID, ViewChild } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { NgForm } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -9,14 +9,13 @@ import { ImageService } from '../../../../../services/image.service';
 @Component({
   selector: 'app-shop-form',
   templateUrl: './shop-form.component.html',
-  styleUrl: './shop-form.component.css'
+  styleUrls: ['./shop-form.component.css']
 })
 export class ShopFormComponent implements OnInit, AfterViewInit, OnDestroy {
   shop: Shop = {
     name: '',
     description: ''
   };
-  ownerId: number | null = null;
   isEditMode = false;
   isLoading = false;
   errorMessage = '';
@@ -195,7 +194,6 @@ export class ShopFormComponent implements OnInit, AfterViewInit, OnDestroy {
     this.shopService.getShopById(id).subscribe({
       next: (shop) => {
         this.shop = shop;
-        this.ownerId = shop.owner?.id ?? null;
         this.photoUrl = shop.photoUrl ?? '';
         this.isLoading = false;
         this.updateMapWithShopLocation();
@@ -213,11 +211,6 @@ export class ShopFormComponent implements OnInit, AfterViewInit, OnDestroy {
       return;
     }
 
-    if (!this.ownerId && !this.shop.owner?.id) {
-      this.errorMessage = 'Owner Id is required to create or update a shop.';
-      return;
-    }
-
     const payload: any = {
       name: this.shop.name,
       description: this.shop.description,
@@ -227,9 +220,6 @@ export class ShopFormComponent implements OnInit, AfterViewInit, OnDestroy {
       latitude: this.shop.latitude,
       longitude: this.shop.longitude,
       photoUrl: this.shop.photoUrl,
-      owner: {
-        id: this.ownerId ?? this.shop.owner?.id
-      }
     };
 
     if (this.isEditMode && this.shop.id) {
@@ -263,3 +253,6 @@ export class ShopFormComponent implements OnInit, AfterViewInit, OnDestroy {
     this.router.navigate(['/shops']);
   }
 }
+
+
+

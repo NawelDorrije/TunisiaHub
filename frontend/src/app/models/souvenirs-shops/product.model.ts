@@ -8,6 +8,7 @@ export interface Product {
   stockQuantity: number;
   photoUrl?: string;
   createdAt?: string;
+  category?: string;
   shop?: { id: number; name?: string };
   reviews?: Review[];
 }

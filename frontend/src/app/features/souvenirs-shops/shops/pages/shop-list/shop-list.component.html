@@ -1,78 +1,110 @@
-<div class="container py-5">
-  <div class="d-flex justify-content-between align-items-center mb-3">
+<div class="shop-list-page">
+
+  <!-- Hero -->
+  <section class="shop-hero rounded-4 mb-5">
+    <div class="hero-overlay"></div>
+    <div class="hero-content">
+      <span class="hero-eyebrow">Tunisian Market</span>
+      <h1 class="hero-title">Browse Authentic Shops</h1>
+      <p class="hero-desc">Discover handcrafted souvenirs, artisanal leather, carpets, jewelry and local design across Tunisia.</p>
+    </div>
+  </section>
+
+  <!-- Section header -->
+  <div class="section-header">
     <div>
-      <h2 class="text-center mb-2">Shops in Tunisia</h2>
-      <p class="text-center text-muted mb-2">Explore the best shopping spots across the country</p>
+      <h2 class="section-title">Shop Collection</h2>
+      <p class="section-subtitle">Warm hospitality, vibrant storefronts and curated souks in one place.</p>
     </div>
-    <a routerLink="/shops/new" class="btn btn-success">Create shop</a>
-  </div>
-
-  <!-- Loading State -->
-  <div *ngIf="isLoading" class="text-center py-5">
-    <div class="spinner-border text-primary" role="status">
-      <span class="visually-hidden">Loading...</span>
+    <div class="section-actions">
+      <a *ngIf="canManageShops" routerLink="/shops/new" class="add-shop-btn">
+        <i class="bi bi-plus-lg"></i> Add New Shop
+      </a>
+      <span *ngIf="!canManageShops" class="muted-note">Only owners and admins can create shops.</span>
     </div>
-    <p class="mt-3 text-muted">Loading shops...</p>
   </div>
 
-  <!-- Error State -->
-  <div *ngIf="errorMessage" class="alert alert-danger text-center">
-    {{ errorMessage }}
+  <!-- Category filter -->
+  <div class="category-bar">
+    <button class="cat-pill"
+            [class.active]="activeCategory === 'ALL'"
+            (click)="filterByCategory('ALL')">
+      All
+    </button>
+    <button *ngFor="let cat of categories"
+            class="cat-pill"
+            [class.active]="activeCategory === cat.value"
+            [style.--cat-color]="cat.color"
+            (click)="filterByCategory(cat.value)">
+      {{ cat.label }}
+    </button>
   </div>
 
-  <!-- Empty State -->
-  <div *ngIf="!isLoading && shops.length === 0 && !errorMessage" class="text-center py-5">
-    <i class="bi bi-shop fs-1 text-muted"></i>
-    <p class="mt-3 text-muted">No shops available at the moment.</p>
+  <!-- Loading -->
+  <div *ngIf="isLoading" class="loading-state">
+    <div class="spinner"></div>
+    <p>Loading shops...</p>
   </div>
 
-  <!-- Shops Grid -->
-  <div class="row g-4" *ngIf="!isLoading && shops.length > 0">
-    <div class="col-md-4" *ngFor="let shop of shops">
-      <div class="card h-100 shadow-sm">
-        <div class="shop-card-img-wrapper">
-          <img *ngIf="shop.photoUrl; else shopPlaceholder"
-               [src]="shop.photoUrl"
-               [alt]="shop.name"
-               class="shop-card-img" />
-          <ng-template #shopPlaceholder>
-            <div class="shop-card-placeholder">
-              <i class="bi bi-shop fs-1"></i>
-            </div>
-          </ng-template>
+  <!-- Error -->
+  <div *ngIf="errorMessage" class="msg-error">{{ errorMessage }}</div>
+
+  <!-- Empty -->
+  <div *ngIf="!isLoading && filteredShops.length === 0 && !errorMessage" class="empty-state">
+    <i class="bi bi-shop"></i>
+    <p>No shops found{{ activeCategory !== 'ALL' ? ' in this category' : '' }}.</p>
+  </div>
+
+  <!-- Grid -->
+  <div class="shops-grid" *ngIf="!isLoading && filteredShops.length > 0">
+    <div *ngFor="let shop of filteredShops" class="shop-card">
+
+      <!-- Image -->
+      <div class="card-img-wrap">
+        <img *ngIf="shop.photoUrl"
+             [src]="shop.photoUrl"
+             [alt]="shop.name"
+             class="card-img" />
+        <div *ngIf="!shop.photoUrl" class="card-img-placeholder">
+          <span>{{ shop.name?.charAt(0)?.toUpperCase() || 'S' }}</span>
         </div>
-        <div class="card-body">
-          <div class="d-flex align-items-center mb-3">
-            <h5 class="card-title mb-0">{{ shop.name }}</h5>
-          </div>
-          <div *ngIf="shop.category" class="mb-3">
-            <span class="badge bg-primary badge-shop-category">{{ shop.category }}</span>
-          </div>
+        <span class="cat-badge" [ngClass]="'cat-' + (shop.category?.toLowerCase() || 'default')">
+          {{ shop.category || 'General' }}
+        </span>
+      </div>
 
-          <p *ngIf="shop.city || shop.address" class="mb-1">
-            <i class="bi bi-geo-alt text-danger"></i>
-            <span class="ms-1">
-              {{ shop.city ? shop.city : '' }}
-              {{ shop.city && shop.address ? ' - ' : '' }}
-              {{ shop.address ? shop.address : '' }}
-            </span>
-          </p>
-
-          <p *ngIf="shop.owner" class="mb-1">
-  <i class="bi bi-person text-secondary"></i>
-  <span class="ms-1">{{ shop.owner.prenom }} {{ shop.owner.nom }}</span>
-</p>
-        </div>
-
-        <div class="card-footer bg-white border-0 pb-3 d-grid gap-2">
-          <a [routerLink]="['/shops', shop.id]" class="btn btn-primary w-100">
-            View Shop
-          </a>
-          <a [routerLink]="['/products', 'shop', shop.id]" class="btn btn-outline-secondary w-100">
-            View Products
-          </a>
+      <!-- Body -->
+      <div class="card-body">
+        <h3 class="card-shop-name">{{ shop.name }}</h3>
+        <p class="card-location">
+          <i class="bi bi-geo-alt-fill"></i>
+          {{ shop.city || 'Unknown city' }}{{ shop.address ? ' · ' + shop.address : '' }}
+        </p>
+        <p class="card-owner">
+          <i class="bi bi-person-fill"></i>
+          {{ shop.owner?.prenom }} {{ shop.owner?.nom }}
+        </p>
+        <div *ngIf="shop.reviews?.length" class="card-rating">
+          <i *ngFor="let s of [1,2,3,4,5]" class="bi bi-star-fill"></i>
+          <span>{{ shop.reviews?.length }} review{{ shop.reviews!.length > 1 ? 's' : '' }}</span>
         </div>
       </div>
+
+      <!-- Footer -->
+      <div class="card-footer">
+        <a [routerLink]="['/shops', shop.id]" class="btn-primary-card">View Shop</a>
+        <a [routerLink]="['/products', 'shop', shop.id]" class="btn-outline-card">Products</a>
+        <div *ngIf="canManageShops" class="owner-btns">
+          <a [routerLink]="['/shops', shop.id, 'edit']" class="icon-btn edit-icon" title="Edit">
+            <i class="bi bi-pencil"></i>
+          </a>
+          <button class="icon-btn delete-icon" disabled title="Delete">
+            <i class="bi bi-trash"></i>
+          </button>
+        </div>
+      </div>
+
     </div>
   </div>
+
 </div>

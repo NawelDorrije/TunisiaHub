@@ -3,7 +3,7 @@ package org.example.backend_tunisiahub.Services.SouvenirsShops;
 import java.util.List;
 import org.example.backend_tunisiahub.Entities.SouvenirsShops.Review;
 
-public interface IReviewService {
+public interface IReviewShopService {
 
     List<Review> retrieveAllReviews();
 

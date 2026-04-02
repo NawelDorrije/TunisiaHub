@@ -1,13 +1,29 @@
 package org.example.backend_tunisiahub.Repositories.SouvenirsShops;
 
 import java.util.List;
+import java.util.Optional;
 import org.example.backend_tunisiahub.Entities.SouvenirsShops.Order;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 @Repository
 public interface OrderRepository extends JpaRepository<Order, Long> {
-    List<Order> findByUserId(Long userId);
 
-    List<Order> findByShopId(Long shopId);
+    @Override
+    @EntityGraph(attributePaths = {"user", "shop"})
+    Optional<Order> findById(Long id);
+
+    @Override
+    @EntityGraph(attributePaths = {"user", "shop"})
+    List<Order> findAll();
+
+    @EntityGraph(attributePaths = {"user", "shop"})
+    List<Order> findByUserIdOrderByCreatedAtDesc(Long userId);
+
+    @EntityGraph(attributePaths = {"user", "shop"})
+    List<Order> findByShopIdOrderByCreatedAtDesc(Long shopId);
+
+    @EntityGraph(attributePaths = {"user", "shop"})
+    List<Order> findByShopOwnerIdOrderByCreatedAtDesc(Long ownerId);
 }

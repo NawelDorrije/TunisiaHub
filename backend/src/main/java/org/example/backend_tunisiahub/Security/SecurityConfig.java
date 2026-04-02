@@ -1,6 +1,7 @@
 package org.example.backend_tunisiahub.Security;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpMethod;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -39,6 +40,36 @@ public class SecurityConfig {
                         .requestMatchers("/api/reviews/get/**").permitAll()
                         .requestMatchers("/api/reviews/accommodation/**").permitAll()
                         .requestMatchers("/api/reviews/add/**").permitAll()
+
+                        // Souvenir shops/products visibility
+                        .requestMatchers(HttpMethod.GET, "/api/souvenir-shops/shops/*/orders").hasAnyRole("OWNER", "ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/api/souvenir-shops/shops/**").hasAnyRole("CLIENT", "OWNER", "ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/api/souvenir-shops/products/**").hasAnyRole("CLIENT", "OWNER", "ADMIN")
+
+                        // Owner/Admin management
+                        .requestMatchers(HttpMethod.POST, "/api/souvenir-shops/shops/**").hasAnyRole("OWNER", "ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/souvenir-shops/shops/**").hasAnyRole("OWNER", "ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/souvenir-shops/shops/**").hasAnyRole("OWNER", "ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/api/souvenir-shops/products/**").hasAnyRole("OWNER", "ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/souvenir-shops/products/**").hasAnyRole("OWNER", "ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/souvenir-shops/products/**").hasAnyRole("OWNER", "ADMIN")
+
+                        // Orders and order items
+                        .requestMatchers(HttpMethod.GET, "/api/souvenir-shops/orders/**").hasAnyRole("CLIENT", "OWNER", "ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/api/souvenir-shops/orders").hasRole("CLIENT")
+                        .requestMatchers(HttpMethod.PUT, "/api/souvenir-shops/orders/*/status").hasRole("OWNER")
+                        .requestMatchers(HttpMethod.DELETE, "/api/souvenir-shops/orders/**").hasRole("CLIENT")
+
+                        .requestMatchers(HttpMethod.GET, "/api/souvenir-shops/order-items/**").hasAnyRole("CLIENT", "OWNER", "ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/api/souvenir-shops/order-items/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/souvenir-shops/order-items/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/souvenir-shops/order-items/**").hasRole("ADMIN")
+
+                        // Payments
+                        .requestMatchers(HttpMethod.GET, "/api/souvenir-shops/payments/**").hasAnyRole("CLIENT", "OWNER", "ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/api/souvenir-shops/payments/**").hasRole("CLIENT")
+                        .requestMatchers(HttpMethod.PUT, "/api/souvenir-shops/payments/**").hasRole("CLIENT")
+                        .requestMatchers(HttpMethod.DELETE, "/api/souvenir-shops/payments/**").hasRole("ADMIN")
 
                         // Admin only
                         .requestMatchers("/api/accommodations/add").hasRole("ADMIN")

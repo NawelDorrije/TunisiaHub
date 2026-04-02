@@ -1,6 +1,7 @@
 package org.example.backend_tunisiahub.Services.SouvenirsShops;
 
 import java.util.List;
+import org.example.backend_tunisiahub.Controllers.SouvenirsShops.dto.CreatePaymentRequest;
 import org.example.backend_tunisiahub.Entities.SouvenirsShops.Payment;
 
 public interface IPaymentService {
@@ -9,9 +10,9 @@ public interface IPaymentService {
 
     Payment retrievePayment(Long id);
 
-    Payment retrievePaymentByOrder(Long orderId);
+    List<Payment> retrievePaymentsByOrder(Long orderId);
 
-    Payment addPayment(Payment payment);
+    Payment addPayment(CreatePaymentRequest request);
 
     void deletePayment(Long id);
 

@@ -13,7 +13,6 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
-import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -46,7 +45,14 @@ public class Order {
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "user_id", nullable = false)
-    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler", "reservations", "orders", "reviews", "motDePasse"})
+    @JsonIgnoreProperties({
+            "hibernateLazyInitializer",
+            "handler",
+            "reservations",
+            "orders",
+            "reviews",
+            "motDePasse"
+    })
     private User user;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
@@ -70,7 +76,8 @@ public class Order {
     @JsonIgnore
     private List<OrderItem> orderItems = new ArrayList<>();
 
-    @OneToOne(mappedBy = "order", fetch = FetchType.LAZY)
+    @Builder.Default
+    @OneToMany(mappedBy = "order", fetch = FetchType.LAZY)
     @JsonIgnore
-    private Payment payment;
+    private List<Payment> payments = new ArrayList<>();
 }

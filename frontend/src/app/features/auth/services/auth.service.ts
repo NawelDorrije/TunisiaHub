@@ -2,7 +2,7 @@ import { Injectable, PLATFORM_ID, Inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, tap } from 'rxjs';
 import { isPlatformBrowser } from '@angular/common';
-import { AuthResponse, LoginRequest, RegisterRequest } from '../../../models/auth/auth.model';
+import { AuthResponse, LoginRequest, RegisterRequest, UserRole } from '../../../models/auth/auth.model';
 
 @Injectable({
   providedIn: 'root'
@@ -49,8 +49,12 @@ export class AuthService {
     return this.isBrowser ? localStorage.getItem('token') : null;
   }
 
-  getRole(): string | null {
-    return this.isBrowser ? localStorage.getItem('role') : null;
+  getRole(): UserRole | null {
+    return this.isBrowser ? (localStorage.getItem('role') as UserRole | null) : null;
+  }
+
+  getEmail(): string | null {
+    return this.isBrowser ? localStorage.getItem('email') : null;
   }
 
   getNom(): string | null {
@@ -67,6 +71,10 @@ export class AuthService {
 
   isAdmin(): boolean {
     return this.getRole() === 'ADMIN';
+  }
+
+  isOwner(): boolean {
+    return this.getRole() === 'OWNER';
   }
 
   isClient(): boolean {

@@ -1,8 +1,10 @@
 package org.example.backend_tunisiahub.Services.SouvenirsShops;
 
 import java.util.List;
+import org.example.backend_tunisiahub.Controllers.SouvenirsShops.dto.CartItemRequest;
 import org.example.backend_tunisiahub.Entities.SouvenirsShops.Order;
 import org.example.backend_tunisiahub.Entities.SouvenirsShops.OrderItem;
+import org.example.backend_tunisiahub.Entities.SouvenirsShops.OrderStatus;
 import org.example.backend_tunisiahub.Entities.SouvenirsShops.Payment;
 
 public interface IOrderService {
@@ -11,17 +13,19 @@ public interface IOrderService {
 
     Order retrieveOrder(Long id);
 
+    List<Order> retrieveMyOrders();
+
     List<Order> retrieveOrdersByUser(Long userId);
 
     List<Order> retrieveOrdersByShop(Long shopId);
 
     List<OrderItem> retrieveOrderItems(Long orderId);
 
-    Payment retrieveOrderPayment(Long orderId);
+    List<Payment> retrieveOrderPayments(Long orderId);
 
-    Order addOrder(Order order);
+    List<Order> addOrdersFromCart(List<CartItemRequest> cartItems);
 
-    void deleteOrder(Long id);
+    void cancelOrderByClient(Long id);
 
-    Order modifyOrder(Order order);
+    Order updateOrderStatus(Long id, OrderStatus newStatus);
 }

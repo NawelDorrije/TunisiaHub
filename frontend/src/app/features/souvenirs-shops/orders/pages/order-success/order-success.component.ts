@@ -21,12 +21,24 @@ export class OrderSuccessComponent implements OnInit {
 
     if (state?.createdOrders?.length) {
       this.createdOrders = state.createdOrders;
+      try {
+        sessionStorage.setItem('createdOrders', JSON.stringify(this.createdOrders));
+      } catch {
+        // ignore storage errors
+      }
       this.isLoading = false;
       return;
     }
 
-    this.fallbackMessage = 'No recent order details are available. You can view all your orders below.';
-    this.orderService.getOrdersByUser(1).subscribe({
+    const persisted = this.loadPersistedCreatedOrders();
+    if (persisted.length > 0) {
+      this.createdOrders = persisted;
+      this.isLoading = false;
+      return;
+    }
+
+    this.fallbackMessage = 'No recent order details are available. You can view your orders below.';
+    this.orderService.getAllOrders().subscribe({
       next: (orders) => {
         this.createdOrders = orders.slice(-5).reverse();
         this.isLoading = false;
@@ -38,10 +50,33 @@ export class OrderSuccessComponent implements OnInit {
   }
 
   viewMyOrders(): void {
+    this.clearPersistedCreatedOrders();
     this.router.navigate(['/orders']);
   }
 
   continueShopping(): void {
+    this.clearPersistedCreatedOrders();
     this.router.navigate(['/products']);
+  }
+
+  private loadPersistedCreatedOrders(): Order[] {
+    try {
+      const raw = sessionStorage.getItem('createdOrders');
+      if (!raw) {
+        return [];
+      }
+      const parsed = JSON.parse(raw) as Order[];
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      return [];
+    }
+  }
+
+  private clearPersistedCreatedOrders(): void {
+    try {
+      sessionStorage.removeItem('createdOrders');
+    } catch {
+      // ignore storage errors
+    }
   }
 }

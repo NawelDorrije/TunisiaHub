@@ -1,8 +1,22 @@
+.product-list-page {
+  background: #FFF8F0;
+  padding: 2rem 4rem;
+}
+
+.page-header {
+  padding-bottom: 1rem;
+  border-bottom: 1px solid rgba(122, 74, 49, 0.15);
+}
+
+.page-header h2 {
+  color: #3c1a37;
+}
+
 .product-card-img-wrapper {
   height: 220px;
   overflow: hidden;
-  border-top-left-radius: 12px;
-  border-top-right-radius: 12px;
+  border-top-left-radius: 1.4rem;
+  border-top-right-radius: 1.4rem;
   background: #f8f9fa;
 }
 
@@ -31,10 +45,20 @@
 }
 
 .card {
+  border: none;
+  border-radius: 1.4rem;
+    min-width: 250px;  /* ← add this */
+
   transition: transform 0.2s, box-shadow 0.2s;
+  box-shadow: 0 18px 40px rgba(109, 76, 61, 0.12);
 }
 
 .card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 10px 24px rgba(0,0,0,0.12) !important;
+  transform: translateY(-6px);
+  box-shadow: 0 24px 48px rgba(109, 76, 61, 0.18);
 }
+
+.product-list-page .btn {
+  border-radius: 0.95rem;
+}
+

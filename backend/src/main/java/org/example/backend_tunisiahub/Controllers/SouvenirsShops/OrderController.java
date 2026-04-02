@@ -2,6 +2,8 @@ package org.example.backend_tunisiahub.Controllers.SouvenirsShops;
 
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.example.backend_tunisiahub.Controllers.SouvenirsShops.dto.CreateOrdersRequest;
+import org.example.backend_tunisiahub.Controllers.SouvenirsShops.dto.UpdateOrderStatusRequest;
 import org.example.backend_tunisiahub.Entities.SouvenirsShops.Order;
 import org.example.backend_tunisiahub.Entities.SouvenirsShops.OrderItem;
 import org.example.backend_tunisiahub.Entities.SouvenirsShops.Payment;
@@ -32,6 +34,11 @@ public class OrderController {
         return orderService.retrieveOrder(id);
     }
 
+    @GetMapping("/me")
+    public List<Order> getMyOrders() {
+        return orderService.retrieveMyOrders();
+    }
+
     @GetMapping("/user/{userId}")
     public List<Order> getOrdersByUser(@PathVariable Long userId) {
         return orderService.retrieveOrdersByUser(userId);
@@ -47,23 +54,23 @@ public class OrderController {
         return orderService.retrieveOrderItems(id);
     }
 
-    @GetMapping("/{id}/payment")
-    public Payment getOrderPayment(@PathVariable Long id) {
-        return orderService.retrieveOrderPayment(id);
+    @GetMapping("/{id}/payments")
+    public List<Payment> getOrderPayments(@PathVariable Long id) {
+        return orderService.retrieveOrderPayments(id);
     }
 
     @PostMapping
-    public Order createOrder(@RequestBody Order order) {
-        return orderService.addOrder(order);
+    public List<Order> createOrders(@RequestBody CreateOrdersRequest request) {
+        return orderService.addOrdersFromCart(request == null ? null : request.getItems());
     }
 
-    @PutMapping
-    public Order updateOrder(@RequestBody Order order) {
-        return orderService.modifyOrder(order);
+    @PutMapping("/{id}/status")
+    public Order updateOrderStatus(@PathVariable Long id, @RequestBody UpdateOrderStatusRequest request) {
+        return orderService.updateOrderStatus(id, request == null ? null : request.getStatus());
     }
 
     @DeleteMapping("/{id}")
     public void deleteOrder(@PathVariable Long id) {
-        orderService.deleteOrder(id);
+        orderService.cancelOrderByClient(id);
     }
 }

@@ -1,13 +1,14 @@
-import { Component, OnInit } from '@angular/core';
+﻿import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Product } from '../../../../../models/souvenirs-shops/product.model';
 import { ProductService } from '../../../../../services/souvenirs-shops/product.service';
 import { CartService } from '../../../../../services/souvenirs-shops/cart.service';
+import { AuthService } from '../../../../auth/services/auth.service';
 
 @Component({
   selector: 'app-product-detail',
   templateUrl: './product-detail.component.html',
-  styleUrl: './product-detail.component.css'
+  styleUrls: ['./product-detail.component.css']
 })
 export class ProductDetailComponent implements OnInit {
   product: Product | null = null;
@@ -22,8 +23,17 @@ export class ProductDetailComponent implements OnInit {
     private route: ActivatedRoute,
     private router: Router,
     private productService: ProductService,
-    private cartService: CartService
+    private cartService: CartService,
+    public authService: AuthService
   ) {}
+
+  get canManageProducts(): boolean {
+    return this.authService.isAdmin() || this.authService.isOwner();
+  }
+
+  get canAddToCart(): boolean {
+    return this.authService.isClient() && !!this.product && this.product.stockQuantity > 0;
+  }
 
   ngOnInit(): void {
     const id = Number(this.route.snapshot.paramMap.get('id'));
@@ -52,15 +62,15 @@ export class ProductDetailComponent implements OnInit {
   }
 
   addToCart(): void {
-    if (!this.product) {
-      return;
-    }
+    if (!this.product || !this.canAddToCart) return;
 
     this.cartService.addProduct(this.product, this.quantity || 1);
-    this.cartMessage = `${this.product.name} has been added to your cart.`;
+    this.cartMessage = 'Added to cart successfully.';
+    setTimeout(() => this.cartMessage = '', 3000);
   }
 
-  backToProductList(): void {
+  backToProductList(event?: Event): void {
+    event?.preventDefault();
     if (this.product?.shop?.id) {
       this.router.navigate(['/products', 'shop', this.product.shop.id]);
       return;
@@ -68,11 +78,28 @@ export class ProductDetailComponent implements OnInit {
     this.router.navigate(['/products']);
   }
 
-  openImageViewer(url: string): void {
+  openImageViewer(url?: string): void {
+    if (!url) {
+      return;
+    }
     this.selectedImageUrl = url;
   }
 
   closeImageViewer(): void {
     this.selectedImageUrl = null;
   }
+  increaseQty(): void {
+  if (this.quantity < (this.product?.stockQuantity || 1)) {
+    this.quantity++;
+  }
 }
+
+decreaseQty(): void {
+  if (this.quantity > 1) {
+    this.quantity--;
+  }
+}
+}
+
+
+

@@ -1,4 +1,4 @@
-package org.example.backend_tunisiahub.Controllers;
+package org.example.backend_tunisiahub.Controllers.User;
 
 import lombok.RequiredArgsConstructor;
 import org.example.backend_tunisiahub.Entities.User.RoleUser;
@@ -26,17 +26,29 @@ public class AuthController {
         if (userRepository.findByEmail(request.getEmail()) != null)
             return ResponseEntity.badRequest().body("Email already exists");
 
+        RoleUser selectedRole = resolveRegistrationRole(request.getRole());
+        if (selectedRole == null) {
+            return ResponseEntity.badRequest().body("Invalid role. Allowed values: CLIENT, OWNER");
+        }
+
         User user = new User();
         user.setNom(request.getNom());
         user.setPrenom(request.getPrenom());
         user.setEmail(request.getEmail());
         user.setMotDePasse(passwordEncoder.encode(request.getPassword()));
-        user.setRole(RoleUser.CLIENT);
+        user.setRole(selectedRole);
 
         userRepository.save(user);
 
         String token = jwtUtil.generateToken(user.getEmail(), user.getRole().name());
-        return ResponseEntity.ok(new AuthResponse(token, user.getRole().name(), user.getEmail(), user.getNom(), user.getPrenom()));
+        return ResponseEntity.ok(new AuthResponse(
+                user.getId(),
+                token,
+                user.getRole().name(),
+                user.getEmail(),
+                user.getNom(),
+                user.getPrenom()
+        ));
     }
 
     @PostMapping("/login")
@@ -50,6 +62,29 @@ public class AuthController {
             return ResponseEntity.status(401).body("Invalid password");
 
         String token = jwtUtil.generateToken(user.getEmail(), user.getRole().name());
-        return ResponseEntity.ok(new AuthResponse(token, user.getRole().name(), user.getEmail(), user.getNom(), user.getPrenom()));
+        return ResponseEntity.ok(new AuthResponse(
+                user.getId(),
+                token,
+                user.getRole().name(),
+                user.getEmail(),
+                user.getNom(),
+                user.getPrenom()
+        ));
+    }
+
+    private RoleUser resolveRegistrationRole(String roleValue) {
+        if (roleValue == null || roleValue.isBlank()) {
+            return RoleUser.CLIENT;
+        }
+
+        try {
+            RoleUser role = RoleUser.valueOf(roleValue.trim().toUpperCase());
+            if (role == RoleUser.ADMIN) {
+                return null;
+            }
+            return role;
+        } catch (IllegalArgumentException ex) {
+            return null;
+        }
     }
 }
