@@ -7,15 +7,15 @@
         <svg viewBox="0 0 24 24"><path d="M12 2L2 19h20L12 2zm0 4l7 13H5l7-13z"/></svg>
       </div>
       <div>
-        <h1 class="page-title">Campings disponibles</h1>
-        <p class="page-subtitle">Découvrez notre sélection de campings d'exception</p>
+        <h1 class="page-title">Available Campings</h1>
+        <p class="page-subtitle">Discover our selection of exceptional campings</p>
       </div>
     </div>
 
     <!-- ── LOADING ── -->
     <div class="loading-state" *ngIf="loading">
       <div class="spinner"></div>
-      <p>Chargement des campings...</p>
+      <p>Loading campings...</p>
     </div>
 
     <!-- ── GRID ── -->
@@ -68,14 +68,14 @@
           </div>
 
           <div class="card-period">
-            <div class="period-label">Période disponible</div>
+            <div class="period-label">Available Period</div>
             <div class="period-value">
               {{ camping.startDate | date:'dd MMM yyyy' }} — {{ camping.endDate | date:'dd MMM yyyy' }}
             </div>
           </div>
 
           <button class="btn-details" [routerLink]="['/campings/details', camping.id]">
-            Voir les détails
+            View Details
             <svg viewBox="0 0 24 24"><path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6z"/></svg>
           </button>
         </div>
@@ -86,8 +86,8 @@
     <!-- ── EMPTY STATE ── -->
     <div class="empty-state" *ngIf="!loading && campings.length === 0">
       <svg viewBox="0 0 24 24"><path d="M12 2L2 19h20L12 2zm0 4l7 13H5l7-13z"/></svg>
-      <h3>Aucun camping disponible</h3>
-      <p>Revenez bientôt pour découvrir nos nouveaux campings.</p>
+      <h3>No camping available</h3>
+      <p>Come back soon to discover our new campings.</p>
     </div>
 
   </div>
