@@ -1,9 +1,8 @@
 package org.example.backend_tunisiahub.carpooling;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.example.backend_tunisiahub.carpooling.dto.TripCreateRequest;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -14,6 +13,8 @@ import org.springframework.test.web.servlet.MockMvc;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
+import java.util.HashMap;
+import java.util.Map;
 import static org.hamcrest.Matchers.hasSize;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
@@ -32,16 +33,17 @@ class TripControllerIntegrationTest {
     @Autowired
     private ObjectMapper objectMapper;
 
-    private TripCreateRequest validRequest;
+        private Map<String, Object> validRequest;
 
     @BeforeEach
     void setUp() {
-        validRequest = new TripCreateRequest();
-        validRequest.setDeparturePoint("Tunis");
-        validRequest.setDestination("Sousse");
-        validRequest.setDepartureDateTime(LocalDateTime.now().plusDays(2));
-        validRequest.setPrice(BigDecimal.valueOf(25));
-        validRequest.setSeatsTotal(3);
+        validRequest = new HashMap<>();
+        validRequest.put("departurePoint", "Tunis");
+        validRequest.put("destination", "Sousse");
+        validRequest.put("departureDateTime", LocalDateTime.now().plusDays(2));
+        validRequest.put("price", 25);
+        validRequest.put("seatsTotal", 3);
+        validRequest.put("vehicleId", 1L);
     }
 
     @Test
@@ -49,11 +51,11 @@ class TripControllerIntegrationTest {
         mockMvc.perform(post("/api/carpooling/trips")
                         .contentType(MediaType.APPLICATION_JSON)
                         .header("X-USER-ID", "10")
-                        .header("X-ROLE", "DRIVER")
+                        .header("X-ROLE", "USER")
                         .content(objectMapper.writeValueAsString(validRequest)))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.driverId").value(10))
-                .andExpect(jsonPath("$.status").value("PLANNED"))
+                .andExpect(jsonPath("$.createdBy").value("10"))
+                .andExpect(jsonPath("$.status").value("SCHEDULED"))
                 .andExpect(jsonPath("$.seatsTotal").value(3))
                 .andExpect(jsonPath("$.seatsAvailable").value(3));
     }
@@ -63,10 +65,10 @@ class TripControllerIntegrationTest {
         mockMvc.perform(post("/api/carpooling/trips")
                         .contentType(MediaType.APPLICATION_JSON)
                         .header("X-USER-ID", "11")
-                        .header("X-ROLE", "PASSENGER")
+                        .header("X-ROLE", "INVALID_ROLE")
                         .content(objectMapper.writeValueAsString(validRequest)))
                 .andExpect(status().isForbidden())
-                .andExpect(jsonPath("$.message").value("Only users with DRIVER role can perform this action"));
+                .andExpect(jsonPath("$.error").exists());
     }
 
     @Test
@@ -74,7 +76,7 @@ class TripControllerIntegrationTest {
         mockMvc.perform(post("/api/carpooling/trips")
                         .contentType(MediaType.APPLICATION_JSON)
                         .header("X-USER-ID", "42")
-                        .header("X-ROLE", "DRIVER")
+                        .header("X-ROLE", "USER")
                         .content(objectMapper.writeValueAsString(validRequest)))
                 .andExpect(status().isCreated());
 
@@ -90,7 +92,7 @@ class TripControllerIntegrationTest {
         String response = mockMvc.perform(post("/api/carpooling/trips")
                         .contentType(MediaType.APPLICATION_JSON)
                         .header("X-USER-ID", "100")
-                        .header("X-ROLE", "DRIVER")
+                        .header("X-ROLE", "USER")
                         .content(objectMapper.writeValueAsString(validRequest)))
                 .andExpect(status().isCreated())
                 .andReturn()
@@ -101,13 +103,13 @@ class TripControllerIntegrationTest {
 
         mockMvc.perform(patch("/api/carpooling/trips/{id}/cancel", tripId)
                         .header("X-USER-ID", "999")
-                        .header("X-ROLE", "DRIVER"))
+                        .header("X-ROLE", "USER"))
                 .andExpect(status().isForbidden());
 
         mockMvc.perform(patch("/api/carpooling/trips/{id}/cancel", tripId)
                         .header("X-USER-ID", "100")
-                        .header("X-ROLE", "DRIVER"))
+                        .header("X-ROLE", "USER"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.status").value("CANCELLED"));
+                .andExpect(jsonPath("$.status").value("CANCELED"));
     }
 }

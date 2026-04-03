@@ -1,0 +1,53 @@
+<div class="container py-4">
+  <h2 class="mb-4">Admin carpooling dashboard</h2>
+
+  <div class="row g-3 mb-4">
+    <div class="col-md-3">
+      <div class="card stat-card shadow-sm">
+        <div class="card-body">
+          <div class="text-muted small">Total trips</div>
+          <div class="display-6">{{ stats.totalTrips }}</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card stat-card shadow-sm">
+        <div class="card-body">
+          <div class="text-muted small">Total bookings</div>
+          <div class="display-6">{{ stats.totalBookings }}</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card stat-card shadow-sm">
+        <div class="card-body">
+          <div class="text-muted small">Total complaints</div>
+          <div class="display-6">{{ stats.totalComplaints }}</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card stat-card shadow-sm">
+        <div class="card-body">
+          <div class="text-muted small">Active users</div>
+          <div class="display-6">{{ stats.activeUsers }}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="d-flex flex-wrap gap-2">
+    <a class="btn btn-outline-primary" routerLink="/carpooling/admin/bookings"
+      >View all bookings</a
+    >
+    <a class="btn btn-outline-warning" routerLink="/carpooling/admin/complaints"
+      >View complaints</a
+    >
+    <a class="btn btn-outline-dark" routerLink="/carpooling/admin/users"
+      >View users summary</a
+    >
+    <a class="btn btn-outline-secondary" routerLink="/carpooling/search-rides"
+      >Monitor trips</a
+    >
+  </div>
+</div>
