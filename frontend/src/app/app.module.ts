@@ -1,8 +1,5 @@
 import { NgModule } from '@angular/core';
-import {
-  BrowserModule,
-  provideClientHydration,
-} from '@angular/platform-browser';
+import { BrowserModule, provideClientHydration } from '@angular/platform-browser';
 
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
@@ -20,6 +17,7 @@ import { ReactiveFormsModule } from '@angular/forms';
     HeaderComponent,
     NotFoundComponent,
     HomeComponent,
+
   ],
   imports: [
     BrowserModule,
@@ -32,4 +30,4 @@ import { ReactiveFormsModule } from '@angular/forms';
   ],
   bootstrap: [AppComponent]
 })
-export class AppModule {}
+export class AppModule { }

@@ -1,70 +1,21 @@
 <div class="auth-container d-flex justify-content-center align-items-center vh-100">
   <div class="auth-card p-4 shadow rounded">
     <h2 class="text-center mb-4">Sign Up</h2>
-
-    <div class="alert alert-danger" *ngIf="errorMessage">{{ errorMessage }}</div>
-
-    <form [formGroup]="signUpForm" (ngSubmit)="onSubmit()">
-
+    <form>
       <div class="mb-3">
-        <label class="form-label">Last Name</label>
-        <input
-          type="text"
-          class="form-control"
-          [class.is-invalid]="f['nom'].invalid && f['nom'].touched"
-          formControlName="nom"
-          placeholder="Enter your last name"
-        />
-        <div class="invalid-feedback">Last name is required.</div>
+        <label for="name" class="form-label">Full Name</label>
+        <input type="text" class="form-control" id="name" placeholder="Enter your name">
       </div>
-
       <div class="mb-3">
-        <label class="form-label">First Name</label>
-        <input
-          type="text"
-          class="form-control"
-          [class.is-invalid]="f['prenom'].invalid && f['prenom'].touched"
-          formControlName="prenom"
-          placeholder="Enter your first name"
-        />
-        <div class="invalid-feedback">First name is required.</div>
+        <label for="email" class="form-label">Email address</label>
+        <input type="email" class="form-control" id="email" placeholder="Enter your email">
       </div>
-
       <div class="mb-3">
-        <label class="form-label">Email address</label>
-        <input
-          type="email"
-          class="form-control"
-          [class.is-invalid]="f['email'].invalid && f['email'].touched"
-          formControlName="email"
-          placeholder="Enter your email"
-        />
-        <div class="invalid-feedback">Please enter a valid email.</div>
+        <label for="password" class="form-label">Password</label>
+        <input type="password" class="form-control" id="password" placeholder="Enter your password">
       </div>
-
-      <div class="mb-3">
-        <label class="form-label">Password</label>
-        <input
-          type="password"
-          class="form-control"
-          [class.is-invalid]="f['password'].invalid && f['password'].touched"
-          formControlName="password"
-          placeholder="Enter your password"
-        />
-        <div class="invalid-feedback">Password must be at least 6 characters.</div>
-      </div>
-
-      <button
-        type="submit"
-        class="btn btn-primary w-100"
-        [disabled]="isLoading"
-      >
-        <span *ngIf="isLoading" class="spinner-border spinner-border-sm me-2"></span>
-        {{ isLoading ? 'Signing up...' : 'Sign Up' }}
-      </button>
-
+      <button type="submit" class="btn btn-primary w-100">Sign Up</button>
     </form>
-
     <p class="text-center mt-3">
       Already have an account? <a routerLink="/sign-in">Sign In</a>
     </p>

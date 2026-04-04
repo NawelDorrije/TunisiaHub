@@ -1,96 +1,42 @@
 <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
   <div class="container">
+    <!-- Logo simple et élégant -->
     <a class="navbar-brand" routerLink="/">
       <span class="logo">Discover Tunisia</span>
     </a>
 
-    <button
-      class="navbar-toggler"
-      type="button"
-      data-bs-toggle="collapse"
-      data-bs-target="#navbarNav"
-      aria-controls="navbarNav"
-      aria-expanded="false"
-      aria-label="Toggle navigation"
-    >
+    <!-- Toggle button pour mobile -->
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+      aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
       <span class="navbar-toggler-icon"></span>
     </button>
 
+    <!-- Liens de navigation -->
     <div class="collapse navbar-collapse" id="navbarNav">
       <ul class="navbar-nav ms-auto align-items-lg-center">
-
         <li class="nav-item">
           <a class="nav-link" routerLink="/">Home</a>
         </li>
-
         <li class="nav-item dropdown">
-          <a 
-            class="nav-link dropdown-toggle"
-            href="#"
-            id="servicesDropdown"
-            role="button"
-            data-bs-toggle="dropdown"
-            aria-expanded="false"
-          >Services </a>
+          <a class="nav-link dropdown-toggle" href="#" id="servicesDropdown" role="button" data-bs-toggle="dropdown"
+            aria-expanded="false">
+            Services
+          </a>
           <ul class="dropdown-menu" aria-labelledby="servicesDropdown">
             <li><a class="dropdown-item" routerLink="/campings">Campings</a></li>
             <li><a class="dropdown-item" routerLink="/events">Events</a></li>
             <li><a class="dropdown-item" routerLink="/shoppings">Shoppings</a></li>
-            <li><a class="dropdown-item" routerLink="/carpooling">Carpooling</a></li>
-            <li><a class="dropdown-item" routerLink="/accommodations/explore">Accommodations</a></li>
           </ul>
         </li>
-
         <li class="nav-item">
           <a class="nav-link" routerLink="/contact">Contact Us</a>
         </li>
-
-        <!-- Admin link -->
-        <li class="nav-item" *ngIf="authService.isAdmin()">
-          <a class="nav-link" routerLink="/accommodations/admin">Dashboard</a>
+        <li class="nav-item">
+          <a class="btn btn-outline-primary ms-lg-3" routerLink="/auth/sign-in">Login</a>
         </li>
-
-        <!-- NOT logged in -->
-        <ng-container *ngIf="!authService.isLoggedIn()">
-          <li class="nav-item">
-            <a class="btn btn-outline-primary ms-lg-3" routerLink="/auth/sign-in">Login</a>
-          </li>
-          <li class="nav-item">
-            <a class="btn btn-primary ms-2 text-white" routerLink="/auth/sign-up">Sign Up</a>
-          </li>
-        </ng-container>
-
-        <!-- Logged in -->
-        <ng-container *ngIf="authService.isLoggedIn()">
-          <li class="nav-item dropdown ms-lg-3">
-            <a 
-              class="nav-link dropdown-toggle fw-semibold"
-              href="#"
-              role="button"
-              data-bs-toggle="dropdown"
-              aria-expanded="false"
-            >
-              👤 {{ authService.getNom() }} {{ authService.getPrenom() }}
-            </a>
-            <ul class="dropdown-menu dropdown-menu-end">
-              <li>
-                <span class="dropdown-item-text text-muted small">
-                  {{ authService.getRole() }}
-                </span>
-              </li>
-              <li><hr class="dropdown-divider"></li>
-              <li>
-                <button
-                  class="dropdown-item text-danger"
-                  (click)="logout()"
-                >
-                  Logout
-                </button>
-              </li>
-            </ul>
-          </li>
-        </ng-container>
-
+        <li class="nav-item">
+          <a class="btn btn-primary ms-2 text-white" routerLink="/auth/sign-up">Sign Up</a>
+        </li>
       </ul>
     </div>
   </div>

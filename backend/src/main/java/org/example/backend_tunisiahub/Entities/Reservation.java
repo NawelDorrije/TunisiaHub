@@ -6,12 +6,11 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.FieldDefaults;
-import org.example.backend_tunisiahub.carpooling.entity.Trip;
+import org.example.backend_tunisiahub.Entities.Camping.ReservationStatus;
+import org.example.backend_tunisiahub.Entities.Camping.Spot;
 import org.example.backend_tunisiahub.Entities.User.User;
 
-import org.example.backend_tunisiahub.Entities.Camping.Spot;
-import java.util.Date;
-import java.util.List;
+import java.time.LocalDate;
 
 @Entity
 @Getter
@@ -24,35 +23,21 @@ public class Reservation {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     Long id;
 
-    String status;
+    LocalDate startDateCamping;
 
-    @Temporal(TemporalType.DATE)
-    Date startDate;
+    LocalDate endDateCamping;
 
-    @Temporal(TemporalType.DATE)
-    Date endDate;
+    int numberOfPeopleCamping;
 
-    Double totalPrice;
+    double totalPriceCamping;
 
     @Enumerated(EnumType.STRING)
-    ReservationType type;
+    ReservationStatus statusCamping;
 
     @ManyToOne
-    @JoinColumn(name = "trip_id")
-    Trip trip;
-
-    @ManyToOne
-    @JoinColumn(name = "spot_id")
-    Spot spot;
-
-    @ManyToOne
-    @JoinColumn(name = "user_id")
     User user;
 
-    @OneToMany(mappedBy = "reservation")
-    List<Complaint> complaints;
-
-    @OneToOne(mappedBy = "reservation")
-    Review review;
+    @ManyToOne
+    Spot spot;
 
 }
