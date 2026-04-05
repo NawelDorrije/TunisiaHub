@@ -1,0 +1,76 @@
+.manage-header {
+  border-radius: 16px;
+  padding: 1.25rem 1.5rem;
+  background: linear-gradient(135deg, #fff9f2 0%, #ffffff 55%, #fff4e8 100%);
+  border: 1px solid #f0e2d3;
+}
+
+.manage-header h1 {
+  color: #2c3e50;
+}
+
+.back-link {
+  color: #7d8a97;
+  font-weight: 500;
+}
+
+.back-link:hover {
+  color: #2c3e50;
+}
+
+.table-wrap {
+  border: 1px solid #ebeef1;
+  border-radius: 14px;
+  background: #fff;
+}
+
+.table thead th {
+  border-bottom: 2px solid #d4a574;
+  font-size: 0.86rem;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: #5f6c78;
+  font-weight: 700;
+  background-color: #fcfcfd;
+}
+
+.table td,
+.table th {
+  vertical-align: middle;
+}
+
+.table tbody tr:hover {
+  background-color: #fffaf3;
+}
+
+.id-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.22rem 0.55rem;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #445260;
+  background-color: #f2f5f8;
+}
+
+.cuisine-badge {
+  background-color: #f6ebdf;
+  color: #8a5a2b;
+  border: 1px solid #e9d2bc;
+  font-weight: 600;
+}
+
+.action-btn {
+  border-radius: 8px;
+}
+
+.modal-content {
+  border-radius: 14px;
+  border: 1px solid #eceff2;
+}
+
+.modal-header {
+  border-bottom: 2px solid #d4a574;
+  background: #fffaf3;
+}

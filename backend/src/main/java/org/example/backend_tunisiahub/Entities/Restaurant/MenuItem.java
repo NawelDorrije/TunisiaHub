@@ -9,6 +9,8 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.FieldDefaults;
 
+import java.math.BigDecimal;
+
 @Entity
 @Table(name = "menu_items")
 @Getter
@@ -20,8 +22,13 @@ public class MenuItem {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     Long id;
     String name;
+    @Lob
+    @Column(columnDefinition = "LONGTEXT")
+    String picture;
     String ingredients;
     String description;
+    @Column(nullable = false, precision = 10, scale = 2)
+    BigDecimal price;
     @ManyToOne
     @JsonIgnore
     Menu menu;

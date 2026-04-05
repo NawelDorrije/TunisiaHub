@@ -27,7 +27,7 @@
 
         <!-- Photo -->
         <img
-          [src]="accommodation.photos?.[0] || 'assets/images/placeholder.jpg'"
+          [src]="accommodation.photos[0] || 'assets/images/placeholder.jpg'"
           class="card-img-top"
           alt="{{ accommodation.title }}"
           style="height: 200px; object-fit: cover;"

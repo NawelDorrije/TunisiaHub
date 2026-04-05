@@ -21,8 +21,15 @@ public class Restaurant {
     Long id;
 
     String name;
+    @Lob
+    @Column(columnDefinition = "LONGTEXT")
+    String picture;
 
     String address;
+    Double latitude;
+    Double longitude;
+    @Convert(converter = CuisineConverter.class)
+    Cuisine cuisine;
     @Column(unique = true)
     String email;
     @Column(unique = true)

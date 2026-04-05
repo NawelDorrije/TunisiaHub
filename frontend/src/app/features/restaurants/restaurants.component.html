@@ -2,6 +2,9 @@
   <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
     <h2 class="text-center flex-grow-1 mb-0">List of Restaurants</h2>
     <div class="d-flex flex-wrap gap-2 justify-content-end">
+      <a *ngIf="isAdmin" routerLink="/restaurants/dashboard" class="btn btn-dark d-flex align-items-center gap-2" style="white-space: nowrap;">
+        <i class="bi bi-speedometer2"></i> Dashboard
+      </a>
       <a *ngIf="isAdmin" routerLink="/restaurants/reservations" class="btn btn-outline-dark d-flex align-items-center gap-2" style="white-space: nowrap;">
         <i class="bi bi-journal-text"></i> Reservations
       </a>
@@ -11,38 +14,65 @@
     </div>
   </div>
 
-  <!-- Search by Address -->
+  <!-- Search + filter -->
   <div class="mb-4">
-    <div class="input-group">
-      <span class="input-group-text" style="background-color: #d4a574; border-color: #d4a574; color: white;">
-        <i class="bi bi-search"></i>
-      </span>
-      <input 
-        type="text" 
-        class="form-control" 
-        placeholder="Search restaurants by address" 
-        [(ngModel)]="searchAddress"
-        style="border-color: #d4a574;">
+    <div class="d-flex flex-wrap gap-2 align-items-end">
+      <div class="input-group flex-grow-1" style="min-width: 280px;">
+        <span class="input-group-text" style="background-color: #d4a574; border-color: #d4a574; color: white;">
+          <i class="bi bi-search"></i>
+        </span>
+        <input
+          type="text"
+          class="form-control"
+          placeholder="Search restaurants by address"
+          [(ngModel)]="searchAddress"
+          style="border-color: #d4a574;">
+      </div>
+
+      <div style="min-width: 220px;">
+        <select
+          class="form-select"
+          [(ngModel)]="selectedCuisine"
+          [disabled]="isCuisinesLoading"
+          style="border-color: #d4a574;">
+          <option value="">All cuisines</option>
+          <option *ngFor="let cuisine of cuisineOptions" [value]="cuisine">
+            {{ cuisine | titlecase }}
+          </option>
+        </select>
+        <div *ngIf="isCuisinesLoading" class="text-muted small mt-1">Loading cuisines...</div>
+      </div>
     </div>
   </div>
 
   <!-- Check if we have restaurants -->
   <div *ngIf="getFilteredRestaurants().length === 0" class="text-center text-muted">
     <p *ngIf="restaurants.length === 0">Loading restaurants...</p>
-    <p *ngIf="restaurants.length > 0">No restaurants found matching your search.</p>
+    <p *ngIf="restaurants.length > 0">No restaurants found matching your filters.</p>
   </div>
 
   <!-- Display restaurant cards -->
   <div class="row g-4">
     <div class="col-md-4" *ngFor="let restaurant of getFilteredRestaurants()">
-      <div class="card h-100 shadow-sm">
-        <!-- <img [src]="restaurant.imageUrl || 'https://via.placeholder.com/300x200'" class="card-img-top" alt="{{restaurant.name}}"> -->
-        <div class="card-body">
-          <h5 class="card-title">{{ restaurant.name }}</h5>
-          <p class="card-text"><i class="bi bi-geo-alt-fill me-2" style="color: #dc3545;"></i>{{ restaurant.address }}</p>
-          <p class="card-text"><small class="text-muted"><i class="bi bi-telephone-fill me-2" style="color: #28a745;"></i>{{ restaurant.phoneNum }}</small></p>
+      <div class="card h-100 shadow-sm border-0 position-relative text-white overflow-hidden" 
+           [ngStyle]="restaurant.picture ? {'background-image': 'url(' + getImageUrl(restaurant.picture) + ')', 'background-size': 'cover', 'background-position': 'center'} : {'background-color': '#1a1a1a'}">
+        
+        <!-- Gradient overlay for readability -->
+        <div class="position-absolute top-0 start-0 w-100 h-100" style="background: linear-gradient(to bottom, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0.9) 100%); z-index: 1;"></div>
+        
+        <div class="card-body position-relative" style="z-index: 2;">
+          <h5 class="card-title fw-bold text-truncate mb-3">{{ restaurant.name }}</h5>
+          <p class="card-text mb-2"><i class="bi bi-geo-alt-fill me-2 text-danger"></i>{{ restaurant.address }}</p>
+          <p class="card-text mb-2">
+            <small class="d-flex align-items-center">
+              <i class="bi bi-tag-fill me-2 text-warning"></i>
+              Cuisine: {{ getCuisineLabel(restaurant.cuisine) }}
+            </small>
+          </p>
+          <p class="card-text mb-0"><small><i class="bi bi-telephone-fill me-2 text-success"></i>{{ restaurant.phoneNum }}</small></p>
         </div>
-        <div class="card-footer text-center">
+        
+        <div class="card-footer text-center position-relative border-top-0 pt-0 pb-3" style="z-index: 2; background: transparent;">
           <div class="d-flex gap-2">
             <button class="btn btn-outline-info flex-grow-1 d-flex align-items-center justify-content-center gap-2" (click)="viewDetails(restaurant)" style="color: #0dcaf0; border-color: #0dcaf0; font-weight: 500; transition: all 0.3s ease;">
               <i class="bi bi-info-circle-fill"></i><span>Details</span>
@@ -84,6 +114,7 @@
         <p><strong>Address:</strong> {{ selectedRestaurant.address }}</p>
         <p><strong>Email:</strong> {{ selectedRestaurant.email }}</p>
         <p><strong>Phone Number:</strong> {{ selectedRestaurant.phoneNum }}</p>
+        <p><strong>Cuisine:</strong> {{ getCuisineLabel(selectedRestaurant.cuisine) }}</p>
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" (click)="closeDetailsModal()">Close</button>
@@ -156,16 +187,41 @@
               required>
           </div>
           <div class="mb-3">
-            <label for="restaurantAddress" class="form-label"><strong>Address</strong></label>
+            <label for="restaurantPicture" class="form-label"><strong>Picture</strong></label>
             <input 
-              type="text" 
+              type="file" 
               class="form-control" 
-              id="restaurantAddress" 
-              [(ngModel)]="newRestaurant.address" 
-              name="address"
-              placeholder="Enter restaurant address"
-              [disabled]="isSubmitting"
-              required>
+              id="restaurantPicture" 
+              (change)="onFileSelected($event, 'new')"
+              accept="image/*"
+              [disabled]="isSubmitting">
+          </div>
+          <div class="mb-3">
+            <label for="restaurantAddress" class="form-label"><strong>Address</strong></label>
+            <div class="input-group mb-2">
+              <input 
+                type="text" 
+                class="form-control" 
+                [(ngModel)]="mapSearchQuery" 
+                name="mapSearchQuery"
+                placeholder="Search location to set map pin..."
+                (keydown.enter)="$event.preventDefault(); searchMapLocation()">
+              <button class="btn btn-outline-secondary" type="button" (click)="searchMapLocation()">
+                <i class="bi bi-search"></i> Search map
+              </button>
+            </div>
+            <div class="input-group mb-2">
+              <input 
+                type="text" 
+                class="form-control" 
+                id="restaurantAddress" 
+                [(ngModel)]="newRestaurant.address" 
+                name="address"
+                placeholder="Click on the map or use search to set address"
+                [disabled]="isSubmitting"
+                required>
+            </div>
+            <div id="add-restaurant-map" style="height: 250px; width: 100%; border-radius: 8px; border: 1px solid #ced4da; z-index: 1;"></div>
           </div>
           <div class="mb-3">
             <label for="restaurantEmail" class="form-label"><strong>Email</strong></label>
@@ -190,6 +246,21 @@
               placeholder="Enter restaurant phone number"
               [disabled]="isSubmitting"
               required>
+          </div>
+          <div class="mb-3">
+            <label for="restaurantCuisine" class="form-label"><strong>Cuisine</strong></label>
+            <select
+              class="form-select"
+              id="restaurantCuisine"
+              [(ngModel)]="newRestaurant.cuisine"
+              name="cuisine"
+              [disabled]="isSubmitting || isCuisinesLoading"
+              required>
+              <option value="">Select cuisine</option>
+              <option *ngFor="let cuisine of cuisineOptions" [value]="cuisine">
+                {{ cuisine | titlecase }}
+              </option>
+            </select>
           </div>
         </form>
       </div>
@@ -222,6 +293,10 @@
             <input type="text" class="form-control" id="editRestaurantName" [(ngModel)]="editRestaurant.name" name="editName" [disabled]="isSubmittingEdit" required>
           </div>
           <div class="mb-3">
+            <label for="editRestaurantPicture" class="form-label"><strong>Picture</strong></label>
+            <input type="file" class="form-control" id="editRestaurantPicture" (change)="onFileSelected($event, 'edit')" accept="image/*" [disabled]="isSubmittingEdit">
+          </div>
+          <div class="mb-3">
             <label for="editRestaurantAddress" class="form-label"><strong>Address</strong></label>
             <input type="text" class="form-control" id="editRestaurantAddress" [(ngModel)]="editRestaurant.address" name="editAddress" [disabled]="isSubmittingEdit" required>
           </div>
@@ -232,6 +307,21 @@
           <div class="mb-3">
             <label for="editRestaurantPhone" class="form-label"><strong>Phone Number</strong></label>
             <input type="tel" class="form-control" id="editRestaurantPhone" [(ngModel)]="editRestaurant.phoneNum" name="editPhoneNum" [disabled]="isSubmittingEdit" required>
+          </div>
+          <div class="mb-3">
+            <label for="editRestaurantCuisine" class="form-label"><strong>Cuisine</strong></label>
+            <select
+              class="form-select"
+              id="editRestaurantCuisine"
+              [(ngModel)]="editRestaurant.cuisine"
+              name="editCuisine"
+              [disabled]="isSubmittingEdit || isCuisinesLoading"
+              required>
+              <option value="">Select cuisine</option>
+              <option *ngFor="let cuisine of cuisineOptions" [value]="cuisine">
+                {{ cuisine | titlecase }}
+              </option>
+            </select>
           </div>
         </form>
       </div>

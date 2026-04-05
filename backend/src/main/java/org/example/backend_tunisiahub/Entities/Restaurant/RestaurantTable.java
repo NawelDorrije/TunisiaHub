@@ -3,9 +3,8 @@ package org.example.backend_tunisiahub.Entities.Restaurant;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -41,7 +40,7 @@ public class RestaurantTable {
 
     String location;
 
-    @Enumerated(EnumType.STRING)
+    @Convert(converter = TableStatusConverter.class)
     @Column(nullable = false)
     TableStatus status;
 

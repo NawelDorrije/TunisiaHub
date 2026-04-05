@@ -1,6 +1,7 @@
 package org.example.backend_tunisiahub.Controllers.Restaurant;
 
 import lombok.RequiredArgsConstructor;
+import org.example.backend_tunisiahub.Entities.Restaurant.Cuisine;
 import org.example.backend_tunisiahub.Entities.Restaurant.Restaurant;
 import org.example.backend_tunisiahub.Services.Restaurant.IRestaurantService;
 import org.springframework.web.bind.annotation.*;
@@ -17,6 +18,28 @@ public class RestaurantController {
     @GetMapping
     public List<Restaurant> getAllRestaurants() {
         return restaurantService.retrieveAllRestaurants();
+    }
+
+    @GetMapping("/cuisines")
+    public List<Cuisine> getCuisines() {
+        return restaurantService.retrieveCuisines();
+    }
+
+    @GetMapping("/cuisines/used")
+    public List<Cuisine> getUsedCuisines() {
+        return restaurantService.retrieveUsedCuisines();
+    }
+
+    @GetMapping("/by-cuisine/{cuisine}")
+    public List<Restaurant> getRestaurantsByCuisine(@PathVariable String cuisine) {
+        return restaurantService.retrieveRestaurantsByCuisine(cuisine);
+    }
+
+    @GetMapping("/reverse-geocode")
+    public ReverseGeocodeResponse reverseGeocode(@RequestParam("lat") Double latitude,
+                                                 @RequestParam("lng") Double longitude) {
+        String address = restaurantService.resolveAddressFromCoordinates(latitude, longitude);
+        return new ReverseGeocodeResponse(address);
     }
 
     @GetMapping("/get/{id}")
@@ -38,4 +61,6 @@ public class RestaurantController {
     public void deleteRestaurant(@PathVariable Long id) {
         restaurantService.deleteRestaurant(id);
     }
+
+    private record ReverseGeocodeResponse(String address) {}
 }

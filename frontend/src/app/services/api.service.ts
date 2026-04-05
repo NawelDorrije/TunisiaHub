@@ -10,6 +10,25 @@ export class ApiService {
 
   constructor(private http: HttpClient) { }
 
+  getImageUrl(path: string): string {
+    if (!path) return '';
+    if (path.startsWith('http')) return path;
+    const cleanPath = path.startsWith('/') ? path : '/' + path;
+    return `${this.BASE_URL}${cleanPath}`;
+  }
+
+  uploadRestaurantPicture(file: File): Observable<any> {
+    const formData = new FormData();
+    formData.append('file', file);
+    return this.http.post(`${this.BASE_URL}/api/uploads/restaurants-picture`, formData);
+  }
+
+  uploadMenuItemPicture(file: File): Observable<any> {
+    const formData = new FormData();
+    formData.append('file', file);
+    return this.http.post(`${this.BASE_URL}/api/uploads/menu-items-picture`, formData);
+  }
+
   getCampings(): Observable<any> {
     return this.http.get(`${this.BASE_URL}/api/campings`);
   }
@@ -24,6 +43,10 @@ export class ApiService {
 
   getRestaurants(): Observable<any> {
     return this.http.get(`${this.BASE_URL}/api/restaurants`);
+  }
+
+  getRestaurantCuisines(): Observable<any[]> {
+    return this.http.get<any[]>(`${this.BASE_URL}/api/restaurants/cuisines`);
   }
 
   getRestaurantById(id: number): Observable<any> {
@@ -109,6 +132,20 @@ export class ApiService {
       url += `?status=${encodeURIComponent(status)}`;
     }
     return this.http.get<any[]>(url);
+  }
+
+  addRestaurantTable(payload: {
+    tableNumber: number;
+    capacity: number;
+    location?: string | null;
+    status?: string;
+    restaurantId: number;
+  }): Observable<any> {
+    return this.http.post(`${this.BASE_URL}/api/restaurant-tables/add`, payload);
+  }
+
+  getRestaurantTableStatuses(): Observable<string[]> {
+    return this.http.get<string[]>(`${this.BASE_URL}/api/restaurant-tables/statuses`);
   }
 }
 

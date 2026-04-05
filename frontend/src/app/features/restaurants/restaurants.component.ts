@@ -1,8 +1,8 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, Inject, PLATFORM_ID } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
 import { ApiService } from '../../services/api.service';
 import { Router } from '@angular/router';
 import { AuthService } from '../auth/services/auth.service';
-
 @Component({
   selector: 'app-restaurants',
   templateUrl: './restaurants.component.html',
@@ -14,12 +14,23 @@ export class RestaurantsComponent implements OnInit {
   showDetailsModal: boolean = false;
   showAddForm: boolean = false;
   searchAddress: string = '';
+  selectedCuisine: string = '';
+  cuisineOptions: string[] = [];
+  isCuisinesLoading: boolean = false;
+  mapSearchQuery: string = '';
   newRestaurant = {
     name: '',
     address: '',
+    latitude: null as number | null,
+    longitude: null as number | null,
     email: '',
-    phoneNum: ''
+    phoneNum: '',
+    cuisine: '',
+    picture: ''
   };
+  addMap: any = null;
+  addMarker: any = null;
+
   isSubmitting: boolean = false;
   showEditForm: boolean = false;
   editRestaurant: {
@@ -28,19 +39,24 @@ export class RestaurantsComponent implements OnInit {
     address: string;
     email: string;
     phoneNum: string;
+    cuisine: string;
+    picture: string;
   } = {
     id: null,
     name: '',
     address: '',
     email: '',
     phoneNum: '',
+    cuisine: '',
+    picture: '',
   };
   isSubmittingEdit: boolean = false;
 
   constructor(
     private api: ApiService,
     private router: Router,
-    private auth: AuthService
+    private auth: AuthService,
+    @Inject(PLATFORM_ID) private platformId: Object
   ) {}
 
   get isAdmin(): boolean {
@@ -65,6 +81,40 @@ export class RestaurantsComponent implements OnInit {
       },
       error: (err) => console.error(err),
     });
+
+    this.loadRestaurantCuisines();
+  }
+
+  private loadRestaurantCuisines(): void {
+    this.isCuisinesLoading = true;
+    this.api.getRestaurantCuisines().subscribe({
+      next: (data: any[]) => {
+        this.cuisineOptions = Array.isArray(data) ? data.map((c) => String(c)) : [];
+        if (!this.selectedCuisine) this.selectedCuisine = '';
+        this.isCuisinesLoading = false;
+      },
+      error: (err) => {
+        console.error('Error fetching restaurant cuisines:', err);
+        this.cuisineOptions = [];
+        this.isCuisinesLoading = false;
+      },
+    });
+  }
+
+  private toTitleCase(value: string): string {
+    return value
+      .toLowerCase()
+      .replace(/_/g, ' ')
+      .split(/[\s]+/g)
+      .filter(Boolean)
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ');
+  }
+
+  getCuisineLabel(cuisine: unknown): string {
+    const value = cuisine == null ? '' : String(cuisine);
+    if (!value) return '—';
+    return this.toTitleCase(value);
   }
 
   viewDetails(restaurant: any): void {
@@ -83,29 +133,187 @@ export class RestaurantsComponent implements OnInit {
   }
 
   getFilteredRestaurants(): any[] {
-    if (!this.searchAddress.trim()) {
-      return this.restaurants;
+    let filtered = this.restaurants;
+
+    if (this.searchAddress.trim()) {
+      const searchTerm = this.searchAddress.toLowerCase();
+      filtered = filtered.filter((restaurant) =>
+        (restaurant.address ?? '').toLowerCase().includes(searchTerm)
+      );
     }
-    const searchTerm = this.searchAddress.toLowerCase();
-    return this.restaurants.filter((restaurant) =>
-      (restaurant.address ?? '').toLowerCase().includes(searchTerm)
-    );
+
+    if (this.selectedCuisine) {
+      const normalizedSelected = this.selectedCuisine.trim().toUpperCase();
+      filtered = filtered.filter(
+        (restaurant) => String(restaurant.cuisine ?? '').toUpperCase() === normalizedSelected
+      );
+    }
+
+    return filtered;
+  }
+
+  onFileSelected(event: any, target: 'new' | 'edit'): void {
+    const file = event.target.files[0];
+    if (file) {
+      if (target === 'new') this.isSubmitting = true;
+      else this.isSubmittingEdit = true;
+
+      this.api.uploadRestaurantPicture(file).subscribe({
+        next: (resp: any) => {
+          if (target === 'new') {
+            this.newRestaurant.picture = resp.picture;
+            this.isSubmitting = false;
+          } else {
+            this.editRestaurant.picture = resp.picture;
+            this.isSubmittingEdit = false;
+          }
+        },
+        error: (err) => {
+          console.error('Upload error', err);
+          alert('Error uploading picture');
+          if (target === 'new') this.isSubmitting = false;
+          else this.isSubmittingEdit = false;
+        }
+      });
+    }
+  }
+
+  getImageUrl(path: string): string {
+    return this.api.getImageUrl(path);
   }
 
   openAddForm(): void {
     if (!this.isAdmin) return;
     this.showAddForm = true;
-    this.newRestaurant = { name: '', address: '', email: '', phoneNum: '' };
+    this.newRestaurant = {
+      name: '',
+      address: '',
+      latitude: null,
+      longitude: null,
+      email: '',
+      phoneNum: '',
+      cuisine: this.cuisineOptions[0] ?? '',
+      picture: '',
+    };
+    
+    // Initialize map after modal is rendered
+    setTimeout(() => {
+      this.initAddMap();
+    }, 200);
+  }
+
+  private initAddMap(): void {
+    if (!isPlatformBrowser(this.platformId)) return;
+    if (this.addMap) {
+      this.addMap.invalidateSize();
+      return;
+    }
+
+    import('leaflet').then((L) => {
+      // Fix marker icons
+      const iconDefault = L.icon({
+        iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
+        iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+        shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+        iconSize: [25, 41],
+        iconAnchor: [12, 41],
+        popupAnchor: [1, -34],
+        tooltipAnchor: [16, -28],
+        shadowSize: [41, 41]
+      });
+      L.Marker.prototype.options.icon = iconDefault;
+
+      this.addMap = L.map('add-restaurant-map').setView([33.8869, 9.5375], 6); // default view to Tunisia
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; OpenStreetMap contributors'
+      }).addTo(this.addMap!);
+
+      this.addMap.on('click', (e: any) => {
+        const lat = e.latlng.lat;
+        const lng = e.latlng.lng;
+        
+        this.newRestaurant.latitude = lat;
+        this.newRestaurant.longitude = lng;
+
+        if (!this.addMarker) {
+          this.addMarker = L.marker([lat, lng]).addTo(this.addMap!);
+        } else {
+          this.addMarker.setLatLng([lat, lng]);
+        }
+
+        this.fetchAddressFromCoordinates(lat, lng);
+      });
+    });
+  }
+
+  private fetchAddressFromCoordinates(lat: number, lng: number): void {
+    const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`;
+    fetch(url)
+      .then(response => response.json())
+      .then(data => {
+        if (data && data.display_name) {
+          this.newRestaurant.address = data.display_name;
+        }
+      })
+      .catch(error => {
+        console.error('Error fetching address:', error);
+      });
+  }
+
+  searchMapLocation(): void {
+    if (!this.mapSearchQuery.trim()) return;
+    
+    const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(this.mapSearchQuery)}&limit=1`;
+    fetch(url)
+      .then(response => response.json())
+      .then(data => {
+        if (data && data.length > 0) {
+          const result = data[0];
+          const lat = parseFloat(result.lat);
+          const lng = parseFloat(result.lon);
+          
+          this.newRestaurant.latitude = lat;
+          this.newRestaurant.longitude = lng;
+          this.newRestaurant.address = result.display_name;
+
+          if (this.addMap) {
+            import('leaflet').then((L) => {
+              this.addMap.setView([lat, lng], 14);
+              if (!this.addMarker) {
+                this.addMarker = L.marker([lat, lng]).addTo(this.addMap);
+              } else {
+                this.addMarker.setLatLng([lat, lng]);
+              }
+            });
+          }
+        } else {
+          alert('Location not found. Please try a different search.');
+        }
+      })
+      .catch(error => {
+        console.error('Error searching location:', error);
+      });
   }
 
   closeAddForm(): void {
     this.showAddForm = false;
-    this.newRestaurant = { name: '', address: '', email: '', phoneNum: '' };
+    this.newRestaurant = { name: '', address: '', latitude: null, longitude: null, email: '', phoneNum: '', cuisine: '', picture: '' };
+    if (this.addMap) {
+      this.addMap.remove();
+      this.addMap = null;
+      this.addMarker = null;
+    }
   }
 
   submitAddRestaurant(): void {
     if (!this.isAdmin) return;
-    if (!this.newRestaurant.name || !this.newRestaurant.address || !this.newRestaurant.email || !this.newRestaurant.phoneNum) {
+    if (
+      !this.newRestaurant.name ||
+      !this.newRestaurant.address ||
+      !this.newRestaurant.email ||
+      !this.newRestaurant.phoneNum ||
+      !this.newRestaurant.cuisine
+    ) {
       alert('Please fill in all fields');
       return;
     }
@@ -135,6 +343,8 @@ export class RestaurantsComponent implements OnInit {
       address: restaurant.address ?? '',
       email: restaurant.email ?? '',
       phoneNum: restaurant.phoneNum ?? '',
+      cuisine: restaurant.cuisine ?? '',
+      picture: restaurant.picture ?? '',
     };
     this.showEditForm = true;
   }
@@ -147,6 +357,8 @@ export class RestaurantsComponent implements OnInit {
       address: '',
       email: '',
       phoneNum: '',
+      cuisine: '',
+      picture: '',
     };
     this.isSubmittingEdit = false;
   }
@@ -157,7 +369,8 @@ export class RestaurantsComponent implements OnInit {
       !this.editRestaurant.name ||
       !this.editRestaurant.address ||
       !this.editRestaurant.email ||
-      !this.editRestaurant.phoneNum
+      !this.editRestaurant.phoneNum ||
+      !this.editRestaurant.cuisine
     ) {
       alert('Please fill in all fields');
       return;
@@ -170,6 +383,8 @@ export class RestaurantsComponent implements OnInit {
       address: this.editRestaurant.address,
       email: this.editRestaurant.email,
       phoneNum: this.editRestaurant.phoneNum,
+      cuisine: this.editRestaurant.cuisine,
+      picture: this.editRestaurant.picture,
     };
     this.api.updateRestaurant(payload).subscribe({
       next: (data) => {

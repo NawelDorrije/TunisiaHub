@@ -33,8 +33,12 @@ public class SecurityConfig {
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         // Public routes
                         .requestMatchers("/api/auth/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/uploads/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/uploads/**").permitAll()
+                        .requestMatchers("/api/restaurant-tables/**").permitAll()
                         .requestMatchers("/api/accommodations/getAll").permitAll()
                         .requestMatchers("/api/accommodations/get/**").permitAll()
                         .requestMatchers("/api/reviews/getAll").permitAll()
@@ -65,8 +69,8 @@ public class SecurityConfig {
                         .requestMatchers(new AntPathRequestMatcher("/api/reservations/*/complete", "PATCH"))
                                 .hasRole("ADMIN")
                         .requestMatchers(HttpMethod.GET, "/api/restaurant-tables", "/api/restaurant-tables/**")
-                                .hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.POST, "/api/restaurant-tables/add").hasRole("ADMIN")
+                                .permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/restaurant-tables/add").permitAll()
                         .requestMatchers(HttpMethod.PUT, "/api/restaurant-tables/update").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/api/restaurant-tables/delete/**")
                                 .hasRole("ADMIN")

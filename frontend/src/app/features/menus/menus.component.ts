@@ -26,7 +26,9 @@ export class MenusComponent implements OnInit {
     name: '',
     ingredients: '',
     description: '',
-    menu_id: null
+    price: 0,
+    menu_id: null,
+    picture: ''
   };
   isSubmittingItem: boolean = false;
   showEditMenuForm: boolean = false;
@@ -38,7 +40,9 @@ export class MenusComponent implements OnInit {
     name: '',
     ingredients: '',
     description: '',
+    price: 0,
     menu_id: null as number | null,
+    picture: ''
   };
   isSubmittingItemEdit: boolean = false;
 
@@ -167,6 +171,25 @@ export class MenusComponent implements OnInit {
     );
   }
 
+  onFileSelected(event: any, target: 'new' | 'edit'): void {
+    const file = event.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e: any) => {
+        if (target === 'new') {
+          this.newMenuItem.picture = e.target.result;
+        } else {
+          this.editMenuItem.picture = e.target.result;
+        }
+      };
+      reader.readAsDataURL(file);
+    }
+  }
+
+  getImageUrl(path: string): string {
+    return this.api.getImageUrl(path);
+  }
+
   openAddItemForm(): void {
     if (!this.isAdmin) return;
     if (!this.selectedMenu) {
@@ -178,7 +201,9 @@ export class MenusComponent implements OnInit {
       name: '',
       ingredients: '',
       description: '',
-      menu_id: this.selectedMenu.id
+      price: 0,
+      menu_id: this.selectedMenu.id,
+      picture: ''
     };
   }
 
@@ -188,14 +213,16 @@ export class MenusComponent implements OnInit {
       name: '',
       ingredients: '',
       description: '',
-      menu_id: null
+      price: 0,
+      menu_id: null,
+      picture: ''
     };
   }
 
   submitAddItem(): void {
     if (!this.isAdmin) return;
-    if (!this.newMenuItem.name || !this.newMenuItem.ingredients || !this.newMenuItem.description) {
-      alert('Please fill in all fields');
+    if (!this.newMenuItem.name || !this.newMenuItem.ingredients || !this.newMenuItem.description || this.newMenuItem.price === null || this.newMenuItem.price === undefined) {
+      alert('Please fill in all fields (including price)');
       return;
     }
 
@@ -209,7 +236,9 @@ export class MenusComponent implements OnInit {
       name: this.newMenuItem.name,
       ingredients: this.newMenuItem.ingredients,
       description: this.newMenuItem.description,
-      menu_id: this.selectedMenu.id
+      price: this.newMenuItem.price,
+      menu_id: this.selectedMenu.id,
+      picture: this.newMenuItem.picture
     };
 
     console.log('Sending menu item data:', itemData);
@@ -303,7 +332,9 @@ export class MenusComponent implements OnInit {
       name: item.name ?? '',
       ingredients: item.ingredients ?? '',
       description: item.description ?? '',
+      price: item.price ?? 0,
       menu_id: item.menu_id ?? this.selectedMenu.id,
+      picture: item.picture ?? ''
     };
     this.showEditItemForm = true;
   }
@@ -315,7 +346,9 @@ export class MenusComponent implements OnInit {
       name: '',
       ingredients: '',
       description: '',
+      price: 0,
       menu_id: null,
+      picture: ''
     };
     this.isSubmittingItemEdit = false;
   }
@@ -326,6 +359,8 @@ export class MenusComponent implements OnInit {
       !this.editMenuItem.name ||
       !this.editMenuItem.ingredients ||
       !this.editMenuItem.description ||
+      this.editMenuItem.price === null ||
+      this.editMenuItem.price === undefined ||
       !this.selectedMenu?.id
     ) {
       alert('Please fill in all fields');
@@ -337,7 +372,9 @@ export class MenusComponent implements OnInit {
       name: this.editMenuItem.name,
       ingredients: this.editMenuItem.ingredients,
       description: this.editMenuItem.description,
+      price: this.editMenuItem.price,
       menu_id: this.selectedMenu.id,
+      picture: this.editMenuItem.picture
     };
     this.api.updateMenuItem(payload).subscribe({
       next: (data: any) => {
