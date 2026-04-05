@@ -1,93 +1,122 @@
 package org.example.backend_tunisiahub.Controllers.Camping;
 
-import lombok.RequiredArgsConstructor;
-import org.example.backend_tunisiahub.Entities.Camping.Camping;
-import org.example.backend_tunisiahub.Services.Camping.FileStorageService;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.example.backend_tunisiahub.Entities.Camping.DTO.CampingDTO;
+import org.example.backend_tunisiahub.Entities.Camping.Enums.CampingStatus;
 import org.example.backend_tunisiahub.Services.Camping.ICampingService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.util.ArrayList;
+import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/campings")
-@RequiredArgsConstructor
 public class CampingController {
 
-    private final ICampingService campingService;
-    private final FileStorageService fileStorageService ;
+    @Autowired private ICampingService campingService;
+    @Autowired private ObjectMapper objectMapper;
+
+    // ── CRUD ───────────────────────────────────────────────
+
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<CampingDTO> createCamping(
+            @RequestPart("camping") String campingJson,
+            @RequestPart(value = "photos", required = false) List<MultipartFile> photos) {
+        try {
+            CampingDTO dto = objectMapper.readValue(campingJson, CampingDTO.class);
+            return ResponseEntity.ok(campingService.createCamping(dto, photos));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.badRequest().build();
+        }
+    }
+
+    @PutMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<CampingDTO> updateCamping(
+            @PathVariable Long id,
+            @RequestPart("camping") String campingJson,
+            @RequestPart(value = "photos", required = false) List<MultipartFile> newPhotos) {
+        try {
+            CampingDTO dto = objectMapper.readValue(campingJson, CampingDTO.class);
+            return ResponseEntity.ok(campingService.updateCamping(id, dto, newPhotos));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.badRequest().build();
+        }
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteCamping(@PathVariable Long id) {
+        campingService.deleteCamping(id);
+        return ResponseEntity.noContent().build();
+    }
 
     @GetMapping
-    public List<Camping> getAllCampings() {
-        return campingService.retrieveAllCampings();
+    public ResponseEntity<List<CampingDTO>> getAllCampings() {
+        return ResponseEntity.ok(campingService.getAllCampings());
     }
 
     @GetMapping("/{id}")
-    public Camping getCampingById(@PathVariable Long id) {
-        return campingService.retrieveCamping(id);
+    public ResponseEntity<CampingDTO> getCampingById(@PathVariable Long id) {
+        return campingService.getCampingById(id)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
     }
 
-    @PostMapping(consumes = "multipart/form-data")
-    public Camping createCamping(
+    // ── FILTERS — CLIENT ───────────────────────────────────
 
-            @RequestPart("camping")
-            Camping camping,
-
-            @RequestPart("files")
-            List<MultipartFile> files
-
-    ) {
-
-        List<String> photoUrls = new ArrayList<>();
-
-        for (MultipartFile file : files) {
-
-            String path =
-                    fileStorageService.saveFile(file);
-
-            photoUrls.add(path);
-
-        }
-
-        camping.setPhotos(photoUrls);
-
-        return campingService.addCamping(camping);
-
+    @GetMapping("/search")
+    public ResponseEntity<List<CampingDTO>> search(
+            @RequestParam String keyword) {
+        return ResponseEntity.ok(campingService.searchByKeyword(keyword));
     }
 
-    @PutMapping(consumes = "multipart/form-data")
-    public Camping updateCamping(
-
-            @RequestPart("camping") Camping camping,
-
-            @RequestPart(value = "files", required = false)
-            List<MultipartFile> files
-
-    ) {
-
-        List<String> photoUrls = new ArrayList<>();
-
-        // garder anciennes images si pas de nouvelles
-        if (camping.getPhotos() != null) {
-            photoUrls.addAll(camping.getPhotos());
-        }
-
-        if (files != null) {
-            for (MultipartFile file : files) {
-
-                String path = fileStorageService.saveFile(file);
-                photoUrls.add(path);
-
-            }
-        }
-
-        camping.setPhotos(photoUrls);
-
-        return campingService.modifyCamping(camping);
+    @GetMapping("/available")
+    public ResponseEntity<List<CampingDTO>> getAvailable(
+            @RequestParam(required = false) String governorate,
+            @RequestParam(required = false) Double maxPrice,
+            @RequestParam(required = false) Integer minCapacity) {
+        return ResponseEntity.ok(campingService.getAvailableByFilters(governorate, maxPrice, minCapacity));
     }
-    @DeleteMapping("/{id}")
-    public void deleteCamping(@PathVariable Long id) {
-        campingService.deleteCamping(id);
+
+    @GetMapping("/available-for-dates")
+    public ResponseEntity<List<CampingDTO>> getAvailableForDates(
+            @RequestParam LocalDate checkIn,
+            @RequestParam LocalDate checkOut,
+            @RequestParam(required = false) String governorate) {
+        return ResponseEntity.ok(campingService.getWithAvailableSpotsForDates(checkIn, checkOut, governorate));
+    }
+
+    @GetMapping("/rating")
+    public ResponseEntity<List<CampingDTO>> getByRating(
+            @RequestParam BigDecimal minRating) {
+        return ResponseEntity.ok(campingService.getByMinRating(minRating));
+    }
+
+    // ── FILTERS — OWNER ────────────────────────────────────
+
+    @GetMapping("/owner/{ownerId}")
+    public ResponseEntity<List<CampingDTO>> getByOwner(
+            @PathVariable Long ownerId) {
+        return ResponseEntity.ok(campingService.getByOwner(ownerId));
+    }
+
+    // ── FILTERS — ADMIN ────────────────────────────────────
+
+    @GetMapping("/status")
+    public ResponseEntity<List<CampingDTO>> getByStatus(
+            @RequestParam CampingStatus status) {
+        return ResponseEntity.ok(campingService.getByStatus(status));
+    }
+
+    @GetMapping("/governorate")
+    public ResponseEntity<List<CampingDTO>> getByGovernorate(
+            @RequestParam String governorate) {
+        return ResponseEntity.ok(campingService.getByGovernorate(governorate));
     }
 }

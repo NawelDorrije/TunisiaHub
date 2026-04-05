@@ -7,8 +7,10 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.FieldDefaults;
+import org.example.backend_tunisiahub.Entities.Camping.Camping;
 import org.example.backend_tunisiahub.Entities.Reservation;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -36,4 +38,9 @@ public class User {
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
     @JsonIgnore
     List<Reservation> reservations;
+
+    // --- Relation avec Camping (un owner peut ajouter plusieurs campings) ---
+    @OneToMany(mappedBy = "owner", cascade = CascadeType.ALL)
+    @JsonIgnore
+    List<Camping> campings = new ArrayList<>();
 }

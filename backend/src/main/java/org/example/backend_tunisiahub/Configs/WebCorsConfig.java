@@ -14,29 +14,19 @@ public class WebCorsConfig implements WebMvcConfigurer {
     @Override
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/api/**")
-                .allowedOrigins("http://localhost:4200")
+                .allowedOriginPatterns("*")                    // Utilise uniquement ceci pour le développement
                 .allowedMethods("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
                 .allowedHeaders("*")
                 .exposedHeaders("*")
-                .allowCredentials(true)
+                .allowCredentials(true)                        // Garde true si tu utilises JWT ou cookies
                 .maxAge(3600);
     }
 
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
+        Path uploadPath = Paths.get("uploads");
 
-        Path uploadPath =
-                Paths.get("uploads");
-
-        registry
-                .addResourceHandler("/uploads/**")
-                .addResourceLocations(
-                        "file:" +
-                                uploadPath
-                                        .toAbsolutePath()
-                                        .toString() +
-                                "/"
-                );
-
+        registry.addResourceHandler("/uploads/**")
+                .addResourceLocations("file:" + uploadPath.toAbsolutePath() + "/");
     }
 }

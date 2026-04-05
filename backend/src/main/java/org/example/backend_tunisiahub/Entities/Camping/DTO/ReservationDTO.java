@@ -1,19 +1,54 @@
 package org.example.backend_tunisiahub.Entities.Camping.DTO;
 
+import jakarta.validation.constraints.*;
+import lombok.*;
+import lombok.experimental.FieldDefaults;
+import org.example.backend_tunisiahub.Entities.Camping.Enums.ReservationStatus;
+
+import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.List;
 
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class ReservationDTO {
-    public LocalDate startDateCamping;
 
-    public LocalDate endDateCamping;
+    // Read-only
+    Long id;
+    BigDecimal totalPrice;
+    ReservationStatus status;
+    LocalDateTime createdAt;
+    LocalDateTime updatedAt;
 
-    public int numberOfPeopleCamping;
+    // Input
+    @NotNull(message = "userId is required")
+    Long userId;
 
-    public double totalPriceCamping;
+    @NotNull(message = "spotId is required")
+    Long spotId;
 
-    public String statusCamping;
+    List<Long> activityIds; // optional
 
-    public Long userId;
+    @NotNull(message = "checkIn date is required")
+    LocalDate checkIn;
 
-    public Long spotId;
+    @NotNull(message = "checkOut date is required")
+    LocalDate checkOut;
+
+    @NotNull(message = "Number of guests is required")
+    @Min(value = 1, message = "At least 1 guest required")
+    Integer numberOfGuests;
+
+    String notes;
+
+    // Read-only (response enrichment)
+    String spotName;
+    String campingName;
+    String userName;
+    List<String> activityNames;
 }
