@@ -6,13 +6,14 @@ import { HomeComponent } from './core/home/home.component';
 const routes: Routes = [
  { path : 'home', component: HomeComponent},
   { path : '', redirectTo: 'home', pathMatch: 'full'},
-  {
-    path: 'campings',
-    loadChildren: () =>
-      import('./features/campings/campings.module')
-        .then(m => m.CampingsModule)
-  },  { path: 'auth', loadChildren: () => import('./features/auth/auth.module').then(m => m.AuthModule) },
 
+    { path: 'auth', loadChildren: () => import('./features/auth/auth.module').then(m => m.AuthModule) },
+  {
+    path: 'camping',
+    loadChildren: () =>
+      import('./features/camping/camping.module')
+        .then(m => m.CampingModule)
+  },
   {
     path: '**',
     component: NotFoundComponent

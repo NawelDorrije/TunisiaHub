@@ -1,0 +1,409 @@
+<div class="res-page" *ngIf="camping; else loadingTpl">
+
+  <!-- ══ Progress Stepper ══════════════════════════════════════════════════ -->
+  <nav class="stepper" aria-label="Reservation steps">
+    <ng-container *ngFor="let s of [1, 2, 3, 4]; let last = last">
+      <div
+        class="stepper__item"
+        [class.is-active]="step === s"
+        [class.is-done]="step > s"
+        [attr.aria-current]="step === s ? 'step' : null"
+      >
+        <div class="stepper__circle">
+          <span *ngIf="step <= s">{{ s }}</span>
+          <svg *ngIf="step > s" width="14" height="14" viewBox="0 0 14 14" fill="none">
+            <path d="M2 7l3.5 3.5L12 3" stroke="currentColor" stroke-width="2"
+                  stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <span class="stepper__label">{{
+          s === 1 ? 'Spot' :
+          s === 2 ? 'Dates' :
+          s === 3 ? 'Activities' : 'Payment'
+        }}</span>
+      </div>
+      <div *ngIf="!last" class="stepper__line" [class.is-done]="step > s"></div>
+    </ng-container>
+  </nav>
+
+  <!-- ══ Main Layout ═══════════════════════════════════════════════════════ -->
+  <div class="res-layout">
+
+    <!-- ── Left: Step Content ─────────────────────────────────────────── -->
+    <main class="res-main">
+
+      <!-- ╔═ Step 1 – Spot Selection ══════════════════════════════════════╗ -->
+      <section *ngIf="step === 1" class="step-panel" aria-labelledby="step1-title">
+        <h2 id="step1-title" class="step-title">Choose Your Spot</h2>
+        <p class="step-hint">Select the spot that best fits your camping style.</p>
+
+        <!-- Spot error banner -->
+        <div class="alert alert--error" *ngIf="spotError" role="alert">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+            <circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.5"/>
+            <path d="M8 5v4M8 11v.5" stroke="currentColor" stroke-width="1.5"
+                  stroke-linecap="round"/>
+          </svg>
+          Please select a spot to continue.
+        </div>
+
+        <div class="spots-grid" role="radiogroup" aria-label="Available spots">
+          <div
+            class="spot-card"
+            *ngFor="let spot of spots"
+            [class.is-selected]="selectedSpot?.id === spot.id"
+            (click)="selectSpot(spot)"
+            (keydown.enter)="selectSpot(spot)"
+            (keydown.space)="selectSpot(spot)"
+            role="radio"
+            [attr.aria-checked]="selectedSpot?.id === spot.id"
+            tabindex="0"
+          >
+            <div class="spot-card__check" *ngIf="selectedSpot?.id === spot.id"
+                 aria-hidden="true">✓</div>
+            <span class="spot-card__type">{{ spot.type }}</span>
+            <h3 class="spot-card__name">{{ spot.name }}</h3>
+            <p class="spot-card__desc">{{ spot.description }}</p>
+            <ul class="spot-card__tags" aria-label="Spot features">
+              <li *ngIf="spot.viewType">👁 {{ spot.viewType }}</li>
+              <li *ngIf="spot.hasShade">🌿 Shade</li>
+              <li *ngIf="spot.accessibleForDisabled">♿ Accessible</li>
+              <li>👥 {{ spot.capacity }} guests max</li>
+            </ul>
+            <div class="spot-card__price">
+              {{ spot.basePrice | number }} <span>TND / night</span>
+            </div>
+          </div>
+        </div>
+
+        <p *ngIf="spots.length === 0" class="empty-state">
+          No spots are available for this camping at the moment.
+        </p>
+
+        <div class="step-actions">
+          <button class="btn btn--primary" (click)="proceedFromSpotStep()">
+            Continue <span aria-hidden="true">→</span>
+          </button>
+        </div>
+      </section>
+
+      <!-- ╔═ Step 2 – Dates & Guests ══════════════════════════════════════╗ -->
+      <section *ngIf="step === 2" class="step-panel" aria-labelledby="step2-title"
+               [formGroup]="datesForm">
+        <h2 id="step2-title" class="step-title">Dates &amp; Guests</h2>
+        <p class="step-hint">
+          Booking spot <strong>{{ selectedSpot?.name }}</strong>
+          ({{ selectedSpot?.type }}) · {{ selectedSpot?.capacity }} guests max
+        </p>
+
+        <!-- Check-in -->
+        <div class="field-group" [class.has-error]="checkIn.invalid && checkIn.touched">
+          <label class="field-label" for="checkIn">Check-in Date *</label>
+          <input
+            id="checkIn"
+            formControlName="checkIn"
+            type="date"
+            class="field-input"
+            [attr.min]="today"
+            aria-describedby="checkIn-error"
+          />
+          <div id="checkIn-error" class="field-error" role="alert"
+               *ngIf="checkIn.invalid && checkIn.touched">
+            <ng-container *ngIf="checkIn.errors?.['required']">
+              Check-in date is required.
+            </ng-container>
+            <ng-container *ngIf="checkIn.errors?.['pastDate']">
+              Check-in cannot be in the past.
+            </ng-container>
+          </div>
+        </div>
+
+        <!-- Check-out -->
+        <div class="field-group" [class.has-error]="checkOut.invalid && checkOut.touched">
+          <label class="field-label" for="checkOut">Check-out Date *</label>
+          <input
+            id="checkOut"
+            formControlName="checkOut"
+            type="date"
+            class="field-input"
+            [attr.min]="checkIn.value || today"
+            aria-describedby="checkOut-error"
+          />
+          <div id="checkOut-error" class="field-error" role="alert"
+               *ngIf="checkOut.invalid && checkOut.touched">
+            <ng-container *ngIf="checkOut.errors?.['required']">
+              Check-out date is required.
+            </ng-container>
+            <ng-container *ngIf="checkOut.errors?.['checkOutBeforeCheckIn']">
+              Check-out must be after the check-in date.
+            </ng-container>
+          </div>
+        </div>
+
+        <!-- Number of guests -->
+        <div class="field-group"
+             [class.has-error]="numberOfGuests.invalid && numberOfGuests.touched">
+          <label class="field-label" for="guests">Number of Guests *</label>
+          <input
+            id="guests"
+            formControlName="numberOfGuests"
+            type="number"
+            class="field-input"
+            min="1"
+            [max]="selectedSpot?.capacity ?? null"
+            aria-describedby="guests-error"
+          />
+          <div id="guests-error" class="field-error" role="alert"
+               *ngIf="numberOfGuests.invalid && numberOfGuests.touched">
+            <ng-container *ngIf="numberOfGuests.errors?.['required']">
+              Number of guests is required.
+            </ng-container>
+            <ng-container *ngIf="numberOfGuests.errors?.['min']">
+              At least 1 guest is required.
+            </ng-container>
+            <ng-container *ngIf="numberOfGuests.errors?.['exceedsCapacity']">
+              This spot holds a maximum of
+              {{ numberOfGuests.errors?.['exceedsCapacity']?.max }} guests.
+            </ng-container>
+          </div>
+        </div>
+
+        <!-- Special Notes -->
+        <div class="field-group">
+          <label class="field-label" for="notes">
+            Special Notes <span class="field-optional">(optional)</span>
+          </label>
+          <textarea
+            id="notes"
+            formControlName="notes"
+            class="field-input field-input--textarea"
+            rows="3"
+            placeholder="Any special requests or requirements…"
+          ></textarea>
+        </div>
+
+        <!-- Nights summary pill -->
+        <div class="nights-pill" *ngIf="nights > 0">
+          🌙 {{ nights }} night{{ nights !== 1 ? 's' : '' }}
+          · {{ spotTotal | number }} TND
+        </div>
+
+        <div class="step-actions">
+          <button class="btn btn--ghost" type="button" (click)="goBack()">
+            <span aria-hidden="true">←</span> Back
+          </button>
+          <button class="btn btn--primary" type="button" (click)="proceedFromDatesStep()">
+            Continue <span aria-hidden="true">→</span>
+          </button>
+        </div>
+      </section>
+
+      <!-- ╔═ Step 3 – Activities ═══════════════════════════════════════════╗ -->
+      <section *ngIf="step === 3" class="step-panel" aria-labelledby="step3-title">
+        <h2 id="step3-title" class="step-title">
+          Add Activities
+          <span class="step-title__badge">Optional</span>
+        </h2>
+        <p class="step-hint">Enhance your stay with on-site activities.</p>
+
+        <div class="activities-grid" *ngIf="activities.length > 0"
+             role="group" aria-label="Available activities">
+          <div
+            class="activity-card"
+            *ngFor="let act of activities"
+            [class.is-selected]="isActivitySelected(act)"
+            (click)="toggleActivity(act)"
+            (keydown.enter)="toggleActivity(act)"
+            (keydown.space)="toggleActivity(act)"
+            role="checkbox"
+            [attr.aria-checked]="isActivitySelected(act)"
+            tabindex="0"
+          >
+            <div class="activity-card__check" *ngIf="isActivitySelected(act)"
+                 aria-hidden="true">✓</div>
+            <h3 class="activity-card__name">{{ act.name }}</h3>
+            <p class="activity-card__desc">{{ act.description }}</p>
+            <div class="activity-card__meta">
+              <span *ngIf="act.duration">⏱ {{ act.duration }} hrs</span>
+              <span class="activity-card__price">{{ act.price | number }} TND</span>
+            </div>
+          </div>
+        </div>
+
+        <p *ngIf="activities.length === 0" class="empty-state">
+          No activities are available for this camping.
+        </p>
+
+        <!-- Submit error -->
+        <div class="alert alert--error" *ngIf="submitError" role="alert">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+            <circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.5"/>
+            <path d="M8 5v4M8 11v.5" stroke="currentColor" stroke-width="1.5"
+                  stroke-linecap="round"/>
+          </svg>
+          {{ submitError }}
+        </div>
+
+        <div class="step-actions">
+          <button class="btn btn--ghost" type="button" (click)="goBack()">
+            <span aria-hidden="true">←</span> Back
+          </button>
+          <button
+            class="btn btn--primary"
+            type="button"
+            (click)="submitReservation()"
+            [disabled]="submitting"
+            [attr.aria-busy]="submitting"
+          >
+            <span class="btn__spinner" *ngIf="submitting" aria-hidden="true"></span>
+            {{ submitting ? 'Creating reservation…' : 'Confirm Reservation →' }}
+          </button>
+        </div>
+      </section>
+
+      <!-- ╔═ Step 4 – Payment ══════════════════════════════════════════════╗ -->
+      <section *ngIf="step === 4 && !success" class="step-panel"
+               aria-labelledby="step4-title" [formGroup]="paymentForm">
+        <h2 id="step4-title" class="step-title">Complete Payment</h2>
+        <p class="step-hint">Choose your preferred payment method.</p>
+
+        <div class="payment-grid" role="radiogroup" aria-label="Payment methods">
+          <label
+            class="method-card"
+            *ngFor="let m of paymentMethods"
+            [class.is-selected]="paymentForm.value.method === m.value"
+          >
+            <input
+              type="radio"
+              formControlName="method"
+              [value]="m.value"
+              class="sr-only"
+            />
+            <span class="method-card__icon" aria-hidden="true">{{ m.icon }}</span>
+            <span class="method-card__label">{{ m.label }}</span>
+          </label>
+        </div>
+
+        <!-- Payment error -->
+        <div class="alert alert--error" *ngIf="paymentError" role="alert">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+            <circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.5"/>
+            <path d="M8 5v4M8 11v.5" stroke="currentColor" stroke-width="1.5"
+                  stroke-linecap="round"/>
+          </svg>
+          {{ paymentError }}
+        </div>
+
+        <button
+          class="btn btn--pay"
+          type="button"
+          (click)="processPayment()"
+          [disabled]="submitting || paymentForm.invalid"
+          [attr.aria-busy]="submitting"
+        >
+          <span class="btn__spinner" *ngIf="submitting" aria-hidden="true"></span>
+          {{ submitting ? 'Processing…' : 'Pay ' + (totalPrice | number) + ' TND' }}
+        </button>
+      </section>
+
+      <!-- ╔═ Success State ═════════════════════════════════════════════════╗ -->
+      <section *ngIf="success" class="success-panel" aria-live="polite"
+               aria-label="Reservation confirmed">
+        <div class="success-panel__icon" aria-hidden="true">🎉</div>
+        <h2 class="success-panel__title">Reservation Confirmed!</h2>
+        <p class="success-panel__sub">
+          Your booking has been created and payment processed successfully.
+          A confirmation will be sent to your registered email.
+        </p>
+        <div class="step-actions step-actions--center">
+          <a class="btn btn--primary" routerLink="/camping/my-reservations">
+            View My Reservations
+          </a>
+          <a class="btn btn--ghost" routerLink="/campings">
+            Browse More Campings
+          </a>
+        </div>
+      </section>
+
+    </main>
+
+    <!-- ── Right: Booking Summary Sidebar ─────────────────────────────── -->
+    <aside class="res-sidebar" aria-label="Booking summary">
+      <div class="summary">
+        <h3 class="summary__title">Booking Summary</h3>
+
+        <!-- Camping info -->
+        <div class="summary__camping">
+          <img
+            [src]="camping.photos?.[0] || 'assets/images/camping-placeholder.jpg'"
+            [alt]="camping.name"
+            class="summary__thumb"
+          />
+          <div>
+            <strong>{{ camping.name }}</strong>
+            <p>📍 {{ camping.governorate }}</p>
+          </div>
+        </div>
+
+        <hr class="summary__divider" />
+
+        <!-- Spot -->
+        <div class="summary__row" *ngIf="selectedSpot">
+          <span>Spot</span>
+          <span>{{ selectedSpot.name }}</span>
+        </div>
+
+        <!-- Dates -->
+        <div class="summary__row" *ngIf="datesForm.value.checkIn">
+          <span>Check-in</span>
+          <span>{{ datesForm.value.checkIn | date:'dd MMM yyyy' }}</span>
+        </div>
+        <div class="summary__row" *ngIf="datesForm.value.checkOut">
+          <span>Check-out</span>
+          <span>{{ datesForm.value.checkOut | date:'dd MMM yyyy' }}</span>
+        </div>
+        <div class="summary__row" *ngIf="nights > 0">
+          <span>Duration</span>
+          <span>{{ nights }} night{{ nights !== 1 ? 's' : '' }}</span>
+        </div>
+
+        <!-- Guests -->
+        <div class="summary__row" *ngIf="datesForm.value.numberOfGuests">
+          <span>Guests</span>
+          <span>{{ datesForm.value.numberOfGuests }}</span>
+        </div>
+
+        <!-- Spot subtotal -->
+        <div class="summary__row summary__row--sub" *ngIf="selectedSpot && nights > 0">
+          <span>Spot ({{ nights }}n × {{ selectedSpot.basePrice | number }} TND)</span>
+          <span>{{ spotTotal | number }} TND</span>
+        </div>
+
+        <hr class="summary__divider" *ngIf="selectedActivities.length > 0" />
+
+        <!-- Activities -->
+        <div class="summary__row" *ngFor="let act of selectedActivities">
+          <span>{{ act.name }}</span>
+          <span>{{ act.price | number }} TND</span>
+        </div>
+
+        <hr class="summary__divider" />
+
+        <!-- Total -->
+        <div class="summary__total">
+          <span>Total</span>
+          <span class="summary__total-price">{{ totalPrice | number }} TND</span>
+        </div>
+      </div>
+    </aside>
+
+  </div>
+</div>
+
+<!-- Loading placeholder -->
+<ng-template #loadingTpl>
+  <div class="loading-placeholder" aria-busy="true" aria-label="Loading camping details">
+    <div class="skeleton skeleton--title"></div>
+    <div class="skeleton skeleton--body"></div>
+  </div>
+</ng-template>

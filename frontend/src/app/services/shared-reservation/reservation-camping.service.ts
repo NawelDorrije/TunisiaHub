@@ -1,39 +1,47 @@
 import { Injectable } from '@angular/core';
-import { Reservation } from '../../models/shared-reservation/reservation';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { HttpClient } from '@angular/common/http';
+import { Reservation } from '../../models/shared-reservation/reservation';
 
-@Injectable({
-  providedIn: 'root'
-})
-export class ReservationCampingService {
+@Injectable({ providedIn: 'root' })
+export class ReservationService {
+  private API_URL = 'http://localhost:8089/api/reservations';
 
- private BASE_URL = 'http://localhost:8089/api/reservations';
+  constructor(private http: HttpClient) {}
 
-  constructor(private http: HttpClient) { }
-
-  // GET all reservations
   getAllReservations(): Observable<Reservation[]> {
-    return this.http.get<Reservation[]>(this.BASE_URL);
+    return this.http.get<Reservation[]>(this.API_URL);
   }
 
-  // GET reservation by ID
   getReservationById(id: number): Observable<Reservation> {
-    return this.http.get<Reservation>(`${this.BASE_URL}/${id}`);
+    return this.http.get<Reservation>(`${this.API_URL}/${id}`);
   }
 
-  // POST - create a reservation
+  getByUser(userId: number): Observable<Reservation[]> {
+    return this.http.get<Reservation[]>(`${this.API_URL}/user/${userId}`);
+  }
+
+  getBySpot(spotId: number): Observable<Reservation[]> {
+    return this.http.get<Reservation[]>(`${this.API_URL}/spot/${spotId}`);
+  }
+
+  getByStatus(status: string): Observable<Reservation[]> {
+    return this.http.get<Reservation[]>(`${this.API_URL}/status`, {
+      params: new HttpParams().set('status', status)
+    });
+  }
+
   createReservation(reservation: Reservation): Observable<Reservation> {
-    return this.http.post<Reservation>(this.BASE_URL, reservation);
+    return this.http.post<Reservation>(this.API_URL, reservation);
   }
 
-  // PUT - update a reservation
-  updateReservation(reservation: Reservation): Observable<Reservation> {
-    return this.http.put<Reservation>(this.BASE_URL, reservation);
+  updateStatus(id: number, status: string): Observable<Reservation> {
+    return this.http.patch<Reservation>(`${this.API_URL}/${id}/status`, null, {
+      params: new HttpParams().set('status', status)
+    });
   }
 
-  // DELETE - delete a reservation
-  deleteReservation(id: number): Observable<void> {
-    return this.http.delete<void>(`${this.BASE_URL}/${id}`);
+  cancelReservation(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.API_URL}/${id}/cancel`);
   }
 }

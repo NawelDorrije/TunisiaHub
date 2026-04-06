@@ -1,0 +1,110 @@
+<div class="dashboard">
+  <div class="dash-header">
+    <div>
+      <h1>Admin Dashboard</h1>
+      <p>Welcome back — here's what's happening today</p>
+    </div>
+    <div class="dash-date">{{ today | date:'fullDate' }}</div>
+  </div>
+
+  <!-- Stats Grid -->
+  <div class="stats-grid" *ngIf="!loading">
+    <div class="stat-card green">
+      <div class="stat-icon">🏕️</div>
+      <div class="stat-body">
+        <span class="stat-label">Total Campings</span>
+        <span class="stat-value">{{ stats.totalCampings }}</span>
+      </div>
+    </div>
+    <div class="stat-card teal">
+      <div class="stat-icon">✅</div>
+      <div class="stat-body">
+        <span class="stat-label">Active Campings</span>
+        <span class="stat-value">{{ stats.activeCampings }}</span>
+      </div>
+    </div>
+    <div class="stat-card amber">
+      <div class="stat-icon">⏳</div>
+      <div class="stat-body">
+        <span class="stat-label">Pending Approval</span>
+        <span class="stat-value">{{ stats.pendingCampings }}</span>
+      </div>
+    </div>
+    <div class="stat-card blue">
+      <div class="stat-icon">📋</div>
+      <div class="stat-body">
+        <span class="stat-label">Reservations</span>
+        <span class="stat-value">{{ stats.totalReservations }}</span>
+      </div>
+    </div>
+    <div class="stat-card purple">
+      <div class="stat-icon">💰</div>
+      <div class="stat-body">
+        <span class="stat-label">Total Revenue</span>
+        <span class="stat-value">{{ stats.totalRevenue | number:'1.0-0' }} TND</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Pending Campings Table -->
+  <div class="dash-section">
+    <div class="section-header">
+      <h2>Campings Pending Approval</h2>
+      <a routerLink="/admin/campings">View All →</a>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Name</th><th>Owner</th><th>Governorate</th>
+            <th>Price</th><th>Status</th><th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let c of recentCampings">
+            <td class="td-name">{{ c.name }}</td>
+            <td>{{ c.ownerName || '—' }}</td>
+            <td>{{ c.governorate }}</td>
+            <td>{{ c.price | number }} TND</td>
+            <td><span class="badge" [ngClass]="'badge-'+c.status.toLowerCase()">{{ c.status }}</span></td>
+            <td>
+              <div class="action-btns">
+                <button class="btn-approve" (click)="approveCamping(c.id)">Approve</button>
+                <button class="btn-view-sm" [routerLink]="['/campings', c.id]">View</button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Recent Reservations -->
+  <div class="dash-section">
+    <div class="section-header">
+      <h2>Recent Reservations</h2>
+      <a routerLink="/admin/reservations">View All →</a>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th><th>User</th><th>Camping</th>
+            <th>Check-in</th><th>Check-out</th><th>Total</th><th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let r of recentReservations">
+            <td>#{{ r.id }}</td>
+            <td>{{ r.userName || r.userId }}</td>
+            <td>{{ r.campingName || '—' }}</td>
+            <td>{{ r.checkIn | date:'dd/MM/yy' }}</td>
+            <td>{{ r.checkOut | date:'dd/MM/yy' }}</td>
+            <td>{{ r.totalPrice | number }} TND</td>
+            <td><span class="badge" [ngClass]="'badge-'+r.status?.toLowerCase()">{{ r.status }}</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

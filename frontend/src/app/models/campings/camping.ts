@@ -1,23 +1,24 @@
-import { Spot } from "./spot";
-
 export interface Camping {
   id?: number;
-
   name: string;
-
-  location: string;
-
-  campingType: string;
-
+  address: string;
+  governorate: string;
+  latitude: number;
+  longitude: number;
+  averageRating?: number;
+  numberOfSpots?: number;
+  maxCapacity: number;
+  status: 'PENDING' | 'ACTIVE' | 'SUSPENDED' | 'CLOSED';
+  rules?: string;
+  checkInTime?: string;
+  checkOutTime?: string;
+  ownerId: number;
+  ownerName?: string;
   price: number;
-
-  description: string;
-
-  startDate: string;
-
-  endDate: string;
-
-  photos: string[];
-
-  spots: Spot[];
+  description?: string;
+  startDate?: string;
+  endDate?: string;
+  photos?: string[];
+  createdAt?: string;
+  updatedAt?: string;
 }

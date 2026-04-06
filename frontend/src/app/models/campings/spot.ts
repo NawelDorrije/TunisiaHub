@@ -1,17 +1,20 @@
 export interface Spot {
-
   id?: number;
-
-  number: number;
-
-  size: number;
-
-  availability: boolean;
-
-  price: number;
-
-  maxCapacity: number;
-
-  campingId?: number ;
-
+  campingId: number;
+  campingName?: string;
+  name: string;
+  type: 'TENT' | 'CARAVAN' | 'BUNGALOW' | 'TREEHOUSE' | 'GLAMPING' | 'MOBILE_HOME';
+  capacity: number;
+  area?: number;
+  description?: string;
+  basePrice: number;
+  status: 'LIBRE' | 'OCCUPE' | 'MAINTENANCE' | 'HORS_SERVICE';
+  positionX?: number;
+  positionY?: number;
+  viewType?: 'SEA' | 'LAKE' | 'MOUNTAIN' | 'FOREST' | 'STANDARD';
+  hasShade: boolean;
+  accessibleForDisabled: boolean;
+  active: boolean;
+  photos?: string[];
+  createdAt?: string;
 }

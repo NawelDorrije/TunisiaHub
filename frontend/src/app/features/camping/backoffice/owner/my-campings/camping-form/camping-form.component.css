@@ -1,0 +1,92 @@
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600&family=DM+Sans:wght@300;400;500&display=swap');
+
+:host {
+  --forest: #1a3a2a; --moss: #2d5a3d; --sage: #7aab8a;
+  --cream: #faf7f2; --sand: #e8dcc8; --text: #1c2b1f; --muted: #6b7c70;
+  --error: #c0392b; --radius: 12px;
+}
+* { box-sizing: border-box; }
+
+.form-page {
+  font-family: 'DM Sans', sans-serif; background: var(--cream);
+  min-height: 100vh; padding: 2rem 1.5rem; color: var(--text);
+  max-width: 1200px; margin: 0 auto;
+}
+.form-header {
+  display: flex; align-items: flex-start; gap: 1.5rem; margin-bottom: 2rem;
+}
+.back-btn {
+  padding: 0.6rem 1rem; border-radius: 10px;
+  border: 1.5px solid var(--sand); background: white;
+  color: var(--muted); cursor: pointer; white-space: nowrap;
+  transition: all 0.2s;
+}
+.back-btn:hover { border-color: var(--sage); color: var(--moss); }
+.form-header h1 { font-family: 'Playfair Display', serif; font-size: 1.75rem; }
+.form-header p { color: var(--muted); font-size: 0.9rem; margin-top: 0.25rem; }
+
+.form-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+
+.form-section {
+  background: white; border-radius: 16px; padding: 1.5rem;
+  border: 1px solid var(--sand); margin-bottom: 1.5rem;
+}
+.section-title {
+  font-family: 'Playfair Display', serif; font-size: 1.1rem;
+  color: var(--forest); margin-bottom: 1.25rem;
+  padding-bottom: 0.75rem; border-bottom: 1px solid var(--sand);
+}
+.section-hint { font-size: 0.82rem; color: var(--muted); margin-bottom: 0.75rem; }
+
+.field-group { display: flex; flex-direction: column; gap: 0.4rem; margin-bottom: 1rem; }
+.field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+label { font-size: 0.82rem; font-weight: 500; color: var(--text); }
+input, select, textarea {
+  padding: 0.65rem 0.875rem; border-radius: var(--radius);
+  border: 1.5px solid var(--sand); background: var(--cream);
+  font-family: 'DM Sans', sans-serif; font-size: 0.9rem; color: var(--text);
+  transition: border-color 0.2s; outline: none; width: 100%;
+}
+input:focus, select:focus, textarea:focus { border-color: var(--sage); background: white; }
+textarea { resize: vertical; }
+.readonly-field { background: #f0ebe2; color: var(--muted); cursor: default; }
+.error { font-size: 0.78rem; color: var(--error); }
+
+.picker-map { height: 280px; border-radius: 12px; overflow: hidden; border: 1.5px solid var(--sand); }
+
+.photo-upload {
+  border: 2px dashed var(--sand); border-radius: 12px;
+  padding: 2rem; text-align: center; cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+}
+.photo-upload:hover { border-color: var(--sage); background: #f5f0e8; }
+.upload-icon { font-size: 2rem; margin-bottom: 0.5rem; }
+.photo-upload p { font-weight: 500; margin-bottom: 0.25rem; }
+.photo-upload span { font-size: 0.78rem; color: var(--muted); }
+.photo-grid {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem; margin-top: 1rem;
+}
+.photo-item { position: relative; border-radius: 10px; overflow: hidden; aspect-ratio: 1; }
+.photo-item img { width: 100%; height: 100%; object-fit: cover; }
+.photo-remove {
+  position: absolute; top: 0.25rem; right: 0.25rem;
+  width: 22px; height: 22px; border-radius: 50%;
+  border: none; background: rgba(0,0,0,0.6); color: white;
+  font-size: 0.65rem; cursor: pointer;
+}
+
+.form-actions { display: flex; gap: 0.75rem; justify-content: flex-end; }
+.btn-cancel {
+  padding: 0.75rem 1.5rem; border-radius: 10px;
+  border: 1.5px solid var(--sand); background: white;
+  color: var(--muted); cursor: pointer; font-size: 0.9rem;
+}
+.btn-submit {
+  padding: 0.75rem 2rem; border-radius: 10px;
+  border: none; background: var(--forest); color: white;
+  font-size: 0.9rem; cursor: pointer; transition: background 0.2s;
+}
+.btn-submit:hover:not(:disabled) { background: var(--moss); }
+.btn-submit:disabled { opacity: 0.6; cursor: not-allowed; }
+
+@media (max-width: 900px) { .form-layout { grid-template-columns: 1fr; } }

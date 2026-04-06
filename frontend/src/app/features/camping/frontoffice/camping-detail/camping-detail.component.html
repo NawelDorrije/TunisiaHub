@@ -1,0 +1,208 @@
+<!-- Loading -->
+<div class="detail-skeleton" *ngIf="loading">
+  <div class="sk-hero"></div>
+  <div class="detail-container">
+    <div class="sk-title"></div>
+    <div class="sk-line"></div>
+    <div class="sk-line short"></div>
+  </div>
+</div>
+
+<!-- Error -->
+<div class="detail-error" *ngIf="error && !loading">
+  <div>⚠️ {{ error }}</div>
+  <button (click)="goBack()">← Go Back</button>
+</div>
+
+<!-- Content -->
+<div class="detail-page" *ngIf="!loading && !error && camping">
+
+  <!-- ── Photo Gallery ── -->
+  <section class="gallery">
+    <div class="gallery-main">
+      <img
+        [src]="camping.photos?.[activePhoto] || 'assets/images/camping-default.jpg'"
+        [alt]="camping.name"
+        class="main-photo"/>
+      <button class="gallery-back" (click)="goBack()">← All Campings</button>
+      <span class="gallery-badge" [ngClass]="'badge-'+camping.status.toLowerCase()">
+        {{ camping.status }}
+      </span>
+    </div>
+    <div class="gallery-thumbs" *ngIf="camping.photos && camping.photos.length > 1">
+      <div
+        *ngFor="let photo of camping.photos; let i = index"
+        class="thumb" [class.active]="activePhoto === i"
+        (click)="setPhoto(i)">
+        <img [src]="photo" [alt]="'Photo ' + (i+1)"/>
+      </div>
+    </div>
+  </section>
+
+  <div class="detail-container">
+    <div class="detail-layout">
+
+      <!-- ── Left: Info ── -->
+      <div class="detail-main">
+
+        <!-- Title -->
+        <div class="detail-title-row">
+          <div>
+            <p class="detail-gov">📍 {{ camping.governorate }} · {{ camping.address }}</p>
+            <h1 class="detail-name">{{ camping.name }}</h1>
+          </div>
+          <div class="detail-rating" *ngIf="camping.averageRating">
+            <div class="stars-row">
+              <span *ngFor="let s of getStars(camping.averageRating!)"
+                    class="star" [ngClass]="'star-'+s">★</span>
+            </div>
+            <span class="rating-text">{{ camping.averageRating | number:'1.1-1' }} / 5</span>
+          </div>
+        </div>
+
+        <!-- Description -->
+        <div class="detail-section" *ngIf="camping.description">
+          <h2 class="section-title">About this Camping</h2>
+          <p class="detail-desc">{{ camping.description }}</p>
+        </div>
+
+        <!-- Key Info Grid -->
+        <div class="detail-section">
+          <h2 class="section-title">Key Information</h2>
+          <div class="info-grid">
+            <div class="info-item">
+              <span class="info-icon">💰</span>
+              <div>
+                <div class="info-label">Price per night</div>
+                <div class="info-value">{{ camping.price | number }} TND</div>
+              </div>
+            </div>
+            <div class="info-item">
+              <span class="info-icon">👥</span>
+              <div>
+                <div class="info-label">Max capacity</div>
+                <div class="info-value">{{ camping.maxCapacity }} guests</div>
+              </div>
+            </div>
+            <div class="info-item" *ngIf="camping.checkInTime">
+              <span class="info-icon">🕐</span>
+              <div>
+                <div class="info-label">Check-in</div>
+                <div class="info-value">{{ camping.checkInTime }}</div>
+              </div>
+            </div>
+            <div class="info-item" *ngIf="camping.checkOutTime">
+              <span class="info-icon">🕐</span>
+              <div>
+                <div class="info-label">Check-out</div>
+                <div class="info-value">{{ camping.checkOutTime }}</div>
+              </div>
+            </div>
+            <div class="info-item" *ngIf="camping.startDate">
+              <span class="info-icon">📅</span>
+              <div>
+                <div class="info-label">Open from</div>
+                <div class="info-value">{{ camping.startDate | date:'dd MMM yyyy' }}</div>
+              </div>
+            </div>
+            <div class="info-item" *ngIf="camping.endDate">
+              <span class="info-icon">📅</span>
+              <div>
+                <div class="info-label">Open until</div>
+                <div class="info-value">{{ camping.endDate | date:'dd MMM yyyy' }}</div>
+              </div>
+            </div>
+            <div class="info-item" *ngIf="camping.numberOfSpots">
+              <span class="info-icon">🏕</span>
+              <div>
+                <div class="info-label">Total spots</div>
+                <div class="info-value">{{ camping.numberOfSpots }}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Available Spots -->
+        <div class="detail-section" *ngIf="spots.length > 0">
+          <h2 class="section-title">Available Spots ({{ spots.length }})</h2>
+          <div class="spots-row">
+            <div class="spot-chip" *ngFor="let spot of spots">
+              <span class="spot-icon">{{ getSpotTypeIcon(spot.type) }}</span>
+              <div class="spot-chip-info">
+                <div class="spot-chip-name">{{ spot.name }}</div>
+                <div class="spot-chip-type">{{ spot.type }}</div>
+              </div>
+              <div class="spot-chip-price">{{ spot.basePrice | number }} TND</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Activities -->
+        <div class="detail-section" *ngIf="activities.length > 0">
+          <h2 class="section-title">Activities</h2>
+          <div class="activities-row">
+            <div class="act-chip" *ngFor="let act of activities">
+              <div class="act-chip-name">{{ act.name }}</div>
+              <div class="act-chip-meta">
+                <span *ngIf="act.duration">⏱ {{ act.duration }}h</span>
+                <span class="act-chip-price">{{ act.price | number }} TND</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Rules -->
+        <div class="detail-section" *ngIf="camping.rules">
+          <h2 class="section-title">Camping Rules</h2>
+          <div class="rules-box">
+            <p>{{ camping.rules }}</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Right: Booking card ── -->
+      <aside class="detail-aside">
+        <div class="booking-card">
+          <div class="booking-price">
+            <span class="booking-price-val">{{ camping.price | number }}</span>
+            <span class="booking-price-unit"> TND / night</span>
+          </div>
+          <div class="booking-meta">
+            <div class="bm-item">
+              <span class="bm-label">Governorate</span>
+              <span class="bm-value">{{ camping.governorate }}</span>
+            </div>
+            <div class="bm-item" *ngIf="camping.maxCapacity">
+              <span class="bm-label">Max guests</span>
+              <span class="bm-value">{{ camping.maxCapacity }}</span>
+            </div>
+            <div class="bm-item" *ngIf="camping.checkInTime">
+              <span class="bm-label">Check-in</span>
+              <span class="bm-value">{{ camping.checkInTime }}</span>
+            </div>
+            <div class="bm-item" *ngIf="camping.checkOutTime">
+              <span class="bm-label">Check-out</span>
+              <span class="bm-value">{{ camping.checkOutTime }}</span>
+            </div>
+            <div class="bm-item">
+              <span class="bm-label">Status</span>
+              <span class="bm-value bm-status" [ngClass]="'badge-'+camping.status.toLowerCase()">
+                {{ camping.status }}
+              </span>
+            </div>
+          </div>
+          <button
+            class="btn-book-now"
+            (click)="goToReserve()"
+            [disabled]="camping.status !== 'ACTIVE'">
+            {{ camping.status === 'ACTIVE' ? '🏕 Book This Camping' : 'Not Available' }}
+          </button>
+          <p class="booking-note" *ngIf="camping.status !== 'ACTIVE'">
+            This camping is currently not accepting reservations.
+          </p>
+        </div>
+      </aside>
+
+    </div>
+  </div>
+</div>
