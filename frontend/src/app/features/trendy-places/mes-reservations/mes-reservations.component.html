@@ -1,0 +1,82 @@
+<div class="reservations-container">
+
+  <div class="page-header">
+    <h1>🎟️ Mes Réservations</h1>
+    <p>{{ reservations.length }} réservation(s)</p>
+  </div>
+
+  <div class="alert-success" *ngIf="successMessage">{{ successMessage }}</div>
+
+  <div *ngIf="loading" class="loading">
+    <div class="spinner"></div><p>Chargement...</p>
+  </div>
+
+  <div *ngIf="!loading && reservations.length === 0" class="empty-state">
+    <span>🎫</span>
+    <h3>Aucune réservation</h3>
+    <p>Vous n'avez pas encore réservé d'activité.</p>
+  </div>
+
+  <div class="reservations-grid" *ngIf="!loading && reservations.length > 0">
+    <div class="reservation-card" *ngFor="let r of reservations">
+
+      <div class="card-top">
+        <div class="activite-info">
+          <h3>{{ r.activite?.nomActivite }}</h3>
+          <p class="lieu-name">📍 {{ r.activite?.lieu?.nom }} — {{ r.activite?.lieu?.ville }}</p>
+        </div>
+        <span class="statut-badge" [ngClass]="getStatutClass(r.statut)">
+          {{ getStatutLabel(r.statut) }}
+        </span>
+      </div>
+
+      <div class="card-details">
+        <div class="detail-row">
+          <span>📅 Date</span>
+          <strong>{{ r.dateReservation | date:'dd/MM/yyyy' }}</strong>
+        </div>
+        <div class="detail-row">
+          <span>👥 Personnes</span>
+          <strong>{{ r.nombrePersonnes }}</strong>
+        </div>
+        <div class="detail-row">
+          <span>⏱️ Durée</span>
+          <strong>{{ r.activite?.duree }} min</strong>
+        </div>
+        <div class="detail-row prix-row">
+          <span>💰 Total</span>
+          <strong class="prix">{{ r.prixTotal }} TND</strong>
+        </div>
+      </div>
+
+      <div class="card-actions" *ngIf="r.statut !== 'ANNULEE'">
+
+  <!-- Bouton PAYER si EN_ATTENTE -->
+  <!-- Bouton PAYER seulement si EN_ATTENTE -->
+<button class="btn-payer"
+        *ngIf="r.statut === 'EN_ATTENTE' && cancellingId !== r.id"
+        (click)="allerPayer(r.id)">
+  💳 Payer maintenant
+</button>
+
+  <!-- Bouton ANNULER -->
+  <button class="btn-annuler"
+          *ngIf="cancellingId !== r.id"
+          (click)="annuler(r.id)">
+    Annuler
+  </button>
+
+  <div class="confirm-annulation" *ngIf="cancellingId === r.id">
+    <p>Confirmer l'annulation ?</p>
+    <div class="confirm-btns">
+      <button class="btn-oui" (click)="confirmerAnnulation(r.id)">Oui</button>
+      <button class="btn-non" (click)="cancellingId = null">Non</button>
+    </div>
+  </div>
+
+</div>
+
+    </div>
+  </div>
+
+</div>
