@@ -1,40 +1,15 @@
-package org.example.backend_tunisiahub.Services.Camping;
+package org.example.backend_tunisiahub.Services.TrendyPlaces;
 
-import lombok.RequiredArgsConstructor;
-import org.example.backend_tunisiahub.Entities.Camping.Camping;
-import org.example.backend_tunisiahub.Repositories.Camping.CampingRepository;
-import org.springframework.stereotype.Service;
+import org.example.backend_tunisiahub.Entities.TrendyPlaces.ReservationActivite;
 
 import java.util.List;
 
-@Service
-@RequiredArgsConstructor
-public class CampingService implements ICampingService {
-
-    private final CampingRepository campingRepository;
-
-    @Override
-    public List<Camping> retrieveAllCampings() {
-        return campingRepository.findAll();
-    }
-
-    @Override
-    public Camping retrieveCamping(Long id) {
-        return campingRepository.findById(id).orElse(null);
-    }
-
-    @Override
-    public Camping addCamping(Camping camping) {
-        return campingRepository.save(camping);
-    }
-
-    @Override
-    public void deleteCamping(Long id) {
-        campingRepository.deleteById(id);
-    }
-
-    @Override
-    public Camping modifyCamping(Camping camping) {
-        return campingRepository.save(camping);
-    }
+public interface IReservationActiviteService {
+    ReservationActivite createReservation(ReservationActivite reservation, Long activiteId, Long userId);
+    List<ReservationActivite> getReservationsByUser(Long userId);
+    List<ReservationActivite> getAllReservations();
+    ReservationActivite updateStatut(Long id, String statut);
+    void deleteReservation(Long id);
+    ReservationActivite getById(Long id);
+    ReservationActivite payerReservation(Long id);
 }

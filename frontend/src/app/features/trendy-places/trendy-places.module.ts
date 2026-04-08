@@ -8,6 +8,9 @@ import { LieuDetailComponent } from './lieu-detail/lieu-detail.component';
 import { AdminLieuComponent } from './admin/admin-lieu/admin-lieu.component';
 import { AdminActiviteComponent } from './admin/admin-activite/admin-activite.component';
 import { TrendyPlacesComponent } from './trendy-places.component';
+import { MesReservationsComponent } from './mes-reservations/mes-reservations.component';
+import { PaiementReservationComponent } from './paiement-reservation/paiement-reservation.component';
+import { AdminReservationsComponent } from './admin/admin-reservations/admin-reservations.component';
 
 @NgModule({
   declarations: [
@@ -15,7 +18,10 @@ import { TrendyPlacesComponent } from './trendy-places.component';
     LieuListComponent,
     LieuDetailComponent,
     AdminLieuComponent,
-    AdminActiviteComponent
+    AdminActiviteComponent,
+    MesReservationsComponent,
+    PaiementReservationComponent,
+    AdminReservationsComponent
   ],
   imports: [
   CommonModule,

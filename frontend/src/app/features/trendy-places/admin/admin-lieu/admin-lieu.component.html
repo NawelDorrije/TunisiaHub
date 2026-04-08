@@ -7,6 +7,8 @@
       <p>{{ lieux.length }} lieu(x) au total</p>
     </div>
     <a routerLink="/trendy-places/admin/activites" class="btn-secondary">🎯 Gérer les Activités</a>
+    <a routerLink="/trendy-places/admin/reservations" class="btn-secondary">🎟️ Réservations</a>
+
     <button class="btn-add" (click)="openAdd()">+ Ajouter un lieu</button>
   </div>
 
@@ -16,74 +18,148 @@
 
   <!-- Modal Form -->
   <div class="modal-overlay" *ngIf="showForm" (click)="closeForm()">
-    <div class="modal-box" (click)="$event.stopPropagation()">
-      <div class="modal-header">
-        <h2>{{ isEditing ? '✏️ Modifier le lieu' : '➕ Ajouter un lieu' }}</h2>
-        <button class="close-btn" (click)="closeForm()">✕</button>
+  <div class="modal-box" (click)="$event.stopPropagation()">
+    
+    <div class="modal-header">
+      <h2>{{ isEditing ? '✏️ Modifier le lieu' : '➕ Ajouter un lieu' }}</h2>
+      <button class="close-btn" (click)="closeForm()">✕</button>
+    </div>
+
+    <!-- ===== SECTION IA ===== -->
+    <div class="ai-section" *ngIf="!isEditing">
+      <div class="ai-header">
+        <span class="ai-badge">🤖 IA</span>
+        <div>
+          <h3>Remplissage automatique par IA</h3>
+          <p>Uploadez une photo du lieu — l'IA remplit tout le formulaire !</p>
+        </div>
       </div>
 
-      <div class="form-grid">
-        <div class="form-group">
-          <label>Nom</label>
-          <input type="text" [(ngModel)]="form.nom" placeholder="Nom du lieu" />
+      <!-- Upload zone -->
+      <div class="upload-zone"
+           [class.has-image]="uploadedImagePreview"
+           (click)="fileInput.click()">
+        <input #fileInput type="file" accept="image/*"
+               style="display:none"
+               (change)="onImageUpload($event)" />
+
+        <div *ngIf="!uploadedImagePreview" class="upload-placeholder">
+          <span class="upload-icon">📸</span>
+          <p>Cliquez pour uploader une image</p>
+          <span>JPG, PNG, WEBP — max 5MB</span>
         </div>
 
-        <div class="form-group">
-          <label>Type</label>
-          <select [(ngModel)]="form.type">
-            <option value="">-- Choisir --</option>
-            <option value="Culturel">🏛️ Culturel</option>
-            <option value="Naturel">🌿 Naturel</option>
-            <option value="Historique">🏰 Historique</option>
-            <option value="Sportif">⚽ Sportif</option>
-            <option value="Gastronomique">🍽️ Gastronomique</option>
-            <option value="Artistique">🎨 Artistique</option>
-          </select>
-        </div>
-
-        <div class="form-group">
-          <label>Ville</label>
-          <input type="text" [(ngModel)]="form.ville" placeholder="Ville" />
-        </div>
-
-        <div class="form-group">
-          <label>Horaires</label>
-          <input type="text" [(ngModel)]="form.horaires" placeholder="08:00 - 22:00" />
-        </div>
-
-        <div class="form-group">
-          <label>Latitude</label>
-          <input type="number" [(ngModel)]="form.latitude" placeholder="36.8702" />
-        </div>
-
-        <div class="form-group">
-          <label>Longitude</label>
-          <input type="number" [(ngModel)]="form.longitude" placeholder="10.3417" />
-        </div>
-
-        <div class="form-group full">
-          <label>Image (nom du fichier ou URL)</label>
-          <input type="text" [(ngModel)]="form.image" placeholder="1.jpg ou https://..." />
-          <div class="image-preview" *ngIf="form.image">
-            <img [src]="getImageUrl(form.image)" alt="preview"
-                 (error)="$any($event.target).src='/assets/images/lieux/default.jpg'" />
+        <div *ngIf="uploadedImagePreview" class="upload-preview">
+          <img [src]="uploadedImagePreview" alt="Preview" />
+          <div class="preview-overlay">
+            <span>Changer l'image</span>
           </div>
         </div>
+      </div>
 
-        <div class="form-group full">
-          <label>Description</label>
-          <textarea [(ngModel)]="form.description" rows="3" placeholder="Description du lieu..."></textarea>
+      <!-- Bouton analyser -->
+      <button class="btn-ai-analyze"
+              (click)="analyserAvecIA()"
+              [disabled]="!uploadedImagePreview || aiLoading">
+        <span *ngIf="!aiLoading">🔍 Analyser avec l'IA</span>
+        <span *ngIf="aiLoading" class="ai-loading-text">
+          <span class="ai-dots"></span>
+          Analyse en cours...
+        </span>
+      </button>
+
+      <!-- Messages IA -->
+      <div class="ai-success" *ngIf="aiSuccess">{{ aiSuccess }}</div>
+      <div class="ai-error" *ngIf="aiError">⚠️ {{ aiError }}</div>
+
+      <!-- Activités suggérées -->
+      <div class="activites-preview" *ngIf="showActivitesPreview">
+        <h4>🎯 Activités suggérées par l'IA</h4>
+        <p class="preview-hint">Ces activités seront créées automatiquement avec le lieu</p>
+        <div class="activite-chip"
+             *ngFor="let act of suggestedActivites; let i = index">
+          <div class="chip-info">
+            <strong>{{ act.nomActivite }}</strong>
+            <span>{{ act.prix }} TND · {{ act.duree }} min · {{ act.capaciteMax }} pers.</span>
+          </div>
+          <button class="chip-remove" (click)="removeSuggestedActivite(i)">✕</button>
         </div>
       </div>
 
-      <div class="modal-footer">
-        <button class="btn-cancel" (click)="closeForm()">Annuler</button>
-        <button class="btn-save" (click)="submit()">
-          {{ isEditing ? 'Modifier' : 'Ajouter' }}
-        </button>
+      <div class="ai-divider">
+        <span>ou remplissez manuellement</span>
       </div>
     </div>
+    <!-- ===== FIN SECTION IA ===== -->
+
+    <!-- Formulaire normal -->
+    <div class="form-grid">
+      <div class="form-group">
+        <label>Nom</label>
+        <input type="text" [(ngModel)]="form.nom" placeholder="Nom du lieu" />
+      </div>
+
+      <div class="form-group">
+        <label>Type</label>
+        <select [(ngModel)]="form.type">
+          <option value="">-- Choisir --</option>
+          <option value="Culturel">🏛️ Culturel</option>
+          <option value="Naturel">🌿 Naturel</option>
+          <option value="Historique">🏰 Historique</option>
+          <option value="Sportif">⚽ Sportif</option>
+          <option value="Gastronomique">🍽️ Gastronomique</option>
+          <option value="Artistique">🎨 Artistique</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>Ville</label>
+        <input type="text" [(ngModel)]="form.ville" placeholder="Ville" />
+      </div>
+
+      <div class="form-group">
+        <label>Horaires</label>
+        <input type="text" [(ngModel)]="form.horaires" placeholder="08:00 - 22:00" />
+      </div>
+
+      <div class="form-group">
+        <label>Latitude</label>
+        <input type="number" [(ngModel)]="form.latitude" />
+      </div>
+
+      <div class="form-group">
+        <label>Longitude</label>
+        <input type="number" [(ngModel)]="form.longitude" />
+      </div>
+
+      <div class="form-group full">
+        <label>Image (nom du fichier ou URL)</label>
+        <input type="text" [(ngModel)]="form.image" placeholder="1.jpg ou https://..." />
+        <div class="image-preview" *ngIf="form.image">
+          <img [src]="getImageUrl(form.image)" alt="preview"
+               (error)="$any($event.target).src='/assets/images/lieux/default.jpg'" />
+        </div>
+      </div>
+
+      <div class="form-group full">
+        <label>Description</label>
+        <textarea [(ngModel)]="form.description" rows="3"
+                  placeholder="Description du lieu..."></textarea>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn-cancel" (click)="closeForm()">Annuler</button>
+      <button class="btn-save" (click)="submit()">
+        {{ isEditing ? 'Modifier' : 'Ajouter' }}
+        <span *ngIf="!isEditing && suggestedActivites.length > 0">
+          + {{ suggestedActivites.length }} activité(s)
+        </span>
+      </button>
+    </div>
+
   </div>
+</div>
 
   <!-- Confirm Delete -->
   <div class="modal-overlay" *ngIf="confirmDeleteId !== null">

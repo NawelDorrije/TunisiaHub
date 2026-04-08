@@ -50,4 +50,31 @@ export class TrendyPlacesService {
   deleteActivite(id: number): Observable<void> {
     return this.http.delete<void>(`${this.BASE_URL}/api/activites/${id}`);
   }
+
+  // Réservations Activités
+creerReservation(activiteId: number, userId: number, data: { nombrePersonnes: number }): Observable<any> {
+  return this.http.post(`${this.BASE_URL}/api/reservations-activites/activite/${activiteId}/user/${userId}`, data);
+}
+
+getMesReservations(userId: number): Observable<any[]> {
+  return this.http.get<any[]>(`${this.BASE_URL}/api/reservations-activites/user/${userId}`);
+}
+
+getAllReservationsAdmin(): Observable<any[]> {
+  return this.http.get<any[]>(`${this.BASE_URL}/api/reservations-activites`);
+}
+
+updateStatutReservation(id: number, statut: string): Observable<any> {
+  return this.http.patch(`${this.BASE_URL}/api/reservations-activites/${id}/statut`, { statut });
+}
+
+annulerReservation(id: number): Observable<void> {
+  return this.http.delete<void>(`${this.BASE_URL}/api/reservations-activites/${id}`);
+}
+
+// Ajoute cette méthode
+simulerPaiement(reservationId: number): Observable<any> {
+  return this.http.post(`${this.BASE_URL}/api/reservations-activites/${reservationId}/payer`, {});
+}
+
 }

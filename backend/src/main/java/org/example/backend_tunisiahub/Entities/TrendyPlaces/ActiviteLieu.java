@@ -25,6 +25,6 @@ public class ActiviteLieu {
 
     @ManyToOne
     @JoinColumn(name = "lieu_id")
-    @JsonIgnoreProperties("activites")
+    @JsonIgnoreProperties({"activites", "reservations"})  // lieu n'a pas de reservations mais par sécurité
     private Lieu lieu;
 }

@@ -32,6 +32,9 @@
         <option value="">Toutes les villes</option>
         <option *ngFor="let ville of villes" [value]="ville">{{ ville }}</option>
       </select>
+      <a routerLink="/trendy-places/mes-reservations" class="mes-resa-btn">
+        🎟️ Mes Réservations
+      </a>
 
       <span class="results-count">{{ filteredLieux.length }} lieu(x) trouvé(s)</span>
     </div>
