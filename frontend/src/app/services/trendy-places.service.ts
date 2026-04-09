@@ -72,9 +72,27 @@ annulerReservation(id: number): Observable<void> {
   return this.http.delete<void>(`${this.BASE_URL}/api/reservations-activites/${id}`);
 }
 
-// Ajoute cette méthode
+// Remplace simulerPaiement par :
+payerReservation(reservationId: number, modePaiement: string, nombreTranches?: number): Observable<any> {
+  return this.http.post(`${this.BASE_URL}/api/reservations-activites/${reservationId}/payer`, {
+    modePaiement,
+    nombreTranches: nombreTranches || null
+  });
+}
+
+payerTranche(reservationId: number): Observable<any> {
+  return this.http.post(`${this.BASE_URL}/api/reservations-activites/${reservationId}/payer-tranche`, {});
+}
+
+// Garde simulerPaiement pour compatibilité (pointe vers payerReservation)
 simulerPaiement(reservationId: number): Observable<any> {
-  return this.http.post(`${this.BASE_URL}/api/reservations-activites/${reservationId}/payer`, {});
+  return this.payerReservation(reservationId, 'TOTAL');
+}
+
+uploadImageLieu(file: File): Observable<any> {
+  const formData = new FormData();
+  formData.append('file', file);
+  return this.http.post<any>(`${this.BASE_URL}/api/lieux/upload-image`, formData);
 }
 
 }

@@ -72,4 +72,7 @@ getStatutLabel(statut: string): string {
   allerPayer(id: number): void {
   this.router.navigate(['/trendy-places/paiement', id]);
 }
+allerPayerTranche(id: number): void {
+  this.router.navigate(['/trendy-places/paiement-tranche', id]);
+}
 }

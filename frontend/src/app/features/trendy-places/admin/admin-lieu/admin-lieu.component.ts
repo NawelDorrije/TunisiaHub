@@ -69,46 +69,52 @@ export class AdminLieuComponent implements OnInit {
   }
 
   resetAI(): void {
-    this.aiLoading = false;
-    this.aiError = '';
-    this.aiSuccess = '';
-    this.uploadedImagePreview = null;
-    this.uploadedImageBase64 = null;
-    this.suggestedActivites = [];
-    this.showActivitesPreview = false;
+  this.aiLoading = false;
+  this.aiError = '';
+  this.aiSuccess = '';
+  this.uploadedImagePreview = null;
+  this.uploadedImageBase64 = null;
+  this.uploadedFile = null; // ← ajouter
+  this.suggestedActivites = [];
+  this.showActivitesPreview = false;
+}
+
+  // Stocker le File original pour l'upload
+uploadedFile: File | null = null;
+
+onImageUpload(event: Event): void {
+  const input = event.target as HTMLInputElement;
+  if (!input.files || input.files.length === 0) return;
+
+  const file = input.files[0];
+
+  if (!file.type.startsWith('image/')) {
+    this.aiError = 'Veuillez uploader une image valide (jpg, png, webp)';
+    return;
   }
 
-  onImageUpload(event: Event): void {
-    const input = event.target as HTMLInputElement;
-    if (!input.files || input.files.length === 0) return;
-
-    const file = input.files[0];
-
-    if (!file.type.startsWith('image/')) {
-      this.aiError = 'Veuillez uploader une image valide (jpg, png, webp)';
-      return;
-    }
-
-    if (file.size > 5 * 1024 * 1024) {
-      this.aiError = 'Image trop grande (max 5MB)';
-      return;
-    }
-
-    this.aiError = '';
-    this.aiSuccess = '';
-
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const result = e.target?.result as string;
-      this.uploadedImagePreview = result;
-      this.uploadedImageBase64 = result.split(',')[1];
-      this.form.image = file.name;
-    };
-    reader.readAsDataURL(file);
+  if (file.size > 10 * 1024 * 1024) {
+    this.aiError = 'Image trop grande (max 10MB)';
+    return;
   }
 
-  async analyserAvecIA(): Promise<void> {
-  if (!this.uploadedImageBase64) {
+  this.aiError = '';
+  this.aiSuccess = '';
+  this.uploadedFile = file; // ← stocker le fichier
+
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const result = e.target?.result as string;
+    this.uploadedImagePreview = result;
+    this.uploadedImageBase64 = result.split(',')[1];
+    // Ne pas mettre form.image ici — on attend le vrai nom après upload
+  };
+  reader.readAsDataURL(file);
+}
+
+
+ async analyserAvecIA(): Promise<void> {
+  if (!this.uploadedImageBase64 || !this.uploadedFile) {
     this.aiError = 'Veuillez d\'abord uploader une image';
     return;
   }
@@ -118,6 +124,20 @@ export class AdminLieuComponent implements OnInit {
   this.aiSuccess = '';
 
   try {
+    // ===== ÉTAPE 1 : Uploader l'image vers le backend =====
+   // ===== ÉTAPE 1 : Uploader l'image vers le backend =====
+const uploadResult = await new Promise<any>((resolve, reject) => {
+  this.service.uploadImageLieu(this.uploadedFile!).subscribe({
+    next: (res) => resolve(res),
+    error: (err) => reject(err)
+  });
+});
+
+// ← Utiliser l'URL complète retournée par le backend
+this.form.image = uploadResult.imageUrl;  // ex: http://localhost:8089/uploads/lieux/f7e0698c.jpg
+console.log('✅ Image uploadée:', uploadResult.imageUrl);
+
+    // ===== ÉTAPE 2 : Analyser avec l'IA =====
     const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -178,14 +198,11 @@ Format exact:
     }
 
     const data = await response.json();
-    console.log('Response:', data);
-
     const text = data.choices?.[0]?.message?.content;
     if (!text) throw new Error('Réponse vide de l\'IA');
 
     console.log('Texte reçu:', text);
 
-    // Nettoyer le JSON — extraire entre { }
     let jsonStr = text;
     const match = text.match(/\{[\s\S]*\}/);
     if (match) jsonStr = match[0];
@@ -197,6 +214,7 @@ Format exact:
       throw new Error('Format JSON invalide reçu de l\'IA');
     }
 
+    // Remplir formulaire — image déjà remplie avec le vrai nom
     this.form.nom         = parsed.nom         || '';
     this.form.description = parsed.description || '';
     this.form.type        = parsed.type        || '';
@@ -208,7 +226,7 @@ Format exact:
     this.suggestedActivites   = parsed.activites || [];
     this.showActivitesPreview = this.suggestedActivites.length > 0;
 
-    this.aiSuccess  = `✨ Formulaire rempli ! ${this.suggestedActivites.length} activité(s) suggérée(s).`;
+    this.aiSuccess  = `✨ Image sauvegardée + formulaire rempli ! ${this.suggestedActivites.length} activité(s) suggérée(s).`;
     this.aiLoading  = false;
 
   } catch (error: any) {
@@ -217,6 +235,8 @@ Format exact:
     this.aiLoading = false;
   }
 }
+
+
 
   removeSuggestedActivite(index: number): void {
     this.suggestedActivites.splice(index, 1);

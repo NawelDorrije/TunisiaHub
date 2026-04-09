@@ -136,50 +136,44 @@
             <strong class="prix-val">{{ r.prixTotal | number:'1.2-2' }} TND</strong>
           </td>
 
+          <!-- Colonne STATUT — avec info tranches -->
           <td>
-            <span class="statut-badge" [ngClass]="getStatutClass(r.statut)">
-              {{ getStatutLabel(r.statut) }}
-            </span>
+            <div class="statut-paiement-cell">
+              <span class="statut-badge" [ngClass]="getStatutClass(r.statut)">
+                {{ getStatutLabel(r.statut) }}
+              </span>
+              <!-- Info tranches si paiement partiel -->
+              <div class="tranche-info" *ngIf="r.modePaiement === 'TRANCHE' && !r.paiementComplet">
+                <span class="tranche-progress">
+                  {{ r.trancheActuelle }}/{{ r.nombreTranches }} tranches
+                </span>
+                <div class="mini-progress">
+                  <div class="mini-fill"
+                       [style.width]="((r.trancheActuelle / r.nombreTranches) * 100) + '%'">
+                  </div>
+                </div>
+                <span class="tranche-reste">{{ r.montantRestant | number:'1.2-2' }} TND restants</span>
+              </div>
+              <div class="paiement-complet-badge" *ngIf="r.paiementComplet">
+                💯 Paiement complet
+              </div>
+            </div>
           </td>
 
+          <!-- Colonne ACTIONS — statut info uniquement, sans boutons -->
           <td>
-            <div class="action-btns" *ngIf="updatingId !== r.id">
-
-              <!-- PAYEE → actions principales -->
-              <ng-container *ngIf="r.statut === 'PAYEE'">
-                <button class="btn-confirmer" (click)="changerStatut(r.id, 'CONFIRMEE')">
-                  ✅ Confirmer
-                </button>
-                <button class="btn-annuler" (click)="changerStatut(r.id, 'ANNULEE')">
-                  ❌ Annuler
-                </button>
-              </ng-container>
-
-              <!-- EN_ATTENTE → peut confirmer ou annuler aussi -->
-              <ng-container *ngIf="r.statut === 'EN_ATTENTE'">
-                <button class="btn-confirmer" (click)="changerStatut(r.id, 'CONFIRMEE')">
-                  ✅ Confirmer
-                </button>
-                <button class="btn-annuler" (click)="changerStatut(r.id, 'ANNULEE')">
-                  ❌ Annuler
-                </button>
-              </ng-container>
-
-              <!-- CONFIRMEE → peut annuler -->
-              <ng-container *ngIf="r.statut === 'CONFIRMEE'">
-                <button class="btn-annuler" (click)="changerStatut(r.id, 'ANNULEE')">
-                  ❌ Annuler
-                </button>
-              </ng-container>
-
-              <!-- ANNULEE → aucune action -->
-              <span *ngIf="r.statut === 'ANNULEE'" class="no-action">—</span>
-
-            </div>
-
-            <!-- Spinner updating -->
-            <div *ngIf="updatingId === r.id" class="updating-spinner">
-              <div class="mini-spinner"></div>
+            <div class="statut-info-only">
+              <span *ngIf="r.statut === 'CONFIRMEE'" class="info-confirmee">✅ Confirmée auto</span>
+              <span *ngIf="r.statut === 'PAYEE' && !r.paiementComplet" class="info-partiel">
+                ⏳ Paiement partiel
+              </span>
+              <span *ngIf="r.statut === 'PAYEE' && r.paiementComplet" class="info-confirmee">
+                ✅ Paiement complet
+              </span>
+              <span *ngIf="r.statut === 'EN_ATTENTE'" class="info-attente">
+                ⌛ Attend paiement
+              </span>
+              <span *ngIf="r.statut === 'ANNULEE'" class="info-annulee">❌ Annulée</span>
             </div>
           </td>
 

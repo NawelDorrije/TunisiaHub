@@ -50,32 +50,58 @@ public class ReservationActiviteController {
     public void delete(@PathVariable Long id) {
         service.deleteReservation(id);
     }
+    // Remplace l'ancien endpoint /payer par ces deux :
+
     @PostMapping("/{id}/payer")
-    public ResponseEntity<?> simulerPaiement(@PathVariable Long id) {
+    public ResponseEntity<?> payer(
+            @PathVariable Long id,
+            @RequestBody PayerRequest request) {
         try {
             ReservationActivite r = service.getById(id);
             if (r == null) return ResponseEntity.notFound().build();
-
             if (!r.getStatut().equals("EN_ATTENTE")) {
-                return ResponseEntity.badRequest().body("Reservation deja traitee");
+                return ResponseEntity.badRequest().body("Réservation déjà traitée");
             }
 
-            // Appeler le service qui met à jour le statut ET envoie l'email
-            ReservationActivite updated = service.payerReservation(id);
+            ReservationActivite updated = service.payerReservation(
+                    id,
+                    request.modePaiement(),
+                    request.nombreTranches()
+            );
 
             return ResponseEntity.ok(Map.of(
                     "success", true,
-                    "message", "Paiement effectue avec succes",
-                    "reservationId", id,
-                    "montant", updated.getPrixTotal(),
-                    "statut", updated.getStatut()
+                    "statut", updated.getStatut(),
+                    "modePaiement", updated.getModePaiement(),
+                    "montantPaye", updated.getMontantPaye(),
+                    "montantRestant", updated.getMontantRestant(),
+                    "paiementComplet", updated.getPaiementComplet(),
+                    "nombreTranches", updated.getNombreTranches() != null ? updated.getNombreTranches() : 1,
+                    "trancheActuelle", updated.getTrancheActuelle()
             ));
         } catch (Exception e) {
-            System.err.println("❌ Erreur paiement: " + e.getMessage());
-            e.printStackTrace();
-            return ResponseEntity.status(500).body("Erreur paiement: " + e.getMessage());
+            return ResponseEntity.status(500).body("Erreur: " + e.getMessage());
         }
     }
+
+    @PostMapping("/{id}/payer-tranche")
+    public ResponseEntity<?> payerTranche(@PathVariable Long id) {
+        try {
+            ReservationActivite updated = service.payerTranche(id);
+            return ResponseEntity.ok(Map.of(
+                    "success", true,
+                    "statut", updated.getStatut(),
+                    "montantPaye", updated.getMontantPaye(),
+                    "montantRestant", updated.getMontantRestant(),
+                    "paiementComplet", updated.getPaiementComplet(),
+                    "trancheActuelle", updated.getTrancheActuelle()
+            ));
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("Erreur: " + e.getMessage());
+        }
+    }
+
+    private record PayerRequest(String modePaiement, Integer nombreTranches) {}
     @GetMapping("/test-email")
     public ResponseEntity<?> testEmail() {
         try {

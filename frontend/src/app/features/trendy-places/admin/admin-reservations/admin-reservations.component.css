@@ -278,3 +278,51 @@
   animation: spin 0.8s linear infinite;
   margin-bottom: 12px;
 }
+
+
+.statut-paiement-cell { display: flex; flex-direction: column; gap: 4px; }
+
+.tranche-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.tranche-progress {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #004085;
+}
+
+.mini-progress {
+  height: 4px;
+  background: #e9ecef;
+  border-radius: 2px;
+  width: 80px;
+  overflow: hidden;
+}
+
+.mini-fill {
+  height: 100%;
+  background: #0f3460;
+  border-radius: 2px;
+  transition: width 0.3s;
+}
+
+.tranche-reste {
+  font-size: 0.72rem;
+  color: #dc3545;
+  font-weight: 600;
+}
+
+.paiement-complet-badge {
+  font-size: 0.72rem;
+  color: #155724;
+  font-weight: 600;
+}
+
+.statut-info-only { font-size: 0.82rem; font-weight: 600; }
+.info-confirmee { color: #155724; }
+.info-partiel { color: #856404; }
+.info-attente { color: #6c757d; }
+.info-annulee { color: #721c24; }

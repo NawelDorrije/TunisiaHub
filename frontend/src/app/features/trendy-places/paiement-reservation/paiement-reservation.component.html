@@ -3,70 +3,166 @@
   <!-- LOADING -->
   <div *ngIf="loading" class="loading-screen">
     <div class="spinner"></div>
-    <p>Chargement de votre réservation...</p>
+    <p>Chargement...</p>
   </div>
 
-  <!-- STEP 1 : RÉCAP -->
+  <!-- ===== STEP 0 : CHOIX MODE PAIEMENT ===== -->
+  <div *ngIf="!loading && step === 'choix'" class="paiement-card">
+    <div class="card-header">
+      <span class="header-icon">💳</span>
+      <div>
+        <h2>Mode de paiement</h2>
+        <p>Choisissez comment vous souhaitez payer</p>
+      </div>
+    </div>
+
+    <!-- Récap prix -->
+    <div class="prix-recap">
+      <span class="prix-label">Total à payer</span>
+      <span class="prix-big">{{ reservation?.prixTotal }} TND</span>
+    </div>
+
+    <!-- Options -->
+    <div class="mode-options">
+
+      <!-- TOTAL -->
+      <div class="mode-card" [class.selected]="modePaiement === 'TOTAL'"
+           (click)="modePaiement = 'TOTAL'">
+        <div class="mode-radio" [class.checked]="modePaiement === 'TOTAL'"></div>
+        <div class="mode-content">
+          <div class="mode-title">
+            <span class="mode-icon-wrap green">✓</span>
+            Paiement intégral
+          </div>
+          <div class="mode-desc">Payez tout maintenant et votre réservation est <strong>confirmée automatiquement</strong></div>
+          <div class="mode-amount">
+            <span class="amount-chip green">{{ reservation?.prixTotal }} TND</span>
+            <span class="badge-auto">✅ Confirmation automatique</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- TRANCHE -->
+      <div class="mode-card" [class.selected]="modePaiement === 'TRANCHE'"
+           (click)="modePaiement = 'TRANCHE'">
+        <div class="mode-radio" [class.checked]="modePaiement === 'TRANCHE'"></div>
+        <div class="mode-content">
+          <div class="mode-title">
+            <span class="mode-icon-wrap blue">⅟</span>
+            Paiement en tranches
+          </div>
+          <div class="mode-desc">Étalez votre paiement en plusieurs versements</div>
+
+          <!-- Sélection nb tranches -->
+          <div class="tranches-select" *ngIf="modePaiement === 'TRANCHE'">
+            <div class="tranche-opt" [class.active]="nombreTranches === 2"
+                 (click)="nombreTranches = 2; $event.stopPropagation()">
+              <strong>2 tranches</strong>
+              <span>{{ getMontantTranche() }} TND × 2</span>
+            </div>
+            <div class="tranche-opt" [class.active]="nombreTranches === 3"
+                 (click)="nombreTranches = 3; $event.stopPropagation()">
+              <strong>3 tranches</strong>
+              <span>{{ getMontantTranche() }} TND × 3</span>
+            </div>
+          </div>
+
+          <div class="mode-amount" *ngIf="modePaiement === 'TRANCHE'">
+            <span class="amount-chip blue">{{ getMontantTranche() }} TND aujourd'hui</span>
+            <span class="reste-info">+ {{ getMontantRestantApresTranche() }} TND restants</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <button class="btn-proceed" (click)="continuerVersRecap()">
+      Continuer →
+    </button>
+  </div>
+
+  <!-- ===== STEP 1 : RÉCAP ===== -->
   <div *ngIf="!loading && step === 'recap'" class="paiement-card">
     <div class="card-header">
       <span class="header-icon">🎟️</span>
       <div>
-        <h2>Finaliser la réservation</h2>
-        <p>Vérifiez les détails avant de payer</p>
+        <h2>Récapitulatif</h2>
+        <p>Vérifiez avant de payer</p>
       </div>
     </div>
 
     <div class="recap-section">
       <div class="recap-row">
-        <span>🎯 Activité</span>
+        <span>Activité</span>
         <strong>{{ reservation?.activite?.nomActivite }}</strong>
       </div>
       <div class="recap-row">
-        <span>📍 Lieu</span>
+        <span>Lieu</span>
         <strong>{{ reservation?.activite?.lieu?.nom }}</strong>
       </div>
       <div class="recap-row">
-        <span>📅 Date</span>
+        <span>Date</span>
         <strong>{{ reservation?.dateReservation | date:'dd/MM/yyyy' }}</strong>
       </div>
       <div class="recap-row">
-        <span>👥 Personnes</span>
+        <span>Personnes</span>
         <strong>{{ reservation?.nombrePersonnes }}</strong>
       </div>
-      <div class="recap-row total-row">
-        <span>💰 Total à payer</span>
-        <strong class="total-amount">{{ reservation?.prixTotal }} TND</strong>
+      <div class="recap-row">
+        <span>Mode</span>
+        <strong>{{ modePaiement === 'TOTAL' ? 'Paiement intégral' : 'Paiement en ' + nombreTranches + ' tranches' }}</strong>
       </div>
     </div>
 
-    <div class="statut-info">
-      <span>⏳</span>
-      <p>Après paiement, votre réservation sera <strong>EN ATTENTE</strong> de confirmation par notre équipe. Vous recevrez un email de confirmation.</p>
+    <!-- Résumé paiement -->
+    <div class="payment-summary" *ngIf="modePaiement === 'TOTAL'">
+      <div class="summary-row">
+        <span>À payer maintenant</span>
+        <strong class="summary-total green">{{ reservation?.prixTotal }} TND</strong>
+      </div>
+      <div class="auto-confirm-notice">
+        ✅ Votre réservation sera <strong>confirmée automatiquement</strong> après paiement
+      </div>
     </div>
 
-    <button class="btn-proceed" (click)="step = 'paiement'">
+    <div class="payment-summary" *ngIf="modePaiement === 'TRANCHE'">
+      <div class="summary-row">
+        <span>1ère tranche (aujourd'hui)</span>
+        <strong class="summary-total blue">{{ getMontantTranche() }} TND</strong>
+      </div>
+      <div class="summary-row muted">
+        <span>Reste à payer ({{ nombreTranches - 1 }} versement(s))</span>
+        <strong>{{ getMontantRestantApresTranche() }} TND</strong>
+      </div>
+      <div class="summary-row total-line">
+        <span>Total</span>
+        <strong>{{ reservation?.prixTotal }} TND</strong>
+      </div>
+      <div class="tranche-notice">
+        ⏳ Votre réservation sera confirmée une fois <strong>toutes les tranches payées</strong>
+      </div>
+    </div>
+
+    <button class="btn-proceed" (click)="continuerVersPaiement()">
       💳 Procéder au paiement
     </button>
-    <button class="btn-back" (click)="goToReservations()">← Retour</button>
+    <button class="btn-back" (click)="step = 'choix'">← Changer le mode</button>
   </div>
 
-  <!-- STEP 2 : FORMULAIRE PAIEMENT -->
+  <!-- ===== STEP 2 : PAIEMENT ===== -->
   <div *ngIf="!loading && step === 'paiement'" class="paiement-card">
     <div class="card-header">
-      <span class="header-icon">💳</span>
+      <span class="header-icon">🔒</span>
       <div>
         <h2>Paiement sécurisé</h2>
         <p>Simulation — aucune vraie transaction</p>
       </div>
     </div>
 
-    <!-- Carte visuelle -->
     <div class="card-preview">
       <div class="card-visual">
         <div class="card-chip">💳</div>
-        <div class="card-number-display">
-          {{ cardNumber || '•••• •••• •••• ••••' }}
-        </div>
+        <div class="card-number-display">{{ cardNumber || '•••• •••• •••• ••••' }}</div>
         <div class="card-bottom">
           <div>
             <div class="card-label">Titulaire</div>
@@ -80,91 +176,140 @@
       </div>
     </div>
 
-    <!-- Formulaire -->
     <div class="form-group">
       <label>Numéro de carte</label>
       <input type="text" placeholder="1234 5678 9012 3456"
-             [value]="cardNumber"
-             (input)="formatCardNumber($event)"
+             [value]="cardNumber" (input)="formatCardNumber($event)"
              maxlength="19" class="form-input" />
     </div>
 
     <div class="form-group">
       <label>Nom sur la carte</label>
-      <input type="text" placeholder="IYED MILOUCHI"
-             [(ngModel)]="cardName"
-             class="form-input"
-             style="text-transform: uppercase" />
+      <input type="text" placeholder="IYED MILOUCHI" [(ngModel)]="cardName"
+             class="form-input" style="text-transform:uppercase" />
     </div>
 
     <div class="form-row">
       <div class="form-group">
-        <label>Date d'expiration</label>
-        <input type="text" placeholder="MM/YY"
-               [value]="cardExpiry"
-               (input)="formatExpiry($event)"
-               maxlength="5" class="form-input" />
+        <label>Expiration</label>
+        <input type="text" placeholder="MM/YY" [value]="cardExpiry"
+               (input)="formatExpiry($event)" maxlength="5" class="form-input" />
       </div>
       <div class="form-group">
         <label>CVV</label>
-        <input type="password" placeholder="•••"
-               [(ngModel)]="cardCvv"
+        <input type="password" placeholder="•••" [(ngModel)]="cardCvv"
                maxlength="3" class="form-input" />
       </div>
     </div>
 
     <div class="amount-bar">
-      <span>Montant à débiter</span>
-      <span class="amount-val">{{ reservation?.prixTotal }} TND</span>
+      <div>
+        <span class="amount-label">Montant à débiter</span>
+        <span class="amount-mode" *ngIf="modePaiement === 'TRANCHE'">
+          (tranche 1/{{ nombreTranches }})
+        </span>
+      </div>
+      <span class="amount-val">
+        {{ modePaiement === 'TOTAL' ? reservation?.prixTotal : getMontantTranche() }} TND
+      </span>
     </div>
 
-    <button class="btn-pay"
-            [disabled]="!isFormValid() || paymentLoading"
-            (click)="payer()">
-      <span *ngIf="!paymentLoading">🔒 Payer {{ reservation?.prixTotal }} TND</span>
-      <span *ngIf="paymentLoading" class="loading-dots">⏳ Traitement en cours...</span>
+    <button class="btn-pay" [disabled]="!isFormValid() || paymentLoading" (click)="payer()">
+      <span *ngIf="!paymentLoading">
+        🔒 Payer {{ modePaiement === 'TOTAL' ? reservation?.prixTotal : getMontantTranche() }} TND
+      </span>
+      <span *ngIf="paymentLoading">⏳ Traitement en cours...</span>
     </button>
 
     <div class="security-badges">
-      <span>🔒 SSL Sécurisé</span>
-      <span>🛡️ Paiement protégé</span>
+      <span>🔒 SSL</span>
+      <span>🛡️ Protégé</span>
       <span>✅ Simulation</span>
     </div>
 
     <button class="btn-back" (click)="step = 'recap'">← Retour</button>
   </div>
 
-  <!-- STEP 3 : SUCCÈS -->
-  <div *ngIf="step === 'succes'" class="paiement-card success-card">
-    <div class="success-icon">✅</div>
-    <h2>Paiement effectué !</h2>
-    <p>Votre réservation est <strong>en attente de confirmation</strong> par notre équipe.</p>
-    <p class="email-notice">📧 Un email de confirmation a été envoyé à <strong>{{ reservation?.user?.email }}</strong></p>
+  <!-- ===== STEP 3 : SUCCÈS ===== -->
+<div *ngIf="step === 'succes'" class="paiement-card success-card">
 
+  <!-- Paiement complet → Confirmé -->
+  <ng-container *ngIf="isPayementComplet()">
+    <div class="success-icon green">✓</div>
+    <h2 class="green">Réservation confirmée !</h2>
+    <p *ngIf="!isTranche">Votre paiement intégral a été reçu.<br>Votre réservation est <strong>automatiquement confirmée</strong>.</p>
+    <p *ngIf="isTranche">Toutes les tranches ont été payées.<br>Votre réservation est <strong>automatiquement confirmée</strong> !</p>
+    <p class="email-notice">📧 Email de confirmation envoyé</p>
     <div class="recap-section">
       <div class="recap-row">
-        <span>🎯 Activité</span>
+        <span>Activité</span>
         <strong>{{ reservation?.activite?.nomActivite }}</strong>
       </div>
-      <div class="recap-row total-row">
-        <span>💰 Montant payé</span>
-        <strong class="total-amount">{{ reservation?.prixTotal }} TND</strong>
+      <div class="recap-row">
+        <span>Montant total payé</span>
+        <strong class="green">{{ reservation?.prixTotal }} TND</strong>
+      </div>
+    </div>
+    <div class="statut-confirmed">✅ CONFIRMÉE</div>
+  </ng-container>
+
+  <!-- Paiement en tranches → encore des tranches restantes -->
+  <ng-container *ngIf="!isPayementComplet()">
+    <div class="success-icon blue">⅟</div>
+    <h2 class="blue">
+      Tranche {{ getNumTranchePaye() }}/{{ getNombreTranchesTotal() }} reçue !
+    </h2>
+    <p>Votre versement a bien été enregistré.</p>
+    <p class="email-notice">📧 Récapitulatif envoyé par email</p>
+
+    <!-- Barre de progression -->
+    <div class="progress-section">
+      <div class="progress-label">
+        <span>Progression du paiement</span>
+        <span>{{ getNumTranchePaye() }}/{{ getNombreTranchesTotal() }} tranches</span>
+      </div>
+      <div class="progress-bar">
+        <div class="progress-fill"
+             [style.width]="((getNumTranchePaye() / getNombreTranchesTotal()) * 100) + '%'">
+        </div>
+      </div>
+      <div class="progress-steps">
+        <span *ngFor="let t of [].constructor(getNombreTranchesTotal()); let i = index"
+              class="step-dot" [class.done]="i < getNumTranchePaye()">
+          T{{ i + 1 }}
+        </span>
       </div>
     </div>
 
-    <div class="statut-badge-success">⏳ EN ATTENTE DE CONFIRMATION</div>
+    <div class="recap-section">
+      <div class="recap-row">
+        <span>Tranches payées</span>
+        <strong class="blue">{{ getNumTranchePaye() }}/{{ getNombreTranchesTotal() }}</strong>
+      </div>
+      <div class="recap-row">
+        <span>Montant payé</span>
+        <strong class="green">{{ reservation?.prixTotal - getMontantRestant() | number:'1.2-2' }} TND</strong>
+      </div>
+      <div class="recap-row">
+        <span>Reste à payer</span>
+        <strong style="color:#dc3545;">{{ getMontantRestant() | number:'1.2-2' }} TND</strong>
+      </div>
+    </div>
 
-    <button class="btn-proceed" (click)="goToReservations()">
-      🎟️ Voir mes réservations
-    </button>
-  </div>
+    <div class="statut-attente">⏳ {{ getNombreTranchesTotal() - getNumTranchePaye() }} tranche(s) restante(s)</div>
+  </ng-container>
+
+  <button class="btn-proceed" (click)="goToReservations()">
+    Voir mes réservations →
+  </button>
+</div>
 
   <!-- ERREUR -->
   <div *ngIf="step === 'erreur'" class="paiement-card error-card">
-    <div class="error-icon">❌</div>
-    <h2>Une erreur est survenue</h2>
-    <p>Impossible de traiter votre paiement. Réessayez.</p>
-    <button class="btn-proceed" (click)="goToReservations()">← Retour aux réservations</button>
+    <div class="error-icon">✕</div>
+    <h2>Erreur</h2>
+    <p>Impossible de traiter le paiement.</p>
+    <button class="btn-proceed" (click)="goToReservations()">← Retour</button>
   </div>
 
 </div>

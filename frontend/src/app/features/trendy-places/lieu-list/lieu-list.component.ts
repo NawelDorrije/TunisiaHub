@@ -70,13 +70,9 @@ export class LieuListComponent implements OnInit {
   }
 
 getImageUrl(image: string): string {
-  if (!image) {
-    return '/assets/images/lieux/default.jpg';
-  }
-  if (image.startsWith('http')) {
-    return image;
-  }
-  return `/assets/images/lieux/${image}`;
+  if (!image) return '/assets/images/lieux/default.jpg';
+  if (image.startsWith('http')) return image;  // ← ✅ gère http://localhost:8089/...
+  return `/assets/images/lieux/${image}`;       // ← ✅ gère 1.jpg, 2.jpg...
 }
 
 onImageError(event: Event): void {

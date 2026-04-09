@@ -49,17 +49,23 @@
         </div>
       </div>
 
-      <div class="card-actions" *ngIf="r.statut !== 'ANNULEE'">
+      <div class="card-actions" *ngIf="r.statut !== 'ANNULEE' && r.statut !== 'CONFIRMEE'">
 
-  <!-- Bouton PAYER si EN_ATTENTE -->
-  <!-- Bouton PAYER seulement si EN_ATTENTE -->
-<button class="btn-payer"
-        *ngIf="r.statut === 'EN_ATTENTE' && cancellingId !== r.id"
-        (click)="allerPayer(r.id)">
-  💳 Payer maintenant
-</button>
+  <!-- Payer maintenant si EN_ATTENTE -->
+  <button class="btn-payer"
+          *ngIf="r.statut === 'EN_ATTENTE' && cancellingId !== r.id"
+          (click)="allerPayer(r.id)">
+    💳 Choisir mon paiement
+  </button>
 
-  <!-- Bouton ANNULER -->
+  <!-- Payer tranche suivante si PAYEE et paiement incomplet -->
+  <button class="btn-payer-tranche"
+          *ngIf="r.statut === 'PAYEE' && !r.paiementComplet && cancellingId !== r.id"
+          (click)="allerPayerTranche(r.id)">
+    💳 Payer tranche {{ (r.trancheActuelle || 0) + 1 }}/{{ r.nombreTranches }}
+    <span class="tranche-montant">{{ r.montantRestant | number:'1.2-2' }} TND restants</span>
+  </button>
+
   <button class="btn-annuler"
           *ngIf="cancellingId !== r.id"
           (click)="annuler(r.id)">

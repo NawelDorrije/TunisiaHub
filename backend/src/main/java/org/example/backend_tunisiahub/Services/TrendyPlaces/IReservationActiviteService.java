@@ -11,5 +11,6 @@ public interface IReservationActiviteService {
     ReservationActivite updateStatut(Long id, String statut);
     void deleteReservation(Long id);
     ReservationActivite getById(Long id);
-    ReservationActivite payerReservation(Long id);
+    ReservationActivite payerReservation(Long id, String modePaiement, Integer nombreTranches);
+    ReservationActivite payerTranche(Long id); // payer la prochaine tranche
 }

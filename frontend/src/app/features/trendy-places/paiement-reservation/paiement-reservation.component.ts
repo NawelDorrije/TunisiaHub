@@ -10,9 +10,14 @@ import { TrendyPlacesService } from '../../../services/trendy-places.service';
 export class PaiementReservationComponent implements OnInit {
   reservation: any = null;
   loading = true;
-  step: 'recap' | 'paiement' | 'succes' | 'erreur' = 'recap';
+  isTranche = false; // ← true si on arrive depuis paiement-tranche
 
-  // Formulaire carte (simulation)
+  step: 'choix' | 'recap' | 'paiement' | 'succes' | 'erreur' = 'choix';
+
+  modePaiement: 'TOTAL' | 'TRANCHE' = 'TOTAL';
+  nombreTranches: 2 | 3 = 2;
+  paiementResult: any = null;
+
   cardNumber = '';
   cardName = '';
   cardExpiry = '';
@@ -27,15 +32,51 @@ export class PaiementReservationComponent implements OnInit {
 
   ngOnInit(): void {
     const id = Number(this.route.snapshot.paramMap.get('id'));
+
+    // Détecter si on vient de paiement-tranche
+    this.isTranche = this.route.snapshot.routeConfig?.path?.includes('paiement-tranche') || false;
+
     this.trendyService.getMesReservations(1).subscribe({
       next: (data) => {
         this.reservation = data.find((r: any) => r.id === id);
         this.loading = false;
-        if (!this.reservation) this.step = 'erreur';
+
+        if (!this.reservation) {
+          this.step = 'erreur';
+          return;
+        }
+
+        // Si on paie une tranche → aller directement au paiement
+        if (this.isTranche) {
+          this.step = 'paiement';
+        }
       },
       error: () => { this.loading = false; this.step = 'erreur'; }
     });
   }
+
+  getMontantTranche(): number {
+    if (!this.reservation) return 0;
+    if (this.isTranche) {
+      // Calculer la tranche restante
+      const nb = this.reservation.nombreTranches || 2;
+      return Math.round((this.reservation.prixTotal / nb) * 100) / 100;
+    }
+    return Math.round((this.reservation.prixTotal / this.nombreTranches) * 100) / 100;
+  }
+
+  getMontantRestantApresTranche(): number {
+    if (!this.reservation) return 0;
+    return Math.round((this.reservation.prixTotal - this.getMontantTranche()) * 100) / 100;
+  }
+
+  getMontantAPayer(): number {
+    if (this.isTranche) return this.getMontantTranche();
+    return this.modePaiement === 'TOTAL' ? this.reservation?.prixTotal : this.getMontantTranche();
+  }
+
+  continuerVersRecap(): void { this.step = 'recap'; }
+  continuerVersPaiement(): void { this.step = 'paiement'; }
 
   formatCardNumber(event: any): void {
     let val = event.target.value.replace(/\D/g, '').substring(0, 16);
@@ -59,19 +100,57 @@ export class PaiementReservationComponent implements OnInit {
     if (!this.isFormValid()) return;
     this.paymentLoading = true;
 
-    // Simulation délai paiement
     setTimeout(() => {
-      this.trendyService.simulerPaiement(this.reservation.id).subscribe({
-        next: () => {
-          this.paymentLoading = false;
-          this.step = 'succes';
-        },
-        error: () => {
-          this.paymentLoading = false;
-          this.step = 'erreur';
-        }
-      });
+      if (this.isTranche) {
+        // Payer la prochaine tranche
+        this.trendyService.payerTranche(this.reservation.id).subscribe({
+          next: (result) => {
+            this.paiementResult = result;
+            this.paymentLoading = false;
+            this.step = 'succes';
+          },
+          error: () => {
+            this.paymentLoading = false;
+            this.step = 'erreur';
+          }
+        });
+      } else {
+        // Premier paiement
+        this.trendyService.payerReservation(
+          this.reservation.id,
+          this.modePaiement,
+          this.modePaiement === 'TRANCHE' ? this.nombreTranches : undefined
+        ).subscribe({
+          next: (result) => {
+            this.paiementResult = result;
+            this.paymentLoading = false;
+            this.step = 'succes';
+          },
+          error: () => {
+            this.paymentLoading = false;
+            this.step = 'erreur';
+          }
+        });
+      }
     }, 2000);
+  }
+
+  // Pour afficher le bon message succès
+  isPayementComplet(): boolean {
+    return this.paiementResult?.paiementComplet === true ||
+           this.paiementResult?.statut === 'CONFIRMEE';
+  }
+
+  getNumTranchePaye(): number {
+    return this.paiementResult?.trancheActuelle || 1;
+  }
+
+  getNombreTranchesTotal(): number {
+    return this.reservation?.nombreTranches || this.paiementResult?.nombreTranches || 2;
+  }
+
+  getMontantRestant(): number {
+    return this.paiementResult?.montantRestant || 0;
   }
 
   goToReservations(): void {

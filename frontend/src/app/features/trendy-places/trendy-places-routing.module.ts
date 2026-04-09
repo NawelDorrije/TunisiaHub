@@ -11,7 +11,8 @@ import { AdminReservationsComponent } from './admin/admin-reservations/admin-res
 const routes: Routes = [
   { path: '', component: LieuListComponent },
   { path: 'mes-reservations', component: MesReservationsComponent },
-  { path: 'paiement/:id', component: PaiementReservationComponent }, 
+  { path: 'paiement/:id', component: PaiementReservationComponent },
+  { path: 'paiement-tranche/:id', component: PaiementReservationComponent }, // ← AJOUTE
   { path: 'admin/lieux', component: AdminLieuComponent },
   { path: 'admin/activites', component: AdminActiviteComponent },
   { path: 'admin/reservations', component: AdminReservationsComponent }, // ← AJOUTE
