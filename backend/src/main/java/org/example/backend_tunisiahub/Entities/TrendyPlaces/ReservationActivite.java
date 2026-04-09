@@ -40,4 +40,11 @@ public class ReservationActivite {
     @ManyToOne
     @JoinColumn(name = "user_id")
     private User user;
+
+    // Ajoute ces champs dans ReservationActivite.java
+
+    // ===== NOTIFICATION =====
+    private Boolean notificationActive;    // true si le user veut être notifié
+    private Integer notificationJoursAvant; // 1, 2, ou 3 jours avant
+    private Boolean notificationEnvoyee;   // true si l'email a déjà été envoyé
 }

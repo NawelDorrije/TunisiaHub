@@ -205,18 +205,19 @@
     <div class="amount-bar">
       <div>
         <span class="amount-label">Montant à débiter</span>
-        <span class="amount-mode" *ngIf="modePaiement === 'TRANCHE'">
-          (tranche 1/{{ nombreTranches }})
+        <span class="amount-mode" *ngIf="modePaiement === 'TRANCHE' || isTranche">
+          {{ isTranche ? '(solde restant)' : '(tranche 1/' + nombreTranches + ')' }}
         </span>
       </div>
       <span class="amount-val">
-        {{ modePaiement === 'TOTAL' ? reservation?.prixTotal : getMontantTranche() }} TND
+        {{ getMontantAPayer() }} TND
       </span>
     </div>
 
     <button class="btn-pay" [disabled]="!isFormValid() || paymentLoading" (click)="payer()">
       <span *ngIf="!paymentLoading">
-        🔒 Payer {{ modePaiement === 'TOTAL' ? reservation?.prixTotal : getMontantTranche() }} TND
+        <span *ngIf="!isTranche">🔒 Payer {{ getMontantAPayer() }} TND</span>
+        <span *ngIf="isTranche">💳 Payer tranche {{ reservation?.trancheActuelle }}/{{ reservation?.nombreTranches }} {{ getMontantAPayer() }} TND restants</span>
       </span>
       <span *ngIf="paymentLoading">⏳ Traitement en cours...</span>
     </button>

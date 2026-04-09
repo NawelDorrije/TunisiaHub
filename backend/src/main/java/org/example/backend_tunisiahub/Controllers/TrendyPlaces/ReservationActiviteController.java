@@ -120,5 +120,25 @@ public class ReservationActiviteController {
         }
     }
 
+    @PatchMapping("/{id}/notification")
+    public ResponseEntity<?> configurerNotification(
+            @PathVariable Long id,
+            @RequestBody NotificationRequest request) {
+        try {
+            ReservationActivite updated = service.configurerNotification(
+                    id, request.active(), request.joursAvant()
+            );
+            return ResponseEntity.ok(Map.of(
+                    "success", true,
+                    "notificationActive", updated.getNotificationActive(),
+                    "notificationJoursAvant", updated.getNotificationJoursAvant()
+            ));
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("Erreur: " + e.getMessage());
+        }
+    }
+
+    private record NotificationRequest(Boolean active, Integer joursAvant) {}
+
     private record StatutRequest(String statut) {}
 }

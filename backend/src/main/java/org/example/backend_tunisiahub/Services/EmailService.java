@@ -328,5 +328,82 @@ public class EmailService {
                         : "Il reste " + r.getMontantRestant() + " TND a payer"
         );
     }
+
+    public void sendRappelEvenement(ReservationActivite reservation) {
+        try {
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+
+            helper.setFrom("milouchi.iyed@gmail.com");
+            helper.setTo(reservation.getUser().getEmail());
+            helper.setSubject("Rappel - Votre activite approche - Discover Tunisia");
+            helper.setText(buildRappelHtml(reservation), true);
+
+            mailSender.send(message);
+            System.out.println("✅ Email rappel envoyé à: " + reservation.getUser().getEmail());
+        } catch (Exception e) {
+            System.err.println("❌ Erreur rappel: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    private String buildRappelHtml(ReservationActivite r) {
+        int jours = r.getNotificationJoursAvant() != null ? r.getNotificationJoursAvant() : 1;
+        String joursText = jours == 1 ? "demain" : "dans " + jours + " jours";
+
+        java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("dd/MM/yyyy");
+        String dateEvt = r.getActivite().getDateEvenement() != null
+                ? sdf.format(r.getActivite().getDateEvenement())
+                : "Date non définie";
+
+        return """
+        <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;background:#f8f9fa;padding:20px;">
+          <div style="background:linear-gradient(135deg,#0f3460,#1a1a2e);padding:30px;border-radius:12px 12px 0 0;text-align:center;">
+            <h1 style="color:white;margin:0;font-size:26px;">Rappel de votre activite</h1>
+            <p style="color:#a8c0e8;margin:8px 0 0;">Votre evenement a lieu %s !</p>
+          </div>
+          <div style="background:white;padding:30px;border-radius:0 0 12px 12px;">
+            <p style="color:#495057;font-size:16px;">Bonjour <strong>%s %s</strong>,</p>
+            <p style="color:#6c757d;">Ceci est un rappel automatique. Votre activite est prevue <strong>%s</strong>.</p>
+
+            <div style="background:#fff8e1;border-left:4px solid #ffc107;border-radius:8px;padding:20px;margin:20px 0;">
+              <h3 style="color:#856404;margin:0 0 15px;">Votre activite</h3>
+              <table style="width:100%%;border-collapse:collapse;">
+                <tr><td style="padding:8px 0;color:#6c757d;">Activite</td><td style="font-weight:bold;color:#1a1a2e;">%s</td></tr>
+                <tr><td style="padding:8px 0;color:#6c757d;">Lieu</td><td style="font-weight:bold;color:#1a1a2e;">%s</td></tr>
+                <tr><td style="padding:8px 0;color:#6c757d;">Date</td><td style="font-weight:bold;color:#0f3460;">%s</td></tr>
+                <tr><td style="padding:8px 0;color:#6c757d;">Duree</td><td style="font-weight:bold;color:#1a1a2e;">%d min</td></tr>
+                <tr><td style="padding:8px 0;color:#6c757d;">Personnes</td><td style="font-weight:bold;color:#1a1a2e;">%d</td></tr>
+              </table>
+            </div>
+
+            <div style="background:linear-gradient(135deg,#0f3460,#1a1a2e);border-radius:8px;padding:16px 20px;margin:20px 0;">
+              <table style="width:100%%;"><tr>
+                <td style="color:white;font-size:15px;font-weight:600;">Montant paye</td>
+                <td style="color:#ffd700;font-size:20px;font-weight:800;text-align:right;">%.2f TND</td>
+              </tr></table>
+            </div>
+
+            <div style="text-align:center;background:#e8f5e9;border-radius:10px;padding:16px;margin:16px 0;">
+              <p style="color:#155724;font-weight:700;font-size:15px;margin:0;">N oubliez pas votre rendez-vous !</p>
+              <p style="color:#155724;font-size:13px;margin:8px 0 0;">Statut : CONFIRMEE</p>
+            </div>
+
+            <hr style="border:none;border-top:1px solid #f0f0f0;margin:20px 0;">
+            <p style="color:#adb5bd;font-size:12px;text-align:center;">2026 Discover Tunisia - Rappel automatique</p>
+          </div>
+        </div>
+    """.formatted(
+                joursText,
+                r.getUser().getPrenom(), r.getUser().getNom(),
+                joursText,
+                r.getActivite().getNomActivite(),
+                r.getActivite().getLieu() != null ? r.getActivite().getLieu().getNom() + " - " + r.getActivite().getLieu().getVille() : "-",
+                dateEvt,
+                r.getActivite().getDuree(),
+                r.getNombrePersonnes(),
+                r.getMontantPaye() != null ? r.getMontantPaye() : r.getPrixTotal()
+        );
+    }
 }
 

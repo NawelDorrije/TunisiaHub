@@ -155,4 +155,15 @@ public class ReservationActiviteService implements IReservationActiviteService {
     public void deleteReservation(Long id) {
         reservationRepo.deleteById(id);
     }
+    @Override
+    public ReservationActivite configurerNotification(Long id, Boolean active, Integer joursAvant) {
+        ReservationActivite r = reservationRepo.findById(id)
+                .orElseThrow(() -> new RuntimeException("Réservation non trouvée"));
+
+        r.setNotificationActive(active);
+        r.setNotificationJoursAvant(joursAvant);
+        r.setNotificationEnvoyee(false); // reset si on reconfigure
+
+        return reservationRepo.save(r);
+    }
 }

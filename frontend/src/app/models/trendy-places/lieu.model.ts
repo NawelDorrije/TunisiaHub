@@ -6,6 +6,7 @@ export interface ActiviteLieu {
   duree: number;
   capaciteMax: number;
   disponible: boolean;
+  dateEvenement?: string; // ← NOUVEAU
 }
 
 export interface Lieu {

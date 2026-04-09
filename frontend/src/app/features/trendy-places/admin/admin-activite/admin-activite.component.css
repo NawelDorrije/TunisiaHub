@@ -72,6 +72,8 @@
 
 .lieu-badge { background: #e8f0fe; color: #0f3460; padding: 4px 10px; border-radius: 12px; font-size: 0.82rem; font-weight: 600; }
 
+.date-badge { background: #fff3cd; color: #856404; padding: 4px 10px; border-radius: 12px; font-size: 0.82rem; font-weight: 600; }
+
 .status-badge { padding: 4px 10px; border-radius: 12px; font-size: 0.82rem; font-weight: 600; }
 .status-badge.disponible { background: #d4edda; color: #155724; }
 .status-badge.indisponible { background: #f8d7da; color: #721c24; }

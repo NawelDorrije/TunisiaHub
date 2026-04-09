@@ -49,6 +49,7 @@ export class PaiementReservationComponent implements OnInit {
         // Si on paie une tranche → aller directement au paiement
         if (this.isTranche) {
           this.step = 'paiement';
+          this.modePaiement = 'TRANCHE';
         }
       },
       error: () => { this.loading = false; this.step = 'erreur'; }
@@ -71,7 +72,7 @@ export class PaiementReservationComponent implements OnInit {
   }
 
   getMontantAPayer(): number {
-    if (this.isTranche) return this.getMontantTranche();
+    if (this.isTranche) return this.reservation?.montantRestant || 0;
     return this.modePaiement === 'TOTAL' ? this.reservation?.prixTotal : this.getMontantTranche();
   }
 

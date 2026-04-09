@@ -6,6 +6,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.util.Date;
+
 @Entity
 @Getter
 @Setter
@@ -23,8 +25,12 @@ public class ActiviteLieu {
     private Integer capaciteMax;
     private Boolean disponible;
 
+    // ← NOUVEAU : date de l'événement
+    @Temporal(TemporalType.DATE)
+    private Date dateEvenement;
+
     @ManyToOne
     @JoinColumn(name = "lieu_id")
-    @JsonIgnoreProperties({"activites", "reservations"})  // lieu n'a pas de reservations mais par sécurité
+    @JsonIgnoreProperties({"activites", "reservations"})
     private Lieu lieu;
 }

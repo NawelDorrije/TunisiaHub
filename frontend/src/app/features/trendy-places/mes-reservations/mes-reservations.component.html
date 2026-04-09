@@ -20,19 +20,55 @@
   <div class="reservations-grid" *ngIf="!loading && reservations.length > 0">
     <div class="reservation-card" *ngFor="let r of reservations">
 
+      <!-- TOP -->
       <div class="card-top">
         <div class="activite-info">
           <h3>{{ r.activite?.nomActivite }}</h3>
           <p class="lieu-name">📍 {{ r.activite?.lieu?.nom }} — {{ r.activite?.lieu?.ville }}</p>
+
+          <!-- Date événement si disponible -->
+          <p class="event-date" *ngIf="hasDateEvenement(r)">
+            📅 Événement le <strong>{{ getDateEvenement(r) }}</strong>
+          </p>
         </div>
-        <span class="statut-badge" [ngClass]="getStatutClass(r.statut)">
-          {{ getStatutLabel(r.statut) }}
-        </span>
+
+        <div class="card-top-right">
+          <span class="statut-badge" [ngClass]="getStatutClass(r.statut)">
+            {{ getStatutLabel(r.statut) }}
+          </span>
+
+          <!-- Bouton notification (seulement si confirmée et a une date) -->
+          <button class="btn-notif"
+                  *ngIf="r.statut === 'CONFIRMEE' && hasDateEvenement(r)"
+                  (click)="ouvrirNotif(r)"
+                  [title]="r.notificationActive ? 'Notification activée' : 'Notification désactivée'">
+            {{ getNotifIcon(r) }}
+            <span class="notif-label">{{ r.notificationActive ? 'Rappel actif' : 'Rappel off' }}</span>
+          </button>
+        </div>
       </div>
 
+      <!-- Barre progression tranches -->
+      <div class="tranche-bar" *ngIf="r.modePaiement === 'TRANCHE' && r.nombreTranches > 1">
+        <div class="tranche-bar-label">
+          <span>Paiement</span>
+          <span>{{ r.trancheActuelle }}/{{ r.nombreTranches }} tranches</span>
+        </div>
+        <div class="tranche-bar-track">
+          <div class="tranche-bar-fill"
+               [style.width]="((r.trancheActuelle / r.nombreTranches) * 100) + '%'">
+          </div>
+        </div>
+        <div class="tranche-amounts">
+          <span class="paid-amount">{{ r.montantPaye | number:'1.2-2' }} TND payés</span>
+          <span class="rest-amount" *ngIf="r.montantRestant > 0">{{ r.montantRestant | number:'1.2-2' }} TND restants</span>
+        </div>
+      </div>
+
+      <!-- DETAILS -->
       <div class="card-details">
         <div class="detail-row">
-          <span>📅 Date</span>
+          <span>📅 Réservé le</span>
           <strong>{{ r.dateReservation | date:'dd/MM/yyyy' }}</strong>
         </div>
         <div class="detail-row">
@@ -49,38 +85,109 @@
         </div>
       </div>
 
+      <!-- ACTIONS -->
       <div class="card-actions" *ngIf="r.statut !== 'ANNULEE' && r.statut !== 'CONFIRMEE'">
 
-  <!-- Payer maintenant si EN_ATTENTE -->
-  <button class="btn-payer"
-          *ngIf="r.statut === 'EN_ATTENTE' && cancellingId !== r.id"
-          (click)="allerPayer(r.id)">
-    💳 Choisir mon paiement
-  </button>
+        <button class="btn-payer"
+                *ngIf="r.statut === 'EN_ATTENTE' && cancellingId !== r.id"
+                (click)="allerPayer(r.id)">
+          💳 Choisir mon paiement
+        </button>
 
-  <!-- Payer tranche suivante si PAYEE et paiement incomplet -->
-  <button class="btn-payer-tranche"
-          *ngIf="r.statut === 'PAYEE' && !r.paiementComplet && cancellingId !== r.id"
-          (click)="allerPayerTranche(r.id)">
-    💳 Payer tranche {{ (r.trancheActuelle || 0) + 1 }}/{{ r.nombreTranches }}
-    <span class="tranche-montant">{{ r.montantRestant | number:'1.2-2' }} TND restants</span>
-  </button>
+        <button class="btn-payer-tranche"
+                *ngIf="r.statut === 'PAYEE' && !r.paiementComplet && cancellingId !== r.id"
+                (click)="allerPayerTranche(r.id)">
+          💳 Payer tranche {{ (r.trancheActuelle || 0) + 1 }}/{{ r.nombreTranches }}
+          <span class="tranche-montant">{{ r.montantRestant | number:'1.2-2' }} TND</span>
+        </button>
 
-  <button class="btn-annuler"
-          *ngIf="cancellingId !== r.id"
-          (click)="annuler(r.id)">
-    Annuler
-  </button>
+        <button class="btn-annuler"
+                *ngIf="cancellingId !== r.id"
+                (click)="annuler(r.id)">
+          Annuler
+        </button>
 
-  <div class="confirm-annulation" *ngIf="cancellingId === r.id">
-    <p>Confirmer l'annulation ?</p>
-    <div class="confirm-btns">
-      <button class="btn-oui" (click)="confirmerAnnulation(r.id)">Oui</button>
-      <button class="btn-non" (click)="cancellingId = null">Non</button>
+        <div class="confirm-annulation" *ngIf="cancellingId === r.id">
+          <p>Confirmer l'annulation ?</p>
+          <div class="confirm-btns">
+            <button class="btn-oui" (click)="confirmerAnnulation(r.id)">Oui</button>
+            <button class="btn-non" (click)="cancellingId = null">Non</button>
+          </div>
+        </div>
+      </div>
+
     </div>
   </div>
 
-</div>
+  <!-- ===== MODAL NOTIFICATION ===== -->
+  <div class="modal-overlay" *ngIf="showNotifModal" (click)="fermerNotif()">
+    <div class="notif-modal" (click)="$event.stopPropagation()">
+
+      <div class="notif-modal-header">
+        <h2>🔔 Configurer le rappel</h2>
+        <button class="close-btn" (click)="fermerNotif()">✕</button>
+      </div>
+
+      <div class="notif-modal-body">
+        <p class="notif-desc">Recevez un email de rappel avant votre activité pour ne rien oublier.</p>
+
+        <!-- Toggle activation -->
+        <div class="notif-toggle-section">
+          <span class="toggle-label">Activer le rappel</span>
+          <div class="toggle-switch"
+               [class.active]="notifActive"
+               (click)="notifActive = !notifActive">
+            <div class="toggle-thumb"></div>
+          </div>
+        </div>
+
+        <!-- Choix du délai -->
+        <div class="notif-delay-section" *ngIf="notifActive">
+          <p class="delay-label">Me notifier :</p>
+          <div class="delay-options">
+            <div class="delay-opt"
+                 [class.selected]="notifJours === 1"
+                 (click)="notifJours = 1">
+              <span class="delay-num">1</span>
+              <span class="delay-text">jour avant</span>
+            </div>
+            <div class="delay-opt"
+                 [class.selected]="notifJours === 2"
+                 (click)="notifJours = 2">
+              <span class="delay-num">2</span>
+              <span class="delay-text">jours avant</span>
+            </div>
+            <div class="delay-opt"
+                 [class.selected]="notifJours === 3"
+                 (click)="notifJours = 3">
+              <span class="delay-num">3</span>
+              <span class="delay-text">jours avant</span>
+            </div>
+          </div>
+
+          <div class="notif-preview">
+            <span>📧</span>
+            <p>Vous recevrez un email de rappel <strong>{{ notifJours }} jour(s) avant</strong> votre activité.</p>
+          </div>
+        </div>
+
+        <div class="notif-off-msg" *ngIf="!notifActive">
+          <span>🔕</span>
+          <p>Aucun rappel ne sera envoyé.</p>
+        </div>
+
+        <div class="notif-success" *ngIf="notifSuccess">✅ {{ notifSuccess }}</div>
+      </div>
+
+      <div class="notif-modal-footer">
+        <button class="btn-cancel" (click)="fermerNotif()">Annuler</button>
+        <button class="btn-save-notif"
+                (click)="sauvegarderNotif()"
+                [disabled]="notifLoading">
+          <span *ngIf="!notifLoading">💾 Sauvegarder</span>
+          <span *ngIf="notifLoading">⏳ Sauvegarde...</span>
+        </button>
+      </div>
 
     </div>
   </div>

@@ -49,6 +49,7 @@ public class ActiviteLieuService implements IActiviteLieuService {
         activite.setDuree(activiteDetails.getDuree());
         activite.setCapaciteMax(activiteDetails.getCapaciteMax());
         activite.setDisponible(activiteDetails.getDisponible());
+        activite.setDateEvenement(activiteDetails.getDateEvenement()); // ← AJOUTE
         Lieu lieu = lieuRepository.findById(lieuId)
                 .orElseThrow(() -> new RuntimeException("Lieu not found"));
         activite.setLieu(lieu);
@@ -59,4 +60,5 @@ public class ActiviteLieuService implements IActiviteLieuService {
     public void deleteActivite(Long id) {
         activiteLieuRepository.deleteById(id);
     }
+
 }

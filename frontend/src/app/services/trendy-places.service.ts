@@ -95,4 +95,11 @@ uploadImageLieu(file: File): Observable<any> {
   return this.http.post<any>(`${this.BASE_URL}/api/lieux/upload-image`, formData);
 }
 
+configurerNotification(reservationId: number, active: boolean, joursAvant: number): Observable<any> {
+  return this.http.patch(
+    `${this.BASE_URL}/api/reservations-activites/${reservationId}/notification`,
+    { active, joursAvant }
+  );
+}
+
 }
