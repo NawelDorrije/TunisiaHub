@@ -12,17 +12,15 @@ import { CampingService } from '../../../../../services/campings/camping.service
 })
 export class MyCampingsComponent implements OnInit, OnDestroy {
   campings: Camping[] = [];
-  loading  = true;
-  error: string | null = null;
-  successMsg: string | null = null;
-
-  // Confirm dialog state
-  showConfirm  = false;
-  confirmTarget: Camping | null = null;
+  loading = true;
+  deleteTarget: Camping | null = null;
   deleting = false;
+  successMsg: string | null = null;
+  errorMsg: string | null = null;
+  viewMode: 'grid' | 'list' = 'grid';
 
-  // View toggle
-  viewMode: 'grid' | 'table' = 'grid';
+  /** Controls which camping's action-menu is open (by id) */
+  openMenuId: number | null = null;
 
   private destroy$ = new Subject<void>();
 
@@ -32,58 +30,78 @@ export class MyCampingsComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void { this.load(); }
-  ngOnDestroy(): void { this.destroy$.next(); this.destroy$.complete(); }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
 
   load(): void {
     this.loading = true;
-    this.error = null;
-    this.campingService.getAllCampings()
+    this.campingService.getByOwner(2) // TODO: replace with real owner id
       .pipe(takeUntil(this.destroy$))
       .subscribe({
-        next: data => { this.campings = data; this.loading = false; },
-        error: ()  => { this.error = 'Failed to load campings.'; this.loading = false; },
+        next: (data) => { this.campings = data; this.loading = false; },
+        error: () => { this.loading = false; this.errorMsg = 'Failed to load campings.'; },
       });
   }
 
-  navigate(path: string[]): void { this.router.navigate(path); }
-
-  requestDelete(camping: Camping): void {
-    this.confirmTarget = camping;
-    this.showConfirm = true;
+  toggleMenu(id: number, event: MouseEvent): void {
+    event.stopPropagation();
+    this.openMenuId = this.openMenuId === id ? null : id;
   }
 
-  cancelDelete(): void {
-    this.showConfirm = false;
-    this.confirmTarget = null;
+  closeMenu(): void { this.openMenuId = null; }
+
+  confirmDelete(c: Camping, event?: MouseEvent): void {
+    if (event) event.stopPropagation();
+    this.closeMenu();
+    this.deleteTarget = c;
   }
 
-  confirmDelete(): void {
-    if (!this.confirmTarget?.id) return;
+  cancelDelete(): void { this.deleteTarget = null; }
+
+  executeDelete(): void {
+    if (!this.deleteTarget) return;
     this.deleting = true;
-    this.campingService.deleteCamping(this.confirmTarget.id)
+    this.campingService.deleteCamping(this.deleteTarget.id!)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: () => {
-          this.campings = this.campings.filter(c => c.id !== this.confirmTarget!.id);
-          this.successMsg = `"${this.confirmTarget!.name}" deleted successfully.`;
+          this.campings = this.campings.filter(c => c.id !== this.deleteTarget!.id);
+          this.deleteTarget = null;
           this.deleting = false;
-          this.showConfirm = false;
-          this.confirmTarget = null;
-          setTimeout(() => this.successMsg = null, 4000);
+          this.flash('success', 'Camping deleted successfully.');
         },
         error: () => {
-          this.error = 'Delete failed. Please try again.';
           this.deleting = false;
-          this.showConfirm = false;
+          this.deleteTarget = null;
+          this.flash('error', 'Failed to delete camping. Please try again.');
         },
       });
   }
 
   getStatusClass(status: string): string {
     const map: Record<string, string> = {
-      ACTIVE: 'badge--active', PENDING: 'badge--pending',
-      SUSPENDED: 'badge--suspended', CLOSED: 'badge--closed',
+      ACTIVE: 'st--active',
+      PENDING: 'st--pending',
+      SUSPENDED: 'st--suspended',
+      CLOSED: 'st--closed',
     };
     return map[status] ?? '';
+  }
+
+  get totalActive(): number  { return this.campings.filter(c => c.status === 'ACTIVE').length; }
+  get totalPending(): number { return this.campings.filter(c => c.status === 'PENDING').length; }
+
+  navigateTo(path: string[]): void {
+    this.closeMenu();
+    this.router.navigate(path);
+  }
+
+  private flash(type: 'success' | 'error', msg: string): void {
+    if (type === 'success') { this.successMsg = msg; this.errorMsg = null; }
+    else                    { this.errorMsg = msg; this.successMsg = null; }
+    setTimeout(() => { this.successMsg = null; this.errorMsg = null; }, 4500);
   }
 }

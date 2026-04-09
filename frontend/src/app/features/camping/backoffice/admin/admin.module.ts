@@ -14,7 +14,7 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
     DashboardComponent,
     CampingManagementComponent,
     ReservationManagementComponent,
-    PaymentManagementComponent
+    PaymentManagementComponent,
   ],
   imports: [
     CommonModule, FormsModule,

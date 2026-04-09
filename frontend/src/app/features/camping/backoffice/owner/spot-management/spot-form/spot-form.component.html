@@ -1,1 +1,98 @@
-<p>spot-form works!</p>
+<div class="bo-page">
+  <div class="bo-header">
+    <div class="bo-header__left">
+      <a class="back-link" [routerLink]="['/camping/backoffice/owner', campingId, 'spots']">← Back to Spots</a>
+      <h1>{{ isEdit ? 'Edit Spot' : 'New Spot' }}</h1>
+    </div>
+  </div>
+
+  <div class="alert alert--success" *ngIf="successMsg" role="alert">✓ {{ successMsg }}</div>
+  <div class="alert alert--error"   *ngIf="errorMsg"   role="alert">✕ {{ errorMsg }}</div>
+
+  <div class="form-card bo-card" *ngIf="!loading">
+    <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+
+      <div class="grid-2">
+        <div class="field" [class.has-error]="invalid('name')">
+          <label>Spot Name *</label>
+          <input formControlName="name" placeholder="e.g. Pine Terrace A1" />
+          <div class="field__error" *ngIf="invalid('name')">
+            <ng-container *ngIf="f('name').errors?.['required']">Name is required.</ng-container>
+            <ng-container *ngIf="f('name').errors?.['minlength']">Minimum 2 characters.</ng-container>
+          </div>
+        </div>
+
+        <div class="field" [class.has-error]="invalid('type')">
+          <label>Spot Type *</label>
+          <select formControlName="type">
+            <option *ngFor="let t of spotTypes" [value]="t">{{ t }}</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Description <span class="optional">(optional)</span></label>
+        <textarea formControlName="description" rows="3" placeholder="Describe this spot…"></textarea>
+      </div>
+
+      <div class="grid-2">
+        <div class="field" [class.has-error]="invalid('basePrice')">
+          <label>Price per Night (TND) *</label>
+          <input type="number" formControlName="basePrice" min="0" placeholder="0.00" />
+          <div class="field__error" *ngIf="invalid('basePrice')">
+            <ng-container *ngIf="f('basePrice').errors?.['required']">Price is required.</ng-container>
+            <ng-container *ngIf="f('basePrice').errors?.['min']">Must be ≥ 0.</ng-container>
+          </div>
+        </div>
+
+        <div class="field" [class.has-error]="invalid('capacity')">
+          <label>Guest Capacity *</label>
+          <input type="number" formControlName="capacity" min="1" placeholder="4" />
+          <div class="field__error" *ngIf="invalid('capacity')">
+            <ng-container *ngIf="f('capacity').errors?.['required']">Capacity is required.</ng-container>
+            <ng-container *ngIf="f('capacity').errors?.['min']">Minimum 1 guest.</ng-container>
+          </div>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>View Type <span class="optional">(optional)</span></label>
+        <select formControlName="viewType">
+          <option value="">None</option>
+          <option *ngFor="let v of viewTypes" [value]="v">{{ v }}</option>
+        </select>
+      </div>
+
+      <!-- Feature checkboxes -->
+      <div class="features-grid">
+        <label class="feature-check" *ngFor="let f of [
+          {key:'hasShade',        label:'🌿 Shade'},
+          {key:'hasElectricity',  label:'⚡ Electricity'},
+          {key:'hasWater',        label:'💧 Water Access'},
+          {key:'accessibleForDisabled', label:'♿ Accessible'}
+        ]">
+          <input type="checkbox" [formControlName]="f.key" />
+          <span>{{ f.label }}</span>
+        </label>
+      </div>
+
+      <!-- Active toggle -->
+      <div class="field active-field">
+        <label>Availability</label>
+        <label class="toggle">
+          <input type="checkbox" formControlName="active" />
+          <span class="toggle__slider"></span>
+        </label>
+        <span class="toggle-label">{{ form.value.active ? 'Active' : 'Inactive' }}</span>
+      </div>
+
+      <div class="form-actions">
+        <a class="btn btn--ghost" [routerLink]="['/owner', campingId, 'spots']">Cancel</a>
+        <button type="submit" class="btn btn--primary btn--lg" [disabled]="saving || form.invalid">
+          <span class="btn__spinner" *ngIf="saving"></span>
+          {{ saving ? 'Saving…' : (isEdit ? 'Update Spot' : 'Create Spot') }}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

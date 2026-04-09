@@ -1,1 +1,210 @@
-<p>dashboard works!</p>
+<div class="dashboard">
+
+  <!-- Header -->
+  <div class="dash-header">
+    <div class="header-left">
+      <div class="header-badge">🌿 Owner Portal</div>
+      <h1>My Camping Empire</h1>
+      <p>Here's a live snapshot of your properties</p>
+    </div>
+    <div class="header-right">
+      <div class="dash-date">{{ today | date:'EEEE, MMMM d, y' }}</div>
+      <a routerLink="my-campings" class="btn-primary">+ New Camping</a>
+    </div>
+  </div>
+
+  <!-- Loading -->
+  <div class="loading-state" *ngIf="loading">
+    <div class="spinner"></div>
+    <p>Loading your dashboard…</p>
+  </div>
+
+  <ng-container *ngIf="!loading">
+
+    <!-- Stats Grid -->
+    <div class="stats-grid">
+      <div class="stat-card forest">
+        <div class="stat-icon">🏕️</div>
+        <div class="stat-body">
+          <span class="stat-label">My Campings</span>
+          <span class="stat-value">{{ stats.totalCampings }}</span>
+          <span class="stat-sub">{{ stats.activeCampings }} active · {{ stats.pendingCampings }} pending</span>
+        </div>
+      </div>
+      <div class="stat-card teal">
+        <div class="stat-icon">📍</div>
+        <div class="stat-body">
+          <span class="stat-label">Total Spots</span>
+          <span class="stat-value">{{ stats.totalSpots }}</span>
+          <span class="stat-sub">{{ stats.availableSpots }} available now</span>
+        </div>
+      </div>
+      <div class="stat-card amber">
+        <div class="stat-icon">🎯</div>
+        <div class="stat-body">
+          <span class="stat-label">Activities</span>
+          <span class="stat-value">{{ stats.totalActivities }}</span>
+          <span class="stat-sub">Across all campings</span>
+        </div>
+      </div>
+      <div class="stat-card blue">
+        <div class="stat-icon">📋</div>
+        <div class="stat-body">
+          <span class="stat-label">Reservations</span>
+          <span class="stat-value">{{ stats.totalReservations }}</span>
+          <span class="stat-sub">{{ stats.pendingReservations }} pending action</span>
+        </div>
+      </div>
+      <div class="stat-card purple">
+        <div class="stat-icon">💰</div>
+        <div class="stat-body">
+          <span class="stat-label">My Revenue</span>
+          <span class="stat-value">{{ stats.totalRevenue | number:'1.0-0' }}</span>
+          <span class="stat-sub">TND confirmed</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Two-column layout -->
+    <div class="dash-cols">
+
+      <!-- My Campings -->
+      <div class="dash-section">
+        <div class="section-header">
+          <h2>🏕️ My Campings</h2>
+          <a routerLink="my-campings">Manage All →</a>
+        </div>
+        <div class="table-wrap">
+          <table *ngIf="recentCampings.length; else noCampings">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Governorate</th>
+                <th>Price</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let c of recentCampings">
+                <td class="td-name">{{ c.name }}</td>
+                <td>{{ c.governorate }}</td>
+                <td>{{ c.price | number }} TND</td>
+                <td>
+                  <span class="badge" [ngClass]="'badge-' + c.status.toLowerCase()">
+                    {{ c.status }}
+                  </span>
+                </td>
+                <td>
+                  <div class="action-btns">
+                    <a class="btn-edit" [routerLink]="[c.id, 'edit']">Edit</a>
+                    <a class="btn-view-sm" [routerLink]="['/camping/backoffice/owner',c.id ,'spots']"
+                       [queryParams]="{campingId: c.id}">Spots</a>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+          <ng-template #noCampings>
+            <div class="empty-state">
+              <span>🏕️</span>
+              <p>No campings yet. <a routerLink="new">Create your first!</a></p>
+            </div>
+          </ng-template>
+        </div>
+      </div>
+
+      <!-- Spot Type Distribution -->
+      <div class="dash-section">
+        <div class="section-header">
+          <h2>📊 Spot Breakdown</h2>
+          <a routerLink="spot-management">Manage Spots →</a>
+        </div>
+        <div class="spot-breakdown" *ngIf="spotsByType.length; else noSpots">
+          <div class="spot-type-row" *ngFor="let s of spotsByType">
+            <div class="spot-type-label">
+              <span>{{ getSpotTypeIcon(s.type) }}</span>
+              <span>{{ s.type | titlecase }}</span>
+            </div>
+            <div class="spot-bar-wrap">
+              <div class="spot-bar"
+                   [style.width.%]="(s.count / stats.totalSpots) * 100">
+              </div>
+            </div>
+            <span class="spot-count">{{ s.count }}</span>
+          </div>
+        </div>
+        <ng-template #noSpots>
+          <div class="empty-state">
+            <span>📍</span>
+            <p>No spots configured yet. <a routerLink="new-spot">Add spots</a> to your campings.</p>
+          </div>
+        </ng-template>
+
+        <!-- Quick Actions -->
+        <div class="quick-actions">
+          <h3>Quick Actions</h3>
+          <div class="qa-grid">
+            <a routerLink="new" class="qa-card">
+              <span>🏕️</span><span>New Camping</span>
+            </a>
+            <a routerLink="new-spot" class="qa-card">
+              <span>📍</span><span>New Spot</span>
+            </a>
+            <a routerLink="activity-management" class="qa-card">
+              <span>🎯</span><span>Activities</span>
+            </a>
+            <a routerLink="equipment-management" class="qa-card">
+              <span>🛠️</span><span>Equipment</span>
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Recent Reservations -->
+    <div class="dash-section">
+      <div class="section-header">
+        <h2>📋 Recent Reservations</h2>
+        <a routerLink="reservations">View All →</a>
+      </div>
+      <div class="table-wrap">
+        <table *ngIf="recentReservations.length; else noRes">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Guest</th>
+              <th>Camping</th>
+              <th>Check-in</th>
+              <th>Check-out</th>
+              <th>Total</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let r of recentReservations">
+              <td class="td-id">#{{ r.id }}</td>
+              <td>{{ r.userName || r.userId }}</td>
+              <td>{{ r.campingName || '—' }}</td>
+              <td>{{ r.checkIn | date:'dd/MM/yy' }}</td>
+              <td>{{ r.checkOut | date:'dd/MM/yy' }}</td>
+              <td><strong>{{ r.totalPrice | number }} TND</strong></td>
+              <td>
+                <span class="badge" [ngClass]="'badge-' + r.status?.toLowerCase()">
+                  {{ r.status }}
+                </span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        <ng-template #noRes>
+          <div class="empty-state">
+            <span>📋</span>
+            <p>No reservations yet.</p>
+          </div>
+        </ng-template>
+      </div>
+    </div>
+
+  </ng-container>
+</div>

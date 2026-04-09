@@ -1,1 +1,70 @@
-<p>spot-management works!</p>
+<div class="bo-page">
+  <div class="bo-header">
+    <div class="bo-header__left">
+      <a class="back-link" routerLink="/camping/backoffice/owner">← My Campings</a>
+      <h1>Spots — {{ camping?.name ?? '…' }}</h1>
+      <p>Manage the individual spots available at this camping</p>
+    </div>
+    <a class="btn btn--primary" [routerLink]="['/camping/backoffice/owner', campingId, 'spots', 'new']">+ Add Spot</a>
+  </div>
+
+  <div class="alert alert--success" *ngIf="successMsg" role="alert">✓ {{ successMsg }}</div>
+  <div class="alert alert--error"   *ngIf="errorMsg"   role="alert">✕ {{ errorMsg }}</div>
+
+  <!-- Loading -->
+  <div class="spots-grid" *ngIf="loading">
+    <div class="skeleton" style="height:200px" *ngFor="let i of [1,2,3,4]"></div>
+  </div>
+
+  <!-- Empty -->
+  <div class="empty-state" *ngIf="!loading && spots.length === 0">
+    <div class="empty-state__icon">🏕️</div>
+    <h3>No spots yet</h3>
+    <p>Add spots so guests can book specific locations within this camping.</p>
+    <a class="btn btn--primary" [routerLink]="['/camping/backoffice/owner', campingId, 'spots', 'new']">Add First Spot</a>
+  </div>
+
+  <!-- Grid -->
+  <div class="spots-grid" *ngIf="!loading && spots.length > 0">
+    <div class="spot-card" *ngFor="let s of spots" [class.inactive]="!s.active">
+      <div class="spot-card__header">
+        <div>
+          <span class="spot-type-badge">{{ s.type }}</span>
+          <h3 class="spot-card__name">{{ s.name }}</h3>
+        </div>
+        <label class="toggle" [title]="s.active ? 'Deactivate' : 'Activate'">
+          <input type="checkbox" [checked]="s.active" (change)="toggleActive(s)" />
+          <span class="toggle__slider"></span>
+        </label>
+      </div>
+      <p class="spot-card__desc">{{ s.description | slice:0:80 }}{{ (s.description?.length ?? 0) > 80 ? '…' : '' }}</p>
+      <div class="spot-card__meta">
+        <div class="meta-item"><span>💰</span>{{ s.basePrice | number }} TND/night</div>
+        <div class="meta-item"><span>👥</span>{{ s.capacity }} guests</div>
+        <div class="meta-item" *ngIf="s.viewType"><span>👁</span>{{ s.viewType }}</div>
+        <div class="meta-item" *ngIf="s.hasShade"><span>🌿</span>Shade</div>
+        <div class="meta-item" *ngIf="s.accessibleForDisabled"><span>♿</span>Accessible</div>
+      </div>
+      <div class="spot-card__actions">
+        <a class="btn btn--ghost btn--sm" [routerLink]="['/camping/backoffice/owner', campingId, 'spots', s.id, 'edit']">✏️ Edit</a>
+        <button class="btn btn--danger btn--sm" (click)="confirmDelete(s)">🗑 Delete</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Delete dialog -->
+  <div class="modal-backdrop" *ngIf="deleteTarget" (click)="cancelDelete()">
+    <div class="modal" (click)="$event.stopPropagation()">
+      <div class="modal__icon">⚠️</div>
+      <h2 class="modal__title">Delete Spot</h2>
+      <p class="modal__body">Delete <strong>{{ deleteTarget?.name }}</strong>? This cannot be undone.</p>
+      <div class="modal__actions">
+        <button class="btn btn--ghost" (click)="cancelDelete()">Cancel</button>
+        <button class="btn btn--danger" (click)="executeDelete()" [disabled]="deleting">
+          <span class="btn__spinner" *ngIf="deleting"></span>
+          {{ deleting ? 'Deleting…' : 'Delete' }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

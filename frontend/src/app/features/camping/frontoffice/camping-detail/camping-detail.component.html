@@ -1,208 +1,758 @@
-<!-- Loading -->
-<div class="detail-skeleton" *ngIf="loading">
+<!-- ══════════════════ LOADING SKELETON ══════════════════ -->
+<div class="skeleton-wrap" *ngIf="loading">
   <div class="sk-hero"></div>
-  <div class="detail-container">
-    <div class="sk-title"></div>
-    <div class="sk-line"></div>
-    <div class="sk-line short"></div>
+  <div class="sk-body">
+    <div class="sk-main">
+      <div class="sk-block sk-title"></div>
+      <div class="sk-block sk-line w75"></div>
+      <div class="sk-block sk-line w55"></div>
+      <div class="sk-cards">
+        <div class="sk-block sk-card" *ngFor="let i of [1,2,3,4,5,6]"></div>
+      </div>
+    </div>
+    <div class="sk-aside"><div class="sk-block sk-aside-card"></div></div>
   </div>
 </div>
 
-<!-- Error -->
-<div class="detail-error" *ngIf="error && !loading">
-  <div>⚠️ {{ error }}</div>
-  <button (click)="goBack()">← Go Back</button>
+<!-- ══════════════════ ERROR STATE ══════════════════ -->
+<div class="error-wrap" *ngIf="error && !loading">
+  <div class="error-box">
+    <svg class="error-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+      <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/>
+      <path d="M12 8v4m0 4h.01"/>
+    </svg>
+    <h2>Camping Not Found</h2>
+    <p>{{ error }}</p>
+    <button class="btn-primary" (click)="goBack()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+      Back to All Campings
+    </button>
+  </div>
 </div>
 
-<!-- Content -->
-<div class="detail-page" *ngIf="!loading && !error && camping">
+<!-- ══════════════════ MAIN PAGE ══════════════════ -->
+<div class="cd-wrap" *ngIf="!loading && !error && camping">
 
-  <!-- ── Photo Gallery ── -->
+  <!-- ────────── HERO GALLERY ────────── -->
   <section class="gallery">
     <div class="gallery-main">
       <img
         [src]="camping.photos?.[activePhoto] || 'assets/images/camping-default.jpg'"
         [alt]="camping.name"
-        class="main-photo"/>
-      <button class="gallery-back" (click)="goBack()">← All Campings</button>
-      <span class="gallery-badge" [ngClass]="'badge-'+camping.status.toLowerCase()">
-        {{ camping.status }}
-      </span>
-    </div>
-    <div class="gallery-thumbs" *ngIf="camping.photos && camping.photos.length > 1">
-      <div
-        *ngFor="let photo of camping.photos; let i = index"
-        class="thumb" [class.active]="activePhoto === i"
-        (click)="setPhoto(i)">
-        <img [src]="photo" [alt]="'Photo ' + (i+1)"/>
+        class="gallery-img"
+      />
+      <div class="gallery-gradient"></div>
+
+      <!-- Back button -->
+      <button class="btn-back" (click)="goBack()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+          <path d="M19 12H5M12 5l-7 7 7 7"/>
+        </svg>
+        All Campings
+      </button>
+
+      <!-- Status + counter -->
+      <div class="gallery-bottom">
+        <span class="status-pill" [ngClass]="'sp-'+camping.status.toLowerCase()">
+          <span class="sp-dot"></span>
+          {{ camping.status }}
+        </span>
+        <span class="photo-count" *ngIf="camping.photos && camping.photos.length > 1">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21,15 16,10 5,21"/>
+          </svg>
+          {{ activePhoto + 1 }} / {{ camping.photos.length }}
+        </span>
       </div>
+    </div>
+
+    <!-- Thumbnails -->
+    <div class="gallery-thumbs" *ngIf="camping.photos && camping.photos.length > 1">
+      <button
+        *ngFor="let photo of camping.photos; let i = index"
+        class="thumb"
+        [class.active]="activePhoto === i"
+        (click)="setPhoto(i)"
+        [attr.aria-label]="'Photo ' + (i + 1)"
+      >
+        <img [src]="photo" [alt]="'View ' + (i+1)" />
+      </button>
     </div>
   </section>
 
-  <div class="detail-container">
-    <div class="detail-layout">
+  <!-- ────────── PAGE BODY ────────── -->
+  <div class="page-body">
 
-      <!-- ── Left: Info ── -->
-      <div class="detail-main">
+    <!-- ── AD SIDEBAR (left) ── -->
+    <aside class="ad-sidebar">
+      <div class="ad-card">
+        <span class="ad-label">Sponsored</span>
+        <div class="ad-inner">
+          <svg class="ad-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/>
+            <circle cx="9" cy="7" r="4"/>
+            <path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/>
+          </svg>
+          <p class="ad-title">Group Camping Deals</p>
+          <p class="ad-desc">Special rates for groups of 10+</p>
+          <button class="ad-btn">View Offers</button>
+        </div>
+      </div>
+      <div class="ad-card ad-card-sm">
+        <span class="ad-label">Partner</span>
+        <div class="ad-inner">
+          <svg class="ad-icon ad-icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M20 7H4a2 2 0 00-2 2v6a2 2 0 002 2h16a2 2 0 002-2V9a2 2 0 00-2-2z"/><path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/>
+          </svg>
+          <p class="ad-title">Camping Gear Rental</p>
+          <p class="ad-desc">Everything you need, delivered</p>
+          <button class="ad-btn">Rent Now</button>
+        </div>
+      </div>
+      <div class="ad-card ad-card-sm">
+        <span class="ad-label">Sponsored</span>
+        <div class="ad-inner">
+          <svg class="ad-icon ad-icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/>
+          </svg>
+          <p class="ad-title">Guided Nature Tours</p>
+          <p class="ad-desc">Expert-led half &amp; full-day trips</p>
+          <button class="ad-btn">Explore</button>
+        </div>
+      </div>
+    </aside>
 
-        <!-- Title -->
-        <div class="detail-title-row">
+    <!-- ── MAIN CONTENT ── -->
+    <main class="main-col">
+
+      <!-- Breadcrumb + Title -->
+      <header class="page-header">
+        <nav class="breadcrumb" aria-label="breadcrumb">
+          <button class="bc-link" (click)="goBack()">Campings</button>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="bc-arrow"><path d="M9 18l6-6-6-6"/></svg>
+          <span class="bc-gov">{{ camping.governorate }}</span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="bc-arrow"><path d="M9 18l6-6-6-6"/></svg>
+          <span class="bc-curr">{{ camping.name }}</span>
+        </nav>
+
+        <div class="title-row">
+          <div class="title-left">
+            <h1 class="camping-name">{{ camping.name }}</h1>
+            <div class="location-tag">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0118 0z"/>
+                <circle cx="12" cy="10" r="3"/>
+              </svg>
+              {{ camping.address }}, {{ camping.governorate }}
+            </div>
+          </div>
+          <div class="title-right" *ngIf="camping.averageRating">
+            <div class="rating-block">
+              <div class="stars">
+                <span *ngFor="let s of getStars(camping.averageRating!)" class="star" [ngClass]="'star-'+s">
+                  <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                </span>
+              </div>
+              <span class="rating-val">{{ camping.averageRating | number:'1.1-1' }}</span>
+              <span class="rating-max">/ 5</span>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <!-- Quick Stats Bar -->
+      <div class="stats-bar">
+        <div class="stat-item">
+          <svg class="stat-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/>
+          </svg>
           <div>
-            <p class="detail-gov">📍 {{ camping.governorate }} · {{ camping.address }}</p>
-            <h1 class="detail-name">{{ camping.name }}</h1>
-          </div>
-          <div class="detail-rating" *ngIf="camping.averageRating">
-            <div class="stars-row">
-              <span *ngFor="let s of getStars(camping.averageRating!)"
-                    class="star" [ngClass]="'star-'+s">★</span>
-            </div>
-            <span class="rating-text">{{ camping.averageRating | number:'1.1-1' }} / 5</span>
+            <div class="stat-v">{{ camping.price | number }} TND</div>
+            <div class="stat-l">per night</div>
           </div>
         </div>
-
-        <!-- Description -->
-        <div class="detail-section" *ngIf="camping.description">
-          <h2 class="section-title">About this Camping</h2>
-          <p class="detail-desc">{{ camping.description }}</p>
-        </div>
-
-        <!-- Key Info Grid -->
-        <div class="detail-section">
-          <h2 class="section-title">Key Information</h2>
-          <div class="info-grid">
-            <div class="info-item">
-              <span class="info-icon">💰</span>
-              <div>
-                <div class="info-label">Price per night</div>
-                <div class="info-value">{{ camping.price | number }} TND</div>
-              </div>
-            </div>
-            <div class="info-item">
-              <span class="info-icon">👥</span>
-              <div>
-                <div class="info-label">Max capacity</div>
-                <div class="info-value">{{ camping.maxCapacity }} guests</div>
-              </div>
-            </div>
-            <div class="info-item" *ngIf="camping.checkInTime">
-              <span class="info-icon">🕐</span>
-              <div>
-                <div class="info-label">Check-in</div>
-                <div class="info-value">{{ camping.checkInTime }}</div>
-              </div>
-            </div>
-            <div class="info-item" *ngIf="camping.checkOutTime">
-              <span class="info-icon">🕐</span>
-              <div>
-                <div class="info-label">Check-out</div>
-                <div class="info-value">{{ camping.checkOutTime }}</div>
-              </div>
-            </div>
-            <div class="info-item" *ngIf="camping.startDate">
-              <span class="info-icon">📅</span>
-              <div>
-                <div class="info-label">Open from</div>
-                <div class="info-value">{{ camping.startDate | date:'dd MMM yyyy' }}</div>
-              </div>
-            </div>
-            <div class="info-item" *ngIf="camping.endDate">
-              <span class="info-icon">📅</span>
-              <div>
-                <div class="info-label">Open until</div>
-                <div class="info-value">{{ camping.endDate | date:'dd MMM yyyy' }}</div>
-              </div>
-            </div>
-            <div class="info-item" *ngIf="camping.numberOfSpots">
-              <span class="info-icon">🏕</span>
-              <div>
-                <div class="info-label">Total spots</div>
-                <div class="info-value">{{ camping.numberOfSpots }}</div>
-              </div>
-            </div>
+        <div class="stat-divider"></div>
+        <div class="stat-item">
+          <svg class="stat-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/>
+            <path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/>
+          </svg>
+          <div>
+            <div class="stat-v">{{ camping.maxCapacity }}</div>
+            <div class="stat-l">max guests</div>
           </div>
         </div>
-
-        <!-- Available Spots -->
-        <div class="detail-section" *ngIf="spots.length > 0">
-          <h2 class="section-title">Available Spots ({{ spots.length }})</h2>
-          <div class="spots-row">
-            <div class="spot-chip" *ngFor="let spot of spots">
-              <span class="spot-icon">{{ getSpotTypeIcon(spot.type) }}</span>
-              <div class="spot-chip-info">
-                <div class="spot-chip-name">{{ spot.name }}</div>
-                <div class="spot-chip-type">{{ spot.type }}</div>
-              </div>
-              <div class="spot-chip-price">{{ spot.basePrice | number }} TND</div>
-            </div>
+        <div class="stat-divider" *ngIf="camping.numberOfSpots"></div>
+        <div class="stat-item" *ngIf="camping.numberOfSpots">
+          <svg class="stat-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9,22 9,12 15,12 15,22"/>
+          </svg>
+          <div>
+            <div class="stat-v">{{ camping.numberOfSpots }}</div>
+            <div class="stat-l">total spots</div>
           </div>
         </div>
-
-        <!-- Activities -->
-        <div class="detail-section" *ngIf="activities.length > 0">
-          <h2 class="section-title">Activities</h2>
-          <div class="activities-row">
-            <div class="act-chip" *ngFor="let act of activities">
-              <div class="act-chip-name">{{ act.name }}</div>
-              <div class="act-chip-meta">
-                <span *ngIf="act.duration">⏱ {{ act.duration }}h</span>
-                <span class="act-chip-price">{{ act.price | number }} TND</span>
-              </div>
-            </div>
+        <div class="stat-divider" *ngIf="camping.checkInTime"></div>
+        <div class="stat-item" *ngIf="camping.checkInTime">
+          <svg class="stat-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"/><polyline points="12,6 12,12 16,14"/>
+          </svg>
+          <div>
+            <div class="stat-v">{{ camping.checkInTime }}</div>
+            <div class="stat-l">check-in</div>
           </div>
         </div>
-
-        <!-- Rules -->
-        <div class="detail-section" *ngIf="camping.rules">
-          <h2 class="section-title">Camping Rules</h2>
-          <div class="rules-box">
-            <p>{{ camping.rules }}</p>
+        <div class="stat-divider" *ngIf="camping.checkOutTime"></div>
+        <div class="stat-item" *ngIf="camping.checkOutTime">
+          <svg class="stat-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"/><polyline points="12,6 12,12 8,14"/>
+          </svg>
+          <div>
+            <div class="stat-v">{{ camping.checkOutTime }}</div>
+            <div class="stat-l">check-out</div>
+          </div>
+        </div>
+        <div class="stat-divider" *ngIf="camping.startDate"></div>
+        <div class="stat-item" *ngIf="camping.startDate">
+          <svg class="stat-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+          </svg>
+          <div>
+            <div class="stat-v">{{ camping.startDate | date:'dd MMM' }}</div>
+            <div class="stat-l">opens</div>
+          </div>
+        </div>
+        <div class="stat-divider" *ngIf="camping.endDate"></div>
+        <div class="stat-item" *ngIf="camping.endDate">
+          <svg class="stat-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+          </svg>
+          <div>
+            <div class="stat-v">{{ camping.endDate | date:'dd MMM' }}</div>
+            <div class="stat-l">closes</div>
           </div>
         </div>
       </div>
 
-      <!-- ── Right: Booking card ── -->
-      <aside class="detail-aside">
-        <div class="booking-card">
-          <div class="booking-price">
-            <span class="booking-price-val">{{ camping.price | number }}</span>
-            <span class="booking-price-unit"> TND / night</span>
+      <!-- Tab Navigation -->
+      <nav class="tab-nav" role="tablist">
+        <button role="tab" class="tab" [class.active]="activeTab==='overview'" (click)="setTab('overview')" aria-label="Overview tab">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+          </svg>
+          Overview
+        </button>
+        <button role="tab" class="tab" [class.active]="activeTab==='spots'" (click)="setTab('spots')" aria-label="Spots tab">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polygon points="12,2 22,20 2,20"/>
+          </svg>
+          Spots
+          <span class="tab-badge" *ngIf="spots.length">{{ spots.length }}</span>
+        </button>
+        <button role="tab" class="tab" [class.active]="activeTab==='activities'" (click)="setTab('activities')" aria-label="Activities tab">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"/><polygon points="10,8 16,12 10,16 10,8"/>
+          </svg>
+          Activities
+          <span class="tab-badge" *ngIf="activities.length">{{ activities.length }}</span>
+        </button>
+        <button role="tab" class="tab" [class.active]="activeTab==='equipment'" (click)="setTab('equipment')" aria-label="Equipment tab">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/>
+          </svg>
+          Equipment
+          <span class="tab-badge" *ngIf="uniqueEquipment.length">{{ uniqueEquipment.length }}</span>
+        </button>
+        <button role="tab" class="tab" [class.active]="activeTab==='rules'" (click)="setTab('rules')" aria-label="Rules tab">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14,2 14,8 20,8"/>
+            <line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10,9 9,9 8,9"/>
+          </svg>
+          Rules
+        </button>
+      </nav>
+
+      <!-- ──── TAB: OVERVIEW ──── -->
+      <section class="tab-panel" *ngIf="activeTab==='overview'" role="tabpanel">
+        <div class="about-section" *ngIf="camping.description">
+          <h2 class="section-title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+            </svg>
+            About This Camping
+          </h2>
+          <p class="about-text">{{ camping.description }}</p>
+        </div>
+
+        <h2 class="section-title">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+          </svg>
+          Highlights
+        </h2>
+        <div class="highlights">
+          <div class="hl-card">
+            <div class="hl-icon-wrap hl-green">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M17 8C8 10 5.9 16.17 3.82 19.83L5.71 21l1-1.25C7.92 18.33 9.67 17 12 17c3.04 0 5.58-1.71 6.87-4.25L21 11c-.58-.87-1.42-2-4-3z"/>
+                <path d="M12 17c0 2.76-2.24 5-5 5H3"/>
+              </svg>
+            </div>
+            <div>
+              <div class="hl-title">Immersed in Nature</div>
+              <div class="hl-desc">Breathe fresh air surrounded by Tunisia's landscapes</div>
+            </div>
           </div>
-          <div class="booking-meta">
-            <div class="bm-item">
-              <span class="bm-label">Governorate</span>
-              <span class="bm-value">{{ camping.governorate }}</span>
+          <div class="hl-card">
+            <div class="hl-icon-wrap hl-blue">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+              </svg>
             </div>
-            <div class="bm-item" *ngIf="camping.maxCapacity">
-              <span class="bm-label">Max guests</span>
-              <span class="bm-value">{{ camping.maxCapacity }}</span>
+            <div>
+              <div class="hl-title">Safe & Managed</div>
+              <div class="hl-desc">Fully supervised site meeting all safety standards</div>
             </div>
-            <div class="bm-item" *ngIf="camping.checkInTime">
-              <span class="bm-label">Check-in</span>
-              <span class="bm-value">{{ camping.checkInTime }}</span>
+          </div>
+          <div class="hl-card">
+            <div class="hl-icon-wrap hl-amber">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+              </svg>
             </div>
-            <div class="bm-item" *ngIf="camping.checkOutTime">
-              <span class="bm-label">Check-out</span>
-              <span class="bm-value">{{ camping.checkOutTime }}</span>
+            <div>
+              <div class="hl-title">Guest Rated</div>
+              <div class="hl-desc" *ngIf="camping.averageRating">{{ camping.averageRating | number:'1.1-1' }}/5 by verified guests</div>
+              <div class="hl-desc" *ngIf="!camping.averageRating">Be the first to share your experience</div>
             </div>
-            <div class="bm-item">
-              <span class="bm-label">Status</span>
-              <span class="bm-value bm-status" [ngClass]="'badge-'+camping.status.toLowerCase()">
-                {{ camping.status }}
+          </div>
+          <div class="hl-card">
+            <div class="hl-icon-wrap hl-teal">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/>
+              </svg>
+            </div>
+            <div>
+              <div class="hl-title">Easy to Reach</div>
+              <div class="hl-desc">Accessible from {{ camping.governorate }} city centre</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ──── TAB: SPOTS ──── -->
+      <section class="tab-panel" *ngIf="activeTab==='spots'" role="tabpanel">
+        <h2 class="section-title">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polygon points="12,2 22,20 2,20"/>
+          </svg>
+          Available Spots
+          <span class="section-count">{{ spots.length }}</span>
+        </h2>
+        <div class="empty-msg" *ngIf="spots.length === 0">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <circle cx="12" cy="12" r="10"/><path d="M8 15s1.5-2 4-2 4 2 4 2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/>
+          </svg>
+          <p>No active spots available at this time.</p>
+        </div>
+        <div class="spots-grid">
+          <div class="spot-card" *ngFor="let spot of spots">
+            <div class="spot-head">
+              <div class="spot-type-icon">
+                <!-- Tent icon for all types, differentiated by label -->
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                  <path d="M12 2L2 20h20L12 2z"/><path d="M12 2v18M7 20l5-8 5 8"/>
+                </svg>
+              </div>
+              <div class="spot-title-block">
+                <div class="spot-name">{{ spot.name }}</div>
+                <div class="spot-type-tag">{{ getSpotTypeLabel(spot.type) }}</div>
+              </div>
+              <div class="spot-price-block">
+                <div class="spot-price">{{ spot.basePrice | number }}</div>
+                <div class="spot-price-unit">TND / night</div>
+              </div>
+            </div>
+            <div class="spot-chips">
+              <span class="chip chip-neutral" *ngIf="spot.capacity">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/>
+                </svg>
+                {{ spot.capacity }} guests
+              </span>
+              <span class="chip chip-neutral" *ngIf="spot.area">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/>
+                </svg>
+                {{ spot.area }} m²
+              </span>
+              <span class="chip chip-teal" *ngIf="spot.viewType">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+                </svg>
+                {{ getViewTypeLabel(spot.viewType) }}
+              </span>
+              <span class="chip chip-green" *ngIf="spot.hasShade">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/>
+                  <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+                </svg>
+                Shaded
+              </span>
+              <span class="chip chip-blue" *ngIf="spot.accessibleForDisabled">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="12" cy="4" r="2"/><path d="M19 13v-2a7 7 0 00-7-7 7 7 0 00-7 7v2"/>
+                  <path d="M5 13l2 8h10l2-8"/>
+                </svg>
+                Accessible
+              </span>
+            </div>
+            <p class="spot-desc" *ngIf="spot.description">{{ spot.description }}</p>
+            <div class="spot-foot">
+              <span class="spot-status-tag" [ngClass]="'ss-'+spot.status.toLowerCase()">
+                <span class="ss-dot"></span>{{ spot.status }}
               </span>
             </div>
           </div>
-          <button
-            class="btn-book-now"
-            (click)="goToReserve()"
-            [disabled]="camping.status !== 'ACTIVE'">
-            {{ camping.status === 'ACTIVE' ? '🏕 Book This Camping' : 'Not Available' }}
-          </button>
-          <p class="booking-note" *ngIf="camping.status !== 'ACTIVE'">
-            This camping is currently not accepting reservations.
+        </div>
+      </section>
+
+      <!-- ──── TAB: ACTIVITIES ──── -->
+      <section class="tab-panel" *ngIf="activeTab==='activities'" role="tabpanel">
+        <h2 class="section-title">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"/><polygon points="10,8 16,12 10,16 10,8"/>
+          </svg>
+          Activities
+          <span class="section-count">{{ activities.length }}</span>
+        </h2>
+        <div class="empty-msg" *ngIf="activities.length === 0">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+          </svg>
+          <p>No activities listed for this camping yet.</p>
+        </div>
+        <div class="act-grid">
+          <div class="act-card" *ngFor="let act of activities">
+            <div class="act-head">
+              <div class="act-icon-wrap">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="12" cy="12" r="10"/><polygon points="10,8 16,12 10,16 10,8"/>
+                </svg>
+              </div>
+              <div class="act-info">
+                <div class="act-name">{{ act.name }}</div>
+                <div class="act-spot" *ngIf="act.spotName">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/>
+                  </svg>
+                  {{ act.spotName }}
+                </div>
+              </div>
+              <div class="act-price-block">
+                <div class="act-price">{{ act.price | number }}</div>
+                <div class="act-price-unit">TND</div>
+              </div>
+            </div>
+            <p class="act-desc" *ngIf="act.description">{{ act.description }}</p>
+            <div class="act-foot" *ngIf="act.duration">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"/><polyline points="12,6 12,12 16,14"/>
+              </svg>
+              Duration: {{ act.duration }} hour{{ act.duration !== 1 ? 's' : '' }}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ──── TAB: EQUIPMENT ──── -->
+      <section class="tab-panel" *ngIf="activeTab==='equipment'" role="tabpanel">
+        <h2 class="section-title">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/>
+          </svg>
+          Equipment Provided
+          <span class="section-count">{{ uniqueEquipment.length }}</span>
+        </h2>
+        <div class="empty-msg" *ngIf="uniqueEquipment.length === 0">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/>
+          </svg>
+          <p>No equipment information available.</p>
+        </div>
+        <div class="eq-list">
+          <div class="eq-row" *ngFor="let eq of uniqueEquipment">
+            <div class="eq-icon-wrap">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/>
+                <line x1="12" y1="12" x2="12" y2="16"/><line x1="10" y1="14" x2="14" y2="14"/>
+              </svg>
+            </div>
+            <div class="eq-info">
+              <div class="eq-name">{{ eq.name }}</div>
+              <div class="eq-desc" *ngIf="eq.description">{{ eq.description }}</div>
+              <div class="eq-spot" *ngIf="eq.spotName">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/>
+                </svg>
+                {{ eq.spotName }}
+              </div>
+            </div>
+            <div class="eq-meta">
+              <span class="eq-qty">× {{ eq.quantity }}</span>
+              <span class="eq-cond" [ngClass]="getConditionClass(eq.condition)">{{ getConditionLabel(eq.condition) }}</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ──── TAB: RULES ──── -->
+      <section class="tab-panel" *ngIf="activeTab==='rules'" role="tabpanel">
+        <h2 class="section-title">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14,2 14,8 20,8"/>
+          </svg>
+          Rules &amp; Regulations
+        </h2>
+
+        <div class="rules-card" *ngIf="camping.rules">
+          <div class="rules-banner">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+            </svg>
+            <p>Please read and follow these rules to ensure a safe and pleasant experience for all guests.</p>
+          </div>
+          <div class="rules-text">{{ camping.rules }}</div>
+        </div>
+
+        <div class="general-rules">
+          <h3 class="gr-heading">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"/><path d="M12 8v4m0 4h.01"/>
+            </svg>
+            General Camping Guidelines
+          </h3>
+          <div class="gr-grid">
+            <div class="gr-item">
+              <div class="gr-ic-wrap gr-ic-orange">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M8.5 14.5A2.5 2.5 0 0011 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 11-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 002.5 2.5z"/>
+                </svg>
+              </div>
+              <span>Campfires only in designated fire zones</span>
+            </div>
+            <div class="gr-item">
+              <div class="gr-ic-wrap gr-ic-green">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="3,6 5,6 21,6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/>
+                  <path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/>
+                </svg>
+              </div>
+              <span>Leave no trace — pack out all rubbish</span>
+            </div>
+            <div class="gr-item">
+              <div class="gr-ic-wrap gr-ic-indigo">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/>
+                </svg>
+              </div>
+              <span>Quiet hours observed 10 PM – 7 AM</span>
+            </div>
+            <div class="gr-item">
+              <div class="gr-ic-wrap gr-ic-amber">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M10 5.172C10 3.782 8.423 2.679 6.5 3c-2.823.47-4.113 6.006-4 7 .08.703 1.725 1.722 3.656 1 1.261-.472 1.96-1.45 2.344-2.5M14.267 5.172c0-1.39 1.577-2.493 3.5-2.172 2.823.47 4.113 6.006 4 7-.08.703-1.725 1.722-3.656 1-1.261-.472-1.855-1.45-2.239-2.5"/>
+                  <path d="M12 13c-1.5 0-2.5 1.5-3 2.5S5 17.5 5 20h14c0-2.5-3.5-4-4-5s-1.5-2-3-2z"/>
+                </svg>
+              </div>
+              <span>Pets must remain on a leash at all times</span>
+            </div>
+            <div class="gr-item">
+              <div class="gr-ic-wrap gr-ic-slate">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="1" y="3" width="15" height="13" rx="2"/><polygon points="16,8 20,8 23,11 23,16 16,16 16,8"/>
+                  <circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/>
+                </svg>
+              </div>
+              <span>Vehicles restricted to designated parking areas</span>
+            </div>
+            <div class="gr-item">
+              <div class="gr-ic-wrap gr-ic-teal">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="1,4 1,10 7,10"/><path d="M3.51 15a9 9 0 102.13-3.81L1 10"/>
+                </svg>
+              </div>
+              <span>Use provided recycling and waste stations</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </main>
+
+    <!-- ── BOOKING SIDEBAR ── -->
+    <aside class="book-sidebar">
+      <div class="book-card" [class.book-unavailable]="!isActive">
+
+        <!-- Price -->
+        <div class="book-price-row">
+          <div>
+            <span class="book-price">{{ camping.price | number }}</span>
+            <span class="book-unit"> TND</span>
+          </div>
+          <span class="book-per">per night</span>
+        </div>
+
+        <!-- Rating -->
+        <div class="book-rating" *ngIf="camping.averageRating">
+          <div class="stars">
+            <span *ngFor="let s of getStars(camping.averageRating!)" class="star" [ngClass]="'star-'+s">
+              <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+            </span>
+          </div>
+          <span class="book-rating-val">{{ camping.averageRating | number:'1.1-1' }} / 5</span>
+        </div>
+
+        <div class="book-divider"></div>
+
+        <!-- Details -->
+        <div class="book-details">
+          <div class="book-row">
+            <span class="book-row-label">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/>
+              </svg>
+              Location
+            </span>
+            <span class="book-row-val">{{ camping.governorate }}</span>
+          </div>
+          <div class="book-row" *ngIf="camping.maxCapacity">
+            <span class="book-row-label">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/>
+                <path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/>
+              </svg>
+              Max Guests
+            </span>
+            <span class="book-row-val">{{ camping.maxCapacity }}</span>
+          </div>
+          <div class="book-row" *ngIf="camping.checkInTime">
+            <span class="book-row-label">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"/><polyline points="12,6 12,12 16,14"/>
+              </svg>
+              Check-in
+            </span>
+            <span class="book-row-val">{{ camping.checkInTime }}</span>
+          </div>
+          <div class="book-row" *ngIf="camping.checkOutTime">
+            <span class="book-row-label">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"/><polyline points="12,6 12,12 8,14"/>
+              </svg>
+              Check-out
+            </span>
+            <span class="book-row-val">{{ camping.checkOutTime }}</span>
+          </div>
+          <div class="book-row" *ngIf="camping.startDate">
+            <span class="book-row-label">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/>
+                <line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+              </svg>
+              Open From
+            </span>
+            <span class="book-row-val">{{ camping.startDate | date:'dd MMM yyyy' }}</span>
+          </div>
+          <div class="book-row" *ngIf="camping.endDate">
+            <span class="book-row-label">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/>
+                <line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+              </svg>
+              Open Until
+            </span>
+            <span class="book-row-val">{{ camping.endDate | date:'dd MMM yyyy' }}</span>
+          </div>
+          <div class="book-row">
+            <span class="book-row-label">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"/><polyline points="12,6 12,12 16,14"/>
+              </svg>
+              Availability
+            </span>
+            <span class="status-pill sp-inline" [ngClass]="'sp-'+camping.status.toLowerCase()">
+              <span class="sp-dot"></span>{{ camping.status }}
+            </span>
+          </div>
+        </div>
+
+        <div class="book-divider"></div>
+
+        <!-- CTA -->
+        <button
+          class="btn-book"
+          (click)="goToReserve()"
+          [disabled]="!isActive"
+          [attr.aria-label]="isActive ? 'Book this camping' : 'Camping not available'"
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+            <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/>
+            <line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+            <path d="M8 14l3 3 5-5"/>
+          </svg>
+          {{ isActive ? 'Book This Camping' : 'Currently Unavailable' }}
+        </button>
+
+        <p class="book-note" *ngIf="!isActive">
+          This camping is not currently accepting reservations. Check back soon.
+        </p>
+
+        <!-- Trust signals -->
+        <div class="book-trust">
+          <div class="trust-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9,12 11,14 15,10"/>
+            </svg>
+            <span>Free cancellation available</span>
+          </div>
+          <div class="trust-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/>
+            </svg>
+            <span>Secure online payment</span>
+          </div>
+          <div class="trust-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
+            </svg>
+            <span>24/7 customer support</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Spots summary -->
+      <div class="spots-summary" *ngIf="spots.length > 0">
+        <h3 class="ss-title">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polygon points="12,2 22,20 2,20"/>
+          </svg>
+          Spot Options
+        </h3>
+        <div class="ss-items">
+          <div class="ss-item" *ngFor="let spot of spots.slice(0,4)">
+            <svg class="ss-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 2L2 20h20L12 2z"/>
+            </svg>
+            <span class="ss-name">{{ spot.name }}</span>
+            <span class="ss-price">{{ spot.basePrice | number }} TND</span>
+          </div>
+          <p class="ss-more" *ngIf="spots.length > 4">
+            +{{ spots.length - 4 }} more available spots
           </p>
         </div>
-      </aside>
+      </div>
+    </aside>
 
-    </div>
-  </div>
-</div>
+  </div><!-- /page-body -->
+</div><!-- /cd-wrap -->

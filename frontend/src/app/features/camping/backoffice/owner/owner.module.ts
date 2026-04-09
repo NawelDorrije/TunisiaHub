@@ -12,6 +12,7 @@ import { ActivityManagementComponent } from './activity-management/activity-mana
 import { EquipmentManagementComponent } from './equipment-management/equipment-management.component';
 import { MyReservationsComponent } from './my-reservations/my-reservations.component';
 import { ReactiveFormsModule } from '@angular/forms';
+import { OverviewComponent } from './overview/overview.component';
 
 
 @NgModule({
@@ -24,7 +25,8 @@ import { ReactiveFormsModule } from '@angular/forms';
     SpotFormComponent,
     ActivityManagementComponent,
     EquipmentManagementComponent,
-    MyReservationsComponent
+    MyReservationsComponent,
+    OverviewComponent
   ],
   imports: [
     CommonModule,

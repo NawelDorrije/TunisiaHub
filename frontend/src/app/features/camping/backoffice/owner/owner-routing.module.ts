@@ -10,11 +10,9 @@ import { EquipmentManagementComponent } from './equipment-management/equipment-m
 import { MyReservationsComponent } from './my-reservations/my-reservations.component';
 
 const routes: Routes = [
-  {
-    path: '',
-    component: DashboardComponent
-  },
-  { path: '', component: MyCampingsComponent },
+
+  { path: '', component: DashboardComponent },
+  { path: 'my-campings', component: MyCampingsComponent },
   { path: 'new', component: CampingFormComponent },
   { path: ':id/edit', component: CampingFormComponent },
   { path: ':campingId/spots', component: SpotManagementComponent },
