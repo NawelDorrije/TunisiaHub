@@ -8,6 +8,7 @@ import { MesReservationsComponent } from './mes-reservations/mes-reservations.co
 import { PaiementReservationComponent } from './paiement-reservation/paiement-reservation.component';
 import { AdminReservationsComponent } from './admin/admin-reservations/admin-reservations.component';
 import { FactureComponent } from './facture/facture.component';
+import { VerifyBilletComponent } from './verify-billet/verify-billet.component';
 
 const routes: Routes = [
   { path: '', component: LieuListComponent },
@@ -15,6 +16,7 @@ const routes: Routes = [
   { path: 'paiement/:id', component: PaiementReservationComponent },
   { path: 'paiement-tranche/:id', component: PaiementReservationComponent }, // ← AJOUTE
   { path: 'facture/:id', component: FactureComponent },
+  { path: 'verify/:token', component: VerifyBilletComponent },
   { path: 'admin/lieux', component: AdminLieuComponent },
   { path: 'admin/activites', component: AdminActiviteComponent },
   { path: 'admin/reservations', component: AdminReservationsComponent }, // ← AJOUTE

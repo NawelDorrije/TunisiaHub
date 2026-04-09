@@ -40,9 +40,9 @@ export class FactureComponent implements OnInit {
     this.trendyService.genererFacture(this.reservation.id).subscribe({
       next: async (res) => {
         this.token = res.token;
-        const verifyUrl = `${this.ngrokUrl}/api/factures/verify/${this.token}`;
-        
-        
+
+        // ← QR pointe vers la page Angular (via ngro
+        const verifyUrl = `${this.ngrokUrl}/api/factures/verify/${this.token}`;        
         // ✅ Généré localement — pas d'API externe
         this.qrUrl = await QRCode.toDataURL(verifyUrl, {
           width: 200,

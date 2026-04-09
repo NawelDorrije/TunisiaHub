@@ -12,6 +12,7 @@ import { MesReservationsComponent } from './mes-reservations/mes-reservations.co
 import { PaiementReservationComponent } from './paiement-reservation/paiement-reservation.component';
 import { AdminReservationsComponent } from './admin/admin-reservations/admin-reservations.component';
 import { FactureComponent } from './facture/facture.component';
+import { VerifyBilletComponent } from './verify-billet/verify-billet.component';
 
 @NgModule({
   declarations: [
@@ -23,7 +24,8 @@ import { FactureComponent } from './facture/facture.component';
     MesReservationsComponent,
     PaiementReservationComponent,
     AdminReservationsComponent,
-    FactureComponent
+    FactureComponent,
+    VerifyBilletComponent
   ],
   imports: [
   CommonModule,
