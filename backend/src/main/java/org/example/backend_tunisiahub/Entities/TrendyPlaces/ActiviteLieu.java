@@ -33,4 +33,6 @@ public class ActiviteLieu {
     @JoinColumn(name = "lieu_id")
     @JsonIgnoreProperties({"activites", "reservations"})
     private Lieu lieu;
+    // Ajoute ce champ dans ActiviteLieu.java
+    private Integer placesReservees = 0; // places déjà réservées
 }

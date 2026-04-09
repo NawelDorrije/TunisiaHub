@@ -1,12 +1,14 @@
 export interface ActiviteLieu {
-  id: number;
+  id?: number;
   nomActivite: string;
-  description: string;
-  prix: number;
-  duree: number;
-  capaciteMax: number;
-  disponible: boolean;
-  dateEvenement?: string; // ← NOUVEAU
+  description?: string;
+  prix?: number;
+  duree?: number;
+  capaciteMax?: number;
+  placesReservees?: number;  // ← NOUVEAU
+  disponible?: boolean;
+  dateEvenement?: string;
+  lieu?: Lieu;
 }
 
 export interface Lieu {

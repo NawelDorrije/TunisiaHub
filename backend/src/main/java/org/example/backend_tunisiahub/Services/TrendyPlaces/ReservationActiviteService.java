@@ -34,6 +34,20 @@ public class ReservationActiviteService implements IReservationActiviteService {
 
         reservation.setActivite(activite);
         reservation.setUser(user);
+        // Vérifier la disponibilité
+        int placesDisponibles = (activite.getCapaciteMax() != null ? activite.getCapaciteMax() : 0)
+                - (activite.getPlacesReservees() != null ? activite.getPlacesReservees() : 0);
+
+        if (reservation.getNombrePersonnes() > placesDisponibles) {
+            throw new RuntimeException("Pas assez de places disponibles. Il reste " + placesDisponibles + " place(s).");
+        }
+
+// Incrémenter les places réservées
+        activite.setPlacesReservees(
+                (activite.getPlacesReservees() != null ? activite.getPlacesReservees() : 0)
+                        + reservation.getNombrePersonnes()
+        );
+        activiteRepo.save(activite);
         reservation.setDateReservation(new Date());
         reservation.setStatut("EN_ATTENTE");
         double prix = activite.getPrix() != null ? activite.getPrix() : 0.0;
@@ -158,6 +172,20 @@ public class ReservationActiviteService implements IReservationActiviteService {
 
     @Override
     public void deleteReservation(Long id) {
+        ReservationActivite r = reservationRepo.findById(id)
+                .orElseThrow(() -> new RuntimeException("Réservation non trouvée"));
+
+        // Libérer les places si pas annulée
+        if (!"ANNULEE".equals(r.getStatut())) {
+            ActiviteLieu activite = r.getActivite();
+            int nouvelles = Math.max(0,
+                    (activite.getPlacesReservees() != null ? activite.getPlacesReservees() : 0)
+                            - r.getNombrePersonnes()
+            );
+            activite.setPlacesReservees(nouvelles);
+            activiteRepo.save(activite);
+        }
+
         reservationRepo.deleteById(id);
     }
     @Override

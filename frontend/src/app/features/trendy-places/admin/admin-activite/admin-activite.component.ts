@@ -77,7 +77,7 @@ export class AdminActiviteComponent implements OnInit {
     return;
   }
   if (this.isEditing) {
-    this.service.updateActivite(this.form.id, this.form, this.selectedLieuId).subscribe({
+    this.service.updateActivite(this.form.id!, this.form, this.selectedLieuId).subscribe({
       next: () => {
         this.successMessage = 'Activité modifiée avec succès !';
         this.closeForm();

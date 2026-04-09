@@ -58,7 +58,7 @@ export class LieuDetailComponent implements OnInit {
     // Vérifier les conflits si l'activité a une date
     if (activite.dateEvenement) {
       this.conflitLoading = true;
-      this.trendyService.getConflits(this.currentUserId, activite.id).subscribe({
+      this.trendyService.getConflits(this.currentUserId, activite.id!).subscribe({
         next: (data) => {
           this.conflits = data;
           this.conflitLoading = false;
@@ -131,13 +131,22 @@ export class LieuDetailComponent implements OnInit {
   }
 
   incrementerPersonnes(): void {
-    const max = this.selectedActivite?.capaciteMax || 10;
-    if (this.nombrePersonnes < max) this.nombrePersonnes++;
-  }
+  const max = this.getPlacesDisponibles(this.selectedActivite!);
+  if (this.nombrePersonnes < max) this.nombrePersonnes++;
+}
 
   formatDate(dateStr: string): string {
     if (!dateStr) return '';
     const d = new Date(dateStr);
     return d.toLocaleDateString('fr-FR', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' });
   }
+  getPlacesDisponibles(activite: ActiviteLieu): number {
+  const max = activite.capaciteMax || 0;
+  const reservees = activite.placesReservees || 0;
+  return Math.max(0, max - reservees);
+}
+
+isComplet(activite: ActiviteLieu): boolean {
+  return this.getPlacesDisponibles(activite) === 0;
+}
 }

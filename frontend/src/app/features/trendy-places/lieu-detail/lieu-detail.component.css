@@ -631,3 +631,17 @@
   color: #155724;
   font-weight: 600;
 }
+
+.places-bar {
+  height: 4px;
+  background: #e9ecef;
+  border-radius: 2px;
+  margin: 8px 0 12px;
+  overflow: hidden;
+}
+
+.places-fill {
+  height: 100%;
+  border-radius: 2px;
+  transition: width 0.3s ease;
+}

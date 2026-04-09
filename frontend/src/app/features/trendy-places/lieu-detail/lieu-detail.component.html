@@ -53,24 +53,39 @@
           </div>
           <p class="activite-desc">{{ activite.description }}</p>
           <div class="activite-details">
-            <div class="detail-item">
-              <span class="detail-label">💰 Prix</span>
-              <span class="detail-value">{{ activite.prix }} TND</span>
-            </div>
-            <div class="detail-item">
-              <span class="detail-label">⏱️ Durée</span>
-              <span class="detail-value">{{ activite.duree }} min</span>
-            </div>
-            <div class="detail-item">
-              <span class="detail-label">👥 Capacité</span>
-              <span class="detail-value">{{ activite.capaciteMax }} pers.</span>
-            </div>
-          </div>
-          <button class="reserve-btn"
-                  [disabled]="!activite.disponible"
-                  (click)="activite.disponible && openReservation(activite)">
-            {{ activite.disponible ? '🎟️ Réserver' : 'Non disponible' }}
-          </button>
+  <div class="detail-item">
+    <span class="detail-label">💰 Prix</span>
+    <span class="detail-value">{{ activite.prix }} TND</span>
+  </div>
+  <div class="detail-item">
+    <span class="detail-label">⏱️ Durée</span>
+    <span class="detail-value">{{ activite.duree }} min</span>
+  </div>
+  <div class="detail-item">
+    <span class="detail-label">👥 Places</span>
+    <span class="detail-value"
+          [style.color]="getPlacesDisponibles(activite) === 0 ? '#dc3545' :
+                         getPlacesDisponibles(activite) <= 3 ? '#fd7e14' : '#28a745'">
+      {{ getPlacesDisponibles(activite) }}/{{ activite.capaciteMax }} disponibles
+    </span>
+  </div>
+</div>
+
+<!-- Barre de progression des places -->
+<div class="places-bar">
+  <div class="places-fill"
+       [style.width.%]="((activite.placesReservees || 0) / (activite.capaciteMax || 1)) * 100"
+       [style.background]="getPlacesDisponibles(activite) === 0 ? '#dc3545' :
+                           getPlacesDisponibles(activite) <= 3 ? '#fd7e14' : '#28a745'">
+  </div>
+</div>
+
+<button class="reserve-btn"
+        [disabled]="!activite.disponible || isComplet(activite)"
+        (click)="activite.disponible && !isComplet(activite) && openReservation(activite)">
+  {{ !activite.disponible ? 'Non disponible' : isComplet(activite) ? '🔴 Complet' : '🎟️ Réserver' }}
+</button>
+          
         </div>
       </div>
     </div>
@@ -167,7 +182,10 @@
       <span class="picker-value">{{ nombrePersonnes }}</span>
       <button (click)="incrementerPersonnes()">+</button>
     </div>
-    <p class="picker-hint">Maximum {{ selectedActivite.capaciteMax }} personnes</p>
+    <p class="picker-hint">
+  Maximum {{ getPlacesDisponibles(selectedActivite!) }} place(s) disponible(s)
+  sur {{ selectedActivite.capaciteMax }}
+</p>
   </div>
 
   <!-- Prix total -->
