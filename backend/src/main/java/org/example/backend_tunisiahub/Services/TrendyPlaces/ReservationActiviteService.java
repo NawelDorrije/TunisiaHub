@@ -166,4 +166,13 @@ public class ReservationActiviteService implements IReservationActiviteService {
 
         return reservationRepo.save(r);
     }
+    @Override
+    public List<ReservationActivite> getConflits(Long userId, Long activiteId) {
+        ActiviteLieu activite = activiteRepo.findById(activiteId)
+                .orElseThrow(() -> new RuntimeException("Activité non trouvée"));
+
+        if (activite.getDateEvenement() == null) return List.of();
+
+        return reservationRepo.findConflits(userId, activite.getDateEvenement(), activiteId);
+    }
 }

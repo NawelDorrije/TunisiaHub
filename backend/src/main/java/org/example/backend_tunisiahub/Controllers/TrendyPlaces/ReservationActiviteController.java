@@ -141,4 +141,15 @@ public class ReservationActiviteController {
     private record NotificationRequest(Boolean active, Integer joursAvant) {}
 
     private record StatutRequest(String statut) {}
+    @GetMapping("/conflits/user/{userId}/activite/{activiteId}")
+    public ResponseEntity<?> getConflits(
+            @PathVariable Long userId,
+            @PathVariable Long activiteId) {
+        try {
+            List<ReservationActivite> conflits = service.getConflits(userId, activiteId);
+            return ResponseEntity.ok(conflits);
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("Erreur: " + e.getMessage());
+        }
+    }
 }

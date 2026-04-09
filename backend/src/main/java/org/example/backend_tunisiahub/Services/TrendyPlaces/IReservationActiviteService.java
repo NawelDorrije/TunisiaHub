@@ -14,4 +14,5 @@ public interface IReservationActiviteService {
     ReservationActivite payerReservation(Long id, String modePaiement, Integer nombreTranches);
     ReservationActivite payerTranche(Long id); // payer la prochaine tranche
     ReservationActivite configurerNotification(Long id, Boolean active, Integer joursAvant);
+    List<ReservationActivite> getConflits(Long userId, Long activiteId);
 }

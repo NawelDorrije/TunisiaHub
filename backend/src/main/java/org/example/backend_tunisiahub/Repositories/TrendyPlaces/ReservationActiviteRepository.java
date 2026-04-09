@@ -23,4 +23,19 @@ public interface ReservationActiviteRepository extends JpaRepository<Reservation
         AND DATEDIFF(r.activite.dateEvenement, :today) = r.notificationJoursAvant
     """)
     List<ReservationActivite> findReservationsANotifier(@Param("today") Date today);
+
+    // Ajoute cette méthode dans ReservationActiviteRepository.java
+
+    @Query("""
+    SELECT r FROM ReservationActivite r
+    WHERE r.user.id = :userId
+    AND r.statut NOT IN ('ANNULEE')
+    AND r.activite.dateEvenement = :dateEvenement
+    AND r.activite.id != :activiteId
+""")
+    List<ReservationActivite> findConflits(
+            @Param("userId") Long userId,
+            @Param("dateEvenement") Date dateEvenement,
+            @Param("activiteId") Long activiteId
+    );
 }

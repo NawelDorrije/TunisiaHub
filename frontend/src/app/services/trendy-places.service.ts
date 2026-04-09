@@ -101,5 +101,10 @@ configurerNotification(reservationId: number, active: boolean, joursAvant: numbe
     { active, joursAvant }
   );
 }
+getConflits(userId: number, activiteId: number): Observable<any[]> {
+  return this.http.get<any[]>(
+    `${this.BASE_URL}/api/reservations-activites/conflits/user/${userId}/activite/${activiteId}`
+  );
+}
 
 }
