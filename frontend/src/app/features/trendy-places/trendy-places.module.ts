@@ -11,6 +11,7 @@ import { TrendyPlacesComponent } from './trendy-places.component';
 import { MesReservationsComponent } from './mes-reservations/mes-reservations.component';
 import { PaiementReservationComponent } from './paiement-reservation/paiement-reservation.component';
 import { AdminReservationsComponent } from './admin/admin-reservations/admin-reservations.component';
+import { FactureComponent } from './facture/facture.component';
 
 @NgModule({
   declarations: [
@@ -21,7 +22,8 @@ import { AdminReservationsComponent } from './admin/admin-reservations/admin-res
     AdminActiviteComponent,
     MesReservationsComponent,
     PaiementReservationComponent,
-    AdminReservationsComponent
+    AdminReservationsComponent,
+    FactureComponent
   ],
   imports: [
   CommonModule,
