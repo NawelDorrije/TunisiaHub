@@ -154,7 +154,15 @@ export class PaiementReservationComponent implements OnInit {
     return this.paiementResult?.montantRestant || 0;
   }
 
+  /*goToReservations(): void {
+    this.router.navigate(['/trendy-places/mes-reservations']);
+  }*/
   goToReservations(): void {
+  // Si paiement complet → afficher la facture
+  if (this.paiementResult?.paiementComplet || this.paiementResult?.statut === 'CONFIRMEE') {
+    this.router.navigate(['/trendy-places/facture', this.reservation.id]);
+  } else {
     this.router.navigate(['/trendy-places/mes-reservations']);
   }
+}
 }

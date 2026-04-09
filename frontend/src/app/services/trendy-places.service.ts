@@ -106,5 +106,12 @@ getConflits(userId: number, activiteId: number): Observable<any[]> {
     `${this.BASE_URL}/api/reservations-activites/conflits/user/${userId}/activite/${activiteId}`
   );
 }
+genererFacture(reservationId: number): Observable<any> {
+  return this.http.post(`${this.BASE_URL}/api/factures/generer/${reservationId}`, {});
+}
+
+verifierBillet(token: string): Observable<any> {
+  return this.http.get(`${this.BASE_URL}/api/factures/verify/${token}`);
+}
 
 }

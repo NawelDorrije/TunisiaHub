@@ -8,6 +8,7 @@ import org.springframework.stereotype.Repository;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface ReservationActiviteRepository extends JpaRepository<ReservationActivite, Long> {
@@ -38,4 +39,6 @@ public interface ReservationActiviteRepository extends JpaRepository<Reservation
             @Param("dateEvenement") Date dateEvenement,
             @Param("activiteId") Long activiteId
     );
+
+    Optional<ReservationActivite> findByFactureToken(String token);
 }

@@ -445,3 +445,21 @@
 
 .btn-payer-tranche:hover { background: #b8daff; }
 .tranche-montant { font-size: 0.75rem; opacity: 0.8; }
+
+/* CSS à ajouter */
+.btn-facture {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: linear-gradient(135deg, #f8f9ff, #e8f0fe);
+  color: #0f3460;
+  border: 1px solid #c5d8ff;
+  padding: 8px 14px;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 0.82rem;
+  cursor: pointer;
+  text-decoration: none;
+  transition: all 0.2s;
+}
+.btn-facture:hover { background: #e8f0fe; }

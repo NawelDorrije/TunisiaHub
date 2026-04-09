@@ -3,7 +3,9 @@
   <div class="page-header">
     <h1>🎟️ Mes Réservations</h1>
     <p>{{ reservations.length }} réservation(s)</p>
+    
   </div>
+  
 
   <div class="alert-success" *ngIf="successMessage">{{ successMessage }}</div>
 
@@ -86,35 +88,46 @@
       </div>
 
       <!-- ACTIONS -->
-      <div class="card-actions" *ngIf="r.statut !== 'ANNULEE' && r.statut !== 'CONFIRMEE'">
+      <!-- ACTIONS -->
+<div class="card-actions">
 
-        <button class="btn-payer"
-                *ngIf="r.statut === 'EN_ATTENTE' && cancellingId !== r.id"
-                (click)="allerPayer(r.id)">
-          💳 Choisir mon paiement
-        </button>
+  <ng-container *ngIf="r.statut !== 'ANNULEE' && r.statut !== 'CONFIRMEE'">
+    <button class="btn-payer"
+            *ngIf="r.statut === 'EN_ATTENTE' && cancellingId !== r.id"
+            (click)="allerPayer(r.id)">
+      💳 Choisir mon paiement
+    </button>
 
-        <button class="btn-payer-tranche"
-                *ngIf="r.statut === 'PAYEE' && !r.paiementComplet && cancellingId !== r.id"
-                (click)="allerPayerTranche(r.id)">
-          💳 Payer tranche {{ (r.trancheActuelle || 0) + 1 }}/{{ r.nombreTranches }}
-          <span class="tranche-montant">{{ r.montantRestant | number:'1.2-2' }} TND</span>
-        </button>
+    <button class="btn-payer-tranche"
+            *ngIf="r.statut === 'PAYEE' && !r.paiementComplet && cancellingId !== r.id"
+            (click)="allerPayerTranche(r.id)">
+      💳 Payer tranche {{ (r.trancheActuelle || 0) + 1 }}/{{ r.nombreTranches }}
+      <span class="tranche-montant">{{ r.montantRestant | number:'1.2-2' }} TND</span>
+    </button>
 
-        <button class="btn-annuler"
-                *ngIf="cancellingId !== r.id"
-                (click)="annuler(r.id)">
-          Annuler
-        </button>
+    <button class="btn-annuler"
+            *ngIf="cancellingId !== r.id"
+            (click)="annuler(r.id)">
+      Annuler
+    </button>
 
-        <div class="confirm-annulation" *ngIf="cancellingId === r.id">
-          <p>Confirmer l'annulation ?</p>
-          <div class="confirm-btns">
-            <button class="btn-oui" (click)="confirmerAnnulation(r.id)">Oui</button>
-            <button class="btn-non" (click)="cancellingId = null">Non</button>
-          </div>
-        </div>
+    <div class="confirm-annulation" *ngIf="cancellingId === r.id">
+      <p>Confirmer l'annulation ?</p>
+      <div class="confirm-btns">
+        <button class="btn-oui" (click)="confirmerAnnulation(r.id)">Oui</button>
+        <button class="btn-non" (click)="cancellingId = null">Non</button>
       </div>
+    </div>
+  </ng-container>
+
+  <!-- Bouton facture pour les CONFIRMEE -->
+  <a class="btn-facture"
+     *ngIf="r.statut === 'CONFIRMEE'"
+     [routerLink]="['/trendy-places/facture', r.id]">
+    🧾 Ma Facture
+  </a>
+
+</div>
 
     </div>
   </div>

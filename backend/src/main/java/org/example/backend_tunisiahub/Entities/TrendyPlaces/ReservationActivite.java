@@ -47,4 +47,13 @@ public class ReservationActivite {
     private Boolean notificationActive;    // true si le user veut être notifié
     private Integer notificationJoursAvant; // 1, 2, ou 3 jours avant
     private Boolean notificationEnvoyee;   // true si l'email a déjà été envoyé
+
+
+    // Ajoute dans ReservationActivite.java
+
+    private String factureToken;      // UUID unique pour le QR code
+    private Boolean billetUtilise;    // true si scanné à l'entrée
+    private Date dateBilletUtilise;   // quand il a été scanné
+
+
 }

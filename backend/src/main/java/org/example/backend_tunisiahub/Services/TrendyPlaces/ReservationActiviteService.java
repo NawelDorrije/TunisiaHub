@@ -67,6 +67,9 @@ public class ReservationActiviteService implements IReservationActiviteService {
             r.setNombreTranches(1);
             r.setTrancheActuelle(1);
             r.setStatut("CONFIRMEE"); // ← Confirmation automatique
+            r.setFactureToken(java.util.UUID.randomUUID().toString());
+            r.setBilletUtilise(false);
+
 
         } else if ("TRANCHE".equals(modePaiement)) {
             // Paiement en tranches
@@ -110,6 +113,8 @@ public class ReservationActiviteService implements IReservationActiviteService {
         r.setMontantPaye(Math.min(nouveauMontantPaye, r.getPrixTotal()));
         r.setMontantRestant(Math.max(r.getPrixTotal() - nouveauMontantPaye, 0.0));
         r.setTrancheActuelle(nouvelleTranche);
+        r.setFactureToken(java.util.UUID.randomUUID().toString());
+        r.setBilletUtilise(false);
 
         if (nouvelleTranche >= tranchesSur) {
             // Toutes les tranches payées → confirmation automatique

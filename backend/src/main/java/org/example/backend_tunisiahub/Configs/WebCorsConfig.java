@@ -10,7 +10,11 @@ public class WebCorsConfig implements WebMvcConfigurer {
     @Override
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/api/**")
-                .allowedOrigins("http://localhost:4200") // <-- Angular dev server
+                .allowedOriginPatterns(
+                        "http://localhost:4200",
+                        "https://*.ngrok-free.app",
+                        "https://*.ngrok-free.dev"
+                )
                 .allowedMethods("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
                 .allowedHeaders("*")
                 .exposedHeaders("*")
