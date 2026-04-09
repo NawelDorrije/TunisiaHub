@@ -21,7 +21,11 @@ export class LieuDetailComponent implements OnInit {
   reservationSuccess = '';
   reservationError = '';
 
-  // Pour la demo : userId hardcodé (à remplacer par ton auth service)
+  // ← NOUVEAU : conflit
+  conflits: any[] = [];
+  conflitAccepte = false;
+  conflitLoading = false;
+
   currentUserId = 1;
 
   constructor(
@@ -47,16 +51,37 @@ export class LieuDetailComponent implements OnInit {
     this.nombrePersonnes = 1;
     this.reservationSuccess = '';
     this.reservationError = '';
+    this.conflits = [];
+    this.conflitAccepte = false;
     this.showReservationModal = true;
+
+    // Vérifier les conflits si l'activité a une date
+    if (activite.dateEvenement) {
+      this.conflitLoading = true;
+      this.trendyService.getConflits(this.currentUserId, activite.id).subscribe({
+        next: (data) => {
+          this.conflits = data;
+          this.conflitLoading = false;
+        },
+        error: () => { this.conflitLoading = false; }
+      });
+    }
   }
 
   closeReservation(): void {
     this.showReservationModal = false;
     this.selectedActivite = null;
+    this.conflits = [];
+    this.conflitAccepte = false;
+  }
+
+  hasConflitNonAccepte(): boolean {
+    return this.conflits.length > 0 && !this.conflitAccepte;
   }
 
   confirmerReservation(): void {
     if (!this.selectedActivite || this.nombrePersonnes < 1) return;
+    if (this.hasConflitNonAccepte()) return;
 
     this.reservationLoading = true;
     this.reservationError = '';
@@ -66,10 +91,14 @@ export class LieuDetailComponent implements OnInit {
       this.currentUserId,
       { nombrePersonnes: this.nombrePersonnes }
     ).subscribe({
-      next: () => {
+      next: (res) => {
         this.reservationLoading = false;
         this.reservationSuccess = '✅ Réservation effectuée avec succès !';
-        setTimeout(() => this.closeReservation(), 2000);
+        setTimeout(() => {
+          this.closeReservation();
+          // Rediriger vers paiement
+          this.router.navigate(['/trendy-places/paiement', res.id]);
+        }, 1500);
       },
       error: () => {
         this.reservationLoading = false;
@@ -77,7 +106,6 @@ export class LieuDetailComponent implements OnInit {
       }
     });
   }
-
 
   getPrixTotal(): number {
     if (!this.selectedActivite) return 0;
@@ -98,16 +126,18 @@ export class LieuDetailComponent implements OnInit {
     this.router.navigate(['/trendy-places']);
   }
 
-  decrementerPersonnes() {
-  if (this.nombrePersonnes > 1) {
-    this.nombrePersonnes--;
+  decrementerPersonnes(): void {
+    if (this.nombrePersonnes > 1) this.nombrePersonnes--;
   }
-}
 
-incrementerPersonnes() {
-  const max = this.selectedActivite?.capaciteMax || 10;
-  if (this.nombrePersonnes < max) {
-    this.nombrePersonnes++;
+  incrementerPersonnes(): void {
+    const max = this.selectedActivite?.capaciteMax || 10;
+    if (this.nombrePersonnes < max) this.nombrePersonnes++;
   }
-}
+
+  formatDate(dateStr: string): string {
+    if (!dateStr) return '';
+    const d = new Date(dateStr);
+    return d.toLocaleDateString('fr-FR', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' });
+  }
 }

@@ -94,51 +94,106 @@
 
     <div class="modal-body" *ngIf="selectedActivite">
 
-      <!-- Info activité -->
-      <div class="activite-recap">
-        <div class="recap-icon">🎯</div>
-        <div>
-          <h3>{{ selectedActivite.nomActivite }}</h3>
-          <p>{{ selectedActivite.description }}</p>
-          <div class="recap-tags">
-            <span>⏱️ {{ selectedActivite.duree }} min</span>
-            <span>👥 Max {{ selectedActivite.capaciteMax }} pers.</span>
-            <span>💰 {{ selectedActivite.prix }} TND/pers.</span>
-          </div>
+  <!-- Info activité -->
+  <div class="activite-recap">
+    <div class="recap-icon">🎯</div>
+    <div>
+      <h3>{{ selectedActivite.nomActivite }}</h3>
+      <p>{{ selectedActivite.description }}</p>
+      <div class="recap-tags">
+        <span>⏱️ {{ selectedActivite.duree }} min</span>
+        <span>👥 Max {{ selectedActivite.capaciteMax }} pers.</span>
+        <span>💰 {{ selectedActivite.prix }} TND/pers.</span>
+        <span *ngIf="selectedActivite.dateEvenement">
+          📅 {{ formatDate(selectedActivite.dateEvenement) }}
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== NOTE DE CONFLIT ===== -->
+  <div *ngIf="conflitLoading" class="conflit-loading">
+    <div class="mini-spinner"></div>
+    <span>Vérification de votre agenda...</span>
+  </div>
+
+  <div *ngIf="!conflitLoading && conflits.length > 0" class="conflit-alert"
+       [class.accepted]="conflitAccepte">
+
+    <div class="conflit-header">
+      <span class="conflit-icon">{{ conflitAccepte ? '✅' : '⚠️' }}</span>
+      <div>
+        <strong>{{ conflitAccepte ? 'Vous avez accepté le double programme' : 'Attention — Activité déjà prévue ce jour !' }}</strong>
+      </div>
+    </div>
+
+    <div class="conflit-list">
+      <div class="conflit-item" *ngFor="let c of conflits">
+        <div class="conflit-item-icon">📌</div>
+        <div class="conflit-item-info">
+          <span class="conflit-activite-name">{{ c.activite?.nomActivite }}</span>
+          <span class="conflit-lieu">📍 {{ c.activite?.lieu?.nom }}</span>
+          <span class="conflit-date">📅 {{ formatDate(c.activite?.dateEvenement) }}</span>
+          <span class="conflit-statut" [ngClass]="'statut-' + c.statut?.toLowerCase()">
+            {{ c.statut === 'CONFIRMEE' ? '✅ Confirmée' : c.statut === 'PAYEE' ? '💳 Payée' : '⏳ En attente' }}
+          </span>
         </div>
       </div>
+    </div>
 
-      <div class="form-section">
-      <label class="form-label">👥 Nombre de personnes</label>
-      <div class="number-picker">
-        <button (click)="decrementerPersonnes()">−</button>
-        <span class="picker-value">{{ nombrePersonnes }}</span>
-        <button (click)="incrementerPersonnes()">+</button>
-      </div>  <!-- ← MANQUAIT -->
-      <p class="picker-hint">Maximum {{ selectedActivite.capaciteMax }} personnes</p>
-    </div>  <!-- ← MANQUAIT -->
-
-      <!-- Prix total -->
-      <div class="prix-total">
-        <span>Prix total</span>
-        <span class="prix-value">{{ getPrixTotal() }} TND</span>
+    <div class="conflit-actions" *ngIf="!conflitAccepte">
+      <p class="conflit-question">Que souhaitez-vous faire ?</p>
+      <div class="conflit-btns">
+        <button class="btn-accept-double" (click)="conflitAccepte = true">
+          ✅ Faire les deux activités
+        </button>
+        <button class="btn-cancel-conflit" (click)="closeReservation()">
+          ✕ Annuler
+        </button>
       </div>
-
-      <!-- Messages -->
-      <div class="alert-success" *ngIf="reservationSuccess">{{ reservationSuccess }}</div>
-      <div class="alert-error" *ngIf="reservationError">{{ reservationError }}</div>
-
     </div>
 
-    <div class="modal-footer">
-      <button class="btn-cancel" (click)="closeReservation()">Annuler</button>
-      <button class="btn-confirm"
-              (click)="confirmerReservation()"
-              [disabled]="reservationLoading">
-        <span *ngIf="!reservationLoading">✅ Confirmer la réservation</span>
-        <span *ngIf="reservationLoading">⏳ En cours...</span>
-      </button>
+    <div class="conflit-accepted-msg" *ngIf="conflitAccepte">
+      <span>👍 Vous avez choisi de faire les deux activités le même jour. Vous pouvez continuer.</span>
     </div>
+  </div>
+  <!-- ===== FIN NOTE CONFLIT ===== -->
+
+  <!-- Nombre de personnes -->
+  <div class="form-section">
+    <label class="form-label">👥 Nombre de personnes</label>
+    <div class="number-picker">
+      <button (click)="decrementerPersonnes()">−</button>
+      <span class="picker-value">{{ nombrePersonnes }}</span>
+      <button (click)="incrementerPersonnes()">+</button>
+    </div>
+    <p class="picker-hint">Maximum {{ selectedActivite.capaciteMax }} personnes</p>
+  </div>
+
+  <!-- Prix total -->
+  <div class="prix-total">
+    <span>Prix total</span>
+    <span class="prix-value">{{ getPrixTotal() }} TND</span>
+  </div>
+
+  <!-- Messages -->
+  <div class="alert-success" *ngIf="reservationSuccess">{{ reservationSuccess }}</div>
+  <div class="alert-error" *ngIf="reservationError">{{ reservationError }}</div>
+
+</div>
+
+<!-- FOOTER — bouton désactivé si conflit non accepté -->
+<div class="modal-footer">
+  <button class="btn-cancel" (click)="closeReservation()">Annuler</button>
+  <button class="btn-confirm"
+          (click)="confirmerReservation()"
+          [disabled]="reservationLoading || hasConflitNonAccepte()">
+    <span *ngIf="!reservationLoading">✅ Confirmer la réservation</span>
+    <span *ngIf="reservationLoading">⏳ En cours...</span>
+  </button>
+</div>
+
+   
 
   </div>
 </div>
