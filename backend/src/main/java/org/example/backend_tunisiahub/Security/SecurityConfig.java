@@ -41,6 +41,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/reviews/add/**").permitAll()
                         .requestMatchers("/api/accommodation-reservations/check-availability/**").permitAll()
                         .requestMatchers("/api/accommodation-reservations/reserved-dates/**").permitAll()
+                        .requestMatchers("/api/ai/**").permitAll()
 
 
                         // Admin only

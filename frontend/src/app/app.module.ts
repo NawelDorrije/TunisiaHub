@@ -12,6 +12,8 @@ import { NotFoundComponent } from './features/not-found/not-found.component';
 import { HomeComponent } from './core/home/home.component';
 import { HTTP_INTERCEPTORS, HttpClientModule } from '@angular/common/http';
 import { AuthInterceptor } from './features/auth/auth.interceptor';
+import { ChatWidgetComponent } from './shared/components/chat-widget/chat-widget.component';
+import { ReactiveFormsModule } from '@angular/forms';
 
 @NgModule({
   declarations: [
@@ -20,8 +22,15 @@ import { AuthInterceptor } from './features/auth/auth.interceptor';
     HeaderComponent,
     NotFoundComponent,
     HomeComponent,
+    ChatWidgetComponent,
   ],
-  imports: [BrowserModule, AppRoutingModule, HttpClientModule],
+  imports: [
+    BrowserModule,
+     AppRoutingModule, 
+     HttpClientModule,
+     ReactiveFormsModule
+    
+    ],
   providers: [provideClientHydration(),
         {
       provide: HTTP_INTERCEPTORS,
