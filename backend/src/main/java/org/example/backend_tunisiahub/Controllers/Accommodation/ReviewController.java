@@ -42,14 +42,20 @@ public class ReviewController {
             @RequestBody AccommodationReview review,
             @AuthenticationPrincipal String email) {
 
-        if (accommodationId <= 0) return ResponseEntity.badRequest().body("Invalid accommodation ID");
+        if (accommodationId <= 0)
+            return ResponseEntity.badRequest().body("Invalid accommodation ID");
         if (review.getRating() < 1 || review.getRating() > 5)
             return ResponseEntity.badRequest().body("Rating must be between 1 and 5");
         if (review.getComment() == null || review.getComment().isEmpty())
             return ResponseEntity.badRequest().body("Comment is required");
 
-        AccommodationReview saved = reviewService.addReview(accommodationId, review, email);
-        if (saved == null) return ResponseEntity.status(404).body("Accommodation not found");
+        AccommodationReview saved = reviewService.addReview(
+                accommodationId, review, email);
+
+        if (saved == null)
+            return ResponseEntity.status(400)
+                    .body("⚠️ Your review contains inappropriate or offensive content. Please keep it respectful and try again.");
+
         return ResponseEntity.status(201).body(saved);
     }
 

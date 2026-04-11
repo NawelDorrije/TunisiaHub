@@ -240,3 +240,68 @@ Description:"""
         return DescriptionResponse(
             description=f"Error generating description: {str(e)}"
         )
+
+
+class ModerationRequest(BaseModel):
+    comment: str
+    rating: int
+
+class ModerationResponse(BaseModel):
+    is_appropriate: bool
+    reason: str
+
+@app.post("/moderate-review", response_model=ModerationResponse)
+async def moderate_review(request: ModerationRequest):
+    try:
+        # Step 1 — Check bad words vectorstore
+        from tools.rag_tool import check_bad_words_in_db
+        found_bad_words = check_bad_words_in_db(request.comment)
+
+        if found_bad_words:
+            return ModerationResponse(
+                is_appropriate=False,
+                reason=f"Your review contains inappropriate words."
+            )
+
+        # Step 2 — LLM double check for subtle inappropriate content
+        prompt = f"""You are a content moderation expert for a Tunisian tourism platform.
+
+Review this comment for inappropriate content:
+- Rating: {request.rating}/5
+- Comment: "{request.comment}"
+
+Check for:
+- Offensive or insulting language (in any language: Arabic, French, English, Tunisian dialect)
+- Hate speech or discrimination
+- Spam or irrelevant content
+- Explicit or sexual content
+- Threats or harassment
+
+Respond ONLY with a valid JSON object:
+{{
+    "is_appropriate": <true or false>,
+    "reason": "<if inappropriate, explain why in one sentence. If appropriate, say 'Review is appropriate'>"
+}}"""
+
+        response = llm.invoke(prompt)
+        content = response.content.strip()
+
+        if "```json" in content:
+            content = content.split("```json")[1].split("```")[0].strip()
+        elif "```" in content:
+            content = content.split("```")[1].split("```")[0].strip()
+
+        import json
+        data = json.loads(content)
+
+        return ModerationResponse(
+            is_appropriate=bool(data["is_appropriate"]),
+            reason=data["reason"]
+        )
+
+    except Exception as e:
+        # If AI fails → allow review (fail open)
+        return ModerationResponse(
+            is_appropriate=True,
+            reason="Moderation service unavailable — review allowed."
+        )

@@ -61,31 +61,48 @@ export class ReviewFormComponent implements OnChanges {
     };
 
     if (this.isEditMode) {
-      this.reviewService.updateReview(this.reviewToEdit!.id!, review).subscribe({
-        next: (updated) => {
-          this.successMessage = 'Review updated successfully!';
-          this.isLoading = false;
-          this.reviewUpdated.emit(updated);
-          this.resetForm();
-        },
-        error: () => {
-          this.errorMessage = 'Failed to update review.';
-          this.isLoading = false;
-        }
-      });
+     this.reviewService.addReview(this.accommodationId, review).subscribe({
+  next: (added) => {
+    this.successMessage = '✅ Review added successfully!';
+    this.isLoading = false;
+    this.reviewAdded.emit(added);
+    this.resetForm();
+  },
+  error: (err) => {
+    // Read the error message from backend correctly
+    if (err.error && typeof err.error === 'string') {
+      this.errorMessage = err.error;
+    } else if (err.error && err.error.message) {
+      this.errorMessage = err.error.message;
+    } else {
+      this.errorMessage = '❌ Failed to add review. Please try again.';
+    }
+    this.isLoading = false;
+  }
+});
     } else {
       this.reviewService.addReview(this.accommodationId, review).subscribe({
-        next: (added) => {
-          this.successMessage = 'Review added successfully!';
-          this.isLoading = false;
-          this.reviewAdded.emit(added);
-          this.resetForm();
-        },
-        error: () => {
-          this.errorMessage = 'Failed to add review.';
-          this.isLoading = false;
-        }
-      });
+  next: (added) => {
+    this.successMessage = '✅ Review added successfully!';
+    this.isLoading = false;
+    this.reviewAdded.emit(added);
+    this.resetForm();
+  },
+ error: (err) => {
+  console.log('Full error:', err); // ← add this temporarily to see what we get
+  
+  if (typeof err.error === 'string') {
+    this.errorMessage = err.error;
+  } else if (err.error?.message) {
+    this.errorMessage = err.error.message;
+  } else if (err.message) {
+    this.errorMessage = err.message;
+  } else {
+    this.errorMessage = '❌ Failed to add review.';
+  }
+  this.isLoading = false;
+}
+});
     }
   }
 

@@ -94,4 +94,21 @@ public class AiController {
             ));
         }
     }
+    @PostMapping("/moderate-review")
+    public ResponseEntity<?> moderateReview(@RequestBody Map<String, Object> request) {
+        try {
+            ResponseEntity<Map> response = restTemplate.postForEntity(
+                aiServiceUrl + "/moderate-review",
+                request,
+                Map.class
+            );
+            return ResponseEntity.ok(response.getBody());
+        } catch (Exception e) {
+            // If AI service down → allow review
+            return ResponseEntity.ok(Map.of(
+                "is_appropriate", true,
+                "reason", "Moderation unavailable."
+            ));
+        }
+    }
 }

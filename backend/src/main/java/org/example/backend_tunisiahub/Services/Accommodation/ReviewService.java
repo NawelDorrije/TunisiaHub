@@ -8,27 +8,73 @@ import org.example.backend_tunisiahub.Repositories.User.UserRepository;
 import org.springframework.stereotype.Service;
 import java.time.LocalDate;
 import java.util.List;
+import org.springframework.web.client.RestTemplate;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.ResponseEntity;
+import java.util.HashMap;
+import java.util.Map;
 @Service
-@RequiredArgsConstructor
 public class ReviewService implements IReviewService {
 
     final ReviewRepository reviewRepository;
-    final AccommodationService accommodationServiceImp;
+    final AccommodationService accommodationService;
     final UserRepository userRepository;
-    @Override
-    public List<AccommodationReview> retrieveAllReviews() {
-        return reviewRepository.findAll();
+    final RestTemplate restTemplate;
+
+    @Value("${ai.service.url}")
+    private String aiServiceUrl;
+
+    public ReviewService(
+            ReviewRepository reviewRepository,
+            AccommodationService accommodationServiceImp,
+            UserRepository userRepository,
+            RestTemplate restTemplate) {
+        this.reviewRepository = reviewRepository;
+        this.accommodationService = accommodationServiceImp;
+        this.userRepository = userRepository;
+        this.restTemplate = restTemplate;
+    }
+
+    private boolean isReviewAppropriate(AccommodationReview review) {
+        try {
+            Map<String, Object> request = new HashMap<>();
+            request.put("comment", review.getComment());
+            request.put("rating", review.getRating());
+
+            ResponseEntity<Map> response = restTemplate.postForEntity(
+                    aiServiceUrl + "/moderate-review",
+                    request,
+                    Map.class
+            );
+
+            Map<String, Object> body = response.getBody();
+            if (body != null) {
+                Object isAppropriate = body.get("is_appropriate");
+                if (isAppropriate instanceof Boolean) {
+                    return (Boolean) isAppropriate;
+                }
+            }
+            return true;
+        } catch (Exception e) {
+            System.out.println("Moderation error: " + e.getMessage());
+            return true; // fail open
+        }
     }
 
     @Override
-    public AccommodationReview retrieveReview(Long reviewId) {
-        return reviewRepository.findById(reviewId).get();
-    }
+    public AccommodationReview addReview(
+            Long accommodationId,
+            AccommodationReview review,
+            String email) {
 
-    @Override
-    public AccommodationReview addReview(Long accommodationId, AccommodationReview review, String email) {
-        Accommodation accommodation = accommodationServiceImp.retrieveAccommodation(accommodationId);
+        if (!isReviewAppropriate(review)) {
+            return null;
+        }
+
+        Accommodation accommodation = accommodationService
+                .retrieveAccommodation(accommodationId);
         if (accommodation == null) return null;
+
         User user = userRepository.findByEmail(email);
         review.setAccommodation(accommodation);
         review.setUser(user);
@@ -37,16 +83,27 @@ public class ReviewService implements IReviewService {
     }
 
     @Override
-    public void removeReview(Long reviewId) {
-        reviewRepository.deleteById(reviewId);
-    }
-
-    @Override
     public AccommodationReview modifyReview(Long id, AccommodationReview updated) {
-        AccommodationReview existing = reviewRepository.findById(id).get();
+        AccommodationReview existing = reviewRepository.findById(id).orElse(null);
+        if (existing == null) return null;
         existing.setRating(updated.getRating());
         existing.setComment(updated.getComment());
         return reviewRepository.save(existing);
+    }
+
+    @Override
+    public List<AccommodationReview> retrieveAllReviews() {
+        return reviewRepository.findAll();
+    }
+
+    @Override
+    public AccommodationReview retrieveReview(Long reviewId) {
+        return reviewRepository.findById(reviewId).orElse(null);
+    }
+
+    @Override
+    public void removeReview(Long reviewId) {
+        reviewRepository.deleteById(reviewId);
     }
 
     @Override
