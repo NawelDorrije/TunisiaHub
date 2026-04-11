@@ -63,4 +63,35 @@ public class AiController {
             ));
         }
     }
+    @PostMapping("/suggest-price")
+    public ResponseEntity<?> suggestPrice(@RequestBody Map<String, Object> request) {
+    try {
+        ResponseEntity<Map> response = restTemplate.postForEntity(
+            aiServiceUrl + "/suggest-price",
+            request,
+            Map.class
+        );
+        return ResponseEntity.ok(response.getBody());
+    } catch (Exception e) {
+        return ResponseEntity.status(500).body(Map.of(
+            "recommended", 100,
+            "reasoning", "AI service unavailable."
+        ));
+    }
+}
+    @PostMapping("/generate-description")
+    public ResponseEntity<?> generateDescription(@RequestBody Map<String, Object> request) {
+        try {
+            ResponseEntity<Map> response = restTemplate.postForEntity(
+                    aiServiceUrl + "/generate-description",
+                    request,
+                    Map.class
+            );
+            return ResponseEntity.ok(response.getBody());
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(Map.of(
+                    "description", "AI service unavailable."
+            ));
+        }
+    }
 }

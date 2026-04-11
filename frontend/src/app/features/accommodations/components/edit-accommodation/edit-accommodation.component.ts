@@ -3,6 +3,7 @@ import { FormControl, FormGroup, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { AccommodationService } from '../../services/accommodation.service';
 import { Accommodation } from '../../../../models/accommodations/accommodation.model';
+import { PriceRecommendation } from '../../../../models/accommodations/price-recommendation.model';
 
 @Component({
   selector: 'app-edit-accommodation',
@@ -111,4 +112,65 @@ export class EditAccommodationComponent implements OnInit {
   goBack(): void {
     this.router.navigate(['/accommodations/admin']);
   }
+  isPriceLoading = false;
+priceRecommendation: PriceRecommendation | null = null;
+priceError = '';
+
+getSuggestedPrice(): void {
+  const type = this.editForm.value.type;
+  const adresse = this.editForm.value.adresse;
+  const capacite = this.editForm.value.capacite;
+
+  if (!type || !adresse || !capacite) {
+    this.priceError = 'Please fill type, address and capacity first.';
+    return;
+  }
+
+  this.isPriceLoading = true;
+  this.priceError = '';
+  this.priceRecommendation = null;
+
+  this.accommodationService.suggestPrice(type, adresse, capacite).subscribe({
+    next: (data) => {
+      this.priceRecommendation = data;
+      this.editForm.patchValue({ price: data.recommended });
+      this.isPriceLoading = false;
+    },
+    error: () => {
+      this.priceError = 'Failed to get price suggestion.';
+      this.isPriceLoading = false;
+    }
+  });
+}
+isDescriptionLoading = false;
+descriptionError = '';
+
+generateDescription(): void {
+  const title = this.editForm.value.title;
+  const type = this.editForm.value.type;
+  const adresse = this.editForm.value.adresse;
+  const capacite = this.editForm.value.capacite;
+  const price = this.editForm.value.price;
+
+  if (!title || !type || !adresse || !capacite || !price) {
+    this.descriptionError = 'Please fill title, type, address, capacity and price first.';
+    return;
+  }
+
+  this.isDescriptionLoading = true;
+  this.descriptionError = '';
+
+  this.accommodationService.generateDescription(
+    title, type, adresse, capacite, price
+  ).subscribe({
+    next: (data) => {
+      this.editForm.patchValue({ description: data.description });
+      this.isDescriptionLoading = false;
+    },
+    error: () => {
+      this.descriptionError = 'Failed to generate description.';
+      this.isDescriptionLoading = false;
+    }
+  });
+}
 }

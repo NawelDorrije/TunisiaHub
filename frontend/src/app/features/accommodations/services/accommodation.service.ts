@@ -2,6 +2,8 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { Accommodation } from '../../../models/accommodations/accommodation.model';
+import { PriceRecommendation } from '../../../models/accommodations/price-recommendation.model';
+import { DescriptionRecommendation } from '../../../models/accommodations/description-recommendation.model';
 @Injectable({
   providedIn: 'root'
 })
@@ -29,5 +31,24 @@ export class AccommodationService {
 
   deleteAccommodation(id: number): Observable<string> {
     return this.http.delete(`${this.baseUrl}/delete/${id}`, { responseType: 'text' });
+  }
+  suggestPrice(type: string, adresse: string, capacite: number): Observable<PriceRecommendation> {
+  return this.http.post<PriceRecommendation>('http://localhost:8089/api/ai/suggest-price', {
+    type,
+    adresse,
+    capacite
+  });
+}
+  generateDescription(
+  title: string,
+  type: string,
+  adresse: string,
+  capacite: number,
+  price: number
+): Observable<DescriptionRecommendation> {
+  return this.http.post<DescriptionRecommendation>(
+    'http://localhost:8089/api/ai/generate-description',
+    { title, type, adresse, capacite, price }
+  );
 }
 }

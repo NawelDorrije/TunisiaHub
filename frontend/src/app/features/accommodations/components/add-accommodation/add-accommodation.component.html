@@ -55,20 +55,45 @@
         </div>
 
         <!-- Price -->
-        <div class="col-md-6">
-          <label class="form-label">Price (TND / night)</label>
-          <input
-            type="number"
-            min="1"
-            class="form-control"
-            [class.is-invalid]="f['price'].invalid && f['price'].touched"
-            formControlName="price"
-            placeholder="Enter price per night"
-          />
-          <div class="invalid-feedback">
-            Price is required and must be greater than 0.
-          </div>
-        </div>
+        <!-- Price -->
+<div class="col-md-6">
+  <label class="form-label">Price (TND / night)</label>
+  <div class="input-group">
+    <input
+      type="number"
+      min="1"
+      class="form-control"
+      [class.is-invalid]="f['price'].invalid && f['price'].touched"
+      formControlName="price"
+      placeholder="Enter price per night"
+    />
+    <button
+      class="btn btn-outline-primary"
+      type="button"
+      (click)="getSuggestedPrice()"
+      [disabled]="isPriceLoading"
+    >
+      <span *ngIf="isPriceLoading" class="spinner-border spinner-border-sm me-1"></span>
+      {{ isPriceLoading ? 'Thinking...' : '🤖 AI Suggest' }}
+    </button>
+  </div>
+  <div class="invalid-feedback">Price is required and must be greater than 0.</div>
+
+  <!-- AI Recommendation result -->
+  <div class="alert alert-info mt-2 p-2 small" *ngIf="priceRecommendation">
+    <strong>🤖 AI Recommendation:</strong>
+    <div class="d-flex gap-3 mt-1">
+      <span>Min: <strong>{{ priceRecommendation.suggested_min }} TND</strong></span>
+      <span>Max: <strong>{{ priceRecommendation.suggested_max }} TND</strong></span>
+      <span class="text-primary">Recommended: <strong>{{ priceRecommendation.recommended }} TND</strong></span>
+    </div>
+    <p class="mb-0 mt-1 text-muted">{{ priceRecommendation.reasoning }}</p>
+  </div>
+
+  <div class="alert alert-danger mt-2 p-2 small" *ngIf="priceError">
+    {{ priceError }}
+  </div>
+</div>
 
         <!-- Capacity -->
         <div class="col-md-6">
@@ -86,20 +111,38 @@
           </div>
         </div>
 
-        <!-- Description -->
-        <div class="col-md-12">
-          <label class="form-label">Description</label>
-          <textarea
-            class="form-control"
-            rows="4"
-            [class.is-invalid]="f['description'].invalid && f['description'].touched"
-            formControlName="description"
-            placeholder="Describe the accommodation..."
-          ></textarea>
-          <div class="invalid-feedback">
-            Description is required and must be at least 10 characters.
-          </div>
-        </div>
+       <!-- Description -->
+<div class="col-md-12">
+  <label class="form-label">Description</label>
+  <textarea
+    class="form-control"
+    rows="4"
+    [class.is-invalid]="f['description'].invalid && f['description'].touched"
+    formControlName="description"
+    placeholder="Describe the accommodation or let AI generate it..."
+  ></textarea>
+  <div class="invalid-feedback">
+    Description is required and must be at least 10 characters.
+  </div>
+
+  <!-- AI Generate button -->
+  <button
+    type="button"
+    class="btn btn-outline-primary btn-sm mt-2"
+    (click)="generateDescription()"
+    [disabled]="isDescriptionLoading"
+  >
+    <span
+      *ngIf="isDescriptionLoading"
+      class="spinner-border spinner-border-sm me-1"
+    ></span>
+    {{ isDescriptionLoading ? '✍️ Writing...' : '🤖 AI Generate Description' }}
+  </button>
+
+  <div class="alert alert-danger mt-2 p-2 small" *ngIf="descriptionError">
+    {{ descriptionError }}
+  </div>
+</div>
 
         <!-- Photos -->
         <div class="col-md-12">

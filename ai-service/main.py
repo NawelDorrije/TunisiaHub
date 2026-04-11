@@ -9,11 +9,14 @@ from langsmith import traceable
 from tools.sql_tool import query_accommodations, get_accommodation_reviews
 from tools.rag_tool import search_documents, ingest_documents
 from dotenv import load_dotenv
+from sqlalchemy import create_engine, text
 import os
 
 load_dotenv()
 print("GROQ KEY:", os.getenv("GROQ_API_KEY"))  # ← add this
 
+
+engine = create_engine(os.getenv("DB_URL"))
 # LangSmith tracing
 os.environ["LANGCHAIN_TRACING_V2"] = "true"
 os.environ["LANGCHAIN_API_KEY"] = os.getenv("LANGSMITH_API_KEY")
@@ -107,3 +110,133 @@ async def ingest():
 @app.get("/health")
 async def health():
     return {"status": "ok", "service": "TunisiaHub AI"}
+
+
+#this is the price reccomendation 
+
+class PriceRequest(BaseModel):
+    type: str
+    adresse: str
+    capacite: int
+
+class PriceResponse(BaseModel):
+    suggested_min: float
+    suggested_max: float
+    recommended: float
+    reasoning: str
+
+@app.post("/suggest-price", response_model=PriceResponse)
+async def suggest_price(request: PriceRequest):
+    try:
+        # Fetch similar accommodations from DB
+        with engine.connect() as conn:
+            result = conn.execute(text("""
+                SELECT 
+                    a.title,
+                    a.type,
+                    a.adresse,
+                    a.price,
+                    a.capacite,
+                    ROUND(AVG(r.rating), 1) as avg_rating
+                FROM accommodation a
+                LEFT JOIN accommodation_review r ON r.accommodation_id = a.id
+                WHERE a.type = :type
+                GROUP BY a.id, a.title, a.type, a.adresse, a.price, a.capacite
+                ORDER BY ABS(a.capacite - :capacite)
+                LIMIT 5
+            """), {"type": request.type, "capacite": request.capacite})
+
+            rows = result.fetchall()
+            keys = result.keys()
+            similar = [dict(zip(keys, row)) for row in rows]
+
+        similar_text = "\n".join([
+            f"- {s['title']}: {s['price']} TND/night, "
+            f"capacity {s['capacite']}, rating {s['avg_rating']}/5"
+            for s in similar
+        ]) if similar else "No similar accommodations found yet."
+
+        prompt = f"""You are a pricing expert for Tunisia accommodations.
+
+Based on these similar accommodations in our database:
+{similar_text}
+
+Suggest an optimal price for a NEW accommodation with:
+- Type: {request.type}
+- Location: {request.adresse}
+- Capacity: {request.capacite} persons
+
+Respond ONLY with a valid JSON object, no explanation outside JSON:
+{{
+    "suggested_min": <minimum price as number>,
+    "suggested_max": <maximum price as number>,
+    "recommended": <recommended price as number>,
+    "reasoning": "<brief explanation in 1-2 sentences>"
+}}"""
+
+        response = llm.invoke(prompt)
+        content = response.content.strip()
+
+        # Clean JSON if wrapped in markdown
+        if "```json" in content:
+            content = content.split("```json")[1].split("```")[0].strip()
+        elif "```" in content:
+            content = content.split("```")[1].split("```")[0].strip()
+
+        import json
+        data = json.loads(content)
+
+        return PriceResponse(
+            suggested_min=float(data["suggested_min"]),
+            suggested_max=float(data["suggested_max"]),
+            recommended=float(data["recommended"]),
+            reasoning=data["reasoning"]
+        )
+
+    except Exception as e:
+        return PriceResponse(
+            suggested_min=50.0,
+            suggested_max=200.0,
+            recommended=100.0,
+            reasoning=f"Default suggestion (AI error: {str(e)})"
+        )
+    
+
+class DescriptionRequest(BaseModel):
+    title: str
+    type: str
+    adresse: str
+    capacite: int
+    price: float
+
+class DescriptionResponse(BaseModel):
+    description: str
+
+@app.post("/generate-description", response_model=DescriptionResponse)
+async def generate_description(request: DescriptionRequest):
+    try:
+        prompt = f"""You are a professional copywriter for a Tunisian tourism platform.
+
+Write an attractive and professional accommodation description for:
+- Name: {request.title}
+- Type: {request.type}
+- Location: {request.adresse}
+- Capacity: {request.capacite} persons
+- Price: {request.price} TND/night
+
+Requirements:
+- 3 to 4 sentences maximum
+- Highlight the location, comfort and value
+- Use an inviting and warm tone
+- Do NOT use generic filler phrases like "nestled" or "boasting"
+- Respond with ONLY the description text, nothing else
+
+Description:"""
+
+        response = llm.invoke(prompt)
+        return DescriptionResponse(description=response.content.strip())
+
+    except Exception as e:
+        return DescriptionResponse(
+            description=f"Error generating description: {str(e)}"
+        )

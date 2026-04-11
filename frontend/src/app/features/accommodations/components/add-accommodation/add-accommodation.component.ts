@@ -2,6 +2,7 @@ import { Component } from '@angular/core';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AccommodationService } from '../../services/accommodation.service';
+import { PriceRecommendation } from '../../../../models/accommodations/price-recommendation.model';
 
 @Component({
   selector: 'app-add-accommodation',
@@ -77,4 +78,63 @@ export class AddAccommodationComponent {
   goBack(): void {
     this.router.navigate(['/accommodations/admin']);
   }
+  isPriceLoading = false;
+  priceRecommendation: PriceRecommendation | null = null;
+  priceError = '';
+
+getSuggestedPrice(): void {
+  const type = this.addForm.value.type;
+  const adresse = this.addForm.value.adresse;
+  const capacite = this.addForm.value.capacite;
+
+  if (!type || !adresse || !capacite) {
+    this.priceError = 'Please fill type, address and capacity first.';
+    return;
+  }
+  this.isPriceLoading = true;
+  this.priceError = '';
+  this.priceRecommendation = null;
+  this.accommodationService.suggestPrice(type, adresse, capacite).subscribe({
+    next: (data) => {
+      this.priceRecommendation = data;
+      this.addForm.patchValue({ price: data.recommended });
+      this.isPriceLoading = false;
+    },
+    error: () => {
+      this.priceError = 'Failed to get price suggestion.';
+      this.isPriceLoading = false;
+    }
+  });
+}
+isDescriptionLoading = false;
+descriptionError = '';
+
+generateDescription(): void {
+  const title = this.addForm.value.title;
+  const type = this.addForm.value.type;
+  const adresse = this.addForm.value.adresse;
+  const capacite = this.addForm.value.capacite;
+  const price = this.addForm.value.price;
+
+  if (!title || !type || !adresse || !capacite || !price) {
+    this.descriptionError = 'Please fill title, type, address, capacity and price first.';
+    return;
+  }
+
+  this.isDescriptionLoading = true;
+  this.descriptionError = '';
+
+  this.accommodationService.generateDescription(
+    title, type, adresse, capacite, price
+  ).subscribe({
+    next: (data) => {
+      this.addForm.patchValue({ description: data.description });
+      this.isDescriptionLoading = false;
+    },
+    error: () => {
+      this.descriptionError = 'Failed to generate description.';
+      this.isDescriptionLoading = false;
+    }
+  });
+}
 }
