@@ -1,10 +1,17 @@
 package org.example.backend_tunisiahub.Controllers.Accommodation;
 
 import lombok.RequiredArgsConstructor;
+import org.example.backend_tunisiahub.Entities.Accommodation.Accommodation;
+import org.example.backend_tunisiahub.Entities.Accommodation.UserHistory;
+import org.example.backend_tunisiahub.Services.Accommodation.AccommodationService;
+import org.example.backend_tunisiahub.Services.Accommodation.UserHistoryService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
+
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -13,7 +20,8 @@ import java.util.Map;
 public class AiController {
 
     private final RestTemplate restTemplate;
-
+    private final UserHistoryService userHistoryService;
+    private final AccommodationService accommodationService;
     @Value("${ai.service.url}")
     private String aiServiceUrl;
 
@@ -109,6 +117,57 @@ public class AiController {
                 "is_appropriate", true,
                 "reason", "Moderation unavailable."
             ));
+        }
+    }
+    @GetMapping("/recommendations")
+    public ResponseEntity<?> getRecommendations(
+            @AuthenticationPrincipal String email) {
+        try {
+            // Get user history
+            List<UserHistory> history = userHistoryService.getUserHistory(email);
+
+            if (history.isEmpty()) {
+                return ResponseEntity.ok(List.of());
+            }
+
+            // Build history text for AI
+            StringBuilder historyText = new StringBuilder();
+            for (UserHistory h : history) {
+                Accommodation a = h.getAccommodation();
+                historyText.append(String.format(
+                        "- %s (%s) | Location: %s | Price: %.0f TND | Capacity: %d persons\n",
+                        a.getTitle(), a.getType(), a.getAdresse(),
+                        a.getPrice(), a.getCapacite()
+                ));
+            }
+
+            // Get all accommodations
+            List<Accommodation> all = accommodationService.retrieveAllAccommodations();
+            StringBuilder allText = new StringBuilder();
+            for (Accommodation a : all) {
+                allText.append(String.format(
+                        "ID:%d | %s (%s) | Location: %s | Price: %.0f TND | Capacity: %d\n",
+                        a.getId(), a.getTitle(), a.getType(),
+                        a.getAdresse(), a.getPrice(), a.getCapacite()
+                ));
+            }
+
+            // Call Python AI service
+            Map<String, String> request = Map.of(
+                    "history", historyText.toString(),
+                    "all_accommodations", allText.toString()
+            );
+
+            ResponseEntity<Map> response = restTemplate.postForEntity(
+                    aiServiceUrl + "/recommend",
+                    request,
+                    Map.class
+            );
+
+            return ResponseEntity.ok(response.getBody());
+
+        } catch (Exception e) {
+            return ResponseEntity.ok(Map.of("recommendations", List.of()));
         }
     }
 }

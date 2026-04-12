@@ -144,6 +144,44 @@
         [accommodationTitle]="accommodation.title"
       ></app-reservation-form>
     </div>
+    <!-- AI Recommendations -->
+<div class="mt-4" *ngIf="authService.isLoggedIn() && recommendations.length > 0">
+  <hr/>
+  <div class="d-flex align-items-center gap-2 mb-3">
+    <h4 class="fw-bold mb-0">🤖 Recommended for you</h4>
+    <span class="badge bg-primary">AI Powered</span>
+  </div>
+  <p class="text-muted small fst-italic mb-3" *ngIf="recommendationReasoning">
+    {{ recommendationReasoning }}
+  </p>
+
+  <div class="row g-3">
+    <div class="col-md-4" *ngFor="let rec of recommendations">
+      <div
+        class="card border-0 shadow-sm h-100 recommendation-card"
+        style="cursor: pointer;"
+        (click)="goToDetail(rec.id!)"
+      >
+        <img
+          [src]="rec.photos?.[0] || 'assets/images/placeholder.jpg'"
+          class="card-img-top"
+          style="height: 150px; object-fit: cover;"
+          alt="{{ rec.title }}"
+        />
+        <div class="card-body p-2">
+          <h6 class="fw-bold mb-1">{{ rec.title }}</h6>
+          <p class="text-muted small mb-1">
+            <i class="bi bi-geo-alt-fill"></i> {{ rec.adresse }}
+          </p>
+          <div class="d-flex justify-content-between align-items-center">
+            <span class="badge bg-secondary">{{ rec.type }}</span>
+            <span class="fw-bold text-primary small">{{ rec.price }} TND/night</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
    <app-review-list [accommodationId]="accommodation.id!"></app-review-list>
 
 </div>

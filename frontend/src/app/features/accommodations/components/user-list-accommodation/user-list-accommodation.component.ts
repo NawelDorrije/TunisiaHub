@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { AccommodationService } from '../../services/accommodation.service';
 import { Accommodation } from '../../../../models/accommodations/accommodation.model';
+import { AuthService } from '../../../auth/services/auth.service';
 
 @Component({
   selector: 'app-user-list-accommodation',
@@ -30,13 +31,41 @@ export class UserListAccommodationComponent implements OnInit {
 
   constructor(
     private accommodationService: AccommodationService,
-    private router: Router
+    private router: Router,
+    public authService: AuthService
   ) {}
 
-  ngOnInit(): void {
-    this.loadAccommodations();
-  }
+ // Add these properties
+recommendations: Accommodation[] = [];
+recommendationReasoning: string = '';
+isLoadingRecommendations: boolean = false;
 
+// Add in ngOnInit
+ngOnInit(): void {
+  this.loadAccommodations();
+  if (this.authService.isLoggedIn()) {
+    this.loadRecommendations();
+  }
+}
+
+loadRecommendations(): void {
+  this.isLoadingRecommendations = true;
+  this.accommodationService.getRecommendations().subscribe({
+    next: (data) => {
+      if (data.recommended_ids?.length > 0) {
+        this.recommendationReasoning = data.reasoning;
+        data.recommended_ids.slice(0, 3).forEach(rid => {
+          this.accommodationService.getAccommodationById(rid).subscribe({
+            next: (acc) => this.recommendations.push(acc),
+            error: () => {}
+          });
+        });
+      }
+      this.isLoadingRecommendations = false;
+    },
+    error: () => this.isLoadingRecommendations = false
+  });
+}
   loadAccommodations(): void {
     this.isLoading = true;
     this.accommodationService.getAllAccommodations().subscribe({
@@ -116,4 +145,5 @@ export class UserListAccommodationComponent implements OnInit {
   toggleFilters(): void {
     this.showFilters = !this.showFilters;
   }
+  
 }

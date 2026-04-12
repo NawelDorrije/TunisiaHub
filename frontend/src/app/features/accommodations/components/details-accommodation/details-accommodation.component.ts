@@ -16,6 +16,11 @@ export class DetailsAccommodationComponent implements OnInit {
   isLoading: boolean = true;
   selectedPhoto: string = '';
 
+  // Recommendations
+  recommendations: Accommodation[] = [];
+  recommendationReasoning: string = '';
+  isLoadingRecommendations: boolean = false;
+
   constructor(
     private accommodationService: AccommodationService,
     private route: ActivatedRoute,
@@ -34,10 +39,43 @@ export class DetailsAccommodationComponent implements OnInit {
         this.accommodation = data;
         this.selectedPhoto = data.photos?.[0] || 'assets/images/placeholder.jpg';
         this.isLoading = false;
+
+        // Track view if logged in
+        if (this.authService.isLoggedIn()) {
+          this.accommodationService.trackView(id).subscribe();
+          this.loadRecommendations();
+        }
       },
       error: () => {
         this.errorMessage = 'Accommodation not found.';
         this.isLoading = false;
+      }
+    });
+  }
+
+  loadRecommendations(): void {
+    this.isLoadingRecommendations = true;
+    this.accommodationService.getRecommendations().subscribe({
+      next: (data) => {
+        if (data.recommended_ids?.length > 0) {
+          this.recommendationReasoning = data.reasoning;
+          // Fetch each recommended accommodation
+          const fetches = data.recommended_ids
+            .filter(rid => rid !== this.accommodation.id)
+            .slice(0, 3);
+
+          this.recommendations = [];
+          fetches.forEach(rid => {
+            this.accommodationService.getAccommodationById(rid).subscribe({
+              next: (acc) => this.recommendations.push(acc),
+              error: () => {}
+            });
+          });
+        }
+        this.isLoadingRecommendations = false;
+      },
+      error: () => {
+        this.isLoadingRecommendations = false;
       }
     });
   }
@@ -52,5 +90,9 @@ export class DetailsAccommodationComponent implements OnInit {
 
   goToEdit(id: number): void {
     this.router.navigate(['/accommodations/edit', id]);
+  }
+
+  goToDetail(id: number): void {
+    this.router.navigate(['/accommodations/detail', id]);
   }
 }

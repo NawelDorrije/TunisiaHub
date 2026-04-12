@@ -55,6 +55,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/reviews/delete/**").hasAnyRole("CLIENT", "ADMIN")
                         .requestMatchers("/api/accommodation-reservations/**").hasAnyRole("CLIENT", "ADMIN")
                         .requestMatchers("/api/accommodation-reservations/my-reservations").hasAnyRole("CLIENT", "ADMIN")
+                        .requestMatchers("/api/history/**").hasAnyRole("CLIENT", "ADMIN")
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);

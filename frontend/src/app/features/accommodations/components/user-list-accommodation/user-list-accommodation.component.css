@@ -24,3 +24,13 @@
 .sticky-top {
   z-index: 10;
 }
+.recommendation-card {
+  border-radius: 12px;
+  overflow: hidden;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.recommendation-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1) !important;
+}

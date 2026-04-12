@@ -305,3 +305,54 @@ Respond ONLY with a valid JSON object:
             is_appropriate=True,
             reason="Moderation service unavailable — review allowed."
         )
+
+class RecommendationRequest(BaseModel):
+    history: str
+    all_accommodations: str
+
+class RecommendationResponse(BaseModel):
+    recommended_ids: list[int]
+    reasoning: str
+
+@app.post("/recommend", response_model=RecommendationResponse)
+async def recommend(request: RecommendationRequest):
+    try:
+        prompt = f"""You are an accommodation recommendation expert for TunisiaHub.
+
+Based on this user's viewing history:
+{request.history}
+
+From all available accommodations:
+{request.all_accommodations}
+
+Recommend exactly 3 accommodations the user would most likely enjoy.
+Consider: type preferences, price range, location patterns, capacity needs.
+Do NOT recommend accommodations already in the history.
+
+Respond ONLY with valid JSON:
+{{
+    "recommended_ids": [<id1>, <id2>, <id3>],
+    "reasoning": "<one sentence explaining the recommendation logic>"
+}}"""
+
+        response = llm.invoke(prompt)
+        content = response.content.strip()
+
+        if "```json" in content:
+            content = content.split("```json")[1].split("```")[0].strip()
+        elif "```" in content:
+            content = content.split("```")[1].split("```")[0].strip()
+
+        import json
+        data = json.loads(content)
+
+        return RecommendationResponse(
+            recommended_ids=data["recommended_ids"][:3],
+            reasoning=data["reasoning"]
+        )
+
+    except Exception as e:
+        return RecommendationResponse(
+            recommended_ids=[],
+            reasoning=f"Could not generate recommendations: {str(e)}"
+        )

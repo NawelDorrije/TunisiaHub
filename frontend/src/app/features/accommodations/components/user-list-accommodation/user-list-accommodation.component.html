@@ -20,7 +20,39 @@
       </span>
     </button>
   </div>
+ <!-- AI Recommendations -->
+<div class="mb-4" *ngIf="authService.isLoggedIn() && recommendations.length > 0">
+  <div class="d-flex align-items-center gap-2 mb-3">
+    <h5 class="fw-bold mb-0">🤖 Recommended for you</h5>
+    <span class="badge bg-primary">AI Powered</span>
+  </div>
+  <p class="text-muted small fst-italic mb-3">{{ recommendationReasoning }}</p>
 
+  <div class="row g-3">
+    <div class="col-md-4" *ngFor="let rec of recommendations">
+      <div
+        class="card border-0 shadow-sm recommendation-card"
+        style="cursor: pointer;"
+        (click)="goToDetail(rec.id!)"
+      >
+        <img
+          [src]="rec.photos?.[0] || 'assets/images/placeholder.jpg'"
+          class="card-img-top"
+          style="height: 150px; object-fit: cover; border-radius: 12px 12px 0 0;"
+          alt="{{ rec.title }}"
+        />
+        <div class="card-body p-2">
+          <h6 class="fw-bold mb-1">{{ rec.title }}</h6>
+          <div class="d-flex justify-content-between align-items-center">
+            <span class="badge bg-secondary">{{ rec.type }}</span>
+            <span class="fw-bold text-primary small">{{ rec.price }} TND/night</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <hr class="mt-4"/>
+</div>
   <!-- Top search bar -->
   <div class="card border-0 shadow-sm mb-4">
     <div class="card-body py-3">

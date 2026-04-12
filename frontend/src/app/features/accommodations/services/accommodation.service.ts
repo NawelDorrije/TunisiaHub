@@ -4,6 +4,7 @@ import { Observable } from 'rxjs';
 import { Accommodation } from '../../../models/accommodations/accommodation.model';
 import { PriceRecommendation } from '../../../models/accommodations/price-recommendation.model';
 import { DescriptionRecommendation } from '../../../models/accommodations/description-recommendation.model';
+import { RecommendationResponse } from '../../../models/accommodations/recommendation.model';
 @Injectable({
   providedIn: 'root'
 })
@@ -49,6 +50,17 @@ export class AccommodationService {
   return this.http.post<DescriptionRecommendation>(
     'http://localhost:8089/api/ai/generate-description',
     { title, type, adresse, capacite, price }
+  );
+}
+  trackView(accommodationId: number): Observable<void> {
+  return this.http.post<void>(
+    `http://localhost:8089/api/history/track/${accommodationId}`, {}
+  );
+}
+
+getRecommendations(): Observable<RecommendationResponse> {
+  return this.http.get<RecommendationResponse>(
+    'http://localhost:8089/api/ai/recommendations'
   );
 }
 }
