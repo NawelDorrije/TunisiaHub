@@ -9,32 +9,29 @@ embeddings = SentenceTransformerEmbeddings(model_name="all-MiniLM-L6-v2")
 
 CHROMA_DIR = "./chroma_db"
 BAD_WORDS_CHROMA_DIR = "./chroma_bad_words_db"
-PDF_DIR = "./documents"
-BAD_WORDS_PDF = "./documents/tunisian_bad_words.pdf"
+PDF_DIR = "./documents/tunisia_hub_profile.pdf"
+BAD_WORDS_PDF = "./documents/tunisian_bad_words.pdf.pdf"
 
 def ingest_documents():
-    """Ingest all PDFs from documents folder into ChromaDB"""
-    all_docs = []
-    for filename in os.listdir(PDF_DIR):
-        if filename.endswith('.pdf') and filename != 'tunisian_bad_words.pdf':
-            print(f"📄 Ingesting: {filename}")
-            loader = PyPDFLoader(os.path.join(PDF_DIR, filename))
-            docs = loader.load()
-            splitter = RecursiveCharacterTextSplitter(
-                chunk_size=1000,
-                chunk_overlap=200
-            )
-            splits = splitter.split_documents(docs)
-            all_docs.extend(splits)
-    if all_docs:
-        vectorstore = Chroma.from_documents(
-            documents=all_docs,
-            embedding=embeddings,
-            persist_directory=CHROMA_DIR
-        )
-        print(f"✅ Ingested {len(all_docs)} chunks into ChromaDB")
-        return vectorstore
-    return None
+    """Ingest Tunisian hub profile PDF into a separate ChromaDB"""
+    if not os.path.exists(PDF_DIR):
+        print("⚠️ No tunisia hub profile found .")
+        return None
+    print("📄 ingesting tunisia_hub_profile...")
+    loader = PyPDFLoader(PDF_DIR)
+    docs = loader.load()
+    splitter = RecursiveCharacterTextSplitter(
+        chunk_size=200,
+        chunk_overlap=50
+    )
+    splits = splitter.split_documents(docs)
+    vectorstore = Chroma.from_documents(
+        documents=splits,
+        embedding=embeddings,
+        persist_directory=CHROMA_DIR
+    )
+    print(f"✅ Ingested {len(splits)} Tunisa hub profile")
+    return vectorstore
 
 def ingest_bad_words():
     """Ingest Tunisian bad words PDF into a separate ChromaDB"""
@@ -97,6 +94,7 @@ def search_documents(query: str) -> str:
         return "\n\n".join(results)
     except Exception as e:
         return f"Error searching documents: {str(e)}"
+
 
 def check_bad_words_in_db(text: str) -> list[str]:
     """Search bad words vectorstore for similar content"""

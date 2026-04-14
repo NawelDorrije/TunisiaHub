@@ -11,6 +11,9 @@ from tools.rag_tool import search_documents, ingest_documents
 from dotenv import load_dotenv
 from sqlalchemy import create_engine, text
 import os
+from collections import defaultdict
+from tools.rag_tool import check_bad_words_in_db
+import json
 
 load_dotenv()
 print("GROQ KEY:", os.getenv("GROQ_API_KEY"))  # ← add this
@@ -36,23 +39,37 @@ llm = ChatGroq(
     api_key=os.getenv("GROQ_API_KEY"),
     temperature=0.3
 )
-
+moderation_llm = ChatGroq(
+    model="llama-guard-3-8b",   # free tier, safety-focused
+    api_key=os.getenv("GROQ_API_KEY"),  # same key, no second account needed
+    temperature=0.0
+)
 # Tools
 tools = [query_accommodations, get_accommodation_reviews, search_documents]
 
 # Prompt
 prompt = ChatPromptTemplate.from_messages([
     ("system", """You are TunisiaHub's helpful AI assistant specializing in 
-    accommodation recommendations in Tunisia. 
+    accommodation recommendations in Tunisia.
+
+    TunisiaHub is a Tunisian accommodation platform. For ANY question about:
+    - What TunisiaHub is, its history, founding date, employees, or mission,capital
+    - Company policies, rules, or procedures
+    - Tourism information, travel guides, regulations
+    → ALWAYS call the search_documents tool first before answering.
     
+    If search_documents returns no results, say:
+    "I don't have that information in my documents. For company details, 
+    please contact TunisiaHub directly."
+    
+    NEVER say "I don't know about TunisiaHub" without first calling search_documents.
+
     You have access to:
     1. A database of accommodations with prices, types, locations and reviews
-    2. PDF documents about Tunisia tourism and accommodation policies
+    2. PDF documents about Tunisia tourism, accommodation policies, AND company information
     
     Always be helpful, friendly and respond in the same language as the user.
     When recommending accommodations, always mention price, rating and location.
-    If asked about specific documents or policies, use the document search tool.
-    If asked about accommodations, prices, availability or reviews, use the database tool.
     """),
     MessagesPlaceholder(variable_name="chat_history"),
     ("human", "{input}"),
@@ -60,22 +77,21 @@ prompt = ChatPromptTemplate.from_messages([
 ])
 
 # Memory — keeps last 5 exchanges
-memory = ConversationBufferWindowMemory(
-    k=5,
-    memory_key="chat_history",
-    return_messages=True
-)
+# Replace the single memory instance with a session store
+
+session_memories: dict[str, ConversationBufferWindowMemory] = {}
+
+def get_memory(session_id: str) -> ConversationBufferWindowMemory:
+    if session_id not in session_memories:
+        session_memories[session_id] = ConversationBufferWindowMemory(
+            k=5,
+            memory_key="chat_history",
+            return_messages=True
+        )
+    return session_memories[session_id]
 
 # Agent
 agent = create_tool_calling_agent(llm, tools, prompt)
-agent_executor = AgentExecutor(
-    agent=agent,
-    tools=tools,
-    memory=memory,
-    verbose=True,
-    max_iterations=3
-)
-
 class ChatRequest(BaseModel):
     message: str
     session_id: str = "default"
@@ -88,9 +104,17 @@ class ChatResponse(BaseModel):
 @traceable
 async def chat(request: ChatRequest):
     try:
-        result = agent_executor.invoke({
-            "input": request.message
-        })
+        memory = get_memory(request.session_id)
+        agent_executor = AgentExecutor(
+            agent=agent,
+            tools=tools,
+            memory=memory,
+            verbose=True,
+            max_iterations=7,           # raised from 3
+            max_execution_time=30,      # add this too — seconds timeout
+            early_stopping_method="generate"  # add this — LLM writes a final answer instead of just stopping cold
+        )
+        result = agent_executor.invoke({"input": request.message})
         return ChatResponse(
             response=result["output"],
             session_id=request.session_id
@@ -100,7 +124,6 @@ async def chat(request: ChatRequest):
             response=f"Sorry, I encountered an error: {str(e)}",
             session_id=request.session_id
         )
-
 @app.post("/ingest")
 async def ingest():
     """Endpoint to re-ingest documents"""
@@ -183,7 +206,6 @@ Respond ONLY with a valid JSON object, no explanation outside JSON:
         elif "```" in content:
             content = content.split("```")[1].split("```")[0].strip()
 
-        import json
         data = json.loads(content)
 
         return PriceResponse(
@@ -254,7 +276,6 @@ class ModerationResponse(BaseModel):
 async def moderate_review(request: ModerationRequest):
     try:
         # Step 1 — Check bad words vectorstore
-        from tools.rag_tool import check_bad_words_in_db
         found_bad_words = check_bad_words_in_db(request.comment)
 
         if found_bad_words:
@@ -283,7 +304,7 @@ Respond ONLY with a valid JSON object:
     "reason": "<if inappropriate, explain why in one sentence. If appropriate, say 'Review is appropriate'>"
 }}"""
 
-        response = llm.invoke(prompt)
+        response = moderation_llm.invoke(prompt)
         content = response.content.strip()
 
         if "```json" in content:
