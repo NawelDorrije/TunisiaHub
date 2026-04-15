@@ -1,6 +1,7 @@
 package org.example.backend_tunisiahub.Services.SouvenirsShops;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -39,6 +40,8 @@ public class OrderService implements IOrderService {
     private final ProductRepository productRepository;
     private final ShopRepository shopRepository;
     private final UserRepository userRepository;
+    private final AiOrderMessageService aiOrderMessageService;
+    private final OrderIssueDetectorService orderIssueDetectorService;
 
     @Override
     public List<Order> retrieveAllOrders() {
@@ -187,7 +190,7 @@ public class OrderService implements IOrderService {
 
     @Override
     @Transactional
-    public Order updateOrderStatus(Long id, OrderStatus newStatus) {
+    public Order updateOrderStatus(Long id, OrderStatus newStatus, Boolean generateAiMessage) {
         if (!isOwner()) {
             throw new ApiException(HttpStatus.FORBIDDEN, "Only owners can update order status");
         }
@@ -201,14 +204,19 @@ public class OrderService implements IOrderService {
         }
 
         OrderStatus currentStatus = order.getStatus();
-        if (currentStatus == OrderStatus.COMPLETED || currentStatus == OrderStatus.CANCELLED) {
+        if (currentStatus == OrderStatus.DELIVERED
+                || currentStatus == OrderStatus.COMPLETED
+                || currentStatus == OrderStatus.CANCELLED) {
             throw new ApiException(HttpStatus.BAD_REQUEST, "Completed or cancelled orders cannot be modified");
         }
 
         boolean allowed =
                 (currentStatus == OrderStatus.PENDING && newStatus == OrderStatus.CANCELLED)
                         || (currentStatus == OrderStatus.PAID && (newStatus == OrderStatus.PROCESSING || newStatus == OrderStatus.CANCELLED))
-                        || (currentStatus == OrderStatus.PROCESSING && (newStatus == OrderStatus.COMPLETED || newStatus == OrderStatus.CANCELLED));
+                        || (currentStatus == OrderStatus.PROCESSING
+                        && (newStatus == OrderStatus.DELIVERED
+                        || newStatus == OrderStatus.COMPLETED
+                        || newStatus == OrderStatus.CANCELLED));
         if (!allowed) {
             throw new ApiException(HttpStatus.BAD_REQUEST, "Invalid status transition");
         }
@@ -220,7 +228,32 @@ public class OrderService implements IOrderService {
         }
 
         order.setStatus(newStatus);
-        return orderRepository.save(order);
+        Order updatedOrder = orderRepository.save(order);
+
+        boolean shouldGenerateAiMessage = generateAiMessage == null || Boolean.TRUE.equals(generateAiMessage);
+        if (shouldGenerateAiMessage && shouldGenerateMessageForStatus(newStatus)) {
+            List<OrderItem> orderItems = orderItemRepository.findByOrderId(updatedOrder.getId());
+            String smartMessage = aiOrderMessageService.generateSmartStatusMessage(updatedOrder, orderItems);
+            updatedOrder.setAiStatusMessage(smartMessage);
+            updatedOrder.setAiMessageGeneratedAt(LocalDateTime.now());
+            updatedOrder = orderRepository.save(updatedOrder);
+        }
+
+        return updatedOrder;
+    }
+
+    @Override
+    public List<String> detectOrderIssues() {
+        List<Order> scopedOrders;
+        if (isAdmin()) {
+            scopedOrders = orderIssueDetectorService.loadRecentOrdersForAdmin();
+        } else if (isOwner()) {
+            scopedOrders = orderIssueDetectorService.loadRecentOrdersForOwner(getCurrentUser().getId());
+        } else {
+            throw new ApiException(HttpStatus.FORBIDDEN, "Only owners and admins can detect order issues");
+        }
+
+        return orderIssueDetectorService.detectIssuesForOrders(scopedOrders);
     }
 
     private void restoreStockForOrder(Order order) {
@@ -237,6 +270,13 @@ public class OrderService implements IOrderService {
                 .orElseThrow(() -> new ApiException(HttpStatus.BAD_REQUEST, "Cannot refund: no successful payment found"));
         payment.setStatus(PaymentStatus.REFUNDED);
         paymentRepository.save(payment);
+    }
+
+    private boolean shouldGenerateMessageForStatus(OrderStatus status) {
+        return status == OrderStatus.PROCESSING
+                || status == OrderStatus.DELIVERED
+                || status == OrderStatus.COMPLETED
+                || status == OrderStatus.PAID;
     }
 
     private void validateCartItem(CartItemRequest item) {

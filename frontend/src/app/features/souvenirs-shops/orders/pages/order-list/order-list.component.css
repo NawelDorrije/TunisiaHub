@@ -357,3 +357,69 @@
   .order-actions { width: 100%; justify-content: flex-start; }
   .order-meta { gap: 1rem; }
 }
+
+/* Issues Alert */
+.issues-alert {
+  background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+  border: 1px solid #ffc107;
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 1.5rem;
+  border-left: 4px solid #ffc107;
+}
+
+.issues-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.issues-icon {
+  font-size: 18px;
+  color: #856404;
+}
+
+.issues-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #856404;
+  margin: 0;
+}
+
+.issues-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.issue-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(133, 100, 4, 0.1);
+}
+
+.issue-item:last-child {
+  border-bottom: none;
+}
+
+.issue-icon {
+  font-size: 14px;
+  color: #dc3545;
+  margin-top: 2px;
+  flex-shrink: 0;
+}
+
+.issue-content {
+  flex: 1;
+  font-size: 14px;
+  color: #5c3d2e;
+  line-height: 1.4;
+}
+
+.issue-order-id {
+  font-weight: 500;
+  color: #C94B2C;
+}

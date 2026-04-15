@@ -13,4 +13,6 @@ export interface Order {
   createdAt?: string;
   orderItems?: OrderItem[];
   payment?: Payment;
+  aiStatusMessage?: string;
+  aiMessageGeneratedAt?: string;
 }

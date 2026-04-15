@@ -65,6 +65,10 @@ public class Shop {
     @Column(length = 1000)
     private String photoUrl;
 
+    @Builder.Default
+    @Column(nullable = false)
+    private Double averageRating = 0.0;
+
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "owner_id", nullable = false)
     @JsonIgnoreProperties({"hibernateLazyInitializer", "handler", "reservations", "orders", "reviews", "motDePasse"})

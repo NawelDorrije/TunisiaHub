@@ -67,6 +67,11 @@ public class Order {
     @Column(nullable = false, precision = 12, scale = 2)
     private BigDecimal totalAmount;
 
+    @Column(columnDefinition = "TEXT")
+    private String aiStatusMessage;
+
+    private LocalDateTime aiMessageGeneratedAt;
+
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;

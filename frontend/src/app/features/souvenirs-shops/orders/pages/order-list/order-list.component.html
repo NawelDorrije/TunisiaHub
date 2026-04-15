@@ -13,6 +13,19 @@
     </button>
   </div>
 
+  <!-- Issues Alert for Owners/Admins -->
+  <div *ngIf="(authService.isOwner() || authService.isAdmin()) && issues.length > 0" class="issues-alert">
+    <div class="issues-header">
+      <span class="issues-icon">⚠️</span>
+      <span class="issues-title">Order Issues Detected</span>
+    </div>
+    <div class="issues-list">
+      <div *ngFor="let issue of issues" class="issue-item">
+        {{ issue }}
+      </div>
+    </div>
+  </div>
+
   <div *ngIf="viewTabs.length > 1" class="orders-view-tabs">
     <button *ngFor="let tab of viewTabs"
       type="button"

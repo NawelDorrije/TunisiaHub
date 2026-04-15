@@ -6,8 +6,18 @@ import { OrderItem } from '../../models/souvenirs-shops/order-item.model';
 import { Payment } from '../../models/souvenirs-shops/payment.model';
 import { environment } from '../../environments/environment';
 
+export interface UpdateOrderStatusRequest {
+  status: string;
+  generateAiMessage?: boolean;
+}
+
+export interface CartItemRequest {
+  productId: number;
+  quantity: number;
+}
+
 export interface CreateOrdersRequest {
-  items: Array<{ productId: number; quantity: number }>;
+  items: CartItemRequest[];
 }
 
 @Injectable({ providedIn: 'root' })
@@ -21,15 +31,20 @@ export class OrderService {
   getOrderById(id: number): Observable<Order> { return this.http.get<Order>(`${this.apiUrl}/${id}`); }
   getOrdersByUser(userId: number): Observable<Order[]> { return this.http.get<Order[]>(`${this.apiUrl}/user/${userId}`); }
   getOrdersByShop(shopId: number): Observable<Order[]> { return this.http.get<Order[]>(`${this.apiUrl}/shop/${shopId}`); }
+  getOrdersByProduct(productId: number): Observable<Order[]> { return this.http.get<Order[]>(`${this.apiUrl}/product/${productId}`); }
   getOrderItems(orderId: number): Observable<OrderItem[]> { return this.http.get<OrderItem[]>(`${this.apiUrl}/${orderId}/items`); }
   getOrderPayments(orderId: number): Observable<Payment[]> { return this.http.get<Payment[]>(`${this.apiUrl}/${orderId}/payments`); }
+
+  getOrderIssues(): Observable<string[]> {
+    return this.http.get<string[]>(`${this.apiUrl}/issues`);
+  }
 
   createOrders(request: CreateOrdersRequest): Observable<Order[]> {
     return this.http.post<Order[]>(`${this.apiUrl}`, request);
   }
 
-  updateOrderStatus(orderId: number, status: string): Observable<Order> {
-    return this.http.put<Order>(`${this.apiUrl}/${orderId}/status`, { status });
+  updateOrderStatus(orderId: number, request: UpdateOrderStatusRequest): Observable<Order> {
+    return this.http.put<Order>(`${this.apiUrl}/${orderId}/status`, request);
   }
 
   addOrder(order: Order): Observable<Order> { return this.http.post<Order>(`${this.apiUrl}`, order); }

@@ -11,4 +11,5 @@ export interface Product {
   category?: string;
   shop?: { id: number; name?: string };
   reviews?: Review[];
+  averageRating?: number;
 }

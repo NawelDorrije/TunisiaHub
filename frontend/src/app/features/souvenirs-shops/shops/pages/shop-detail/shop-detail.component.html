@@ -41,6 +41,12 @@
             <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="6" r="2.5"/><path d="M8 2C5.5 2 3.5 4 3.5 6.5c0 3.5 4.5 7.5 4.5 7.5s4.5-4 4.5-7.5C12.5 4 10.5 2 8 2z"/></svg>
             {{ shop.city }}{{ shop.address ? ' · ' + shop.address : '' }}
           </span>
+          <span *ngIf="shop.averageRating" class="sdp-rating">
+            <svg width="12" height="12" viewBox="0 0 20 20" fill="#EF9F27" stroke="#EF9F27" stroke-width="1.2">
+              <polygon points="10,2 12.5,7.5 18.5,7.5 14,11.5 15.8,18 10,14.5 4.2,18 6,11.5 1.5,7.5 7.5,7.5"/>
+            </svg>
+            {{ shop.averageRating | number:'1.1-1' }} ({{ reviews.length }} reviews)
+          </span>
           <span class="sdp-active">
             <span class="sdp-active-dot"></span>
             Active
@@ -68,13 +74,13 @@
         <span class="sdp-stat-l">Products</span>
       </div>
       <div class="sdp-stat-div"></div>
-      <div class="sdp-stat">
+      <div class="sdp-stat" *ngIf="authService.isOwner() || authService.isAdmin()">
         <span class="sdp-stat-n">{{ orderCount }}</span>
         <span class="sdp-stat-l">Orders</span>
       </div>
-      <div class="sdp-stat-div"></div>
+      <div class="sdp-stat-div" *ngIf="authService.isOwner() || authService.isAdmin()"></div>
       <div class="sdp-stat">
-        <span class="sdp-stat-n">{{ shop.reviews?.length || 0 }}</span>
+        <span class="sdp-stat-n">{{ reviews.length }}</span>
         <span class="sdp-stat-l">Reviews</span>
       </div>
     </div>
@@ -117,42 +123,95 @@
               </div>
             </div>
           </div>
-          <div *ngIf="!shop.products || shop.products.length === 0" class="sdp-empty">
-            <div class="sdp-empty-icon">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
-            </div>
-            <p class="sdp-empty-title">No products yet</p>
-            <p class="sdp-empty-sub">This shop hasn't listed anything for sale.</p>
-          </div>
         </div>
 
         <!-- Reviews -->
-        <div class="sdp-card">
+        <div class="sdp-card" *ngIf="canSeeReviews">
           <div class="sdp-card-head">
             <span class="sdp-card-title">Reviews</span>
-            <span class="sdp-muted-sm">{{ shop.reviews?.length || 0 }} total</span>
+            <span class="sdp-muted-sm">{{ reviews.length }} total</span>
           </div>
 
-          <div *ngIf="shop.reviews && shop.reviews.length > 0" class="sdp-reviews">
-            <div class="sdp-review" *ngFor="let review of shop.reviews">
+          <div *ngIf="reviews.length > 0" class="sdp-reviews">
+            <div class="sdp-review" *ngFor="let review of reviews">
               <div class="sdp-review-head">
                 <div>
                   <span class="sdp-reviewer">{{ review.user?.prenom || 'Guest' }} {{ review.user?.nom || '' }}</span>
                   <span class="sdp-review-date">{{ review.createdAt | date:'mediumDate' }}</span>
                 </div>
-                <div class="sdp-stars">
-                  <svg *ngFor="let s of [1,2,3,4,5]" width="13" height="13" viewBox="0 0 20 20"
-                       [attr.fill]="s <= review.rating ? '#EF9F27' : 'none'"
-                       [attr.stroke]="s <= review.rating ? '#EF9F27' : '#ccc'" stroke-width="1.2">
-                    <polygon points="10,2 12.5,7.5 18.5,7.5 14,11.5 15.8,18 10,14.5 4.2,18 6,11.5 1.5,7.5 7.5,7.5"/>
-                  </svg>
+                <div class="sdp-review-actions">
+                  <div class="sdp-stars">
+                    <svg *ngFor="let s of [1,2,3,4,5]" width="13" height="13" viewBox="0 0 20 20"
+                         [attr.fill]="s <= review.rating ? '#EF9F27' : 'none'"
+                         [attr.stroke]="s <= review.rating ? '#EF9F27' : '#ccc'" stroke-width="1.2">
+                      <polygon points="10,2 12.5,7.5 18.5,7.5 14,11.5 15.8,18 10,14.5 4.2,18 6,11.5 1.5,7.5 7.5,7.5"/>
+                    </svg>
+                  </div>
+                  <!-- Only show edit/delete buttons for the review author (not for owners viewing reviews) -->
+                  <div *ngIf="canManageReview(review) && editingReview?.id !== review.id" class="sdp-review-buttons">
+                    <button class="sdp-btn-edit" (click)="startEditReview(review)" title="Edit review">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                      </svg>
+                    </button>
+                    <button class="sdp-btn-delete" (click)="deleteReview(review)" title="Delete review">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <polyline points="3 6 5 6 21 6"/>
+                        <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+                        <path d="M10 11v6"/>
+                        <path d="M14 11v6"/>
+                        <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+                      </svg>
+                    </button>
+                  </div>
                 </div>
               </div>
-              <p class="sdp-review-text">{{ review.comment }}</p>
+
+              <!-- Review content or edit form -->
+              <div *ngIf="editingReview?.id !== review.id">
+                <p class="sdp-review-text">{{ review.comment }}</p>
+              </div>
+              <div *ngIf="editingReview?.id === review.id" class="sdp-edit-form">
+                <div class="sdp-form-group">
+                  <label>Rating:</label>
+                  <div class="sdp-stars-input">
+                    <button *ngFor="let r of [1,2,3,4,5]" 
+                            type="button" 
+                            class="sdp-star-btn"
+                            [class.active]="r <= editRating"
+                            (click)="editRating = r">
+                      <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+                        <polygon points="10,2 12.5,7.5 18.5,7.5 14,11.5 15.8,18 10,14.5 4.2,18 6,11.5 1.5,7.5 7.5,7.5"/>
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+                <div class="sdp-form-group">
+                  <label for="edit-comment">Comment:</label>
+                  <textarea id="edit-comment" 
+                            [(ngModel)]="editComment" 
+                            placeholder="Update your review..."
+                            rows="3"></textarea>
+                </div>
+                <div class="sdp-form-actions">
+                  <button class="sdp-btn-secondary" (click)="cancelEditReview()">Cancel</button>
+                  <button class="sdp-btn-primary" 
+                          (click)="updateReview()" 
+                          [disabled]="isUpdatingReview || !editComment.trim()">
+                    {{ isUpdatingReview ? 'Updating...' : 'Update Review' }}
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
 
-          <div *ngIf="!shop.reviews || shop.reviews.length === 0" class="sdp-empty sdp-empty-review">
+          <!-- Add yours button for clients who haven't reviewed yet -->
+          <div *ngIf="reviews.length > 0 && canWriteReview && !hasUserReview && authService.isClient()" class="sdp-add-review-prompt">
+            <button class="sdp-review-btn sdp-add-yours-btn" (click)="openReviewForm()">Add yours</button>
+          </div>
+
+          <div *ngIf="reviews.length === 0" class="sdp-empty sdp-empty-review">
             <div class="sdp-stars-empty">
               <svg *ngFor="let s of [1,2,3,4,5]" width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="#ddd" stroke-width="1.2">
                 <polygon points="10,2 12.5,7.5 18.5,7.5 14,11.5 15.8,18 10,14.5 4.2,18 6,11.5 1.5,7.5 7.5,7.5"/>
@@ -160,7 +219,58 @@
             </div>
             <p class="sdp-empty-title">No reviews yet</p>
             <p class="sdp-empty-sub">Be the first to share your experience.</p>
-            <button class="sdp-review-btn">Write a review</button>
+            <!-- Only show write review button for eligible clients, not for owners -->
+            <button class="sdp-review-btn" (click)="openReviewForm()" *ngIf="canWriteReview && !hasUserReview && authService.isClient()">Write a review</button>
+          </div>
+
+          <!-- Review Form - Only for eligible clients -->
+          <div *ngIf="showReviewForm && canWriteReview && !hasUserReview && authService.isClient()" class="sdp-review-form">
+            <h4>Write a Review</h4>
+            <div class="sdp-form-group">
+              <label>Rating:</label>
+              <div class="sdp-stars-input">
+                <button *ngFor="let r of [1,2,3,4,5]" 
+                        type="button" 
+                        class="sdp-star-btn"
+                        [class.active]="r <= newReviewRating"
+                        (click)="newReviewRating = r">
+                  <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+                    <polygon points="10,2 12.5,7.5 18.5,7.5 14,11.5 15.8,18 10,14.5 4.2,18 6,11.5 1.5,7.5 7.5,7.5"/>
+                  </svg>
+                </button>
+              </div>
+            </div>
+            <div class="sdp-form-group">
+              <label for="review-comment">Comment:</label>
+              <textarea id="review-comment" 
+                        [(ngModel)]="newReviewComment" 
+                        placeholder="Share your experience..."
+                        rows="4"></textarea>
+            </div>
+            <div class="sdp-form-actions">
+              <button class="sdp-btn-secondary" (click)="closeReviewForm()">Cancel</button>
+              <button class="sdp-btn-primary" 
+                      (click)="submitReview()" 
+                      [disabled]="isSubmittingReview || !newReviewComment.trim()">
+                {{ isSubmittingReview ? 'Submitting...' : 'Submit Review' }}
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Reviews Access Message - Only for clients who can't see reviews -->
+        <div class="sdp-card" *ngIf="!canSeeReviews && authService.isClient()">
+          <div class="sdp-card-head">
+            <span class="sdp-card-title">Reviews</span>
+          </div>
+          <div class="sdp-empty sdp-empty-review">
+            <div class="sdp-stars-empty">
+              <svg *ngFor="let s of [1,2,3,4,5]" width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="#ddd" stroke-width="1.2">
+                <polygon points="10,2 12.5,7.5 18.5,7.5 14,11.5 15.8,18 10,14.5 4.2,18 6,11.5 1.5,7.5 7.5,7.5"/>
+              </svg>
+            </div>
+            <p class="sdp-empty-title">Reviews Available After Purchase</p>
+            <p class="sdp-empty-sub">Complete an order from this shop to view and write reviews.</p>
           </div>
         </div>
 

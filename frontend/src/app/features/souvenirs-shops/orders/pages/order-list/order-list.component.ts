@@ -1,7 +1,7 @@
 ﻿import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { Order } from '../../../../../models/souvenirs-shops/order.model';
-import { OrderService } from '../../../../../services/souvenirs-shops/order.service';
+import { OrderService, UpdateOrderStatusRequest } from '../../../../../services/souvenirs-shops/order.service';
 import { AuthService } from '../../../../auth/services/auth.service';
 import { OrderStatus } from '../../../../../models/souvenirs-shops/order-status.enum';
 
@@ -15,6 +15,10 @@ export class OrderListComponent implements OnInit {
   isLoading = true;
   errorMessage = '';
   actionMessage = '';
+
+  // Issues detector
+  issues: string[] = [];
+  isLoadingIssues = false;
 
   activeViewTab: 'client' | 'owner' = 'client';
   activeStatusTab = 'ALL';
@@ -39,6 +43,7 @@ export class OrderListComponent implements OnInit {
   ngOnInit(): void {
     if (this.authService.isOwner() || this.authService.isAdmin()) {
       this.activeViewTab = 'owner';
+      this.loadIssues();
     } else {
       this.activeViewTab = 'client';
     }
@@ -62,6 +67,21 @@ export class OrderListComponent implements OnInit {
           this.errorMessage = error.error?.message || 'Unable to load orders. Please try again later.';
         }
         this.isLoading = false;
+      }
+    });
+  }
+
+  loadIssues(): void {
+    this.isLoadingIssues = true;
+    this.orderService.getOrderIssues().subscribe({
+      next: (issues) => {
+        this.issues = issues;
+        this.isLoadingIssues = false;
+      },
+      error: (error) => {
+        console.error('Failed to load issues:', error);
+        this.issues = [];
+        this.isLoadingIssues = false;
       }
     });
   }
@@ -311,7 +331,11 @@ export class OrderListComponent implements OnInit {
       return;
     }
 
-    this.orderService.updateOrderStatus(order.id, OrderStatus.CANCELLED).subscribe({
+    const request: UpdateOrderStatusRequest = {
+      status: OrderStatus.CANCELLED
+    };
+
+    this.orderService.updateOrderStatus(order.id, request).subscribe({
       next: () => {
         this.actionMessage = 'Order has been cancelled.';
         this.loadOrders();
@@ -327,7 +351,11 @@ export class OrderListComponent implements OnInit {
       return;
     }
 
-    this.orderService.updateOrderStatus(order.id, status).subscribe({
+    const request: UpdateOrderStatusRequest = {
+      status: status
+    };
+
+    this.orderService.updateOrderStatus(order.id, request).subscribe({
       next: () => {
         this.actionMessage = `Order status changed to ${label}.`;
         this.loadOrders();

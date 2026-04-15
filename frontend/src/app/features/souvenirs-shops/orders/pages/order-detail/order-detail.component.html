@@ -8,6 +8,11 @@
       <p class="page-subtitle">Review order details, items, and payment actions.</p>
     </div>
     <div class="header-actions">
+      <button *ngIf="canClientCancel"
+              class="action-btn danger-btn"
+              (click)="cancelOrder()">
+        Cancel order
+      </button>
       <button *ngIf="authService.isClient() && order?.status === OrderStatus.PENDING"
               class="action-btn danger-btn"
               (click)="cancelOrder()">
@@ -57,6 +62,17 @@
           <span *ngIf="isOrderRefunded" class="status-badge payment-refunded">
             REFUNDED
           </span>
+        </div>
+
+        <!-- AI Status Message - Only for Clients -->
+        <div *ngIf="showAiMessage" class="ai-message-block">
+          <div class="ai-message-header">
+            <span class="ai-icon">✨</span>
+            <span class="ai-label">Order Status Update</span>
+          </div>
+          <div class="ai-message-content">
+            {{ getAiMessage() }}
+          </div>
         </div>
 
         <div class="info-row">

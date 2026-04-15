@@ -12,6 +12,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 import java.time.LocalDateTime;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -25,7 +26,12 @@ import org.hibernate.annotations.NotFound;
 import org.hibernate.annotations.NotFoundAction;
 
 @Entity(name = "SouvenirShopReview")
-@Table(name = "reviews")
+@Table(
+        name = "reviews",
+        uniqueConstraints = {
+                @UniqueConstraint(name = "uk_review_user_target", columnNames = {"user_id", "review_type", "target_id"})
+        }
+)
 @Getter
 @Setter
 @Builder
@@ -57,6 +63,14 @@ public class Review {
 
     @Column(nullable = false, length = 2000)
     private String comment;
+
+    @Column(nullable = false)
+    @Builder.Default
+    private Boolean deleted = false;
+
+    private Double averageRating;
+
+    private LocalDateTime deletedAt;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "target_id", referencedColumnName = "id", insertable = false, updatable = false)

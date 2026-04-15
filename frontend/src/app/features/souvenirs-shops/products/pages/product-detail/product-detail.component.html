@@ -91,6 +91,135 @@
     </div>
   </div>
 
+  <!-- Reviews Section -->
+  <div *ngIf="product && canSeeReviews" class="reviews-section mt-5">
+    <div class="reviews-card">
+      <div class="reviews-header">
+        <h3>Reviews</h3>
+        <span class="reviews-count">{{ reviews.length }} reviews</span>
+      </div>
+
+      <div *ngIf="reviews.length > 0" class="reviews-list">
+        <div *ngFor="let review of reviews" class="review-item">
+          <div class="review-header">
+            <div class="review-user">
+              <span class="user-name">{{ review.user?.prenom || 'Anonymous' }} {{ review.user?.nom || '' }}</span>
+              <span class="review-date">{{ review.createdAt | date:'mediumDate' }}</span>
+            </div>
+            <div class="review-rating">
+              <div class="stars">
+                <span *ngFor="let star of [1,2,3,4,5]" 
+                      class="star" 
+                      [class.filled]="star <= review.rating">★</span>
+              </div>
+            </div>
+            <div *ngIf="canManageReview(review)" class="review-actions">
+              <button class="btn-edit" (click)="startEditReview(review)" title="Edit review">
+                <i class="bi bi-pencil"></i>
+              </button>
+              <button class="btn-delete" (click)="deleteReview(review)" title="Delete review">
+                <i class="bi bi-trash"></i>
+              </button>
+            </div>
+          </div>
+
+          <div *ngIf="editingReview?.id !== review.id" class="review-content">
+            <p>{{ review.comment }}</p>
+          </div>
+
+          <div *ngIf="editingReview?.id === review.id" class="edit-review-form">
+            <div class="form-group">
+              <label>Rating:</label>
+              <div class="rating-input">
+                <button *ngFor="let r of [1,2,3,4,5]" 
+                        type="button" 
+                        class="star-btn"
+                        [class.active]="r <= editRating"
+                        (click)="editRating = r">★</button>
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="edit-comment">Comment:</label>
+              <textarea id="edit-comment" 
+                        [(ngModel)]="editComment" 
+                        placeholder="Update your review..."
+                        rows="3"></textarea>
+            </div>
+            <div class="form-actions">
+              <button class="btn-cancel" (click)="cancelEditReview()">Cancel</button>
+              <button class="btn-save" 
+                      (click)="updateReview()" 
+                      [disabled]="isUpdatingReview || !editComment.trim()">
+                {{ isUpdatingReview ? 'Updating...' : 'Update Review' }}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Add yours button for clients who haven't reviewed yet -->
+      <div *ngIf="reviews.length > 0 && canWriteReview && !hasUserReview && authService.isClient()" class="add-review-prompt">
+        <button class="btn-write-review add-yours-btn" (click)="openReviewForm()">Add yours</button>
+      </div>
+
+      <div *ngIf="reviews.length === 0" class="no-reviews">
+        <div class="no-reviews-icon">⭐</div>
+        <h4>No reviews yet</h4>
+        <p>Be the first to share your experience with this product.</p>
+        <!-- Only show write review button for eligible clients, not for owners -->
+        <button class="btn-write-review" 
+                (click)="openReviewForm()" 
+                *ngIf="canWriteReview && !hasUserReview && authService.isClient()">
+          Write a Review
+        </button>
+      </div>
+
+      <!-- Write Review Form - Only for eligible clients -->
+      <div *ngIf="showReviewForm && canWriteReview && !hasUserReview && authService.isClient()" class="write-review-form">
+        <h4>Write a Review</h4>
+        <div class="form-group">
+          <label>Rating:</label>
+          <div class="rating-input">
+            <button *ngFor="let r of [1,2,3,4,5]" 
+                    type="button" 
+                    class="star-btn"
+                    [class.active]="r <= newReviewRating"
+                    (click)="newReviewRating = r">★</button>
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="review-comment">Comment:</label>
+          <textarea id="review-comment" 
+                    [(ngModel)]="newReviewComment" 
+                    placeholder="Share your experience with this product..."
+                    rows="4"></textarea>
+        </div>
+        <div class="form-actions">
+          <button class="btn-cancel" (click)="closeReviewForm()">Cancel</button>
+          <button class="btn-submit" 
+                  (click)="submitReview()" 
+                  [disabled]="isSubmittingReview || !newReviewComment.trim()">
+            {{ isSubmittingReview ? 'Submitting...' : 'Submit Review' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Reviews Access Message -->
+  <div *ngIf="product && !canSeeReviews && authService.isClient()" class="reviews-section mt-5">
+    <div class="reviews-card">
+      <div class="reviews-header">
+        <h3>Reviews</h3>
+      </div>
+      <div class="no-reviews">
+        <div class="no-reviews-icon">🔒</div>
+        <h4>Reviews Available After Purchase</h4>
+        <p>Complete an order for this product to view and write reviews.</p>
+      </div>
+    </div>
+  </div>
+
   <!-- Bottom Info Grid (Product Details + Shop Info) -->
   <div *ngIf="product && authService.isAdmin()" class="info-grid mt-5">
     <div class="info-card">

@@ -41,7 +41,7 @@ public class ProductService implements IProductService {
 
     @Override
     public List<Review> retrieveReviewsByProduct(Long productId) {
-        return reviewShopRepository.findByReviewTypeAndTargetId(ReviewType.PRODUCT, productId);
+        return reviewShopRepository.findByReviewTypeAndTargetIdAndDeletedFalseOrderByCreatedAtDesc(ReviewType.PRODUCT, productId);
     }
 
     @Override

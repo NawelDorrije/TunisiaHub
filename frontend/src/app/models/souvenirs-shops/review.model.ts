@@ -9,4 +9,23 @@ export interface Review {
   rating: number;             // 1 to 5
   comment: string;
   createdAt?: string;
+  deleted?: boolean;
+  deletedAt?: string;
+  averageRating?: number;
+}
+
+export interface CreateReviewRequest {
+  rating: number;
+  comment: string;
+}
+
+export interface UpdateReviewRequest {
+  rating: number;
+  comment: string;
+}
+
+export interface ReviewEligibilityResponse {
+  reviews: Review[];
+  canWriteReview: boolean;
+  userReview: Review | null;
 }

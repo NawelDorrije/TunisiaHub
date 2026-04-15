@@ -27,5 +27,7 @@ public interface IOrderService {
 
     void cancelOrderByClient(Long id);
 
-    Order updateOrderStatus(Long id, OrderStatus newStatus);
+    Order updateOrderStatus(Long id, OrderStatus newStatus, Boolean generateAiMessage);
+
+    List<String> detectOrderIssues();
 }

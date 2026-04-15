@@ -8,4 +8,5 @@ import lombok.Setter;
 @Setter
 public class UpdateOrderStatusRequest {
     private OrderStatus status;
+    private Boolean generateAiMessage;
 }

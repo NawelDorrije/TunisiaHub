@@ -57,7 +57,7 @@ public class ShopService implements IShopService {
 
     @Override
     public List<Review> retrieveReviewsByShop(Long shopId) {
-        return reviewShopRepository.findByReviewTypeAndTargetId(ReviewType.SHOP, shopId);
+        return reviewShopRepository.findByReviewTypeAndTargetIdAndDeletedFalseOrderByCreatedAtDesc(ReviewType.SHOP, shopId);
     }
 
     @Override

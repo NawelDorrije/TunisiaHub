@@ -66,7 +66,16 @@ public class OrderController {
 
     @PutMapping("/{id}/status")
     public Order updateOrderStatus(@PathVariable Long id, @RequestBody UpdateOrderStatusRequest request) {
-        return orderService.updateOrderStatus(id, request == null ? null : request.getStatus());
+        return orderService.updateOrderStatus(
+                id,
+                request == null ? null : request.getStatus(),
+                request == null ? null : request.getGenerateAiMessage()
+        );
+    }
+
+    @GetMapping("/issues")
+    public List<String> detectOrderIssues() {
+        return orderService.detectOrderIssues();
     }
 
     @DeleteMapping("/{id}")

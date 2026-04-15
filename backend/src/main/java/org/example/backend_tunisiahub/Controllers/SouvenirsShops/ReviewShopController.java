@@ -2,6 +2,9 @@ package org.example.backend_tunisiahub.Controllers.SouvenirsShops;
 
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.example.backend_tunisiahub.Controllers.SouvenirsShops.dto.ReviewEligibilityResponse;
+import org.example.backend_tunisiahub.Controllers.SouvenirsShops.dto.CreateReviewRequest;
+import org.example.backend_tunisiahub.Controllers.SouvenirsShops.dto.UpdateReviewRequest;
 import org.example.backend_tunisiahub.Entities.SouvenirsShops.Review;
 import org.example.backend_tunisiahub.Services.SouvenirsShops.IReviewShopService;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -14,25 +17,42 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/api/souvenir-shops/reviews")
+@RequestMapping({"/api/souvenir-shops/reviews", "/api/souvenir-shops/souvenir-shops/reviews"})
 @RequiredArgsConstructor
 public class ReviewShopController {
 
     private final IReviewShopService reviewService;
 
-    @GetMapping
-    public List<Review> getAllReviews() {
-        return reviewService.retrieveAllReviews();
+    @PostMapping("/shop/{shopId}")
+    public Review createShopReview(@PathVariable Long shopId, @RequestBody CreateReviewRequest request) {
+        return reviewService.addShopReview(
+                shopId,
+                request == null ? null : request.getRating(),
+                request == null ? null : request.getComment()
+        );
     }
 
-    @GetMapping("/{id}")
-    public Review getReviewById(@PathVariable Long id) {
-        return reviewService.retrieveReview(id);
+    @PostMapping("/product/{productId}")
+    public Review createProductReview(@PathVariable Long productId, @RequestBody CreateReviewRequest request) {
+        return reviewService.addProductReview(
+                productId,
+                request == null ? null : request.getRating(),
+                request == null ? null : request.getComment()
+        );
     }
 
-    @GetMapping("/user/{userId}")
-    public List<Review> getReviewsByUser(@PathVariable Long userId) {
-        return reviewService.retrieveReviewsByUser(userId);
+    @PutMapping("/{id}")
+    public Review updateReview(@PathVariable Long id, @RequestBody UpdateReviewRequest request) {
+        return reviewService.modifyReview(
+                id,
+                request == null ? null : request.getRating(),
+                request == null ? null : request.getComment()
+        );
+    }
+
+    @DeleteMapping("/{id}")
+    public void deleteReview(@PathVariable Long id) {
+        reviewService.deleteReview(id);
     }
 
     @GetMapping("/shop/{shopId}")
@@ -45,18 +65,13 @@ public class ReviewShopController {
         return reviewService.retrieveReviewsByProduct(productId);
     }
 
-    @PostMapping
-    public Review createReview(@RequestBody Review review) {
-        return reviewService.addReview(review);
+    @GetMapping("/shop/{shopId}/with-eligibility")
+    public ReviewEligibilityResponse getReviewsWithEligibilityByShop(@PathVariable Long shopId) {
+        return reviewService.getReviewsWithEligibilityForShop(shopId);
     }
 
-    @PutMapping
-    public Review updateReview(@RequestBody Review review) {
-        return reviewService.modifyReview(review);
-    }
-
-    @DeleteMapping("/{id}")
-    public void deleteReview(@PathVariable Long id) {
-        reviewService.deleteReview(id);
+    @GetMapping("/product/{productId}/with-eligibility")
+    public ReviewEligibilityResponse getReviewsWithEligibilityByProduct(@PathVariable Long productId) {
+        return reviewService.getReviewsWithEligibilityForProduct(productId);
     }
 }

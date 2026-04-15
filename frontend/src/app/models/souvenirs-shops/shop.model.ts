@@ -25,4 +25,5 @@ export interface Shop {
   products?: Product[];
   orders?: Order[];
   reviews?: Review[];
+  averageRating?: number;
 }

@@ -99,7 +99,14 @@ export class OrderDetailComponent implements OnInit {
       return;
     }
 
-    this.orderService.updateOrderStatus(this.order.id, status).subscribe({
+    // For owners/admins, ask if they want to generate AI message
+    const generateAiMessage = (this.authService.isOwner() || this.authService.isAdmin()) &&
+      confirm('Generate AI status message for customer?');
+
+    this.orderService.updateOrderStatus(this.order.id, {
+      status: status,
+      generateAiMessage: generateAiMessage
+    }).subscribe({
       next: () => {
         this.actionMessage = `Order status updated to ${label}.`;
         this.loadOrder(this.order!.id!);
@@ -115,13 +122,16 @@ export class OrderDetailComponent implements OnInit {
       return;
     }
 
-    if (this.authService.isClient() && this.order.status === OrderStatus.PENDING) {
-      this.orderService.deleteOrder(this.order.id).subscribe({
-        next: () => this.router.navigate(['/orders']),
-        error: () => {
-          this.errorMessage = 'Unable to cancel the order. Please try again.';
-        }
-      });
+    // Clients can cancel before completion
+    if (this.authService.isClient() && this.order.status !== OrderStatus.COMPLETED && this.order.status !== OrderStatus.CANCELLED) {
+      if (confirm('Are you sure you want to cancel this order?')) {
+        this.orderService.deleteOrder(this.order.id).subscribe({
+          next: () => this.router.navigate(['/orders']),
+          error: () => {
+            this.errorMessage = 'Unable to cancel the order. Please try again.';
+          }
+        });
+      }
       return;
     }
 
@@ -141,6 +151,35 @@ export class OrderDetailComponent implements OnInit {
 
   get ownerCancelLabel(): string {
     return this.order?.status === OrderStatus.PENDING ? 'Cancel order' : 'Cancel & Refund';
+  }
+
+  get canClientCancel(): boolean {
+    return this.authService.isClient() &&
+      this.order !== null &&
+      this.order.status !== OrderStatus.COMPLETED &&
+      this.order.status !== OrderStatus.CANCELLED;
+  }
+
+  getAiMessage(): string {
+    if (!this.order) return '';
+
+    const productName = this.items[0]?.product?.name || 'your order';
+    const shopName = this.order.shop?.name || 'our shop';
+
+    switch (this.order.status) {
+      case OrderStatus.PROCESSING:
+        return `Great news! Your ${productName} from ${shopName} is being carefully prepared by our artisans. Expected delivery in 2-3 days.`;
+      case OrderStatus.COMPLETED:
+        return `🎉 Your order is complete! Your ${productName} from ${shopName} is ready for delivery. Expected delivery in 2-3 days.`;
+      default:
+        return '';
+    }
+  }
+
+  get showAiMessage(): boolean {
+    return this.authService.isClient() &&
+      this.order !== null &&
+      [OrderStatus.PROCESSING, OrderStatus.COMPLETED].includes(this.order.status);
   }
 
   get isOrderRefunded(): boolean {
