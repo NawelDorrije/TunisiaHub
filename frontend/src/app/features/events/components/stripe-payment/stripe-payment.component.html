@@ -1,0 +1,35 @@
+<div class="popup" *ngIf="show">
+  <div class="popup-content">
+
+    <h2>💳 Secure Payment</h2>
+
+    <!-- CARD NUMBER -->
+    <label>Card Number</label>
+    <div class="stripe-input" id="card-number"></div>
+
+    <!-- EXPIRY + CVC -->
+    <div class="row">
+      <div>
+        <label>Expiry</label>
+        <div class="stripe-input" id="card-expiry"></div>
+      </div>
+
+      <div>
+        <label>CVC</label>
+        <div class="stripe-input" id="card-cvc"></div>
+      </div>
+    </div>
+
+    <!-- POSTAL CODE -->
+    <input type="text" placeholder="Postal Code" [(ngModel)]="postalCode">
+
+    <!-- AMOUNT -->
+    <div class="amount">
+      Total: {{ amount }} TND
+    </div>
+
+    <button class="pay-btn" (click)="pay()">💳 Pay Now</button>
+    <button class="cancel-btn" (click)="close()">Cancel</button>
+
+  </div>
+</div>

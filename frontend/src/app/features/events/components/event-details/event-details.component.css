@@ -1,0 +1,16 @@
+.card {
+  border-radius: 15px;
+  overflow: hidden;
+}
+
+.card-body {
+  padding: 20px;
+}
+
+.badge {
+  font-size: 14px;
+}
+
+#map {
+  margin-top: 10px;
+}

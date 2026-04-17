@@ -1,0 +1,59 @@
+<div class="mt-5">
+
+  <hr />
+
+  <!-- Header -->
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h4 class="fw-bold mb-0">
+      Reviews
+      <span class="text-muted fs-6 fw-normal">({{ reviews.length }})</span>
+    </h4>
+
+    <!-- Average rating -->
+    <div class="d-flex align-items-center gap-2" *ngIf="reviews.length > 0">
+      <span class="fw-bold fs-5 text-warning">{{ averageRating }}</span>
+      <div>
+        <i *ngFor="let s of filledStars" class="bi bi-star-fill text-warning"></i>
+        <i *ngFor="let s of emptyStars" class="bi bi-star text-muted"></i>
+      </div>
+      <small class="text-muted">/ 5</small>
+    </div>
+  </div>
+
+  <!-- Review form -->
+  <div id="review-form-section">
+    <app-review-form
+      [accommodationId]="accommodationId"
+      [reviewToEdit]="reviewToEdit"
+      (reviewAdded)="onReviewAdded($event)"
+      (reviewUpdated)="onReviewUpdated($event)"
+      (cancelled)="onCancelled()"
+    ></app-review-form>
+  </div>
+
+  <!-- Loading -->
+  <div class="text-center py-4" *ngIf="isLoading">
+    <div class="spinner-border text-primary" role="status">
+      <span class="visually-hidden">Loading...</span>
+    </div>
+  </div>
+
+  <!-- Error -->
+  <div class="alert alert-danger" *ngIf="errorMessage">{{ errorMessage }}</div>
+
+  <!-- Empty state -->
+  <div class="alert alert-info" *ngIf="!isLoading && reviews.length === 0">
+    No reviews yet. Be the first to review this accommodation!
+  </div>
+
+  <!-- Review items -->
+  <div *ngIf="!isLoading && reviews.length > 0">
+    <app-review-item
+      *ngFor="let review of reviews"
+      [review]="review"
+      (reviewEdit)="onReviewEdit($event)"
+      (reviewDeleted)="onReviewDeleted($event)"
+    ></app-review-item>
+  </div>
+
+</div>

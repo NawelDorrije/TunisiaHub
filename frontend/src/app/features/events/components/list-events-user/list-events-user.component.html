@@ -1,0 +1,84 @@
+<div class="page">
+
+  <!-- HEADER -->
+  <div class="header">
+    <div>
+      <h2>🌿 Explore Events</h2>
+      <p class="subtitle">Find and book your next experience</p>
+    </div>
+
+    <input
+      type="text"
+      placeholder="🔍 Search events..."
+      [(ngModel)]="searchQuery"
+      class="search-input"
+    />
+  </div>
+
+  <!-- GRID -->
+  <div class="grid">
+
+    <div class="card"
+         *ngFor="let event of filteredEvents"
+         [ngClass]="{'completed': event.status === 'COMPLETED'}">
+
+      <!-- IMAGE -->
+      <div class="img-wrapper">
+        <img *ngIf="event.image" [src]="event.image" />
+      </div>
+
+      <!-- CONTENT -->
+      <div class="content">
+
+        <div class="title-row">
+          <h3>{{ event.title }}</h3>
+
+          <span class="status"
+                [ngClass]="event.status === 'COMPLETED' ? 'red' : 'green'">
+            {{ event.status }}
+          </span>
+        </div>
+
+        <p class="desc">
+          {{ event.description | slice:0:90 }}...
+        </p>
+
+        <div class="meta">
+          <span>📍 {{ event.lieu }}</span>
+          <span class="price">{{ event.price }} TND</span>
+        </div>
+
+        <!-- ACTIONS -->
+        <div class="actions">
+
+          <button class="btn details"
+                  (click)="goToDetails(event.id!)">
+            Details
+          </button>
+
+          <button class="btn reserve"
+                  [disabled]="event.status === 'COMPLETED'"
+                  (click)="reserveEvent(event)">
+            {{ event.status === 'COMPLETED' ? 'Full' : 'Reserve' }}
+          </button>
+          
+
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+
+  <!-- POPUP -->
+  <div class="popup" *ngIf="showPopup">
+    <div class="popup-box">
+      <div class="icon">⚠️</div>
+      <h3>Warning</h3>
+      <p>{{ errorMessage }}</p>
+      <button (click)="closePopup()">OK</button>
+    </div>
+  </div>
+  
+
+</div>
