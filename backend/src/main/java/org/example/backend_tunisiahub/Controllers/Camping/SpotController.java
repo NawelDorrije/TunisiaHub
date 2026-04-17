@@ -1,10 +1,12 @@
 package org.example.backend_tunisiahub.Controllers.Camping;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.example.backend_tunisiahub.Entities.Camping.DTO.ActivityDTO;
 import org.example.backend_tunisiahub.Entities.Camping.DTO.SpotDTO;
 import org.example.backend_tunisiahub.Entities.Camping.Enums.SpotStatus;
 import org.example.backend_tunisiahub.Entities.Camping.Enums.SpotType;
 import org.example.backend_tunisiahub.Entities.Camping.Enums.ViewType;
+import org.example.backend_tunisiahub.Services.Camping.IActivityService;
 import org.example.backend_tunisiahub.Services.Camping.ISpotService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
@@ -22,6 +24,7 @@ public class SpotController {
 
     @Autowired private ISpotService spotService;
     @Autowired private ObjectMapper objectMapper;
+    @Autowired private IActivityService activityService;
 
     // ── CRUD ───────────────────────────────────────────────
 
@@ -152,5 +155,19 @@ public class SpotController {
             @PathVariable Long campingId,
             @RequestParam SpotType type) {
         return ResponseEntity.ok(spotService.getByType(campingId, type));
+    }
+    @PutMapping("/spots/{spotId}/assign-activity/{activityId}")
+    public ResponseEntity<ActivityDTO> assignActivityToSpot(
+            @PathVariable Long spotId,
+            @PathVariable Long activityId
+    ) {
+
+        return ResponseEntity.ok(
+                activityService.assignActivity(
+                        activityId,
+                        null,
+                        spotId
+                )
+        );
     }
 }

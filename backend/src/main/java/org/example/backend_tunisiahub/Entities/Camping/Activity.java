@@ -34,10 +34,10 @@ public class Activity {
     Boolean active;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "camping_id")
+    @JoinColumn(name = "camping_id" , nullable = true)
     Camping camping;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "spot_id")
+    @JoinColumn(name = "spot_id" , nullable = true)
     Spot spot;
 }

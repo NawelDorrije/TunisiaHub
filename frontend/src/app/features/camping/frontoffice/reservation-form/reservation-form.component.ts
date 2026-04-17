@@ -14,15 +14,18 @@ import { takeUntil } from 'rxjs/operators';
 import { Camping } from '../../../../models/campings/camping';
 import { Spot } from '../../../../models/campings/spot';
 import { Activity } from '../../../../models/campings/activity';
+import { Equipment } from '../../../../models/campings/equipment';
+import { Payment, OnlinePaymentMethod, ReceptionPaymentMethod } from '../../../../models/shared-reservation/payment';
+
 import { CampingService } from '../../../../services/campings/camping.service';
 import { SpotService } from '../../../../services/campings/spot.service';
 import { ActivityService } from '../../../../services/campings/activity.service';
+import { EquipmentService } from '../../../../services/campings/equipment.service';
 import { ReservationService } from '../../../../services/shared-reservation/reservation-camping.service';
 import { PaymentService } from '../../../../services/shared-reservation/payment.service';
 
 // ── Custom Validators ────────────────────────────────────────────────────────
 
-/** Date must be today or in the future. */
 export function minTodayValidator(): ValidatorFn {
   return (control: AbstractControl): ValidationErrors | null => {
     if (!control.value) return null;
@@ -33,7 +36,6 @@ export function minTodayValidator(): ValidatorFn {
   };
 }
 
-/** Check-out must be strictly after check-in. Depends on a sibling control. */
 export function checkOutAfterCheckInValidator(checkInControlName: string): ValidatorFn {
   return (control: AbstractControl): ValidationErrors | null => {
     if (!control.value) return null;
@@ -45,7 +47,6 @@ export function checkOutAfterCheckInValidator(checkInControlName: string): Valid
   };
 }
 
-/** Number of guests must not exceed the spot's capacity. */
 export function maxCapacityValidator(maxCapacity: () => number): ValidatorFn {
   return (control: AbstractControl): ValidationErrors | null => {
     const max = maxCapacity();
@@ -54,10 +55,11 @@ export function maxCapacityValidator(maxCapacity: () => number): ValidatorFn {
   };
 }
 
-// ── Component ────────────────────────────────────────────────────────────────
+// ── Types ────────────────────────────────────────────────────────────────────
 
-export type Step = 1 | 2 | 3 | 4;
-export type PaymentMethod = 'CREDIT_CARD' | 'PAYPAL' | 'BANK_TRANSFER' | 'CASH';
+export type Step = 1 | 2 | 3 | 4 | 5;
+
+// ── Component ────────────────────────────────────────────────────────────────
 
 @Component({
   selector: 'app-reservation-form',
@@ -65,16 +67,18 @@ export type PaymentMethod = 'CREDIT_CARD' | 'PAYPAL' | 'BANK_TRANSFER' | 'CASH';
   styleUrls: ['./reservation-form.component.css'],
 })
 export class ReservationFormComponent implements OnInit, OnDestroy {
+
   // ── State ────────────────────────────────────────────────────────────────
   step: Step = 1;
   camping!: Camping;
   spots: Spot[] = [];
   activities: Activity[] = [];
+  equipmentList: Equipment[] = [];
 
   selectedSpot: Spot | null = null;
-  spotError = false; // touched-and-missing spot validation flag
-
+  spotError = false;
   selectedActivities: Activity[] = [];
+  selectedEquipment: { equipment: Equipment; quantity: number }[] = [];
 
   submitting = false;
   reservationId: number | null = null;
@@ -82,11 +86,23 @@ export class ReservationFormComponent implements OnInit, OnDestroy {
   submitError: string | null = null;
   paymentError: string | null = null;
 
-  readonly paymentMethods: { value: PaymentMethod; label: string; icon: string }[] = [
-    { value: 'CREDIT_CARD',    label: 'Credit Card',    icon: '💳' },
-    { value: 'PAYPAL',         label: 'PayPal',         icon: '🅿️' },
-    { value: 'BANK_TRANSFER',  label: 'Bank Transfer',  icon: '🏦' },
-    { value: 'CASH',           label: 'Cash',           icon: '💵' },
+  /** Payment result from backend */
+  completedPayment: Payment | null = null;
+
+  /** Minimum deposit percentage */
+  minimumDepositPercent = 30;
+
+  // ── Payment method options ───────────────────────────────────────────────
+
+  readonly onlinePaymentMethods: { value: OnlinePaymentMethod; label: string; icon: string }[] = [
+    { value: 'CREDIT_CARD',   label: 'Credit Card',   icon: '💳' },
+    { value: 'PAYPAL',        label: 'PayPal',         icon: '🅿' },
+    { value: 'BANK_TRANSFER', label: 'Bank Transfer',  icon: '🏦' },
+  ];
+
+  readonly receptionPaymentMethods: { value: ReceptionPaymentMethod; label: string; icon: string }[] = [
+    { value: 'CASH',              label: 'Cash',           icon: '💵' },
+    { value: 'CARD_AT_RECEPTION', label: 'Card at desk',   icon: '💳' },
   ];
 
   // ── Forms ────────────────────────────────────────────────────────────────
@@ -102,6 +118,7 @@ export class ReservationFormComponent implements OnInit, OnDestroy {
     private campingService: CampingService,
     private spotService: SpotService,
     private activityService: ActivityService,
+    private equipmentService: EquipmentService,
     private reservationService: ReservationService,
     private paymentService: PaymentService,
   ) {}
@@ -118,68 +135,84 @@ export class ReservationFormComponent implements OnInit, OnDestroy {
     this.destroy$.complete();
   }
 
-  // ── Initialisation helpers ───────────────────────────────────────────────
+  // ── Form builder ─────────────────────────────────────────────────────────
 
   private buildForms(): void {
-    this.datesForm = this.fb.group(
-      {
-        checkIn: ['', [Validators.required, minTodayValidator()]],
-        checkOut: ['', [Validators.required, checkOutAfterCheckInValidator('checkIn')]],
-        numberOfGuests: [
-          1,
-          [
-            Validators.required,
-            Validators.min(1),
-            maxCapacityValidator(() => this.selectedSpot?.capacity ?? Infinity),
-          ],
+    this.datesForm = this.fb.group({
+      checkIn: ['', [Validators.required, minTodayValidator()]],
+      checkOut: ['', [Validators.required, checkOutAfterCheckInValidator('checkIn')]],
+      numberOfGuests: [
+        1,
+        [
+          Validators.required,
+          Validators.min(1),
+          maxCapacityValidator(() => this.selectedSpot?.capacity ?? Infinity),
         ],
-        notes: [''],
-      },
-    );
+      ],
+      notes: [''],
+    });
 
-    // Re-validate checkOut whenever checkIn changes
-    this.datesForm
-      .get('checkIn')!
+    this.datesForm.get('checkIn')!
       .valueChanges.pipe(takeUntil(this.destroy$))
       .subscribe(() => this.datesForm.get('checkOut')!.updateValueAndValidity());
 
-    // Re-validate numberOfGuests whenever the selected spot changes
-    // (triggered in selectSpot())
-
     this.paymentForm = this.fb.group({
-      method: ['CREDIT_CARD', Validators.required],
+      method:           ['CREDIT_CARD', Validators.required],
+      depositPercent:   [this.minimumDepositPercent, [
+        Validators.required,
+        Validators.min(this.minimumDepositPercent),
+        Validators.max(100),
+      ]],
+      remainingMethod:  ['CASH', Validators.required],
+      clientEmail:      ['', [Validators.required, Validators.email]],
     });
+
+    this.paymentForm.get('depositPercent')!
+      .valueChanges.pipe(takeUntil(this.destroy$))
+      .subscribe((pct: number) => {
+        const ctrl = this.paymentForm.get('remainingMethod')!;
+        if (pct >= 100) {
+          ctrl.clearValidators();
+          ctrl.setValue(null);
+        } else {
+          ctrl.setValidators(Validators.required);
+        }
+        ctrl.updateValueAndValidity();
+      });
   }
 
   private loadData(): void {
     const campingId = +this.route.snapshot.params['id'];
 
-    this.campingService
-      .getCampingById(campingId)
+    this.campingService.getCampingById(campingId)
       .pipe(takeUntil(this.destroy$))
       .subscribe({ next: (c) => (this.camping = c) });
 
-    this.spotService
-      .getSpotsByCamping(campingId)
+    this.spotService.getSpotsByCamping(campingId)
       .pipe(takeUntil(this.destroy$))
       .subscribe({ next: (spots) => (this.spots = spots.filter((s) => s.active)) });
 
-    this.activityService
-      .getActivitiesByCamping(campingId)
+    this.activityService.getActivitiesByCamping(campingId)
       .pipe(takeUntil(this.destroy$))
       .subscribe({ next: (acts) => (this.activities = acts.filter((a) => a.active)) });
+
+    this.equipmentService.getEquipmentByCamping(campingId)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (equip) => {
+          this.equipmentList = equip.filter((e) => e.available && e.quantity > 0);
+        }
+      });
   }
 
-  // ── Step 1 – Spot selection ──────────────────────────────────────────────
+  // ── Step 1 – Spot Selection ──────────────────────────────────────────────
 
   selectSpot(spot: Spot): void {
     this.selectedSpot = spot;
     this.spotError = false;
-    // Re-run capacity validator with the new spot
     this.datesForm.get('numberOfGuests')!.updateValueAndValidity();
   }
 
-  /** Advance from step 1; show inline error if no spot chosen. */
   proceedFromSpotStep(): void {
     if (!this.selectedSpot) {
       this.spotError = true;
@@ -190,31 +223,51 @@ export class ReservationFormComponent implements OnInit, OnDestroy {
 
   // ── Step 2 – Dates & Guests ──────────────────────────────────────────────
 
-  get checkIn() { return this.datesForm.get('checkIn')!; }
-  get checkOut() { return this.datesForm.get('checkOut')!; }
+  get checkIn()        { return this.datesForm.get('checkIn')!; }
+  get checkOut()       { return this.datesForm.get('checkOut')!; }
   get numberOfGuests() { return this.datesForm.get('numberOfGuests')!; }
 
-  /** ISO date string for today — used as the `min` attribute on date inputs. */
   get today(): string {
     return new Date().toISOString().split('T')[0];
   }
 
-  /** Advance from step 2 only when all date controls are valid. */
   proceedFromDatesStep(): void {
     this.datesForm.markAllAsTouched();
     if (this.datesForm.invalid) return;
     this.step = 3;
   }
 
-  // ── Step 3 – Activities ──────────────────────────────────────────────────
+  // ── Step 3 – Equipment ───────────────────────────────────────────────────
+
+  toggleEquipment(equip: Equipment, qty: number = 1): void {
+    const idx = this.selectedEquipment.findIndex(item => item.equipment.id === equip.id);
+
+    if (idx >= 0) {
+      if (qty <= 0) {
+        this.selectedEquipment.splice(idx, 1);
+      } else {
+        this.selectedEquipment[idx].quantity = qty;
+      }
+    } else if (qty > 0) {
+      this.selectedEquipment.push({ equipment: equip, quantity: qty });
+    }
+  }
+
+  isEquipmentSelected(equip: Equipment): boolean {
+    return this.selectedEquipment.some(item => item.equipment.id === equip.id);
+  }
+
+  getEquipmentQuantity(equip: Equipment): number {
+    const item = this.selectedEquipment.find(item => item.equipment.id === equip.id);
+    return item ? item.quantity : 0;
+  }
+
+  // ── Step 4 – Activities ──────────────────────────────────────────────────
 
   toggleActivity(activity: Activity): void {
     const idx = this.selectedActivities.findIndex((a) => a.id === activity.id);
-    if (idx >= 0) {
-      this.selectedActivities.splice(idx, 1);
-    } else {
-      this.selectedActivities.push(activity);
-    }
+    if (idx >= 0) this.selectedActivities.splice(idx, 1);
+    else          this.selectedActivities.push(activity);
   }
 
   isActivitySelected(activity: Activity): boolean {
@@ -234,12 +287,27 @@ export class ReservationFormComponent implements OnInit, OnDestroy {
     return this.selectedActivities.reduce((sum, a) => sum + a.price, 0);
   }
 
+
+
   get spotTotal(): number {
-    return (this.selectedSpot?.basePrice ?? 0) * this.nights;
+    return (this.selectedSpot?.dynamicPrice ?? 0) * this.nights;
   }
 
   get totalPrice(): number {
-    return this.spotTotal + this.activitiesTotal;
+    return this.spotTotal + this.activitiesTotal ;
+  }
+
+  get depositPreview(): number {
+    const pct = this.paymentForm?.get('depositPercent')?.value ?? this.minimumDepositPercent;
+    return Math.ceil(this.totalPrice * pct / 100);
+  }
+
+  get remainingPreview(): number {
+    return this.totalPrice - this.depositPreview;
+  }
+
+  get isFullPayment(): boolean {
+    return (this.paymentForm?.get('depositPercent')?.value ?? 0) >= 100;
   }
 
   // ── Submission ───────────────────────────────────────────────────────────
@@ -252,23 +320,26 @@ export class ReservationFormComponent implements OnInit, OnDestroy {
     this.submitError = null;
 
     const payload = {
-        userId: 2, // ✅ AJOUTER
+      userId: 2, // TODO: replace with authenticated user id
       spotId: this.selectedSpot.id!,
       activityIds: this.selectedActivities.map((a) => a.id!),
+      equipmentRequests: this.selectedEquipment.map(item => ({
+        equipmentId: item.equipment.id!,
+        quantity: item.quantity
+      })),
       checkIn: this.datesForm.value.checkIn,
       checkOut: this.datesForm.value.checkOut,
       numberOfGuests: this.datesForm.value.numberOfGuests,
       notes: this.datesForm.value.notes,
     };
 
-    this.reservationService
-      .createReservation(payload)
+    this.reservationService.createReservation(payload)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (res) => {
           this.reservationId = res.id!;
           this.submitting = false;
-          this.step = 4;
+          this.step = 5;
         },
         error: () => {
           this.submitting = false;
@@ -278,16 +349,26 @@ export class ReservationFormComponent implements OnInit, OnDestroy {
   }
 
   processPayment(): void {
-    if (!this.reservationId) return;
+    this.paymentForm.markAllAsTouched();
+    if (!this.reservationId || this.paymentForm.invalid) return;
 
     this.submitting = true;
     this.paymentError = null;
 
+    const { method, depositPercent, remainingMethod, clientEmail } = this.paymentForm.value;
+
     this.paymentService
-      .processPayment(this.reservationId, this.paymentForm.value.method)
+      .processDeposit(
+        this.reservationId,
+        method,
+        clientEmail,
+        depositPercent,
+        this.isFullPayment ? undefined : remainingMethod,
+      )
       .pipe(takeUntil(this.destroy$))
       .subscribe({
-        next: () => {
+        next: (payment) => {
+          this.completedPayment = payment;
           this.submitting = false;
           this.success = true;
         },
@@ -298,7 +379,7 @@ export class ReservationFormComponent implements OnInit, OnDestroy {
       });
   }
 
-  // ── Navigation helpers ───────────────────────────────────────────────────
+  // ── Navigation ───────────────────────────────────────────────────────────
 
   goBack(): void {
     if (this.step > 1) this.step = (this.step - 1) as Step;

@@ -79,4 +79,8 @@ public class EquipementController {
             @RequestParam EquipmentCondition condition) {
         return ResponseEntity.ok(equipementService.getBySpotAndCondition(spotId, condition));
     }
+    @GetMapping("/camping/{campingId}")
+    public ResponseEntity<List<EquipementDTO>> getByCamping(@PathVariable Long campingId) {
+        return ResponseEntity.ok(equipementService.getByCampingId(campingId));
+    }
 }

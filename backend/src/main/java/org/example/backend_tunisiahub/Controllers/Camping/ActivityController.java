@@ -22,7 +22,14 @@ public class ActivityController {
     public ResponseEntity<ActivityDTO> createActivity(@Valid @RequestBody ActivityDTO dto) {
         return ResponseEntity.ok(activityService.createActivity(dto));
     }
-
+    @PostMapping("/template")
+    public ResponseEntity<ActivityDTO> createActivityTemplate(
+            @Valid @RequestBody ActivityDTO dto
+    ) {
+        return ResponseEntity.ok(
+                activityService.createActivityTemplate(dto)
+        );
+    }
     @PutMapping("/{id}")
     public ResponseEntity<ActivityDTO> updateActivity(
             @PathVariable Long id,
@@ -54,5 +61,20 @@ public class ActivityController {
     public ResponseEntity<Void> deleteActivity(@PathVariable Long id) {
         activityService.deleteActivity(id);
         return ResponseEntity.noContent().build();
+    }
+    @PutMapping("/{activityId}/assign")
+    public ResponseEntity<ActivityDTO> assignActivity(
+            @PathVariable Long activityId,
+            @RequestParam(required = false) Long campingId,
+            @RequestParam(required = false) Long spotId
+    ) {
+
+        return ResponseEntity.ok(
+                activityService.assignActivity(
+                        activityId,
+                        campingId,
+                        spotId
+                )
+        );
     }
 }

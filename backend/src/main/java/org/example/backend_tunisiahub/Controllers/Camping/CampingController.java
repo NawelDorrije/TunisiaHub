@@ -1,8 +1,10 @@
 package org.example.backend_tunisiahub.Controllers.Camping;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.example.backend_tunisiahub.Entities.Camping.DTO.ActivityDTO;
 import org.example.backend_tunisiahub.Entities.Camping.DTO.CampingDTO;
 import org.example.backend_tunisiahub.Entities.Camping.Enums.CampingStatus;
+import org.example.backend_tunisiahub.Services.Camping.IActivityService;
 import org.example.backend_tunisiahub.Services.Camping.ICampingService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
@@ -20,6 +22,7 @@ public class CampingController {
 
     @Autowired private ICampingService campingService;
     @Autowired private ObjectMapper objectMapper;
+    @Autowired private IActivityService  activityService;
 
     // ── CRUD ───────────────────────────────────────────────
 
@@ -119,4 +122,19 @@ public class CampingController {
             @RequestParam String governorate) {
         return ResponseEntity.ok(campingService.getByGovernorate(governorate));
     }
+    @PutMapping("/campings/{campingId}/assign-activity/{activityId}")
+    public ResponseEntity<ActivityDTO> assignActivityToCamping(
+            @PathVariable Long campingId,
+            @PathVariable Long activityId
+    ) {
+
+        return ResponseEntity.ok(
+                activityService.assignActivity(
+                        activityId,
+                        campingId,
+                        null
+                )
+        );
+    }
+
 }

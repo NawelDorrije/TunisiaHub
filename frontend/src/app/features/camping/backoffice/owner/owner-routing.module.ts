@@ -8,6 +8,7 @@ import { SpotFormComponent } from './spot-management/spot-form/spot-form.compone
 import { ActivityManagementComponent } from './activity-management/activity-management.component';
 import { EquipmentManagementComponent } from './equipment-management/equipment-management.component';
 import { MyReservationsComponent } from './my-reservations/my-reservations.component';
+import { EquipmenntFormComponent } from './equipment-management/equipmennt-form/equipmennt-form.component';
 
 const routes: Routes = [
 
@@ -20,6 +21,9 @@ const routes: Routes = [
   { path: ':campingId/spots/:spotId/edit', component: SpotFormComponent },
   { path: ':campingId/activities', component: ActivityManagementComponent },
   { path: ':campingId/equipment', component: EquipmentManagementComponent },
+  { path: ':campingId/equipment/new', component: EquipmenntFormComponent },
+    { path: ':campingId/equipment/:equipmentId/edit', component: EquipmenntFormComponent },
+
   { path: 'reservations', component: MyReservationsComponent },
 ];
 

@@ -44,7 +44,8 @@ public class SpotMapper {
                 .accessibleForDisabled(spot.getAccessibleForDisabled())
                 .active(spot.getActive())
                 .photos(spot.getPhotos())
-
+                .dynamicPrice(spot.getDynamicPrice())
+                .lastPricedAt(spot.getLastPricedAt())
                 .build();
     }
 

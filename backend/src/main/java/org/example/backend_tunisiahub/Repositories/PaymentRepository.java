@@ -10,4 +10,6 @@ import java.util.Optional;
 public interface PaymentRepository extends JpaRepository<Payment, Long> {
     Optional<Payment> findByReservationId(Long reservationId);
     List<Payment> findByStatus(PaymentStatus status);
+    Optional<Payment> findByQrValidationToken(String qrValidationToken);
+
 }

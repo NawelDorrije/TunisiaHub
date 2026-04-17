@@ -1,7 +1,7 @@
 <div class="bo-page">
   <div class="bo-header">
     <div class="bo-header__left">
-      <a class="back-link" routerLink="/camping/backoffice/owner">← My Campings</a>
+      <a class="back-link" routerLink="/camping/backoffice/owner/my-campings">← My Campings</a>
       <h1>Spots — {{ camping?.name ?? '…' }}</h1>
       <p>Manage the individual spots available at this camping</p>
     </div>
@@ -47,24 +47,10 @@
       </div>
       <div class="spot-card__actions">
         <a class="btn btn--ghost btn--sm" [routerLink]="['/camping/backoffice/owner', campingId, 'spots', s.id, 'edit']">✏️ Edit</a>
-        <button class="btn btn--danger btn--sm" (click)="confirmDelete(s)">🗑 Delete</button>
+        <button class="btn btn--danger btn--sm" (click)="deleteSpot(s)">🗑 Delete</button>
       </div>
     </div>
   </div>
 
-  <!-- Delete dialog -->
-  <div class="modal-backdrop" *ngIf="deleteTarget" (click)="cancelDelete()">
-    <div class="modal" (click)="$event.stopPropagation()">
-      <div class="modal__icon">⚠️</div>
-      <h2 class="modal__title">Delete Spot</h2>
-      <p class="modal__body">Delete <strong>{{ deleteTarget?.name }}</strong>? This cannot be undone.</p>
-      <div class="modal__actions">
-        <button class="btn btn--ghost" (click)="cancelDelete()">Cancel</button>
-        <button class="btn btn--danger" (click)="executeDelete()" [disabled]="deleting">
-          <span class="btn__spinner" *ngIf="deleting"></span>
-          {{ deleting ? 'Deleting…' : 'Delete' }}
-        </button>
-      </div>
-    </div>
-  </div>
+
 </div>

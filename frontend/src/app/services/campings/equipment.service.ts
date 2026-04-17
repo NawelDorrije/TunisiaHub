@@ -31,4 +31,7 @@ export class EquipmentService {
   deleteEquipment(id: number): Observable<void> {
     return this.http.delete<void>(`${this.API_URL}/${id}`);
   }
+  getEquipmentByCamping(campingId: number): Observable<Equipment[]> {
+  return this.http.get<Equipment[]>(`${this.API_URL}/camping/${campingId}`);
+}
 }

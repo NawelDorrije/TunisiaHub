@@ -1,0 +1,69 @@
+@import '../shared/_theme.css';
+
+.back-link { font-size:.82rem; color:var(--muted); text-decoration:none; display:inline-flex; align-items:center; gap:.35rem; margin-bottom:.4rem; }
+.back-link:hover { color: var(--forest); }
+
+.spots-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px,1fr));
+  gap: 1.25rem;
+}
+
+.spot-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 1.25rem;
+  box-shadow: var(--shadow-sm);
+  transition: box-shadow .2s, opacity .2s;
+}
+.spot-card:hover { box-shadow: var(--shadow); }
+.spot-card.inactive { opacity: .65; }
+
+.spot-card__header {
+  display: flex; justify-content: space-between; align-items: flex-start;
+  margin-bottom: .75rem;
+}
+
+.spot-type-badge {
+  display: inline-block;
+  font-size: .68rem; font-weight: 600;
+  color: var(--sage); text-transform: uppercase; letter-spacing: .1em;
+  margin-bottom: .25rem;
+}
+
+.spot-card__name { font-family:'Playfair Display',serif; font-size:1.05rem; color:var(--forest); }
+.spot-card__desc { font-size:.82rem; color:var(--muted); line-height:1.5; margin-bottom:.875rem; }
+
+.spot-card__meta {
+  display: flex; flex-wrap: wrap; gap: .5rem;
+  margin-bottom: .875rem;
+}
+.meta-item {
+  display: inline-flex; align-items: center; gap:.3rem;
+  font-size:.78rem; color:var(--muted);
+  background: var(--cream); padding:.2rem .55rem;
+  border-radius:100px; border: 1px solid var(--border);
+}
+
+.spot-card__actions { display:flex; gap:.5rem; padding-top:.75rem; border-top:1px solid var(--border); }
+
+/* Toggle switch */
+.toggle { position:relative; display:inline-block; width:42px; height:24px; cursor:pointer; flex-shrink:0; }
+.toggle input { opacity:0; width:0; height:0; }
+.toggle__slider {
+  position:absolute; inset:0;
+  background: var(--border); border-radius:100px;
+  transition: background .2s;
+}
+.toggle__slider::before {
+  content:''; position:absolute;
+  width:18px; height:18px; left:3px; top:3px;
+  background:#fff; border-radius:50%;
+  transition: transform .2s;
+  box-shadow: 0 1px 4px rgba(0,0,0,.2);
+}
+.toggle input:checked + .toggle__slider { background: var(--forest); }
+.toggle input:checked + .toggle__slider::before { transform: translateX(18px); }
+
+.modal__icon { font-size:2rem; margin-bottom:.5rem; }

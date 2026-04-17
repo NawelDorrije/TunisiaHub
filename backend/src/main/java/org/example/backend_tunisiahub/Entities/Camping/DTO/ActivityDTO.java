@@ -32,8 +32,6 @@ public class ActivityDTO {
 
     Boolean active;
 
-    // Camping is required — every activity must belong to a camping
-    @NotNull(message = "campingId is required")
     Long campingId;
 
     // Spot is optional — activity may be specific to a spot or general to camping

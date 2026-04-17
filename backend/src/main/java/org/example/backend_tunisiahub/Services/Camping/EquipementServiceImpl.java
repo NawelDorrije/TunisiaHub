@@ -106,4 +106,11 @@ public class EquipementServiceImpl implements IEquipementService {
         return equipementRepository.findBySpotIdAndCondition(spotId, condition)
                 .stream().map(equipementMapper::toDTO).collect(Collectors.toList());
     }
+    @Override
+    public List<EquipementDTO> getByCampingId(Long campingId) {
+        return equipementRepository.findBySpotCampingId(campingId)
+                .stream()
+                .map(equipementMapper::toDTO)
+                .collect(Collectors.toList());
+    }
 }

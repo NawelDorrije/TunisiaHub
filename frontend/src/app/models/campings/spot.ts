@@ -17,4 +17,8 @@ export interface Spot {
   active: boolean;
   photos?: string[];
   createdAt?: string;
+   dynamicPrice?: number;      // AI-computed price (may be null if not yet priced)
+  lastPricedAt?: string;
+   multiplier?: number;
+
 }

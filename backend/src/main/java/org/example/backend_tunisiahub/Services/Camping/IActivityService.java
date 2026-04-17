@@ -6,6 +6,8 @@ import java.util.List;
 
 public interface IActivityService {
     ActivityDTO createActivity(ActivityDTO dto);
+     ActivityDTO createActivityTemplate(ActivityDTO dto);
+     ActivityDTO assignActivity(Long activityId, Long campingId, Long spotId);
     ActivityDTO updateActivity(Long id, ActivityDTO dto);
     void deleteActivity(Long id);
     ActivityDTO getActivityById(Long id);

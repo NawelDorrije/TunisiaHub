@@ -369,7 +369,7 @@
                 <div class="spot-type-tag">{{ getSpotTypeLabel(spot.type) }}</div>
               </div>
               <div class="spot-price-block">
-                <div class="spot-price">{{ spot.basePrice | number }}</div>
+                <div class="spot-price">{{ spot.dynamicPrice | number }}</div>
                 <div class="spot-price-unit">TND / night</div>
               </div>
             </div>
@@ -595,13 +595,13 @@
       <div class="book-card" [class.book-unavailable]="!isActive">
 
         <!-- Price -->
-        <div class="book-price-row">
+        <!-- <div class="book-price-row">
           <div>
             <span class="book-price">{{ camping.price | number }}</span>
             <span class="book-unit"> TND</span>
           </div>
           <span class="book-per">per night</span>
-        </div>
+        </div> -->
 
         <!-- Rating -->
         <div class="book-rating" *ngIf="camping.averageRating">
@@ -745,7 +745,7 @@
               <path d="M12 2L2 20h20L12 2z"/>
             </svg>
             <span class="ss-name">{{ spot.name }}</span>
-            <span class="ss-price">{{ spot.basePrice | number }} TND</span>
+            <span class="ss-price">{{ spot.dynamicPrice | number }} TND</span>
           </div>
           <p class="ss-more" *ngIf="spots.length > 4">
             +{{ spots.length - 4 }} more available spots

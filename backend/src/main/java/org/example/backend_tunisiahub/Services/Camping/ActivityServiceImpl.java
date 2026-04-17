@@ -50,6 +50,39 @@ public class ActivityServiceImpl implements IActivityService {
     }
 
     @Override
+    public ActivityDTO createActivityTemplate(ActivityDTO dto) {
+        Activity activity = new Activity();
+
+        activityMapper.updateEntityFromDTO(dto, activity);
+
+        if (dto.getCampingId() != null) {
+
+            Camping camping = campingRepository
+                    .findById(dto.getCampingId())
+                    .orElseThrow(() ->
+                            new RuntimeException(
+                                    "Camping not found"));
+
+            activity.setCamping(camping);
+        }
+
+        if (dto.getSpotId() != null) {
+
+            Spot spot = spotRepository
+                    .findById(dto.getSpotId())
+                    .orElseThrow(() ->
+                            new RuntimeException(
+                                    "Spot not found"));
+
+            activity.setSpot(spot);
+        }
+
+        return activityMapper.toDTO(
+                activityRepository.save(activity)
+        );
+    }
+
+    @Override
     public ActivityDTO updateActivity(Long id, ActivityDTO dto) {
         Activity activity = activityRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Activity not found with id: " + id));
@@ -109,4 +142,44 @@ public class ActivityServiceImpl implements IActivityService {
                 .map(activityMapper::toDTO)
                 .collect(Collectors.toList());
     }
+    @Override
+    public ActivityDTO assignActivity(Long activityId, Long campingId, Long spotId) {
+
+        Activity activity = activityRepository
+                .findById(activityId)
+                .orElseThrow(() ->
+                        new RuntimeException(
+                                "Activity not found"));
+
+        // Affecter au camping
+        if (campingId != null) {
+
+            Camping camping = campingRepository
+                    .findById(campingId)
+                    .orElseThrow(() ->
+                            new RuntimeException(
+                                    "Camping not found"));
+
+            activity.setCamping(camping);
+            activity.setSpot(null);
+        }
+
+        // Affecter au spot
+        if (spotId != null) {
+
+            Spot spot = spotRepository
+                    .findById(spotId)
+                    .orElseThrow(() ->
+                            new RuntimeException(
+                                    "Spot not found"));
+
+            activity.setSpot(spot);
+            activity.setCamping(spot.getCamping());
+        }
+
+        return activityMapper.toDTO(
+                activityRepository.save(activity)
+        );
+    }
+
 }

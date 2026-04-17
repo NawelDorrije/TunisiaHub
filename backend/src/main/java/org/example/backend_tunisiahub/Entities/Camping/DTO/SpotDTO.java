@@ -11,6 +11,8 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 @Getter
 @Setter
 @NoArgsConstructor
@@ -19,17 +21,26 @@ import java.util.List;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class SpotDTO {
 
+    // ─────────────────────────────────────────
     // Read-only fields
+    // ─────────────────────────────────────────
+
     Long id;
     LocalDateTime createdAt;
 
-    // --- Camping reference ---
+    // ─────────────────────────────────────────
+    // Camping reference
+    // ─────────────────────────────────────────
+
     @NotNull(message = "Camping ID is required")
     Long campingId;
 
     String campingName;
 
-    // --- Core fields ---
+    // ─────────────────────────────────────────
+    // Core fields
+    // ─────────────────────────────────────────
+
     @NotBlank(message = "Name is required")
     @Size(max = 50, message = "Name must not exceed 50 characters")
     String name;
@@ -76,4 +87,36 @@ public class SpotDTO {
     Boolean active;
 
     List<String> photos;
+
+    // ─────────────────────────────────────────
+    // Dynamic Pricing (NEW FIELDS)
+    // ─────────────────────────────────────────
+
+    /**
+     * AI-adjusted price.
+     * null if the spot has not been priced yet.
+     */
+    BigDecimal dynamicPrice;
+
+    /**
+     * Last time the price was recalculated.
+     */
+    LocalDateTime lastPricedAt;
+
+    // ─────────────────────────────────────────
+    // Effective Price Helper
+    // ─────────────────────────────────────────
+
+    /**
+     * Returns the price that should actually be used.
+     *
+     * Logic:
+     * if dynamicPrice exists → use it
+     * otherwise → use basePrice
+     */
+    @JsonIgnore
+    public BigDecimal getEffectivePrice() {
+        return dynamicPrice != null ? dynamicPrice : basePrice;
+    }
+
 }

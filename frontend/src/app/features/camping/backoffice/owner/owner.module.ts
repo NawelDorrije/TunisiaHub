@@ -13,6 +13,7 @@ import { EquipmentManagementComponent } from './equipment-management/equipment-m
 import { MyReservationsComponent } from './my-reservations/my-reservations.component';
 import { ReactiveFormsModule } from '@angular/forms';
 import { OverviewComponent } from './overview/overview.component';
+import { EquipmenntFormComponent } from './equipment-management/equipmennt-form/equipmennt-form.component';
 
 
 @NgModule({
@@ -26,7 +27,8 @@ import { OverviewComponent } from './overview/overview.component';
     ActivityManagementComponent,
     EquipmentManagementComponent,
     MyReservationsComponent,
-    OverviewComponent
+    OverviewComponent,
+    EquipmenntFormComponent
   ],
   imports: [
     CommonModule,

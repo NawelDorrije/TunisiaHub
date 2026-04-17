@@ -23,7 +23,10 @@ import java.util.List;
 @Setter
 @NoArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
-@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
+@JsonIgnoreProperties({
+        "hibernateLazyInitializer",
+        "handler"
+})
 public class Spot {
 
     @Id
@@ -32,7 +35,10 @@ public class Spot {
 
     // Relation avec Camping
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "camping_id", nullable = false)
+    @JoinColumn(
+            name = "camping_id",
+            nullable = false
+    )
     @JsonIgnoreProperties({
             "spots",
             "hibernateLazyInitializer",
@@ -82,23 +88,59 @@ public class Spot {
     Boolean active = true;
 
     @Column(nullable = false)
-    LocalDateTime createdAt = LocalDateTime.now();
+    LocalDateTime createdAt =
+            LocalDateTime.now();
+
+    /*
+     ===============================
+     DYNAMIC PRICING FIELDS
+     ===============================
+    */
+
+    @Column(name = "dynamic_price", precision = 10, scale = 2)
+    BigDecimal dynamicPrice;
+
+    @Column(name = "last_priced_at")
+    LocalDateTime lastPricedAt;
+
+    /*
+     ===============================
+     RELATIONS
+     ===============================
+    */
 
     @ElementCollection
     @CollectionTable(
             name = "spot_photos",
-            joinColumns = @JoinColumn(name = "spot_id")
+            joinColumns =
+            @JoinColumn(name = "spot_id")
     )
-    List<String> photos = new ArrayList<>();
+    List<String> photos =
+            new ArrayList<>();
 
-    @OneToMany(mappedBy = "spot", cascade = CascadeType.ALL)
+    @OneToMany(
+            mappedBy = "spot",
+            cascade = CascadeType.ALL
+    )
     @JsonIgnore
-    List<Reservation> reservations = new ArrayList<>();
+    List<Reservation> reservations =
+            new ArrayList<>();
 
-    @OneToMany(mappedBy = "spot", cascade = CascadeType.ALL)
+    @OneToMany(
+            mappedBy = "spot",
+            cascade = CascadeType.ALL
+    )
     @JsonIgnore
-    List<Activity> activities = new ArrayList<>();
-    @OneToMany(mappedBy = "spot", cascade = CascadeType.ALL, orphanRemoval = true)
+    List<Activity> activities =
+            new ArrayList<>();
+
+    @OneToMany(
+            mappedBy = "spot",
+            cascade = CascadeType.ALL,
+            orphanRemoval = true
+    )
     @JsonIgnore
-    List<Equipement> equipements = new ArrayList<>();
+    List<Equipement> equipements =
+            new ArrayList<>();
+
 }

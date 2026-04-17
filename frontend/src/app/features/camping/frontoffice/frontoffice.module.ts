@@ -10,18 +10,23 @@ import { MyReservationsComponent } from './my-reservations/my-reservations.compo
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { HttpClientModule } from '@angular/common/http';
 
-
 @NgModule({
   declarations: [
     ListCampingsComponent,
     CampingDetailComponent,
     CampingMapComponent,
     ReservationFormComponent,
-    MyReservationsComponent
+    MyReservationsComponent,
+
+
+
   ],
   imports: [
     CommonModule,
-    FrontofficeRoutingModule
+    FrontofficeRoutingModule,
+    HttpClientModule,
+    FormsModule
+
 ,
  ReactiveFormsModule,
   FormsModule,

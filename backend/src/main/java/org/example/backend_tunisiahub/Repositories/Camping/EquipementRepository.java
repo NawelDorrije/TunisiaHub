@@ -22,4 +22,5 @@ public interface EquipementRepository extends JpaRepository<Equipement, Long> {
 
     // Filter by spot + condition
     List<Equipement> findBySpotIdAndCondition(Long spotId, EquipmentCondition condition);
+    List<Equipement> findBySpotCampingId(Long campingId);
 }

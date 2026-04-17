@@ -12,6 +12,7 @@ public interface IEquipementService {
     EquipementDTO updateEquipement(Long id, EquipementDTO dto);
 
     void deleteEquipement(Long id);
+    List<EquipementDTO> getByCampingId(Long campingId);
 
     EquipementDTO getEquipementById(Long id);
 
