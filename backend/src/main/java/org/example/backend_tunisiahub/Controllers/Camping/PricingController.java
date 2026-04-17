@@ -12,6 +12,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
@@ -81,17 +82,19 @@ public class PricingController {
         BigDecimal effectivePrice = pricingService.getEffectivePrice(spot, checkIn);
         BigDecimal base = spot.getBasePrice();
         double multiplier = base.compareTo(BigDecimal.ZERO) > 0
-                ? effectivePrice.divide(base, 4, java.math.RoundingMode.HALF_UP).doubleValue()
+                ? effectivePrice.divide(base, 4, RoundingMode.HALF_UP).doubleValue()
                 : 1.0;
 
-        return ResponseEntity.ok(Map.of(
-                "spotId",        spotId,
-                "checkIn",       checkIn.toString(),
-                "basePrice",     base,
-                "dynamicPrice",  effectivePrice,
-                "multiplier",    Math.round(multiplier * 100.0) / 100.0,
-                "pricingActive", spot.getDynamicPrice() != null
-        ));
+        Map<String, Object> response = new java.util.LinkedHashMap<>();
+        response.put("spotId",        spotId);
+        response.put("checkIn",       checkIn.toString());
+        response.put("basePrice",     base);
+        response.put("maxPrice",      spot.getMaxPrice());   // expose owner cap to frontend
+        response.put("dynamicPrice",  effectivePrice);
+        response.put("multiplier",    Math.round(multiplier * 100.0) / 100.0);
+        response.put("pricingActive", spot.getDynamicPrice() != null);
+
+        return ResponseEntity.ok(response);
     }
 
     // ── 2. Manually reprice one spot ───────────────────────────────────────

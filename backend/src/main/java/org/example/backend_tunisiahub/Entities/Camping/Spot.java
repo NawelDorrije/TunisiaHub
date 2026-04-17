@@ -64,7 +64,8 @@ public class Spot {
 
     @Column(nullable = false, precision = 10, scale = 2)
     BigDecimal basePrice;
-
+    @Column(precision = 10, scale = 2)
+    BigDecimal maxPrice;  // Optional, set by owner. null = no upper limit.
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     SpotStatus status;

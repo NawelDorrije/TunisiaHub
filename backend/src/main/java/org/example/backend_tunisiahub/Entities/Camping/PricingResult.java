@@ -8,6 +8,5 @@ import java.math.BigDecimal;
 public record PricingResult(
         BigDecimal dynamicPrice,
         double rawMultiplier,
-        double clampedMultiplier,
         String reason
 ) {}

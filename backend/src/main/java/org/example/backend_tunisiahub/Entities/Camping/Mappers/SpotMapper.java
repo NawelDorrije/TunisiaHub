@@ -36,6 +36,7 @@ public class SpotMapper {
                 .area(spot.getArea())
                 .description(spot.getDescription())
                 .basePrice(spot.getBasePrice())
+                .maxPrice(spot.getMaxPrice())
                 .status(spot.getStatus())
                 .positionX(spot.getPositionX())
                 .positionY(spot.getPositionY())
@@ -63,6 +64,7 @@ public class SpotMapper {
         spot.setArea(dto.getArea());
         spot.setDescription(dto.getDescription());
         spot.setBasePrice(dto.getBasePrice());
+        spot.setMaxPrice(dto.getMaxPrice());
         spot.setStatus(dto.getStatus());
         spot.setPositionX(dto.getPositionX());
         spot.setPositionY(dto.getPositionY());
@@ -106,11 +108,14 @@ public class SpotMapper {
         spot.setArea(dto.getArea());
         spot.setDescription(dto.getDescription());
         spot.setBasePrice(dto.getBasePrice());
+        spot.setMaxPrice(dto.getMaxPrice());
         spot.setStatus(dto.getStatus());
         spot.setPositionX(dto.getPositionX());
         spot.setPositionY(dto.getPositionY());
         spot.setViewType(dto.getViewType());
-
+        if (dto.getMaxPrice() != null) {
+            spot.setMaxPrice(dto.getMaxPrice());
+        }
         if (dto.getHasShade() != null) {
             spot.setHasShade(dto.getHasShade());
         }

@@ -34,9 +34,6 @@ public class PricingAudit {
     @Column(nullable = false)
     double rawMultiplier;
 
-    @Column(nullable = false)
-    double clampedMultiplier;
-
     @Column(length = 500)
     String reason;
 

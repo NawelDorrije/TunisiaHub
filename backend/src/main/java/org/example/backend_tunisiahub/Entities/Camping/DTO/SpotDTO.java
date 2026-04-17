@@ -1,5 +1,6 @@
 package org.example.backend_tunisiahub.Entities.Camping.DTO;
 
+import jakarta.persistence.Column;
 import jakarta.validation.constraints.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -68,6 +69,7 @@ public class SpotDTO {
             message = "Base price must be positive"
     )
     BigDecimal basePrice;
+    BigDecimal maxPrice;  // Optional, set by owner. null = no upper limit.
 
     @NotNull(message = "Status is required")
     SpotStatus status;

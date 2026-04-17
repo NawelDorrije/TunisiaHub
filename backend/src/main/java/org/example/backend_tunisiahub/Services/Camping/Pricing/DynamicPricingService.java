@@ -38,9 +38,6 @@ import java.util.List;
 @Service
 public class DynamicPricingService {
 
-    // Guardrail constants
-    private static final double FLOOR_FACTOR   = 0.70;
-    private static final double CEILING_FACTOR = 2.50;
 
     @Autowired private SpotRepository        spotRepository;
     @Autowired private PricingSignalService  signalService;
@@ -123,24 +120,44 @@ public class DynamicPricingService {
         // Step 1 — Gather signals
         PricingContext ctx = signalService.buildContext(spot, checkInDate);
 
-        // Step 2 — Ask Groq/Llama3
+        // Step 2 — Ask Groq/Llama3 for a raw multiplier
         double rawMultiplier = groqEngine.getMultiplier(ctx);
 
-        // Step 3 — Apply guardrails
-        double clamped = Math.max(FLOOR_FACTOR, Math.min(CEILING_FACTOR, rawMultiplier));
-
-        // Step 4 — Compute final price (2 decimal places)
-        BigDecimal dynamicPrice = ctx.basePrice()
-                .multiply(BigDecimal.valueOf(clamped))
+        // Step 3 — Compute AI-suggested price
+        BigDecimal aiPrice = ctx.basePrice()
+                .multiply(BigDecimal.valueOf(rawMultiplier))
                 .setScale(2, RoundingMode.HALF_UP);
 
-        String reason = buildReason(ctx, clamped);
+        // Step 4 — Apply per-spot constraints (min = basePrice, max = owner-defined)
+        BigDecimal basePrice = ctx.basePrice();
+        BigDecimal maxPrice  = spot.getMaxPrice();   // null means no upper limit
 
-        System.out.printf("[Pricing] Spot %d → base=%.2f × %.2f = %.2f (%s)%n",
-                spot.getId(), ctx.basePrice().doubleValue(),
-                clamped, dynamicPrice.doubleValue(), reason);
+        BigDecimal finalPrice;
+        String reason;
 
-        return new PricingResult(dynamicPrice, rawMultiplier, clamped, reason);
+        if (aiPrice.compareTo(basePrice) < 0) {
+            // AI went below base — floor to basePrice
+            finalPrice = basePrice;
+            reason = "Raised to base price (minimum allowed)";
+
+        } else if (maxPrice != null && aiPrice.compareTo(maxPrice) > 0) {
+            // AI exceeded owner's ceiling — cap to maxPrice
+            finalPrice = maxPrice;
+            reason = "Limited by owner max price";
+
+        } else {
+            // AI price is within bounds
+            finalPrice = aiPrice;
+            reason = "Price determined by AI";
+        }
+
+        System.out.printf(
+                "[Pricing] Spot %d → base=%.2f × %.2f = AI %.2f → final %.2f (%s)%n",
+                spot.getId(), basePrice.doubleValue(),
+                rawMultiplier, aiPrice.doubleValue(),
+                finalPrice.doubleValue(), reason);
+
+        return new PricingResult(finalPrice, rawMultiplier, reason);
     }
 
     private void applyAndSave(Spot spot, PricingResult result) {

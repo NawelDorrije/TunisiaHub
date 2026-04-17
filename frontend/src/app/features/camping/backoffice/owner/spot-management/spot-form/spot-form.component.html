@@ -57,27 +57,37 @@
           </div>
         </div>
 
-        <div class="form-row three" style="margin-bottom:1rem;">
-          <div class="form-field">
-            <label class="form-label" for="capacity">Capacity <span class="required-star">*</span></label>
-            <input id="capacity" type="number" class="form-control" formControlName="capacity"
-                   min="1" placeholder="Persons" />
-            <span class="error-text" *ngIf="f['capacity'].invalid && f['capacity'].touched">Must be ≥ 1</span>
-          </div>
+      <div class="form-row three" style="margin-bottom:1rem;">
+  <div class="form-field">
+    <label class="form-label" for="capacity">Capacity <span class="required-star">*</span></label>
+    <input id="capacity" type="number" class="form-control" formControlName="capacity"
+           min="1" placeholder="Persons" />
+    <span class="error-text" *ngIf="f['capacity'].invalid && f['capacity'].touched">Must be ≥ 1</span>
+  </div>
 
-          <div class="form-field">
-            <label class="form-label" for="basePrice">Price / night (TND) <span class="required-star">*</span></label>
-            <input id="basePrice" type="number" class="form-control" formControlName="basePrice"
-                   min="0.01" step="0.01" placeholder="0.00" />
-            <span class="error-text" *ngIf="f['basePrice'].invalid && f['basePrice'].touched">Must be positive</span>
-          </div>
+  <div class="form-field">
+    <label class="form-label" for="basePrice">Min Price / night (TND) <span class="required-star">*</span></label>
+    <input id="basePrice" type="number" class="form-control" formControlName="basePrice"
+           min="0.01" step="0.01" placeholder="0.00" />
+    <span class="error-text" *ngIf="f['basePrice'].invalid && f['basePrice'].touched">Must be positive</span>
+  </div>
 
-          <div class="form-field">
-            <label class="form-label" for="area">Area (m²)</label>
-            <input id="area" type="number" class="form-control" formControlName="area"
-                   min="0" step="0.01" placeholder="Optional" />
-          </div>
-        </div>
+  <!-- NOUVEAU CHAMP maxPrice -->
+  <div class="form-field">
+    <label class="form-label" for="maxPrice">Max Price / night (TND) <span class="required-star">*</span></label>
+    <input id="maxPrice" type="number" class="form-control" formControlName="maxPrice"
+           min="0.01" step="0.01" placeholder="0.00" />
+    <span class="error-text" *ngIf="f['maxPrice'].invalid && f['maxPrice'].touched">
+      Must be positive
+    </span>
+  </div>
+
+  <div class="form-field">
+    <label class="form-label" for="area">Area (m²)</label>
+    <input id="area" type="number" class="form-control" formControlName="area"
+           min="0" step="0.01" placeholder="Optional" />
+  </div>
+</div>
 
         <div class="form-field">
           <label class="form-label" for="description">Description</label>
@@ -203,5 +213,116 @@
       </div>
 
     </form>
+  </div>
+</div>
+<!-- ── PRICING POPUP ──────────────────────────────────────────────────── -->
+<div class="pricing-overlay" *ngIf="showPricingPopup" (click)="$event.stopPropagation()">
+  <div class="pricing-modal" role="dialog" aria-modal="true" aria-labelledby="pricing-modal-title">
+
+    <!-- ── Header ─────────────────────────────────────────────────────── -->
+    <div class="pricing-modal__header">
+      <div class="pricing-modal__icon">
+        <span *ngIf="pricingData">{{ getPriceLevel()?.icon ?? '💡' }}</span>
+        <span *ngIf="!pricingData">⚠️</span>
+      </div>
+      <div>
+        <h2 class="pricing-modal__title" id="pricing-modal-title">Dynamic Price Calculated</h2>
+        <p class="pricing-modal__subtitle">
+          AI pricing engine has set the initial price for this spot
+        </p>
+      </div>
+    </div>
+
+    <!-- ── Success: pricing data available ───────────────────────────── -->
+    <ng-container *ngIf="pricingData?.pricing as p">
+
+      <!-- Price strip -->
+      <div class="pricing-modal__strip" [ngClass]="getPriceLevel()?.colorClass">
+        <div class="pricing-strip__left">
+          <span class="strip-label">Min Price / night</span>
+          <span class="strip-amount">{{ p.basePrice | number:'1.2-2' }} TND</span>
+        </div>
+        <div class="pricing-strip__arrow">→</div>
+        <div class="pricing-strip__right">
+          <span class="strip-label">Dynamic Price / night</span>
+          <span class="strip-amount strip-amount--final">{{ p.dynamicPrice | number:'1.2-2' }} TND</span>
+        </div>
+      </div>
+
+      <!-- Badge + change pill -->
+      <div class="pricing-modal__badges">
+        <span class="price-badge" [ngClass]="getPriceLevel()?.badgeClass">
+          {{ getPriceLevel()?.icon }} {{ getPriceLevel()?.label }}
+        </span>
+        <span class="change-pill"
+              [class.change-pill--up]="getPriceChangePercent() > 0"
+              [class.change-pill--flat]="getPriceChangePercent() === 0">
+          <ng-container *ngIf="getPriceChangePercent() > 0">▲ +{{ getPriceChangePercent() }}%</ng-container>
+          <ng-container *ngIf="getPriceChangePercent() === 0">= At base price</ng-container>
+        </span>
+      </div>
+
+      <!-- Max price info (if owner set one) -->
+      <div class="pricing-modal__max" *ngIf="p.maxPrice">
+        <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        Owner cap: <strong>{{ p.maxPrice | number:'1.2-2' }} TND</strong>
+        <span class="max-note">— AI price will never exceed this</span>
+      </div>
+
+      <!-- Reason box -->
+      <div class="pricing-modal__reason">
+        <div class="reason-icon">🤖</div>
+        <div class="reason-body">
+          <p class="reason-title">Why this price?</p>
+          <p class="reason-text">{{ getPricingReason() }}</p>
+        </div>
+      </div>
+
+      <!-- Signal pills (from audit if available) -->
+      <div class="pricing-modal__signals" *ngIf="pricingData?.audit as a">
+        <div class="signal-pill">
+          <span class="signal-icon">☁️</span>
+          <span class="signal-label">Weather</span>
+          <span class="signal-val">{{ (a.weatherScore * 100) | number:'1.0-0' }}%</span>
+        </div>
+        <div class="signal-pill">
+          <span class="signal-icon">🏕️</span>
+          <span class="signal-label">Occupancy</span>
+          <span class="signal-val">{{ (a.occupancyRate * 100) | number:'1.0-0' }}%</span>
+        </div>
+        <div class="signal-pill">
+          <span class="signal-icon">📊</span>
+          <span class="signal-label">Demand</span>
+          <span class="signal-val">×{{ a.demandIndex | number:'1.2-2' }}</span>
+        </div>
+        <div class="signal-pill" [class.signal-pill--active]="a.localEventNearby">
+          <span class="signal-icon">🎪</span>
+          <span class="signal-label">Local event</span>
+          <span class="signal-val">{{ a.localEventNearby ? 'Yes' : 'No' }}</span>
+        </div>
+      </div>
+
+      <!-- Nightly re-price note -->
+      <p class="pricing-modal__note">
+        💡 This price is recalculated automatically every night based on live conditions.
+      </p>
+    </ng-container>
+
+    <!-- ── Fallback: pricing call failed ─────────────────────────────── -->
+    <div class="pricing-modal__fallback" *ngIf="!pricingData">
+      <p>Spot created successfully, but the pricing engine could not be reached right now.</p>
+      <p>The price will be recalculated automatically tonight.</p>
+    </div>
+
+    <!-- ── CTA ────────────────────────────────────────────────────────── -->
+    <div class="pricing-modal__footer">
+      <button class="btn btn-primary btn-confirm" (click)="closePricingPopup()">
+        <svg viewBox="0 0 24 24" style="width:15px;height:15px;stroke:#fff;fill:none;stroke-width:2.5">
+          <polyline points="20 6 9 17 4 12"/>
+        </svg>
+        Got it — view my spots
+      </button>
+    </div>
+
   </div>
 </div>

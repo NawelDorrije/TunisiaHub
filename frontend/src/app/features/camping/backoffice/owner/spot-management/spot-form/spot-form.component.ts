@@ -1,10 +1,10 @@
 import { Component, OnInit, OnDestroy, AfterViewInit } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, AbstractControl } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators, AbstractControl, ValidationErrors } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { SpotService } from '../../../../../../services/campings/spot.service';
-import { DynamicPricingService, PricingResponse } from '../../../../../../services/campings/dynamic-pricing.service';
+import { DynamicPricingService, PricingPopupData, PricingResponse } from '../../../../../../services/campings/dynamic-pricing.service';
 
 declare const L: any; // Leaflet
 
@@ -24,7 +24,7 @@ export class SpotFormComponent implements OnInit, AfterViewInit, OnDestroy {
   selectedPhotos: File[] = [];
   previewUrls: string[] = [];
   showPricingPopup = false;
-pricingData: PricingResponse | null = null;
+pricingData: PricingPopupData | null = null;   // was PricingResponse | null
 
   // Map state
   private map: any;
@@ -101,24 +101,42 @@ pricingData: PricingResponse | null = null;
   }
 
   private buildForm(): void {
-    this.form = this.fb.group({
-      campingId:             [this.campingId, Validators.required],
-      name:                  ['', [Validators.required, Validators.maxLength(50)]],
-      type:                  [null, Validators.required],
-      capacity:              [null, [Validators.required, Validators.min(1)]],
-      area:                  [null, Validators.min(0.01)],
-      description:           [''],
-      basePrice:             [null, [Validators.required, Validators.min(0.01)]],
-      status:                ['LIBRE', Validators.required],
-      positionX:             [null],
-      positionY:             [null],
-      viewType:              [null],
-      hasShade:              [false],
-      accessibleForDisabled: [false],
-      active:                [true],
-    });
+  this.form = this.fb.group({
+    campingId:             [this.campingId, Validators.required],
+    name:                  ['', [Validators.required, Validators.maxLength(50)]],
+    type:                  [null, Validators.required],
+    capacity:              [null, [Validators.required, Validators.min(1)]],
+    area:                  [null, Validators.min(0.01)],
+    description:           [''],
+    basePrice:             [null, [Validators.required, Validators.min(0.01)]],
+    maxPrice:              [null, [Validators.required, Validators.min(0.01)]],
+    status:                ['LIBRE', Validators.required],
+    positionX:             [null],
+    positionY:             [null],
+    viewType:              [null],
+    hasShade:              [false],
+    accessibleForDisabled: [false],
+    active:                [true],
+  }, {validators: this.priceValidator   });
+}
+// ── Validateur personnalisé : maxPrice >= basePrice ─────────────────────
+private priceValidator(control: AbstractControl): ValidationErrors | null {
+  const group = control as FormGroup;   // On sait que c'est un FormGroup
+
+  const basePrice = group.get('basePrice')?.value;
+  const maxPrice  = group.get('maxPrice')?.value;
+
+  // Si un des deux champs n'est pas encore rempli, on ne bloque pas
+  if (basePrice == null || maxPrice == null) {
+    return null;
   }
 
+  if (Number(maxPrice) < Number(basePrice)) {
+    return { maxPriceLowerThanBase: true };
+  }
+
+  return null;
+}
   get f(): { [key: string]: AbstractControl } {
     return this.form.controls;
   }
@@ -244,22 +262,22 @@ pricingData: PricingResponse | null = null;
         if (!this.isEditMode && newSpotId) {
           const checkIn = new Date().toISOString().split('T')[0];
 
-          this.pricingService.getEffectivePrice(newSpotId, checkIn)
-            .pipe(takeUntil(this.destroy$))
-            .subscribe({
-              next: (pricing) => {
-                this.pricingData = pricing;
-                this.showPricingPopup = true;
-              },
-              error: () => {
-                // Still show popup even if pricing fails
-                this.showPricingPopup = true;
-              }
-            });
-        } else {
-          // For edit mode or if ID is missing, redirect directly
-          this.router.navigate(['/camping/backoffice/owner/', this.campingId, 'spots']);
+        this.pricingService.getPricingWithExplanation(newSpotId, checkIn)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (data) => {
+          this.pricingData = data;           // { pricing, audit }
+          this.showPricingPopup = true;
+        },
+        error: () => {
+          // Pricing call failed — still show popup so user isn't left hanging
+          this.pricingData = null;
+          this.showPricingPopup = true;
         }
+      });
+  } else {
+    this.router.navigate(['/camping/backoffice/owner/', this.campingId, 'spots']);
+  }
       },
       error: () => {
         this.isSubmitting = false;
@@ -274,13 +292,24 @@ closePricingPopup(): void {
 }
 
 getPriceChangePercent(): number {
-  if (!this.pricingData) return 0;
-  return this.pricingService.getPriceChangePercent(this.pricingData.basePrice, this.pricingData.dynamicPrice);
+  if (!this.pricingData?.pricing) return 0;
+  return this.pricingService.getPriceChangePercent(
+    this.pricingData.pricing.basePrice,
+    this.pricingData.pricing.dynamicPrice
+  );
 }
 
 getPriceLevel() {
-  if (!this.pricingData) return null;
-  return this.pricingService.getPriceLevel(this.pricingData.multiplier);
+  if (!this.pricingData?.pricing) return null;
+  return this.pricingService.getPriceLevel(this.pricingData.pricing.multiplier);
+}
+
+// ── New helper: resolve the best available reason string ─────────────────
+getPricingReason(): string {
+  // Prefer the audit reason (most specific); fall back to the pricing response reason
+  if (this.pricingData?.audit?.reason) return this.pricingData.audit.reason;
+  if (this.pricingData?.pricing?.reason) return this.pricingData.pricing.reason;
+  return 'Dynamic price computed based on current conditions.';
 }
   goBack(): void {
     this.router.navigate(['/camping/backoffice/owner/', this.campingId, 'spots']);

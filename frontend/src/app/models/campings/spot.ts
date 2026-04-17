@@ -8,6 +8,7 @@ export interface Spot {
   area?: number;
   description?: string;
   basePrice: number;
+  maxPrice: number;
   status: 'LIBRE' | 'OCCUPE' | 'MAINTENANCE' | 'HORS_SERVICE';
   positionX?: number;
   positionY?: number;

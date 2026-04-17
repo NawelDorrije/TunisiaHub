@@ -1,56 +1,367 @@
-<div class="bo-page">
-  <div class="bo-header">
-    <div class="bo-header__left">
-      <a class="back-link" routerLink="/camping/backoffice/owner/my-campings">← My Campings</a>
-      <h1>Spots — {{ camping?.name ?? '…' }}</h1>
-      <p>Manage the individual spots available at this camping</p>
+<div class="spm-root">
+
+  <!-- ══════════════ PAGE HEADER ══════════════ -->
+  <header class="spm-header">
+    <div class="spm-header__left">
+      <a class="spm-back" routerLink="/camping/backoffice/owner/my-campings">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M10 12L6 8l4-4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        My Campings
+      </a>
+      <div class="spm-title-group">
+        <h1 class="spm-title">
+          <span class="spm-title__icon">⛺</span>
+          <span>{{ camping?.name ?? '…' }}</span>
+          <span class="spm-title__sub">— Spot Management</span>
+        </h1>
+        <p class="spm-subtitle">Manage spots, monitor dynamic pricing and reservations</p>
+      </div>
     </div>
-    <a class="btn btn--primary" [routerLink]="['/camping/backoffice/owner', campingId, 'spots', 'new']">+ Add Spot</a>
+    <a class="spm-btn spm-btn--primary"
+       [routerLink]="['/camping/backoffice/owner', campingId, 'spots', 'new']">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 3v10M3 8h10" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      Add Spot
+    </a>
+  </header>
+
+  <!-- ══════════════ ALERTS ══════════════ -->
+  <div class="spm-alert spm-alert--success" *ngIf="successMsg" role="alert">
+    <svg width="18" height="18" viewBox="0 0 18 18"><circle cx="9" cy="9" r="8" stroke="currentColor" stroke-width="1.5" fill="none"/><path d="M5.5 9l2.5 2.5 4.5-4.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    {{ successMsg }}
+  </div>
+  <div class="spm-alert spm-alert--error" *ngIf="errorMsg" role="alert">
+    <svg width="18" height="18" viewBox="0 0 18 18"><circle cx="9" cy="9" r="8" stroke="currentColor" stroke-width="1.5" fill="none"/><path d="M9 5v4M9 12v.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+    {{ errorMsg }}
   </div>
 
-  <div class="alert alert--success" *ngIf="successMsg" role="alert">✓ {{ successMsg }}</div>
-  <div class="alert alert--error"   *ngIf="errorMsg"   role="alert">✕ {{ errorMsg }}</div>
-
-  <!-- Loading -->
-  <div class="spots-grid" *ngIf="loading">
-    <div class="skeleton" style="height:200px" *ngFor="let i of [1,2,3,4]"></div>
+  <!-- ══════════════ SKELETON ══════════════ -->
+  <div class="spm-grid" *ngIf="loading">
+    <div class="spm-skeleton" *ngFor="let i of [1,2,3,4,5,6]"></div>
   </div>
 
-  <!-- Empty -->
-  <div class="empty-state" *ngIf="!loading && spots.length === 0">
-    <div class="empty-state__icon">🏕️</div>
+  <!-- ══════════════ EMPTY STATE ══════════════ -->
+  <div class="spm-empty" *ngIf="!loading && spots.length === 0">
+    <div class="spm-empty__icon">🏕️</div>
     <h3>No spots yet</h3>
-    <p>Add spots so guests can book specific locations within this camping.</p>
-    <a class="btn btn--primary" [routerLink]="['/camping/backoffice/owner', campingId, 'spots', 'new']">Add First Spot</a>
+    <p>Add spots so guests can book specific locations at this camping.</p>
+    <a class="spm-btn spm-btn--primary"
+       [routerLink]="['/camping/backoffice/owner', campingId, 'spots', 'new']">
+      Add First Spot
+    </a>
   </div>
 
-  <!-- Grid -->
-  <div class="spots-grid" *ngIf="!loading && spots.length > 0">
-    <div class="spot-card" *ngFor="let s of spots" [class.inactive]="!s.active">
-      <div class="spot-card__header">
-        <div>
-          <span class="spot-type-badge">{{ s.type }}</span>
-          <h3 class="spot-card__name">{{ s.name }}</h3>
+  <!-- ══════════════ SPOTS GRID ══════════════ -->
+  <div class="spm-grid" *ngIf="!loading && spots.length > 0">
+
+    <article class="spm-card"
+             *ngFor="let s of spots; trackBy: trackBySpot"
+             [class.spm-card--inactive]="!s.active"
+             (click)="openModal(s)"
+             role="button"
+             [attr.aria-label]="'View details for ' + s.name">
+
+      <!-- Photo -->
+      <div class="spm-card__photo">
+        <img *ngIf="s.photos?.length" [src]="getPhotoUrl(s.photos![0])" [alt]="s.name" loading="lazy" />
+        <div *ngIf="!s.photos?.length" class="spm-card__photo-placeholder">
+          <span>{{ s.type[0] }}</span>
         </div>
-        <label class="toggle" [title]="s.active ? 'Deactivate' : 'Activate'">
-          <input type="checkbox" [checked]="s.active" (change)="toggleActive(s)" />
-          <span class="toggle__slider"></span>
-        </label>
+        <span class="spm-card__status-pill"
+              [class.pill--active]="s.active"
+              [class.pill--inactive]="!s.active">
+          {{ s.active ? 'Active' : 'Inactive' }}
+        </span>
+        <span class="spm-card__type-badge">{{ s.type }}</span>
       </div>
-      <p class="spot-card__desc">{{ s.description | slice:0:80 }}{{ (s.description?.length ?? 0) > 80 ? '…' : '' }}</p>
-      <div class="spot-card__meta">
-        <div class="meta-item"><span>💰</span>{{ s.basePrice | number }} TND/night</div>
-        <div class="meta-item"><span>👥</span>{{ s.capacity }} guests</div>
-        <div class="meta-item" *ngIf="s.viewType"><span>👁</span>{{ s.viewType }}</div>
-        <div class="meta-item" *ngIf="s.hasShade"><span>🌿</span>Shade</div>
-        <div class="meta-item" *ngIf="s.accessibleForDisabled"><span>♿</span>Accessible</div>
+
+      <!-- Body -->
+      <div class="spm-card__body">
+
+        <!-- Name + toggle row -->
+        <div class="spm-card__name-row">
+          <h3 class="spm-card__name">{{ s.name }}</h3>
+          <label class="spm-toggle" [title]="s.active ? 'Deactivate' : 'Activate'"
+                 (click)="$event.stopPropagation()">
+            <input type="checkbox" [checked]="s.active" (change)="toggleActive(s, $event)" />
+            <span class="spm-toggle__track">
+              <span class="spm-toggle__thumb"></span>
+            </span>
+          </label>
+        </div>
+
+        <!-- Description -->
+        <p class="spm-card__desc" *ngIf="s.description">
+          {{ s.description | slice:0:72 }}{{ (s.description?.length ?? 0) > 72 ? '...' : '' }}
+        </p>
+
+        <!-- Pricing block -->
+        <div class="spm-card__pricing">
+          <div class="spm-price-badge" *ngIf="!s.pricingLoading && s.priceLevel"
+               [ngClass]="s.priceLevel.badgeClass">
+            <span class="spm-price-badge__icon">{{ s.priceLevel.icon }}</span>
+            <span>{{ s.priceLevel.label }}</span>
+          </div>
+          <div class="spm-price-badge badge--loading" *ngIf="s.pricingLoading">
+            <span class="spm-spinner"></span>
+            <span>Pricing...</span>
+          </div>
+
+          <div class="spm-price-main">
+            <span class="spm-price-main__dynamic">
+              {{ getEffectivePrice(s) | number:'1.0-0' }}
+              <small>TND</small>
+            </span>
+            <span class="spm-price-main__night">/night</span>
+            <span class="spm-price-change"
+                  *ngIf="!s.pricingLoading && getPriceChangePercent(s) !== 0"
+                  [class.change--up]="getPriceChangePercent(s) > 0"
+                  [class.change--down]="getPriceChangePercent(s) < 0">
+              {{ getPriceChangePercent(s) > 0 ? '+' : '' }}{{ getPriceChangePercent(s) }}%
+            </span>
+          </div>
+
+          <div class="spm-price-range">
+            <div class="spm-price-range__item">
+              <span class="spm-price-range__label">Base</span>
+              <span class="spm-price-range__val">{{ s.basePrice | number:'1.0-0' }}</span>
+            </div>
+            <div class="spm-price-range__sep">→</div>
+            <div class="spm-price-range__item">
+              <span class="spm-price-range__label">Max</span>
+              <span class="spm-price-range__val">{{ s.maxPrice | number:'1.0-0' }}</span>
+            </div>
+          </div>
+
+          <p class="spm-price-reason" *ngIf="s.audit?.reason">
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><circle cx="6" cy="6" r="5" stroke="currentColor" stroke-width="1.3"/><path d="M6 4v3M6 8.5v.3" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+            {{ s.audit!.reason | slice:0:60 }}{{ (s.audit!.reason?.length ?? 0) > 60 ? '...' : '' }}
+          </p>
+        </div>
+
+        <!-- Meta chips -->
+        <div class="spm-card__meta">
+          <div class="spm-chip">
+            <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M6.5 1.5C4.01 1.5 2 3.51 2 6s2.01 4.5 4.5 4.5S11 8.49 11 6 8.99 1.5 6.5 1.5z" stroke="currentColor" stroke-width="1.2"/></svg>
+            Cap. {{ s.capacity }}
+          </div>
+          <div class="spm-chip spm-chip--reservations">
+            <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><rect x="2" y="3.5" width="9" height="7.5" rx="1.2" stroke="currentColor" stroke-width="1.2"/><path d="M4.5 3.5V2.5M8.5 3.5V2.5M2 6h9" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+            {{ s.reservationCount ?? '...' }} reservations
+          </div>
+          <div class="spm-chip" *ngIf="s.viewType">{{ s.viewType }}</div>
+          <div class="spm-chip spm-chip--green" *ngIf="s.hasShade">Shade</div>
+          <div class="spm-chip" *ngIf="s.accessibleForDisabled">Accessible</div>
+        </div>
+
+        <!-- Actions -->
+        <div class="spm-card__actions" (click)="$event.stopPropagation()">
+          <a class="spm-btn spm-btn--ghost spm-btn--sm"
+             [routerLink]="['/camping/backoffice/owner', campingId, 'spots', s.id, 'edit']">
+            <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M9.5 2.5l1 1L4 10 2.5 10.5 3 9l6.5-6.5z" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Edit
+          </a>
+          <button class="spm-btn spm-btn--danger spm-btn--sm" (click)="deleteSpot(s, $event)">
+            <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M2.5 4h8M5 4V2.5h3V4M10 4l-.5 6.5a1 1 0 01-1 .9H4.5a1 1 0 01-1-.9L3 4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Delete
+          </button>
+        </div>
       </div>
-      <div class="spot-card__actions">
-        <a class="btn btn--ghost btn--sm" [routerLink]="['/camping/backoffice/owner', campingId, 'spots', s.id, 'edit']">✏️ Edit</a>
-        <button class="btn btn--danger btn--sm" (click)="deleteSpot(s)">🗑 Delete</button>
-      </div>
-    </div>
+    </article>
+
   </div>
 
+</div>
 
+
+<!-- ══════════════════════════════════════ MODAL ══════════════════════════════════════ -->
+<div class="spm-modal-backdrop" [class.spm-modal-backdrop--open]="modalOpen" (click)="closeModal()">
+  <div class="spm-modal" [class.spm-modal--open]="modalOpen" (click)="$event.stopPropagation()" role="dialog" aria-modal="true">
+
+    <ng-container *ngIf="selectedSpot as s">
+
+      <button class="spm-modal__close" (click)="closeModal()" aria-label="Close">
+        <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M4 4l10 10M14 4L4 14" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+      </button>
+
+      <!-- Gallery -->
+      <div class="spm-modal__gallery" [class.spm-modal__gallery--placeholder]="!s.photos?.length">
+        <ng-container *ngIf="s.photos?.length; else noGallery">
+          <img class="spm-modal__gallery-img"
+               [src]="getPhotoUrl(s.photos![activePhotoIndex])"
+               [alt]="s.name" />
+          <button class="spm-gallery-nav spm-gallery-nav--prev" *ngIf="s.photos!.length > 1" (click)="prevPhoto()">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M13 4l-6 6 6 6" stroke="white" stroke-width="2" stroke-linecap="round"/></svg>
+          </button>
+          <button class="spm-gallery-nav spm-gallery-nav--next" *ngIf="s.photos!.length > 1" (click)="nextPhoto()">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M7 4l6 6-6 6" stroke="white" stroke-width="2" stroke-linecap="round"/></svg>
+          </button>
+          <div class="spm-gallery-dots" *ngIf="s.photos!.length > 1">
+            <button *ngFor="let p of s.photos; let i = index"
+                    class="spm-gallery-dot"
+                    [class.spm-gallery-dot--active]="i === activePhotoIndex"
+                    (click)="setPhoto(i)"></button>
+          </div>
+        </ng-container>
+        <ng-template #noGallery><span class="spm-modal__gallery-placeholder-text">{{ s.type }}</span></ng-template>
+        <span class="spm-modal__type-tag">{{ s.type }}</span>
+        <span class="spm-modal__status-tag" [class.tag--active]="s.active" [class.tag--inactive]="!s.active">
+          {{ s.active ? 'Active' : 'Inactive' }}
+        </span>
+      </div>
+
+      <!-- Modal body -->
+      <div class="spm-modal__body">
+
+        <div class="spm-modal__title-row">
+          <div>
+            <h2 class="spm-modal__name">{{ s.name }}</h2>
+            <p class="spm-modal__sub" *ngIf="s.description">{{ s.description }}</p>
+          </div>
+          <div class="spm-modal__reservations-pill">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="2" y="4" width="12" height="10" rx="1.5" stroke="currentColor" stroke-width="1.4"/><path d="M5 4V3M11 4V3M2 8h12" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+            <span>{{ s.reservationCount ?? '—' }}</span>
+            <small>reservations</small>
+          </div>
+        </div>
+
+        <!-- Pricing hero -->
+        <div class="spm-modal__pricing-hero">
+          <div class="spm-modal__pricing-hero-inner">
+            <div class="spm-modal__demand" *ngIf="s.priceLevel" [ngClass]="s.priceLevel.badgeClass">
+              {{ s.priceLevel.icon }} {{ s.priceLevel.label }}
+            </div>
+            <div class="spm-modal__price-cols">
+              <div class="spm-price-col">
+                <div class="spm-price-col__label">Base Price</div>
+                <div class="spm-price-col__val">{{ s.basePrice | number:'1.0-0' }}</div>
+                <div class="spm-price-col__unit">TND / night</div>
+              </div>
+              <div class="spm-price-col spm-price-col--dynamic">
+                <div class="spm-price-col__label">Dynamic Price</div>
+                <div class="spm-price-col__val">{{ getEffectivePrice(s) | number:'1.0-0' }}</div>
+                <div class="spm-price-col__unit">TND / night</div>
+                <div class="spm-price-col__change"
+                     *ngIf="getPriceChangePercent(s) !== 0"
+                     [class.change--up]="getPriceChangePercent(s) > 0"
+                     [class.change--down]="getPriceChangePercent(s) < 0">
+                  {{ getPriceChangePercent(s) > 0 ? '▲' : '▼' }} {{ getPriceChangePercent(s) | number }}%
+                </div>
+              </div>
+              <div class="spm-price-col">
+                <div class="spm-price-col__label">Max Price</div>
+                <div class="spm-price-col__val">{{ s.maxPrice | number:'1.0-0' }}</div>
+                <div class="spm-price-col__unit">TND / night</div>
+              </div>
+            </div>
+            <div class="spm-modal__multiplier" *ngIf="s.pricing?.multiplier">
+              <div class="spm-modal__multiplier-label">
+                <span>Pricing Multiplier</span>
+                <strong>x{{ s.pricing!.multiplier | number:'1.2-2' }}</strong>
+              </div>
+              <div class="spm-modal__multiplier-track">
+                <div class="spm-modal__multiplier-fill"
+                     [style.width.%]="((s.pricing!.multiplier - 0.5) / 1.5) * 100"
+                     [ngClass]="{
+                       'fill--standard': s.pricing!.multiplier < 1.05,
+                       'fill--moderate': s.pricing!.multiplier < 1.2,
+                       'fill--high':     s.pricing!.multiplier < 1.4,
+                       'fill--peak':     s.pricing!.multiplier >= 1.4
+                     }">
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Reason -->
+        <div class="spm-modal__reason" *ngIf="s.audit?.reason">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6.5" stroke="currentColor" stroke-width="1.4"/><path d="M8 5v4M8 10.5v.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+          <div>
+            <div class="spm-modal__reason-title">Why This Price?</div>
+            <div class="spm-modal__reason-text">{{ s.audit!.reason }}</div>
+          </div>
+        </div>
+
+        <!-- Audit stats -->
+        <div class="spm-modal__stats" *ngIf="s.audit">
+          <div class="spm-stat-card">
+            <div class="spm-stat-card__icon">📊</div>
+            <div class="spm-stat-card__label">Occupancy Rate</div>
+            <div class="spm-stat-card__val">{{ getOccupancyPercent(s) }}%</div>
+            <div class="spm-stat-card__bar">
+              <div class="spm-stat-card__bar-fill" [style.width.%]="getOccupancyPercent(s)"></div>
+            </div>
+          </div>
+          <div class="spm-stat-card">
+            <div class="spm-stat-card__icon">🌦️</div>
+            <div class="spm-stat-card__label">Weather Score</div>
+            <div class="spm-stat-card__val">{{ (s.audit!.weatherScore * 10) | number:'1.0-1' }}/10</div>
+          </div>
+          <div class="spm-stat-card">
+            <div class="spm-stat-card__icon">📈</div>
+            <div class="spm-stat-card__label">Demand Index</div>
+            <div class="spm-stat-card__val">{{ s.audit!.demandIndex | number:'1.2-2' }}</div>
+          </div>
+          <div class="spm-stat-card">
+            <div class="spm-stat-card__icon">🗓️</div>
+            <div class="spm-stat-card__label">Days to Check-in</div>
+            <div class="spm-stat-card__val">{{ s.audit!.daysUntilCheckIn }}</div>
+          </div>
+          <div class="spm-stat-card" *ngIf="s.audit!.localEventNearby">
+            <div class="spm-stat-card__icon">🎪</div>
+            <div class="spm-stat-card__label">Local Event</div>
+            <div class="spm-stat-card__val spm-stat-card__val--event">Nearby</div>
+          </div>
+          <div class="spm-stat-card">
+            <div class="spm-stat-card__icon">📅</div>
+            <div class="spm-stat-card__label">Day of Week</div>
+            <div class="spm-stat-card__val">{{ s.audit!.dayOfWeek }}</div>
+          </div>
+        </div>
+
+        <!-- Details -->
+        <div class="spm-modal__details">
+          <div class="spm-detail-item" *ngIf="s.capacity">
+            <span class="spm-detail-item__icon">👥</span>
+            <span class="spm-detail-item__label">Capacity</span>
+            <span class="spm-detail-item__val">{{ s.capacity }} guests</span>
+          </div>
+          <div class="spm-detail-item" *ngIf="s.area">
+            <span class="spm-detail-item__icon">📐</span>
+            <span class="spm-detail-item__label">Area</span>
+            <span class="spm-detail-item__val">{{ s.area }} m²</span>
+          </div>
+          <div class="spm-detail-item" *ngIf="s.viewType">
+            <span class="spm-detail-item__icon">👁</span>
+            <span class="spm-detail-item__label">View Type</span>
+            <span class="spm-detail-item__val">{{ s.viewType }}</span>
+          </div>
+          <div class="spm-detail-item">
+            <span class="spm-detail-item__icon">🌿</span>
+            <span class="spm-detail-item__label">Shade</span>
+            <span class="spm-detail-item__val">{{ s.hasShade ? 'Yes' : 'No' }}</span>
+          </div>
+          <div class="spm-detail-item">
+            <span class="spm-detail-item__icon">♿</span>
+            <span class="spm-detail-item__label">Accessible</span>
+            <span class="spm-detail-item__val">{{ s.accessibleForDisabled ? 'Yes' : 'No' }}</span>
+          </div>
+          <div class="spm-detail-item" *ngIf="s.audit?.createdAt">
+            <span class="spm-detail-item__icon">🕐</span>
+            <span class="spm-detail-item__label">Last Priced</span>
+            <span class="spm-detail-item__val">{{ formatDate(s.audit!.createdAt) }}</span>
+          </div>
+        </div>
+
+        <div class="spm-modal__footer">
+          <button class="spm-btn spm-btn--ghost" (click)="closeModal()">Close</button>
+          <a class="spm-btn spm-btn--primary"
+             [routerLink]="['/camping/backoffice/owner', campingId, 'spots', s.id, 'edit']"
+             (click)="closeModal()">
+            Edit Spot
+          </a>
+        </div>
+
+      </div>
+    </ng-container>
+  </div>
 </div>

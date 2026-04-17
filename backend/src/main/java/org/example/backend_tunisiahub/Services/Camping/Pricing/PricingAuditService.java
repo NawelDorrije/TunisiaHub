@@ -33,7 +33,6 @@ public class PricingAuditService {
             audit.setBasePrice(ctx.basePrice());
             audit.setDynamicPrice(result.dynamicPrice());
             audit.setRawMultiplier(result.rawMultiplier());
-            audit.setClampedMultiplier(result.clampedMultiplier());
             audit.setReason(result.reason());
 
             // Signal snapshot

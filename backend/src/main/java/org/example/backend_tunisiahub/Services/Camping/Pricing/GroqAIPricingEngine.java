@@ -32,8 +32,6 @@ public class GroqAIPricingEngine {
 
     private static final String GROQ_URL      = "https://api.groq.com/openai/v1/chat/completions";
     private static final String MODEL         = "llama-3.1-8b-instant";
-    private static final double MIN_MULT      = 0.70;
-    private static final double MAX_MULT      = 2.50;
     private static final double FALLBACK      = 1.0;
 
     @Value("${groq.api.key}")
@@ -66,7 +64,7 @@ public class GroqAIPricingEngine {
         return """
                 You are a JSON-only revenue-optimisation engine for camping spots.
                 You MUST respond with a single valid JSON object containing exactly two keys:
-                  "multiplier" (a decimal number) and "reason" (a short string, max 15 words).
+                  "multiplier" (a decimal number >= 0) and "reason" (a short string, max 15 words).
                 No preamble, no explanation, no markdown fences. Only the JSON object.
                 Example: {"multiplier": 1.25, "reason": "High weekend occupancy with local festival"}
                 """;
@@ -89,26 +87,27 @@ public class GroqAIPricingEngine {
                 is_weekend          : %s     [Friday or Saturday night]
                 is_last_minute      : %s     [check-in in ≤ 3 days]
 
-                === Business rules ===
-                Allowed multiplier : %.2f – %.2f
-                Target improvement : +15%% to +30%% revenue over flat pricing
+                === Pricing rules ===
+                - The minimum price is enforced externally as base_price (multiplier 1.0).
+                  You may recommend below 1.0, but the system will floor to 1.0 automatically.
+                - The maximum price is enforced externally by the owner's cap.
+                  You may recommend above the cap; the system will apply the owner's limit.
+                - Your goal: maximise revenue while keeping occupancy healthy.
 
-                INCREASE price when:
+                INCREASE multiplier (> 1.0) when:
                   - occupancy_rate > 0.70
                   - is_weekend = true
                   - local_event_nearby = true
                   - demand_index > 1.20
 
-                DECREASE price when:
+                DECREASE multiplier (< 1.0, will be floored to 1.0) when:
                   - occupancy_rate < 0.30
                   - weather_score < 0.40
                   - demand_index < 0.80
 
                 LAST-MINUTE rule:
-                  - If is_last_minute AND occupancy_rate < 0.40 → apply ×0.90 discount
-                  - If is_last_minute AND occupancy_rate > 0.60 → keep or raise price
-
-                NEVER exceed ×2.50 — maintains customer trust.
+                  - If is_last_minute AND occupancy_rate < 0.40 → suggest 0.90 (system may raise to 1.0)
+                  - If is_last_minute AND occupancy_rate > 0.60 → keep or raise multiplier
 
                 Respond with valid JSON only:
                 {"multiplier": <number>, "reason": "<max 15 words>"}
@@ -121,26 +120,23 @@ public class GroqAIPricingEngine {
                 ctx.dayOfWeek(),
                 ctx.daysUntilCheckIn(),
                 ctx.isWeekend(),
-                ctx.isLastMinute(),
-                MIN_MULT, MAX_MULT
+                ctx.isLastMinute()
         );
     }
-
     // ── HTTP call to Groq ──────────────────────────────────────────────────
 
     private String callGroq(String systemPrompt, String userPrompt) throws Exception {
-
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.setBearerAuth(apiKey);  // "Authorization: Bearer gsk_..."
+        headers.setBearerAuth(apiKey);
 
         Map<String, Object> body = Map.of(
                 "model",       MODEL,
                 "max_tokens",  200,
-                "temperature", 0.2,    // low = consistent, structured output
+                "temperature", 0.2,
                 "messages", List.of(
-                        Map.of("role", "system",  "content", systemPrompt),
-                        Map.of("role", "user",    "content", userPrompt)
+                        Map.of("role", "system", "content", systemPrompt),
+                        Map.of("role", "user",   "content", userPrompt)
                 )
         );
 
@@ -152,24 +148,19 @@ public class GroqAIPricingEngine {
             throw new RuntimeException("Groq API error: " + response.getStatusCode());
         }
 
-        // Groq returns OpenAI-compatible format:
-        // { "choices": [ { "message": { "content": "..." } } ] }
         JsonNode root = objectMapper.readTree(response.getBody());
         return root.path("choices").get(0)
                 .path("message").path("content").asText();
     }
-
     // ── JSON parsing ───────────────────────────────────────────────────────
 
     private double parseMultiplier(String responseText) {
         try {
-            // Strip accidental markdown fences if model adds them
             String clean = responseText
                     .replaceAll("(?s)```[a-z]*\\s*", "")
                     .replaceAll("```", "")
                     .trim();
 
-            // Extract the JSON object even if surrounded by stray text
             int start = clean.indexOf('{');
             int end   = clean.lastIndexOf('}');
             if (start == -1 || end == -1) {
@@ -180,8 +171,8 @@ public class GroqAIPricingEngine {
             JsonNode node = objectMapper.readTree(clean.substring(start, end + 1));
             double multiplier = node.path("multiplier").asDouble(FALLBACK);
 
-            // Clamp defensively (main guardrail is in DynamicPricingService)
-            return Math.max(MIN_MULT, Math.min(MAX_MULT, multiplier));
+            // Only guard against nonsensical negative values
+            return Math.max(0.0, multiplier);
 
         } catch (Exception e) {
             System.err.println("[GroqEngine] Parse failed: " + responseText);

@@ -8,9 +8,11 @@ export interface PricingResponse {
   spotId: number;
   checkIn: string;
   basePrice: number;
+  maxPrice: number | null;       // owner cap, may be null
   dynamicPrice: number;
   multiplier: number;
   pricingActive: boolean;
+   reason?: string;
 }
 
 export interface PricingAudit {
@@ -19,7 +21,6 @@ export interface PricingAudit {
   basePrice: number;
   dynamicPrice: number;
   rawMultiplier: number;
-  clampedMultiplier: number;
   reason: string;
   weatherScore: number;
   occupancyRate: number;
@@ -174,14 +175,12 @@ export class DynamicPricingService {
 
   // ── Display helpers ────────────────────────────────────────────────
 
-  getPriceLevel(multiplier: number): PriceLevel {
-    if (multiplier >= 1.4) return { label: 'Peak Demand',     icon: '🔥', colorClass: 'level-hot',      badgeClass: 'badge--peak',     description: 'High occupancy + local event' };
-    if (multiplier >= 1.2) return { label: 'High Demand',     icon: '📈', colorClass: 'level-high',     badgeClass: 'badge--high',     description: 'Weekend or seasonal pressure' };
-    if (multiplier >= 1.05) return { label: 'Moderate',       icon: '☀️', colorClass: 'level-moderate', badgeClass: 'badge--moderate', description: 'Slightly above standard' };
-    if (multiplier <= 0.8)  return { label: 'Great Deal',     icon: '💚', colorClass: 'level-deal',     badgeClass: 'badge--deal',     description: 'Low occupancy discount' };
-    if (multiplier <= 0.92) return { label: 'Slight Discount',icon: '🌿', colorClass: 'level-low',      badgeClass: 'badge--discount', description: 'Below-average demand' };
-    return                         { label: 'Standard',       icon: '⚖️', colorClass: 'level-standard', badgeClass: 'badge--standard', description: 'Balanced signals' };
-  }
+getPriceLevel(multiplier: number): PriceLevel {
+  if (multiplier >= 1.4)  return { label: 'Peak Demand',  icon: '🔥', colorClass: 'level-hot',      badgeClass: 'badge--peak',     description: 'High occupancy + local event' };
+  if (multiplier >= 1.2)  return { label: 'High Demand',  icon: '📈', colorClass: 'level-high',     badgeClass: 'badge--high',     description: 'Weekend or seasonal pressure' };
+  if (multiplier >= 1.05) return { label: 'Moderate',     icon: '☀️', colorClass: 'level-moderate', badgeClass: 'badge--moderate', description: 'Slightly above standard' };
+  return                         { label: 'Standard',     icon: '⚖️', colorClass: 'level-standard', badgeClass: 'badge--standard', description: 'Balanced signals' };
+}
 
   getPriceChangePercent(basePrice: number, dynamicPrice: number): number {
     if (!basePrice) return 0;
