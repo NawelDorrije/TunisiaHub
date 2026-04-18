@@ -162,15 +162,25 @@
 
       <!-- Quick Stats Bar -->
       <div class="stats-bar">
-        <div class="stat-item">
-          <svg class="stat-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/>
-          </svg>
-          <div>
-            <div class="stat-v">{{ camping.price | number }} TND</div>
-            <div class="stat-l">per night</div>
-          </div>
-        </div>
+
+         <div class="price-alert" [ngClass]="'price-alert--' + countdownUrgency">
+    <!-- Icon changes per urgency -->
+    <svg *ngIf="countdownUrgency === 'calm'"    class="pa-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <circle cx="12" cy="12" r="10"/><polyline points="12,6 12,12 16,14"/>
+    </svg>
+    <svg *ngIf="countdownUrgency === 'warning'" class="pa-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+    </svg>
+    <svg *ngIf="countdownUrgency === 'urgent'"  class="pa-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <path d="M8.5 14.5A2.5 2.5 0 0011 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 11-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 002.5 2.5z"/>
+    </svg>
+
+    <div class="pa-body">
+      <span class="pa-label">Price refreshes in</span>
+      <span class="pa-timer">{{ countdownDisplay }}</span>
+    </div>
+  </div>
+
         <div class="stat-divider"></div>
         <div class="stat-item">
           <svg class="stat-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -372,6 +382,7 @@
                 <div class="spot-price">{{ spot.dynamicPrice | number }}</div>
                 <div class="spot-price-unit">TND / night</div>
               </div>
+
             </div>
             <div class="spot-chips">
               <span class="chip chip-neutral" *ngIf="spot.capacity">

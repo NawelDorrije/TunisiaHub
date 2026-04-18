@@ -26,6 +26,16 @@ export class CampingDetailComponent implements OnInit, OnDestroy {
   error = '';
   activePhoto = 0;
   activeTab: 'overview' | 'spots' | 'activities' | 'equipment' | 'rules' = 'overview';
+   /** Raw seconds remaining until the AI reprices (3-hour cycle). */
+  countdown = 0;
+
+  /** Formatted display string, e.g. "02:14:37" */
+  countdownDisplay = '';
+
+  /** Urgency tier drives the visual style of the alert. */
+  countdownUrgency: 'calm' | 'warning' | 'urgent' = 'calm';
+
+  private countdownInterval: ReturnType<typeof setInterval> | null = null;
 
   private destroy$ = new Subject<void>();
 
@@ -43,7 +53,52 @@ export class CampingDetailComponent implements OnInit, OnDestroy {
     this.loadCamping(id);
     this.loadSpots(id);
     this.loadActivities(id);
+    this.initCountdown();
   }
+    initCountdown(): void {
+    const CYCLE_SECONDS = 3 * 60 * 60; // 10 800 s
+
+    const nowMs   = Date.now();
+    const cycleMs = CYCLE_SECONDS * 1000;
+    const elapsed = nowMs % cycleMs;                    // ms into current cycle
+    const remaining = Math.floor((cycleMs - elapsed) / 1000); // seconds left
+
+    this.countdown = remaining;
+    this.updateCountdownDisplay();
+
+    this.countdownInterval = setInterval(() => this.tick(), 1000);
+  }
+
+  private tick(): void {
+    if (this.countdown > 0) {
+      this.countdown--;
+    } else {
+      // Cycle rolled over — restart
+      this.countdown = 3 * 60 * 60;
+    }
+    this.updateCountdownDisplay();
+  }
+
+  private updateCountdownDisplay(): void {
+  const now = new Date();
+  const future = new Date(now.getTime() + this.countdown * 1000);
+
+  this.countdownDisplay = future.toLocaleTimeString('en-US', {
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: true
+  });
+
+  if (this.countdown <= 5 * 60) {
+    this.countdownUrgency = 'urgent';
+  } else if (this.countdown <= 30 * 60) {
+    this.countdownUrgency = 'warning';
+  } else {
+    this.countdownUrgency = 'calm';
+  }
+}
+
 
   private loadCamping(id: number): void {
     this.campingService.getCampingById(id)
@@ -148,5 +203,6 @@ export class CampingDetailComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
+    if (this.countdownInterval) clearInterval(this.countdownInterval);
   }
 }

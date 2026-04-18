@@ -475,3 +475,109 @@ svg { display: block; flex-shrink: 0; }
   .stats-bar { padding: 0.75rem 0.75rem; }
   .stat-divider { height: 28px; }
 }
+/* ════════════════════════════════════════════════════════════════
+   PRICE ROW  —  price + countdown side-by-side
+   ════════════════════════════════════════════════════════════════ */
+
+.book-price-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.75rem;
+}
+
+.book-price-col {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.book-price-main {
+  display: flex;
+  align-items: baseline;
+  gap: 0;
+}
+
+/* ════════════════════════════════════════════════════════════════
+   COUNTDOWN ALERT PILL
+   ════════════════════════════════════════════════════════════════ */
+
+.price-alert {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.45rem 0.85rem;
+  border-radius: 12px;
+  font-family: var(--ff-body);
+  border: 1.5px solid transparent;
+  transition: background 0.4s, border-color 0.4s, box-shadow 0.4s;
+  flex-shrink: 0;
+}
+
+/* ── Urgency: calm (> 30 min) ── */
+.price-alert--calm {
+  background: var(--teal-lt);
+  border-color: rgba(29, 122, 138, 0.25);
+  color: var(--teal);
+}
+
+/* ── Urgency: warning (≤ 30 min) ── */
+.price-alert--warning {
+  background: #fff8e6;
+  border-color: rgba(201, 125, 32, 0.35);
+  color: var(--amber);
+}
+
+/* ── Urgency: urgent (≤ 5 min) ── red pulse ── */
+.price-alert--urgent {
+  background: var(--red-lt);
+  border-color: rgba(192, 57, 43, 0.35);
+  color: var(--red);
+  animation: urgentPulse 1.1s ease-in-out infinite;
+}
+
+@keyframes urgentPulse {
+  0%,  100% { box-shadow: 0 0 0 0 rgba(192, 57, 43, 0); }
+  50%        { box-shadow: 0 0 0 5px rgba(192, 57, 43, 0.18); }
+}
+
+/* ── Icon ── */
+.pa-icon {
+  width: 15px;
+  height: 15px;
+  flex-shrink: 0;
+  stroke: currentColor;
+}
+
+/* ── Text body ── */
+.pa-body {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.25;
+}
+
+.pa-label {
+  font-size: 0.62rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  opacity: 0.78;
+}
+
+.pa-timer {
+  font-size: 1.02rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.04em;
+  line-height: 1.15;
+}
+
+/* ── Responsive: stack on very narrow booking card ── */
+@media (max-width: 380px) {
+  .book-price-row {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}

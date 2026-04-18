@@ -11,7 +11,7 @@ import { SpotFormComponent } from './spot-management/spot-form/spot-form.compone
 import { ActivityManagementComponent } from './activity-management/activity-management.component';
 import { EquipmentManagementComponent } from './equipment-management/equipment-management.component';
 import { MyReservationsComponent } from './my-reservations/my-reservations.component';
-import { ReactiveFormsModule } from '@angular/forms';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { OverviewComponent } from './overview/overview.component';
 import { EquipmenntFormComponent } from './equipment-management/equipmennt-form/equipmennt-form.component';
 
@@ -33,7 +33,8 @@ import { EquipmenntFormComponent } from './equipment-management/equipmennt-form/
   imports: [
     CommonModule,
     OwnerRoutingModule,
-    ReactiveFormsModule
+    ReactiveFormsModule,
+    FormsModule
   ]
 })
 export class OwnerModule { }
