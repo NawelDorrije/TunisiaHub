@@ -6,6 +6,7 @@ import lombok.AllArgsConstructor;
 import org.example.backend_tunisiahub.Entities.Carpooling.Trip;
 import org.example.backend_tunisiahub.Services.Carpooling.ITripService;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -35,7 +36,11 @@ public class PublicTripController {
 
     @GetMapping("/{id}")
     @Operation(summary = "Get public trip details by id")
-    public Trip retrieveTrip(@PathVariable Long id) {
-        return tripService.retrieveTrip(id);
+    public ResponseEntity<Trip> retrieveTrip(@PathVariable Long id) {
+        Trip trip = tripService.retrieveTrip(id);
+        if (trip == null) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(trip);
     }
 }

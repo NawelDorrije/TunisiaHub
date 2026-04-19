@@ -50,7 +50,7 @@ public class Reservation {
 
     @ManyToOne
     @JoinColumn(name = "user_id")
-    private User user;
+    private User reservedBy;
 
     @OneToMany(mappedBy = "reservation")
     @JsonIgnore

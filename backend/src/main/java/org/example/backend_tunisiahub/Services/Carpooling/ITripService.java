@@ -11,6 +11,8 @@ public interface ITripService {
 
     Trip retrieveTrip(Long id);
 
+    Trip retrieveMyTrip(Long id, Long driverId);
+
     List<Trip> retrieveMyTrips(Long driverId);
 
     Trip addTrip(Trip trip, Long driverId);

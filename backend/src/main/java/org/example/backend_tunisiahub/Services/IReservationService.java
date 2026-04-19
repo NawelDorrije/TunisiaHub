@@ -8,6 +8,8 @@ public interface IReservationService {
 
     List<Reservation> retrieveAllReservations();
 
+    List<Reservation> retrieveReservationsByUserId(Long userId);
+
     Reservation retrieveReservation(Long id);
 
     Reservation addReservation(Reservation reservation);

@@ -2,9 +2,13 @@ package org.example.backend_tunisiahub.Services.Carpooling;
 
 import lombok.AllArgsConstructor;
 import org.example.backend_tunisiahub.Entities.Carpooling.Trip;
+import org.example.backend_tunisiahub.Entities.Reservation;
+import org.example.backend_tunisiahub.Entities.User.User;
+import org.example.backend_tunisiahub.Repositories.ReservationRepository;
 import org.example.backend_tunisiahub.Repositories.Carpooling.TripRepository;
-import org.example.backend_tunisiahub.shared.exception.ApiException;
-import org.springframework.http.HttpStatus;
+import org.example.backend_tunisiahub.Repositories.User.UserRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -17,10 +21,15 @@ import java.util.List;
 public class TripServiceImp implements ITripService {
 
     private TripRepository tripRepository;
+    private ReservationRepository reservationRepository;
+    private UserRepository userRepository;
+    private static final Logger logger = LoggerFactory.getLogger(TripServiceImp.class);
     private static final String STATUS_SCHEDULED = "scheduled";
     private static final String STATUS_CANCELED = "canceled";
     private static final String BOOKING_MODE_INSTANT = "instant";
     private static final String BOOKING_MODE_MANUAL = "manual";
+    private static final int MAX_SEATS_TOTAL = 8;
+    private static final BigDecimal MAX_PRICE = new BigDecimal("500");
 
     @Override
     public List<Trip> retrieveAllTrips(String departurePoint, String destination, LocalDate date, Integer seatsRequired) {
@@ -39,18 +48,34 @@ public class TripServiceImp implements ITripService {
 
     @Override
     public Trip retrieveTrip(Long id) {
-        return tripRepository.findById(id).get();
+        logger.debug("Retrieve public trip id={}", id);
+        return tripRepository.findById(id).orElse(null);
+    }
+
+    @Override
+    public Trip retrieveMyTrip(Long id, Long driverId) {
+        logger.debug("Retrieve driver trip id={} driverId={}", id, driverId);
+        return tripRepository.findByIdAndDriverId(id, driverId);
     }
 
     @Override
     public List<Trip> retrieveMyTrips(Long driverId) {
-        String currentUserId = String.valueOf(driverId);
-        return tripRepository.findByCreatedByOrderByDepartureDateTimeDesc(currentUserId);
+        logger.debug("Retrieve trips for driverId={}", driverId);
+        return tripRepository.findByDriverIdOrderByDepartureDateTimeDesc(driverId);
     }
 
     @Override
     public Trip addTrip(Trip request, Long driverId) {
-        validateTrip(request);
+        if (!validateTrip(request, 0)) {
+            logger.warn("Trip validation failed on create for driverId={}", driverId);
+            return null;
+        }
+
+        User driver = userRepository.findById(driverId).orElse(null);
+        if (driver == null) {
+            logger.warn("Trip creation failed because driver not found driverId={}", driverId);
+            return null;
+        }
 
         Trip trip = new Trip();
         trip.setDeparture(request.getDeparture().trim());
@@ -62,79 +87,144 @@ public class TripServiceImp implements ITripService {
         trip.setSeatsAvailable(request.getSeatsTotal());
         trip.setStatus(STATUS_SCHEDULED);
         trip.setBookingMode(normalizeBookingMode(request.getBookingMode()));
-        trip.setCreatedBy(String.valueOf(driverId));
+        trip.setDriver(driver);
+        logger.debug("Saving new trip for driverId={} departure={} destination={}",
+                driverId, trip.getDeparture(), trip.getDestination());
         return tripRepository.save(trip);
     }
 
     @Override
     public Trip modifyTrip(Long tripId, Trip request, Long currentUserId) {
-        validateTrip(request);
-
-        Trip trip = tripRepository.findById(tripId).get();
+        Trip trip = tripRepository.findById(tripId).orElse(null);
+        if (trip == null) {
+            logger.warn("Trip update failed because trip not found id={}", tripId);
+            return null;
+        }
         if (!isOwner(trip, currentUserId)) {
-            throw new ApiException(HttpStatus.FORBIDDEN, "You can only edit your own trip");
+            logger.warn("Trip update rejected because userId={} is not owner of tripId={}", currentUserId, tripId);
+            return null;
+        }
+        int reservedSeats = getReservedSeats(tripId);
+        if (!validateTrip(request, reservedSeats)) {
+            logger.warn("Trip validation failed on update id={} userId={} reservedSeats={}",
+                    tripId, currentUserId, reservedSeats);
+            return null;
         }
 
         trip.setDeparture(request.getDeparture().trim());
         trip.setDestination(request.getDestination().trim());
         trip.setDepartureDateTime(request.getDepartureDateTime());
-        if (request.getDurationMinutes() != null && request.getDurationMinutes() > 0) {
-            trip.setDurationMinutes(request.getDurationMinutes());
-        }
+        trip.setDurationMinutes(request.getDurationMinutes());
         trip.setPrice(request.getPrice());
         trip.setSeatsTotal(request.getSeatsTotal());
-        trip.setSeatsAvailable(request.getSeatsTotal());
+        trip.setSeatsAvailable(request.getSeatsTotal() - reservedSeats);
         if (request.getBookingMode() != null && !request.getBookingMode().isBlank()) {
             trip.setBookingMode(normalizeBookingMode(request.getBookingMode()));
         }
+        logger.debug("Saving updated trip id={} userId={}", tripId, currentUserId);
         return tripRepository.save(trip);
     }
 
     @Override
     public Trip cancelTrip(Long tripId, Long currentUserId) {
-        Trip trip = tripRepository.findById(tripId).get();
+        Trip trip = tripRepository.findById(tripId).orElse(null);
+        if (trip == null) {
+            logger.warn("Trip cancel failed because trip not found id={}", tripId);
+            return null;
+        }
         if (!isOwner(trip, currentUserId)) {
-            throw new ApiException(HttpStatus.FORBIDDEN, "You can only cancel your own trip");
+            logger.warn("Trip cancel rejected because userId={} is not owner of tripId={}", currentUserId, tripId);
+            return null;
         }
         trip.setStatus(STATUS_CANCELED);
+        logger.debug("Saving canceled trip id={} userId={}", tripId, currentUserId);
         return tripRepository.save(trip);
     }
 
     @Override
     public Trip makeTripAvailable(Long tripId, Long currentUserId) {
-        Trip trip = tripRepository.findById(tripId).get();
+        Trip trip = tripRepository.findById(tripId).orElse(null);
+        if (trip == null) {
+            logger.warn("Trip restore failed because trip not found id={}", tripId);
+            return null;
+        }
         if (!isOwner(trip, currentUserId)) {
-            throw new ApiException(HttpStatus.FORBIDDEN, "You can only update your own trip");
+            logger.warn("Trip restore rejected because userId={} is not owner of tripId={}", currentUserId, tripId);
+            return null;
         }
         trip.setStatus(STATUS_SCHEDULED);
+        logger.debug("Saving restored trip id={} userId={}", tripId, currentUserId);
         return tripRepository.save(trip);
     }
 
     private boolean isOwner(Trip trip, Long currentUserId) {
-        String userId = String.valueOf(currentUserId);
-        return userId.equals(trip.getCreatedBy());
+        return trip.getDriver() != null && currentUserId.equals(trip.getDriver().getId());
     }
 
-    private void validateTrip(Trip request) {
+    private boolean validateTrip(Trip request, int reservedSeats) {
         if (request == null) {
-            throw new ApiException(HttpStatus.BAD_REQUEST, "Trip is required");
+            return false;
         }
         if (request.getDeparture() == null || request.getDeparture().isBlank()) {
-            throw new ApiException(HttpStatus.BAD_REQUEST, "departure is required");
+            return false;
         }
         if (request.getDestination() == null || request.getDestination().isBlank()) {
-            throw new ApiException(HttpStatus.BAD_REQUEST, "destination is required");
+            return false;
+        }
+        if (normalizeLocation(request.getDeparture()).equals(normalizeLocation(request.getDestination()))) {
+            return false;
         }
         if (request.getDepartureDateTime() == null || !request.getDepartureDateTime().isAfter(LocalDateTime.now())) {
-            throw new ApiException(HttpStatus.BAD_REQUEST, "departureDateTime must be in the future");
+            return false;
+        }
+        if (request.getDurationMinutes() == null || request.getDurationMinutes() < 1) {
+            return false;
         }
         BigDecimal price = request.getPrice();
         if (price == null || price.compareTo(BigDecimal.ZERO) < 0) {
-            throw new ApiException(HttpStatus.BAD_REQUEST, "price must be greater than or equal to 0");
+            return false;
+        }
+        if (price.compareTo(MAX_PRICE) > 0) {
+            return false;
         }
         if (request.getSeatsTotal() < 1) {
-            throw new ApiException(HttpStatus.BAD_REQUEST, "seatsTotal must be greater than 0");
+            return false;
         }
+        if (request.getSeatsTotal() > MAX_SEATS_TOTAL) {
+            return false;
+        }
+        if (request.getSeatsTotal() < reservedSeats) {
+            return false;
+        }
+        return true;
+    }
+
+    private int getReservedSeats(Long tripId) {
+        return reservationRepository.findByTripId(tripId).stream()
+                .filter(this::isActiveTripReservation)
+                .mapToInt(this::getReservedPeopleCount)
+                .sum();
+    }
+
+    private boolean isActiveTripReservation(Reservation reservation) {
+        if (reservation == null) {
+            return false;
+        }
+
+        String status = reservation.getStatus() == null ? "" : reservation.getStatus();
+        return !status.equalsIgnoreCase("canceled") && !status.equalsIgnoreCase("cancelled");
+    }
+
+    private int getReservedPeopleCount(Reservation reservation) {
+        Integer numberOfPeople = reservation.getNumberOfPeople();
+        if (numberOfPeople == null || numberOfPeople < 1) {
+            return 1;
+        }
+        return numberOfPeople;
+    }
+
+    private String normalizeLocation(String value) {
+        return value.trim().toLowerCase();
     }
 
     private String normalizeBookingMode(String value) {

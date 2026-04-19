@@ -29,7 +29,7 @@ interface TripApi {
   seatsTotal: number;
   seatsAvailable: number;
   status: string;
-  createdBy: string;
+  driver?: { id?: number; nom?: string; prenom?: string };
   bookingMode?: string;
 }
 
@@ -60,17 +60,89 @@ interface ComplaintApi {
 })
 export class CarpoolingDataService {
   private readonly baseUrl = 'http://localhost:8089';
-  private readonly currentUserId = 2;
-  private readonly currentRole = 'USER';
+  private readonly tunisiaCities = [
+    'Tunis',
+    'Le Bardo',
+    'La Marsa',
+    'La Goulette',
+    'Carthage',
+    'Ariana',
+    'Raoued',
+    'La Soukra',
+    'Ben Arous',
+    'Hammam Lif',
+    'Radès',
+    'Mourouj',
+    'Manouba',
+    'Den Den',
+    'Douar Hicher',
+    'Nabeul',
+    'Hammamet',
+    'Kelibia',
+    'Korba',
+    'Menzel Temime',
+    'Bizerte',
+    'Menzel Bourguiba',
+    'Ras Jebel',
+    'Beja',
+    'Medjez el Bab',
+    'Jendouba',
+    'Tabarka',
+    'Ain Draham',
+    'Kef',
+    'Dahmani',
+    'Siliana',
+    'Makthar',
+    'Sousse',
+    'Akouda',
+    'Kalaa Kebira',
+    'Monastir',
+    'Ksibet el Mediouni',
+    'Moknine',
+    'Jemmal',
+    'Mahdia',
+    'Chebba',
+    'El Jem',
+    'Kairouan',
+    'Sbikha',
+    'Sfax',
+    'Sakiet Ezzit',
+    'Sakiet Eddaier',
+    'Mahres',
+    'Gabes',
+    'Mareth',
+    'Metouia',
+    'Medenine',
+    'Ben Gardane',
+    'Zarzis',
+    'Djerba',
+    'Houmt Souk',
+    'Midoun',
+    'Ajim',
+    'Tataouine',
+    'Gafsa',
+    'Metlaoui',
+    'Redeyef',
+    'Tozeur',
+    'Nefta',
+    'Kebili',
+    'Douz',
+    'Kasserine',
+    'Sbeitla',
+    'Sidi Bouzid',
+    'Regueb',
+    'Zaghouan',
+  ];
   private countriesAndCities$?: Observable<CountryCityData[]>;
 
   constructor(private readonly http: HttpClient) {}
 
   getCurrentUser(): CarpoolUser {
+    const currentUserId = this.getCurrentUserId();
     return {
-      id: this.currentUserId,
-      fullName: `User ${this.currentUserId}`,
-      email: `user${this.currentUserId}@example.com`,
+      id: currentUserId,
+      fullName: `User ${currentUserId}`,
+      email: `user${currentUserId}@example.com`,
     };
   }
 
@@ -187,6 +259,72 @@ export class CarpoolingDataService {
     );
   }
 
+  searchTunisiaCities(query: string, limit: number = 8): Observable<string[]> {
+    const value = (query || '').trim();
+    if (!value) {
+      console.log('[Carpooling] Tunisia city search skipped', { query: value });
+      return of([]);
+    }
+
+    console.log('[Carpooling] Tunisia city search', {
+      query: value,
+      limit,
+    });
+
+    const cities = this.filterTunisiaCityNames(
+      this.tunisiaCities,
+      value,
+      limit,
+    );
+
+    console.log('[Carpooling] Tunisia city search result', {
+      query: value,
+      result: cities,
+    });
+
+    return of(cities);
+  }
+
+  private filterTunisiaCityNames(
+    names: string[],
+    query: string,
+    limit: number,
+  ): string[] {
+    const labels = new Set<string>();
+    const normalizedQuery = query.toLowerCase();
+
+    return (names || [])
+      .filter((city) => {
+        const normalized = city.toLowerCase();
+        if (
+          !normalized ||
+          labels.has(normalized) ||
+          !normalized.includes(normalizedQuery)
+        ) {
+          return false;
+        }
+
+        labels.add(normalized);
+        return true;
+      })
+      .sort((a, b) => {
+        const aLower = a.toLowerCase();
+        const bLower = b.toLowerCase();
+        const aStarts = aLower.startsWith(normalizedQuery);
+        const bStarts = bLower.startsWith(normalizedQuery);
+
+        if (aStarts && !bStarts) {
+          return -1;
+        }
+        if (!aStarts && bStarts) {
+          return 1;
+        }
+
+        return a.localeCompare(b);
+      })
+      .slice(0, limit);
+  }
+
   getLocationName(lat: number, lng: number): Observable<any> {
     return this.http.get(
       `https://nominatim.openstreetmap.org/reverse?format=json&addressdetails=1&namedetails=1&accept-language=en&lat=${lat}&lon=${lng}`
@@ -194,7 +332,7 @@ export class CarpoolingDataService {
   }
 
   canEditTrip(trip: Trip): { allowed: boolean; reason?: string } {
-    if (trip.ownerUserId !== this.currentUserId) {
+    if (trip.ownerUserId !== this.getCurrentUserId()) {
       return { allowed: false, reason: 'Only trip owner can edit this ride.' };
     }
     if (trip.status === 'CANCELED') {
@@ -302,7 +440,7 @@ export class CarpoolingDataService {
         if (!trip) {
           return of({ ok: false, error: 'Trip not found.' });
         }
-        if (trip.ownerUserId === this.currentUserId) {
+        if (trip.ownerUserId === this.getCurrentUserId()) {
           return of({ ok: false, error: 'You cannot book your own trip.' });
         }
         if (trip.seatsAvailable < seatsRequested) {
@@ -356,9 +494,9 @@ export class CarpoolingDataService {
           );
 
           return forkJoin(tripCalls).pipe(
-            map((trips) => {
+            map((trips: Array<TripApi | undefined>) => {
               const tripMap = new Map<number, Trip>();
-              trips.forEach((tripApi) => {
+              trips.forEach((tripApi: TripApi | undefined) => {
                 if (tripApi) {
                   tripMap.set(tripApi.id, this.mapTrip(tripApi));
                 }
@@ -424,7 +562,7 @@ export class CarpoolingDataService {
     const body = {
       description: payload.description,
       date: new Date().toISOString(),
-      reportedByUserId: String(this.currentUserId),
+      reportedByUserId: String(this.getCurrentUserId()),
       reservation: payload.bookingId ? { id: payload.bookingId } : undefined,
     };
 
@@ -441,11 +579,15 @@ export class CarpoolingDataService {
         catchError(() => of([])),
       ),
     }).pipe(
-      map(({ trips, bookings, complaints }) => ({
+      map(({ trips, bookings, complaints }: {
+        trips: Trip[];
+        bookings: BookingWithContext[];
+        complaints: ComplaintWithContext[];
+      }) => ({
         totalTrips: trips.length,
         totalBookings: bookings.length,
         totalComplaints: complaints.length,
-        activeUsers: new Set(trips.map((trip) => trip.ownerUserId)).size,
+        activeUsers: new Set(trips.map((trip: Trip) => trip.ownerUserId)).size,
       })),
     );
   }
@@ -460,7 +602,7 @@ export class CarpoolingDataService {
         (complaints ?? []).map((complaint) => ({
           complaint: this.mapComplaint(complaint, 0),
           reporter: this.getUserById(
-            Number(complaint.reportedByUserId || this.currentUserId),
+            Number(complaint.reportedByUserId || this.getCurrentUserId()),
           ),
         })),
       ),
@@ -505,13 +647,17 @@ export class CarpoolingDataService {
         catchError(() => of([])),
       ),
     }).pipe(
-      map(({ trips, bookings, complaints }) => {
+      map(({ trips, bookings, complaints }: {
+        trips: Trip[];
+        bookings: BookingWithContext[];
+        complaints: ComplaintWithContext[];
+      }) => {
         const current = this.getCurrentUser();
         return [
           {
             user: current,
             tripsCreated: trips.filter(
-              (trip) => trip.ownerUserId === current.id,
+              (trip: Trip) => trip.ownerUserId === current.id,
             ).length,
             bookingsMade: bookings.length,
             complaintsSubmitted: complaints.length,
@@ -523,14 +669,22 @@ export class CarpoolingDataService {
   }
 
   private userHeaders(): HttpHeaders {
-    return new HttpHeaders({
-      'X-USER-ID': String(this.currentUserId),
-      'X-ROLE': this.currentRole,
-    });
+    let headers = new HttpHeaders();
+    const userId = this.getStoredUserId();
+    const role = this.getStoredRole();
+
+    if (userId) {
+      headers = headers.set('X-USER-ID', userId);
+    }
+    if (role) {
+      headers = headers.set('X-ROLE', role);
+    }
+
+    return headers;
   }
 
   private mapTrip(apiTrip: TripApi): Trip {
-    const ownerUserId = Number(apiTrip.createdBy);
+    const ownerUserId = Number(apiTrip.driver?.id);
     return {
       id: apiTrip.id,
       departure: apiTrip.departure,
@@ -541,16 +695,29 @@ export class CarpoolingDataService {
       seatsTotal: apiTrip.seatsTotal,
       seatsAvailable: apiTrip.seatsAvailable,
       ownerUserId: Number.isFinite(ownerUserId) ? ownerUserId : 0,
+      ownerFullName: this.buildFullName(
+        apiTrip.driver?.nom,
+        apiTrip.driver?.prenom,
+      ),
       bookingMode: apiTrip.bookingMode,
       status: apiTrip.status?.toUpperCase() === 'CANCELED' ? 'CANCELED' : 'ACTIVE',
     };
+  }
+
+  private buildFullName(nom?: string, prenom?: string): string | undefined {
+    const fullName = [nom, prenom]
+      .filter((value) => !!value && value.trim().length > 0)
+      .join(' ')
+      .trim();
+
+    return fullName || undefined;
   }
 
   private mapReservationToBooking(reservation: ReservationApi): Booking {
     return {
       id: reservation.id,
       tripId: this.extractTripId(reservation),
-      passengerUserId: this.currentUserId,
+      passengerUserId: this.getCurrentUserId(),
       seatsBooked: Number(reservation.numberOfPeople ?? 1),
       totalPrice: Number(reservation.totalPrice ?? 0),
       bookingDate: reservation.startDate || reservation.endDate || new Date().toISOString(),
@@ -563,11 +730,47 @@ export class CarpoolingDataService {
       id: complaint.id,
       description: complaint.description,
       createdAt: complaint.date,
-      reporterUserId: Number(complaint.reportedByUserId || this.currentUserId),
+      reporterUserId: Number(complaint.reportedByUserId || this.getCurrentUserId()),
       tripId,
       status: (complaint.status as ComplaintStatus) || 'OPEN',
       bookingId: undefined,
     };
+  }
+
+  private getCurrentUserId(): number {
+    const value = this.getStoredUserId();
+    if (!value) {
+      return 0;
+    }
+
+    const userId = Number(value);
+    return Number.isFinite(userId) ? userId : 0;
+  }
+
+  private getStoredUserId(): string | null {
+    if (typeof localStorage === 'undefined') {
+      return null;
+    }
+
+    const value = localStorage.getItem('userId');
+    if (value == null || value.trim() === '') {
+      return null;
+    }
+
+    return value;
+  }
+
+  private getStoredRole(): string | null {
+    if (typeof localStorage === 'undefined') {
+      return null;
+    }
+
+    const value = localStorage.getItem('role');
+    if (value == null || value.trim() === '') {
+      return null;
+    }
+
+    return value;
   }
 
 

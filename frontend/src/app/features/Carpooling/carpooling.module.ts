@@ -16,6 +16,7 @@ import { AdminDashboardComponent } from './admin-dashboard/admin-dashboard.compo
 import { AllBookingsComponent } from './all-bookings/all-bookings.component';
 import { ComplaintsManagementComponent } from './complaints-management/complaints-management.component';
 import { UsersSummaryComponent } from './users-summary/users-summary.component';
+import { CarpoolingSearchBarComponent } from './shared/carpooling-search-bar/carpooling-search-bar.component';
 
 @NgModule({
   declarations: [
@@ -33,6 +34,7 @@ import { UsersSummaryComponent } from './users-summary/users-summary.component';
     AllBookingsComponent,
     ComplaintsManagementComponent,
     UsersSummaryComponent,
+    CarpoolingSearchBarComponent,
   ],
   imports: [
     CommonModule,

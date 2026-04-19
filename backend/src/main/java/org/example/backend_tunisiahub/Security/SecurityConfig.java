@@ -33,6 +33,10 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         // Public routes
                         .requestMatchers("/api/auth/**").permitAll()
+                        .requestMatchers("/api/carpooling/trips/**").permitAll()
+                        .requestMatchers("/api/driver/trips/**").permitAll()
+                        .requestMatchers("/api/reservations/**").permitAll()
+                        .requestMatchers("/api/complaints/**").permitAll()
                         .requestMatchers("/api/accommodations/getAll").permitAll()
                         .requestMatchers("/api/accommodations/get/**").permitAll()
                         .requestMatchers("/api/reviews/getAll").permitAll()

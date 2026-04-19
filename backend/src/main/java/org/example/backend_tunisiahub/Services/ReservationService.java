@@ -20,6 +20,11 @@ public class ReservationService implements IReservationService {
     }
 
     @Override
+    public List<Reservation> retrieveReservationsByUserId(Long userId) {
+        return reservationRepository.findByReservedBy_Id(userId);
+    }
+
+    @Override
     public Reservation retrieveReservation(Long id) {
         return reservationRepository.findById(id).orElse(null);
     }

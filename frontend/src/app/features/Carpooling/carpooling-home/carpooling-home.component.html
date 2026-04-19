@@ -17,155 +17,23 @@
     </div>
   </div>
 
-  <div class="search-wrapper shadow-sm mb-5">
-    <form [formGroup]="searchForm" (ngSubmit)="searchRide()" class="row g-0">
-      <div class="col-lg search-field">
-        <span class="field-dot"></span>
-        <div
-          class="field-body floating-field"
-          [class.has-value]="searchForm.value.departure"
-        >
-          <input
-            id="departure"
-            type="text"
-            class="form-control field-input"
-            formControlName="departure"
-            placeholder=" "
-            autocomplete="off"
-            (input)="onLocationInput('departure')"
-            (focus)="openSuggestions('departure')"
-            (blur)="closeSuggestions('departure')"
-          />
-          <label for="departure" class="floating-label">Departure</label>
-
-          <div
-            class="location-dropdown"
-            *ngIf="showDepartureSuggestions"
-          >
-            <button
-              type="button"
-              class="location-option"
-              *ngFor="let suggestion of departureSuggestions"
-              (mousedown)="selectSuggestion('departure', suggestion)"
-            >
-              <span>{{ suggestion.label }}</span>
-              <small>{{ suggestion.type }}</small>
-            </button>
-
-            <div class="location-state" *ngIf="loadingLocations">
-              Loading locations...
-            </div>
-
-            <div class="location-state error" *ngIf="locationError">
-              {{ locationError }}
-            </div>
-
-            <div class="location-state" *ngIf="shouldShowNoResults('departure')">
-              No city or country found.
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="col-lg search-field">
-        <span class="field-dot"></span>
-        <div
-          class="field-body floating-field"
-          [class.has-value]="searchForm.value.destination"
-        >
-          <input
-            id="destination"
-            type="text"
-            class="form-control field-input"
-            formControlName="destination"
-            placeholder=" "
-            autocomplete="off"
-            (input)="onLocationInput('destination')"
-            (focus)="openSuggestions('destination')"
-            (blur)="closeSuggestions('destination')"
-          />
-          <label for="destination" class="floating-label">Destination</label>
-
-          <div
-            class="location-dropdown"
-            *ngIf="showDestinationSuggestions"
-          >
-            <button
-              type="button"
-              class="location-option"
-              *ngFor="let suggestion of destinationSuggestions"
-              (mousedown)="selectSuggestion('destination', suggestion)"
-            >
-              <span>{{ suggestion.label }}</span>
-              <small>{{ suggestion.type }}</small>
-            </button>
-
-            <div class="location-state" *ngIf="loadingLocations">
-              Loading locations...
-            </div>
-
-            <div class="location-state error" *ngIf="locationError">
-              {{ locationError }}
-            </div>
-
-            <div class="location-state" *ngIf="shouldShowNoResults('destination')">
-              No city or country found.
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="col-lg search-field">
-        <span class="field-dot"></span>
-        <div class="field-body">
-          <label for="date" class="field-label">Departure date</label>
-          <input
-            id="date"
-            type="date"
-            class="form-control field-input"
-            formControlName="date"
-          />
-        </div>
-      </div>
-
-      <div class="col-lg search-field">
-        <span class="field-dot"></span>
-        <div class="field-body">
-          <label for="returnDate" class="field-label">Return date</label>
-          <input
-            id="returnDate"
-            type="date"
-            class="form-control field-input"
-            formControlName="returnDate"
-          />
-        </div>
-      </div>
-
-      <div class="col-lg search-field passenger-field">
-        <span class="field-dot"></span>
-        <div class="field-body">
-          <label for="seatsNeeded" class="field-label">Seats</label>
-          <input
-            id="seatsNeeded"
-            type="number"
-            min="1"
-            max="8"
-            class="form-control field-input"
-            formControlName="seatsNeeded"
-          />
-        </div>
-      </div>
-
-      <div class="col-lg-2">
-        <button
-          type="submit"
-          class="btn search-button w-100"
-          [disabled]="searchForm.invalid"
-        >
-          Search
-        </button>
-      </div>
-    </form>
+  <div class="mb-5">
+    <app-carpooling-search-bar
+      [searchForm]="searchForm"
+      [departureSuggestions]="departureSuggestions"
+      [destinationSuggestions]="destinationSuggestions"
+      [showDepartureSuggestions]="showDepartureSuggestions"
+      [showDestinationSuggestions]="showDestinationSuggestions"
+      [loadingLocations]="loadingLocations"
+      [locationError]="locationError"
+      [disableSubmit]="searchForm.invalid"
+      (searchSubmitted)="searchRide()"
+      (swapLocations)="swapLocations()"
+      (locationInput)="onLocationInput($event)"
+      (suggestionOpen)="openSuggestions($event)"
+      (suggestionClose)="closeSuggestions($event)"
+      (suggestionSelected)="selectSuggestion($event.field, $event.suggestion)"
+    ></app-carpooling-search-bar>
   </div>
 
   <div class="publish-banner text-center mb-5">
@@ -258,23 +126,26 @@
 
   <div class="row g-3">
     <div class="col-md-3">
-      <a class="btn btn-outline-primary w-100" routerLink="/carpooling/my-trips">
+      <a
+        class="btn btn-outline-primary w-100"
+        routerLink="/carpooling/my-trips"
+      >
         My Trips
       </a>
     </div>
-    <div class="col-md-3">
+    <!-- <div class="col-md-3">
       <a
         class="btn btn-outline-primary w-100"
         routerLink="/carpooling/my-bookings"
       >
         My Bookings
       </a>
-    </div>
-   
-    <div class="col-md-3">
+    </div> -->
+
+    <!-- <div class="col-md-3">
       <a class="btn btn-outline-secondary w-100" routerLink="/carpooling/admin">
         Admin area
       </a>
-    </div>
+    </div> -->
   </div>
 </div>

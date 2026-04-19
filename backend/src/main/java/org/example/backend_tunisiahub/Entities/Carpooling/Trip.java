@@ -6,6 +6,8 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import lombok.Getter;
@@ -14,6 +16,7 @@ import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 import org.example.backend_tunisiahub.Entities.Reservation;
+import org.example.backend_tunisiahub.Entities.User.User;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -50,7 +53,9 @@ public class Trip {
     @Column(name = "booking_mode")
     private String bookingMode;
 
-    private String createdBy;
+    @ManyToOne
+    @JoinColumn(name = "driver_id", nullable = false)
+    private User driver;
 
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)

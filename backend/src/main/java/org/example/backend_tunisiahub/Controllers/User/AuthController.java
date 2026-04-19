@@ -36,7 +36,7 @@ public class AuthController {
         userRepository.save(user);
 
         String token = jwtUtil.generateToken(user.getEmail(), user.getRole().name());
-        return ResponseEntity.ok(new AuthResponse(token, user.getRole().name(), user.getEmail(), user.getNom(), user.getPrenom()));
+        return ResponseEntity.ok(new AuthResponse(user.getId(), token, user.getRole().name(), user.getEmail(), user.getNom(), user.getPrenom()));
     }
 
     @PostMapping("/login")
@@ -50,6 +50,6 @@ public class AuthController {
             return ResponseEntity.status(401).body("Invalid password");
 
         String token = jwtUtil.generateToken(user.getEmail(), user.getRole().name());
-        return ResponseEntity.ok(new AuthResponse(token, user.getRole().name(), user.getEmail(), user.getNom(), user.getPrenom()));
+        return ResponseEntity.ok(new AuthResponse(user.getId(), token, user.getRole().name(), user.getEmail(), user.getNom(), user.getPrenom()));
     }
 }

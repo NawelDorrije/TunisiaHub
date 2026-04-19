@@ -19,6 +19,7 @@ export interface Trip {
   seatsTotal: number;
   seatsAvailable: number;
   ownerUserId: number;
+  ownerFullName?: string;
   bookingMode?: string;
   status: TripStatus;
 }

@@ -1,10 +1,13 @@
 package org.example.backend_tunisiahub.Services.Carpooling;
 
-import org.example.backend_tunisiahub.shared.exception.ApiException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.*;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.RestTemplate;
@@ -29,7 +32,7 @@ public class RouteSuggestionService {
             double endLng
     ) {
         if (orsApiKey == null || orsApiKey.isBlank()) {
-            throw new ApiException(HttpStatus.BAD_REQUEST, "OpenRouteService API key is missing");
+            return new ArrayList<>();
         }
 
         List<String> errors = new ArrayList<>();
@@ -41,14 +44,7 @@ public class RouteSuggestionService {
                 errors
         );
 
-        if (suggestions.isEmpty()) {
-            String errorMessage = errors.isEmpty()
-                    ? "Unable to calculate routes"
-                    : errors.get(0);
-            throw new ApiException(HttpStatus.BAD_REQUEST, errorMessage);
-        }
-
-        return suggestions;
+        return suggestions.isEmpty() ? new ArrayList<>() : suggestions;
     }
 
     private List<Map<String, Object>> requestAlternativeRoutes(

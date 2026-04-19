@@ -33,6 +33,7 @@ export class AuthService {
 
   private storeUser(response: AuthResponse): void {
     if (this.isBrowser) {
+      localStorage.setItem('userId', String(response.id));
       localStorage.setItem('token', response.token);
       localStorage.setItem('role', response.role);
       localStorage.setItem('email', response.email);
@@ -51,6 +52,20 @@ export class AuthService {
 
   getRole(): string | null {
     return this.isBrowser ? localStorage.getItem('role') : null;
+  }
+
+  getUserId(): number | null {
+    if (!this.isBrowser) {
+      return null;
+    }
+
+    const value = localStorage.getItem('userId');
+    if (!value) {
+      return null;
+    }
+
+    const userId = Number(value);
+    return Number.isFinite(userId) ? userId : null;
   }
 
   getNom(): string | null {

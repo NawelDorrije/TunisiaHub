@@ -1,12 +1,12 @@
-import { Component, OnInit } from '@angular/core';
+import { Component } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
-import { CarpoolingDataService, CountryCityData } from '../services/carpooling-data.service';
+import { CarpoolingDataService } from '../services/carpooling-data.service';
 
 interface LocationSuggestion {
   label: string;
   value: string;
-  type: 'city' | 'country';
+  type: 'city';
 }
 
 @Component({
@@ -14,27 +14,25 @@ interface LocationSuggestion {
   templateUrl: './carpooling-home.component.html',
   styleUrls: ['./carpooling-home.component.css'],
 })
-export class CarpoolingHomeComponent implements OnInit {
+export class CarpoolingHomeComponent {
   searchForm!: FormGroup;
-  allLocations: LocationSuggestion[] = [];
   departureSuggestions: LocationSuggestion[] = [];
   destinationSuggestions: LocationSuggestion[] = [];
   showDepartureSuggestions = false;
   showDestinationSuggestions = false;
   loadingLocations = false;
   locationError = '';
+  private searchTimeout: any = null;
 
   constructor(
     private fb: FormBuilder,
     private router: Router,
     private dataService: CarpoolingDataService,
-  ) {}
-
-  ngOnInit(): void {
+  ) {
     this.searchForm = this.fb.group({
       departure: [''],
       destination: [''],
-      date: ['', Validators.required],
+      date: [''],
       returnDate: [''],
       seatsNeeded: [1, [Validators.required, Validators.min(1), Validators.max(8)]],
     });
@@ -60,27 +58,56 @@ export class CarpoolingHomeComponent implements OnInit {
     });
   }
 
+  swapLocations(): void {
+    const departure = this.searchForm.value.departure || '';
+    const destination = this.searchForm.value.destination || '';
+
+    this.searchForm.patchValue({
+      departure: destination,
+      destination: departure,
+    });
+  }
+
   publishRide(): void {
     this.router.navigate(['/carpooling/publish']);
   }
 
   onLocationInput(field: 'departure' | 'destination'): void {
-    this.ensureLocationsLoaded();
-    const suggestions = this.getFilteredLocations(this.searchForm.value[field]);
+    const value = `${this.searchForm.value[field] || ''}`.trim();
+    this.locationError = '';
 
-    if (field === 'departure') {
-      this.departureSuggestions = suggestions;
-      this.showDepartureSuggestions = true;
+    if (this.searchTimeout) {
+      clearTimeout(this.searchTimeout);
+    }
+
+    if (!value) {
+      this.loadingLocations = false;
+      if (field === 'departure') {
+        this.departureSuggestions = [];
+        this.showDepartureSuggestions = false;
+        return;
+      }
+
+      this.destinationSuggestions = [];
+      this.showDestinationSuggestions = false;
       return;
     }
 
-    this.destinationSuggestions = suggestions;
-    this.showDestinationSuggestions = true;
+    if (field === 'departure') {
+      this.showDepartureSuggestions = true;
+    } else {
+      this.showDestinationSuggestions = true;
+    }
+
+    this.searchTimeout = setTimeout(() => {
+      this.searchTunisiaCities(field, value);
+    }, 250);
   }
 
   openSuggestions(field: 'departure' | 'destination'): void {
-    this.ensureLocationsLoaded();
-    this.onLocationInput(field);
+    if (`${this.searchForm.value[field] || ''}`.trim()) {
+      this.onLocationInput(field);
+    }
   }
 
   closeSuggestions(field: 'departure' | 'destination'): void {
@@ -122,75 +149,36 @@ export class CarpoolingHomeComponent implements OnInit {
     return !this.loadingLocations && !this.locationError && value.length > 0 && suggestions.length === 0;
   }
 
-  private loadLocations(): void {
+  private searchTunisiaCities(
+    field: 'departure' | 'destination',
+    value: string,
+  ): void {
     this.loadingLocations = true;
-    this.locationError = '';
+    this.dataService.searchTunisiaCities(value).subscribe({
+      next: (cities: string[]) => {
+        const suggestions = cities.map((city) => ({
+          label: city,
+          value: city,
+          type: 'city' as const,
+        }));
 
-    this.dataService.getCountriesAndCities().subscribe({
-      next: (data: CountryCityData[]) => {
-        this.allLocations = this.buildLocationList(data);
+        if (field === 'departure') {
+          this.departureSuggestions = suggestions;
+        } else {
+          this.destinationSuggestions = suggestions;
+        }
+
         this.loadingLocations = false;
       },
       error: () => {
         this.loadingLocations = false;
         this.locationError = 'Location list unavailable.';
+        if (field === 'departure') {
+          this.departureSuggestions = [];
+        } else {
+          this.destinationSuggestions = [];
+        }
       },
     });
-  }
-
-  private ensureLocationsLoaded(): void {
-    if (this.loadingLocations || this.allLocations.length > 0) {
-      return;
-    }
-
-    this.loadLocations();
-  }
-
-  private buildLocationList(data: CountryCityData[]): LocationSuggestion[] {
-    const suggestions: LocationSuggestion[] = [];
-    const labels = new Set<string>();
-
-    data.forEach((item) => {
-      const country = (item.country || '').trim();
-
-      if (country && !labels.has(country.toLowerCase())) {
-        suggestions.push({
-          label: country,
-          value: country,
-          type: 'country',
-        });
-        labels.add(country.toLowerCase());
-      }
-
-      (item.cities || []).forEach((city) => {
-        const cityName = (city || '').trim();
-        const label = country ? `${cityName}, ${country}` : cityName;
-
-        if (!cityName || labels.has(label.toLowerCase())) {
-          return;
-        }
-
-        suggestions.push({
-          label: label,
-          value: cityName,
-          type: 'city',
-        });
-        labels.add(label.toLowerCase());
-      });
-    });
-
-    return suggestions;
-  }
-
-  private getFilteredLocations(value: string): LocationSuggestion[] {
-    const searchValue = `${value || ''}`.trim().toLowerCase();
-
-    if (!searchValue) {
-      return this.allLocations.slice(0, 8);
-    }
-
-    return this.allLocations
-      .filter((location) => location.label.toLowerCase().includes(searchValue))
-      .slice(0, 8);
   }
 }
