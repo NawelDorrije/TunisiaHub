@@ -5,6 +5,7 @@ import { takeUntil } from 'rxjs/operators';
 
 import { Camping } from '../../../../../models/campings/camping';
 import { CampingService } from '../../../../../services/campings/camping.service';
+import { AuthService } from '../../../../auth/services/auth.service';
 
 @Component({
   selector: 'app-my-campings',
@@ -18,6 +19,7 @@ export class MyCampingsComponent implements OnInit, OnDestroy {
   successMsg: string | null = null;
   errorMsg: string | null = null;
   viewMode: 'grid' | 'list' = 'grid';
+  userId!: number;
 
   /** Controls which camping's action-menu is open (by id) */
   openMenuId: number | null = null;
@@ -27,9 +29,17 @@ export class MyCampingsComponent implements OnInit, OnDestroy {
   constructor(
     private campingService: CampingService,
     private router: Router,
+     private authService: AuthService
+
   ) {}
 
   ngOnInit(): void {
+     const id = this.authService.getId();
+    if (!id) {
+      this.router.navigate(['/auth/sign-in']);
+      return;
+    }
+    this.userId = id;
     this.load();
   }
 
@@ -40,8 +50,7 @@ export class MyCampingsComponent implements OnInit, OnDestroy {
 
   load(): void {
     this.loading = true;
-    this.campingService.getByOwner(2) // TODO: replace with real authenticated owner id
-      .pipe(takeUntil(this.destroy$))
+    this.campingService.getByOwner(this.userId) 
       .subscribe({
         next: (data) => {
           this.campings = data;

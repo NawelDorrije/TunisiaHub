@@ -23,6 +23,7 @@ import { ActivityService } from '../../../../services/campings/activity.service'
 import { EquipmentService } from '../../../../services/campings/equipment.service';
 import { ReservationService } from '../../../../services/shared-reservation/reservation-camping.service';
 import { PaymentService } from '../../../../services/shared-reservation/payment.service';
+import { AuthService } from '../../../auth/services/auth.service';
 
 // ── Custom Validators ────────────────────────────────────────────────────────
 
@@ -85,6 +86,7 @@ export class ReservationFormComponent implements OnInit, OnDestroy {
   success = false;
   submitError: string | null = null;
   paymentError: string | null = null;
+   clientId!: number;
 
   /** Payment result from backend */
   completedPayment: Payment | null = null;
@@ -121,14 +123,23 @@ export class ReservationFormComponent implements OnInit, OnDestroy {
     private equipmentService: EquipmentService,
     private reservationService: ReservationService,
     private paymentService: PaymentService,
+        private authService: AuthService
   ) {}
 
   // ── Lifecycle ────────────────────────────────────────────────────────────
 
   ngOnInit(): void {
+    const id = this.authService.getId();
+    if (!id) {
+      this.router.navigate(['/auth/sign-in']);
+      return;
+    }
+    this.clientId = id;
     this.buildForms();
     this.loadData();
   }
+
+
 
   ngOnDestroy(): void {
     this.destroy$.next();
@@ -320,7 +331,7 @@ export class ReservationFormComponent implements OnInit, OnDestroy {
     this.submitError = null;
 
     const payload = {
-      userId: 2, // TODO: replace with authenticated user id
+      userId: this.clientId, 
       spotId: this.selectedSpot.id!,
       activityIds: this.selectedActivities.map((a) => a.id!),
       equipmentRequests: this.selectedEquipment.map(item => ({

@@ -4,6 +4,7 @@ import { takeUntil } from 'rxjs/operators';
 import { Router } from '@angular/router';
 import { Reservation } from '../../../../models/shared-reservation/reservation';
 import { ReservationService } from '../../../../services/shared-reservation/reservation-camping.service';
+import { AuthService } from '../../../auth/services/auth.service';
 
 @Component({
   selector: 'app-my-reservations',
@@ -19,19 +20,30 @@ export class MyReservationsComponent implements OnInit, OnDestroy {
   cancellingId: number | null = null;
   selectedReservation: Reservation | null = null;
   statusFilter = 'ALL';
-  userId = 1; // Replace with AuthService.currentUser.id
+  userId!: number;
   private destroy$ = new Subject<void>();
 
   statuses = ['ALL', 'PENDING', 'PAID', 'CONFIRMED', 'ACTIVE', 'COMPLETED', 'CANCELLED'];
 
   constructor(
     private reservationService: ReservationService,
-    private router: Router
+    private router: Router,
+        private authService: AuthService
+
   ) {}
 
-  ngOnInit(): void {
-    this.loadReservations();
+ngOnInit(): void {
+  const userId = this.authService.getId();
+
+  if (!userId) {
+    this.router.navigate(['/auth/sign-in']);
+    return;
   }
+
+  this.userId = userId;
+  this.loadReservations();
+}
+
 
   loadReservations(): void {
     this.loading = true;

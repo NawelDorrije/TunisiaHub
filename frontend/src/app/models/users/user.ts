@@ -6,6 +6,6 @@ export interface User {
   prenom: string;
   email: string;
   motDePasse: string;
-  role: 'ADMIN' | 'USER' ;
-  reservations?: Reservation[]; 
+  role: 'ADMIN' | 'USER' |'OWNER';
+  reservations?: Reservation[];
 }

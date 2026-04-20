@@ -33,12 +33,18 @@ public class AuthController {
         user.setMotDePasse(passwordEncoder.encode(request.getPassword()));
         user.setRole(RoleUser.CLIENT);
 
-        userRepository.save(user);
+        User savedUser = userRepository.save(user); // ← récupérer l'entité sauvegardée avec l'id généré
 
-        String token = jwtUtil.generateToken(user.getEmail(), user.getRole().name());
-        return ResponseEntity.ok(new AuthResponse(token, user.getRole().name(), user.getEmail(), user.getNom(), user.getPrenom()));
+        String token = jwtUtil.generateToken(savedUser.getEmail(), savedUser.getRole().name(),user.getId());
+        return ResponseEntity.ok(new AuthResponse(
+                savedUser.getId(),      // ← id
+                token,
+                savedUser.getRole().name(),
+                savedUser.getEmail(),
+                savedUser.getNom(),
+                savedUser.getPrenom()
+        ));
     }
-
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequest request) {
         User user = userRepository.findByEmail(request.getEmail());
@@ -49,7 +55,14 @@ public class AuthController {
         if (!passwordEncoder.matches(request.getPassword(), user.getMotDePasse()))
             return ResponseEntity.status(401).body("Invalid password");
 
-        String token = jwtUtil.generateToken(user.getEmail(), user.getRole().name());
-        return ResponseEntity.ok(new AuthResponse(token, user.getRole().name(), user.getEmail(), user.getNom(), user.getPrenom()));
+        String token = jwtUtil.generateToken(user.getEmail(), user.getRole().name(),user.getId());
+        return ResponseEntity.ok(new AuthResponse(
+                user.getId(),           // ← id
+                token,
+                user.getRole().name(),
+                user.getEmail(),
+                user.getNom(),
+                user.getPrenom()
+        ));
     }
 }

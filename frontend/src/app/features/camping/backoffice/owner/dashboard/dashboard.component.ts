@@ -11,6 +11,7 @@ import { DynamicPricingService } from '../../../../../services/campings/dynamic-
 import { Camping } from '../../../../../models/campings/camping';
 import { Spot } from '../../../../../models/campings/spot';
 import { Reservation } from '../../../../../models/shared-reservation/reservation';
+import { AuthService } from '../../../../auth/services/auth.service';
 
 interface KpiCard {
   label: string;
@@ -43,7 +44,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   loading = true;
   Math = Math;
   private destroy$ = new Subject<void>();
-  private ownerId = 1;
+   userId!: number;
 
   campings: Camping[] = [];
   selectedCampingId: number | null = null;
@@ -93,10 +94,17 @@ export class DashboardComponent implements OnInit, OnDestroy {
     private equipmentService: EquipmentService,
     private reservationService: ReservationService,
     private pricingService: DynamicPricingService,
-    private router: Router
+    private router: Router,
+    private authService: AuthService
   ) {}
 
   ngOnInit(): void {
+     const id = this.authService.getId();
+    if (!id) {
+      this.router.navigate(['/auth/sign-in']);
+      return;
+    }
+    this.userId = id;
     this.loadDashboard();
   }
 
@@ -112,7 +120,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   loadDashboard(): void {
     this.loading = true;
 
-    this.campingService.getByOwner(this.ownerId).pipe(
+    this.campingService.getByOwner(this.userId).pipe(
       takeUntil(this.destroy$),
       switchMap(campings => {
         this.campings = campings;

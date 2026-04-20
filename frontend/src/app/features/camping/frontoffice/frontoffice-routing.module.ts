@@ -5,13 +5,14 @@ import { CampingMapComponent } from './camping-map/camping-map.component';
 import { CampingDetailComponent } from './camping-detail/camping-detail.component';
 import { ReservationFormComponent } from './reservation-form/reservation-form.component';
 import { MyReservationsComponent } from './my-reservations/my-reservations.component';
+import { AuthGuard } from '../../auth/auth.guard';
 
 const routes: Routes = [
-  { path: '', component: ListCampingsComponent },
-  { path: 'map', component: CampingMapComponent },
-  { path: 'my-reservations', component: MyReservationsComponent },
-  { path: ':id', component: CampingDetailComponent },
-  { path: ':id/reserve', component: ReservationFormComponent },
+  { path: '',                component: ListCampingsComponent },
+  { path: 'map',             component: CampingMapComponent },
+  { path: 'my-reservations', component: MyReservationsComponent, canActivate: [AuthGuard] },
+  { path: ':id',             component: CampingDetailComponent },
+  { path: ':id/reserve',     component: ReservationFormComponent, canActivate: [AuthGuard] },
 ];
 
 @NgModule({

@@ -3,6 +3,7 @@ import { FormBuilder, FormGroup, Validators, AbstractControl, ValidationErrors }
 import { ActivatedRoute, Router } from '@angular/router';
 import * as L from 'leaflet';
 import { CampingService } from '../../../../../../services/campings/camping.service';
+import { AuthService } from '../../../../../auth/services/auth.service';
 
 function noWhitespaceOnly(control: AbstractControl): ValidationErrors | null {
   const val = control.value as string;
@@ -86,6 +87,7 @@ export class CampingFormComponent implements OnInit, OnDestroy {
   readonly MAX_PHOTOS   = 10;
   readonly MAX_PHOTO_MB = 5;
   photoError = '';
+    userId!: number;
 
   governorates = Object.keys(GOVERNORATE_BOUNDS);
 
@@ -101,11 +103,19 @@ export class CampingFormComponent implements OnInit, OnDestroy {
     private route:   ActivatedRoute,
     private router:  Router,
     private cdr:     ChangeDetectorRef,   // ← KEY
-    private zone:    NgZone               // ← KEY
+    private zone:    NgZone  ,
+     private authService: AuthService             // ← KEY
   ) {}
 
   // ── Lifecycle ─────────────────────────────────────────────────────────────
   ngOnInit(): void {
+        const id = this.authService.getId();
+    if (!id) {
+      this.router.navigate(['/auth/sign-in']);
+      return;
+    }
+    this.userId = id; // ← store it
+
     this.buildForm();
     this.campingId = this.route.snapshot.params['id'] ? +this.route.snapshot.params['id'] : null;
     this.isEdit    = !!this.campingId;
@@ -137,7 +147,7 @@ export class CampingFormComponent implements OnInit, OnDestroy {
       startDate:     [''],
       endDate:       [''],
       status:        ['PENDING', Validators.required],
-      ownerId:       [2, [Validators.required, Validators.min(1)]],
+      ownerId:       [this.userId, [Validators.required, Validators.min(1)]],
     }, { validators: [checkOutAfterCheckIn, endAfterStart] });
   }
 

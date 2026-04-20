@@ -14,6 +14,12 @@ const routes: Routes = [
       import('./features/camping/camping.module')
         .then(m => m.CampingModule)
   },
+   
+  {
+    path: 'auth',
+    loadChildren: () =>
+      import('./features/auth/auth.module').then((m) => m.AuthModule),
+  },
   {
     path: '**',
     component: NotFoundComponent
