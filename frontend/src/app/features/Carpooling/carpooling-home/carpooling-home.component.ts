@@ -53,6 +53,7 @@ export class CarpoolingHomeComponent {
         departure: this.searchForm.value.departure || undefined,
         destination: this.searchForm.value.destination || undefined,
         date: this.searchForm.value.date || undefined,
+        returnDate: this.searchForm.value.returnDate || undefined,
         seatsNeeded: this.searchForm.value.seatsNeeded || 1,
       },
     });

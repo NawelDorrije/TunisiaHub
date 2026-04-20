@@ -1,5 +1,5 @@
 export type TripStatus = 'ACTIVE' | 'CANCELED' | 'COMPLETED';
-export type BookingStatus = 'CONFIRMED' | 'CANCELED';
+export type BookingStatus = 'CONFIRMED' | 'PENDING' | 'CANCELED';
 export type ComplaintStatus = 'OPEN' | 'REVIEWED' | 'CLOSED';
 
 export interface CarpoolUser {
@@ -17,9 +17,11 @@ export interface Trip {
   durationMinutes?: number;
   pricePerSeat: number;
   seatsTotal: number;
-  seatsAvailable: number;
+  seatsAvailable?: number;
   ownerUserId: number;
   ownerFullName?: string;
+  driverRatingAverage?: number;
+  driverReviewsCount?: number;
   bookingMode?: string;
   status: TripStatus;
 }
@@ -34,6 +36,13 @@ export interface Booking {
   status: BookingStatus;
 }
 
+export interface ReservationQuote {
+  seatsRequested: number;
+  driverAmount: number;
+  serviceFee: number;
+  totalAmount: number;
+}
+
 export interface Complaint {
   id: number;
   tripId: number;
@@ -44,11 +53,32 @@ export interface Complaint {
   status: ComplaintStatus;
 }
 
+export interface DriverReview {
+  id: number;
+  reservationId: number;
+  rating: number;
+  comment: string;
+  date: string;
+  reviewerName?: string;
+}
+
+export interface DriverReviewSummary {
+  averageRating: number;
+  reviewsCount: number;
+}
+
 export interface TripSearchFilters {
   departure?: string;
   destination?: string;
-  date?: string;
+  dateFrom?: string;
+  dateTo?: string;
   seatsNeeded?: number;
+  minDriverRating?: number;
+  status?: string;
+  bookingMode?: string;
+  minPrice?: number;
+  maxPrice?: number;
+  durationMax?: number;
 }
 
 export interface AdminStats {

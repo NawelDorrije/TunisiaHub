@@ -1,56 +1,214 @@
-<div class="container py-4" *ngIf="trip; else noTrip">
-  <h2 class="mb-4">Book trip</h2>
+<div class="booking-page" *ngIf="trip; else noTrip">
+  <div class="booking-shell">
+    <div class="alert alert-danger mb-4" *ngIf="error">{{ error }}</div>
+    <div class="alert alert-success mb-4" *ngIf="success">{{ success }}</div>
 
-  <div class="card shadow-sm mb-3">
-    <div class="card-body">
-      <h5>{{ trip.departure }} -> {{ trip.destination }}</h5>
-      <p class="mb-1">
-        <strong>Date:</strong> {{ trip.departureDateTime | date: "medium" }}
-      </p>
-      <p class="mb-1">
-        <strong>Price per seat:</strong> {{ trip.pricePerSeat }} TND
-      </p>
-      <p class="mb-0">
-        <strong>Seats available:</strong> {{ trip.seatsAvailable }}
-      </p>
-    </div>
-  </div>
+    <form
+      [formGroup]="bookingForm"
+      (ngSubmit)="confirmBooking()"
+      class="booking-card"
+    >
+      <h1 class="booking-title">{{ bookingTitle }}</h1>
 
-  <div class="card shadow-sm">
-    <div class="card-body">
-      <form
-        [formGroup]="bookingForm"
-        (ngSubmit)="confirmBooking()"
-        class="row g-3 align-items-end"
-      >
-        <div class="col-md-4">
-          <label class="form-label">Selected seats</label>
+      <div class="booking-notice" *ngIf="bookingNotice">
+        <i class="bi bi-card-checklist"></i>
+        <span>{{ bookingNotice }}</span>
+      </div>
+
+      <div class="booking-section">
+        <h2 class="booking-date">
+          {{ formatTripDate(trip.departureDateTime) }}
+        </h2>
+
+        <div class="booking-timeline">
+          <div class="timeline-time-col">
+            <span>{{ formatTripTime(trip.departureDateTime) }}</span>
+            <span>{{ formatArrivalTime() }}</span>
+            <small class="next-day-label" *ngIf="isArrivalNextDay()">
+              (+1 day)
+            </small>
+          </div>
+
+          <div class="timeline-line-col">
+            <span class="timeline-dot top"></span>
+            <span class="timeline-line"></span>
+            <span class="timeline-dot bottom"></span>
+          </div>
+
+          <div class="timeline-stop-col">
+            <strong>{{ formatPlace(trip.departure) }}</strong>
+            <strong>{{ formatPlace(trip.destination) }}</strong>
+          </div>
+        </div>
+      </div>
+
+      <div class="booking-divider"></div>
+
+      <div class="booking-section">
+        <h3>Price summary</h3>
+
+        <button
+          type="button"
+          class="price-summary-card"
+          (click)="openPriceDetails()"
+        >
+          <div>
+            <strong>Total price</strong>
+            <small>{{ seatsLabel }}</small>
+          </div>
+
+          <div class="price-summary-side">
+            <div class="price-value">{{ formatPrice(totalPrice) }} TND</div>
+            <i class="bi bi-chevron-right"></i>
+          </div>
+        </button>
+
+        <div class="seat-field">
+          <label for="bookingSeats" class="form-label">Passengers</label>
           <input
+            id="bookingSeats"
             type="number"
             min="1"
+            [max]="trip.seatsAvailable ?? trip.seatsTotal"
             class="form-control"
             formControlName="seats"
           />
         </div>
-        <div class="col-md-4">
-          <label class="form-label">Total price</label>
-          <input class="form-control" [value]="totalPrice + ' TND'" readonly />
-        </div>
-        <div class="col-md-4 d-flex gap-2">
-          <button type="submit" class="btn btn-success">Confirm booking</button>
-          <button
-            type="button"
-            class="btn btn-outline-secondary"
-            (click)="cancel()"
-          >
-            Cancel
-          </button>
-        </div>
-      </form>
+      </div>
 
-      <div class="alert alert-danger mt-3 mb-0" *ngIf="error">{{ error }}</div>
-      <div class="alert alert-success mt-3 mb-0" *ngIf="success">
-        {{ success }}
+      <div class="booking-divider"></div>
+
+      <div class="booking-section">
+        <h3>Send a message to {{ driverLabel }} to introduce yourself</h3>
+
+        <textarea
+          rows="5"
+          class="form-control booking-message"
+          formControlName="message"
+        ></textarea>
+      </div>
+
+      <div class="booking-actions">
+        <button
+          type="button"
+          class="btn btn-outline-secondary"
+          (click)="cancel()"
+        >
+          Back
+        </button>
+
+        <button type="submit" class="btn continue-button">
+          <i
+            class="bi"
+            [class.bi-lightning-charge]="trip.bookingMode === 'instant'"
+            [class.bi-card-checklist]="trip.bookingMode !== 'instant'"
+          ></i>
+          <span>Continue</span>
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <div
+    class="price-details-overlay"
+    *ngIf="showPriceDetails"
+    (click)="closePriceDetails()"
+  >
+    <div class="price-details-panel" (click)="$event.stopPropagation()">
+      <div class="price-details-header">
+        <h2>Price details</h2>
+        <button
+          type="button"
+          class="price-details-close"
+          (click)="closePriceDetails()"
+          aria-label="Close price details"
+        >
+          <i class="bi bi-x-lg"></i>
+        </button>
+      </div>
+
+      <div class="price-details-row">
+        <div>
+          <strong>Amount paid to the driver</strong>
+        </div>
+        <span>{{ formatPrice(driverPrice) }} TND</span>
+      </div>
+
+      <div class="price-details-row">
+        <div>
+          <strong>Service fee and VAT</strong>
+          <small>
+            This helps us keep the platform reliable, secure, and available for
+            all passengers.
+          </small>
+        </div>
+        <span>{{ formatPrice(serviceFee) }} TND</span>
+      </div>
+
+      <div class="price-details-separator"></div>
+
+      <div class="price-details-row total">
+        <div>
+          <strong>Total price</strong>
+          <small>{{ seatsLabel }}</small>
+        </div>
+        <span>{{ formatPrice(totalPrice) }} TND</span>
+      </div>
+
+      <div class="booking-divider"></div>
+
+      <div class="service-fee-info">
+        <h3>Service fee includes</h3>
+
+        <div class="service-fee-item">
+          <i class="bi bi-bank"></i>
+          <div>
+            <strong>VAT</strong>
+            <small>Applied to the service fee for your trip.</small>
+          </div>
+        </div>
+
+        <div class="service-fee-item">
+          <i class="bi bi-chat-left-text"></i>
+          <div>
+            <strong>Customer support</strong>
+            <small>Access to customer support when you need help.</small>
+          </div>
+        </div>
+
+        <div class="service-fee-item">
+          <i class="bi bi-lock"></i>
+          <div>
+            <strong>Secure payments</strong>
+            <small>Support for a safer booking and payment experience.</small>
+          </div>
+        </div>
+
+        <div class="service-fee-item">
+          <i class="bi bi-shield-check"></i>
+          <div>
+            <strong>Fraud protection</strong>
+            <small
+              >Protection against suspicious activity on the platform.</small
+            >
+          </div>
+        </div>
+
+        <div class="service-fee-item">
+          <i class="bi bi-person-check"></i>
+          <div>
+            <strong>Profile verification</strong>
+            <small>Helping keep a more trusted community for everyone.</small>
+          </div>
+        </div>
+
+        <div class="service-fee-item">
+          <i class="bi bi-people"></i>
+          <div>
+            <strong>Teams and operations</strong>
+            <small>Work needed to keep the platform stable and usable.</small>
+          </div>
+        </div>
       </div>
     </div>
   </div>

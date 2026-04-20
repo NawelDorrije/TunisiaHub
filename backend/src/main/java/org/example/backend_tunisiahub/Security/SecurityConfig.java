@@ -37,6 +37,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/driver/trips/**").permitAll()
                         .requestMatchers("/api/reservations/**").permitAll()
                         .requestMatchers("/api/complaints/**").permitAll()
+                        .requestMatchers("/api/carpooling-reviews/**").permitAll()
                         .requestMatchers("/api/accommodations/getAll").permitAll()
                         .requestMatchers("/api/accommodations/get/**").permitAll()
                         .requestMatchers("/api/reviews/getAll").permitAll()

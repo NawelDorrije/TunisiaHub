@@ -32,18 +32,46 @@ public class TripServiceImp implements ITripService {
     private static final BigDecimal MAX_PRICE = new BigDecimal("500");
 
     @Override
-    public List<Trip> retrieveAllTrips(String departurePoint, String destination, LocalDate date, Integer seatsRequired) {
-        return tripRepository.findByStatusIgnoreCaseOrderByDepartureDateTimeAsc(STATUS_SCHEDULED)
-                .stream()
-                .filter(trip -> departurePoint == null
-                        || departurePoint.isBlank()
-                        || trip.getDeparture().toLowerCase().contains(departurePoint.trim().toLowerCase()))
-                .filter(trip -> destination == null
-                        || destination.isBlank()
-                        || trip.getDestination().toLowerCase().contains(destination.trim().toLowerCase()))
-                .filter(trip -> date == null || trip.getDepartureDateTime().toLocalDate().equals(date))
-                .filter(trip -> seatsRequired == null || seatsRequired < 1 || trip.getSeatsAvailable() >= seatsRequired)
-                .toList();
+    public List<Trip> retrieveAllTrips(String departurePoint,
+                                       String destination,
+                                       LocalDate dateFrom,
+                                       LocalDate dateTo,
+                                       Integer seatsRequired,
+                                       String status,
+                                       String bookingMode,
+                                       BigDecimal minPrice,
+                                       BigDecimal maxPrice,
+                                       Integer durationMax) {
+        LocalDate effectiveDateFrom = dateFrom;
+        LocalDate effectiveDateTo = dateTo;
+        if (effectiveDateFrom != null && effectiveDateTo != null && effectiveDateFrom.isAfter(effectiveDateTo)) {
+            LocalDate temporaryDate = effectiveDateFrom;
+            effectiveDateFrom = effectiveDateTo;
+            effectiveDateTo = temporaryDate;
+        }
+
+        LocalDateTime dateFromValue = effectiveDateFrom != null ? effectiveDateFrom.atStartOfDay() : null;
+        LocalDateTime dateToValue = effectiveDateTo != null ? effectiveDateTo.plusDays(1).atStartOfDay() : null;
+        Integer normalizedSeatsRequired = seatsRequired != null && seatsRequired > 0 ? seatsRequired : null;
+        String normalizedStatus = normalizeStatusFilter(status);
+        BigDecimal normalizedMinPrice = minPrice != null && minPrice.compareTo(BigDecimal.ZERO) >= 0 ? minPrice : null;
+        BigDecimal normalizedMaxPrice = maxPrice != null && maxPrice.compareTo(BigDecimal.ZERO) > 0 ? maxPrice : null;
+        Integer normalizedDurationMax = durationMax != null && durationMax > 0 ? durationMax : null;
+        String effectiveStatus = normalizedStatus != null ? normalizedStatus : STATUS_SCHEDULED;
+        String normalizedBookingMode = normalizeBookingModeFilter(bookingMode);
+
+        return tripRepository.searchTripsAdvanced(
+                effectiveStatus,
+                normalizeSearchText(departurePoint),
+                normalizeSearchText(destination),
+                dateFromValue,
+                dateToValue,
+                normalizedSeatsRequired,
+                normalizedBookingMode,
+                normalizedMinPrice,
+                normalizedMaxPrice,
+                normalizedDurationMax
+        );
     }
 
     @Override
@@ -62,6 +90,11 @@ public class TripServiceImp implements ITripService {
     public List<Trip> retrieveMyTrips(Long driverId) {
         logger.debug("Retrieve trips for driverId={}", driverId);
         return tripRepository.findByDriverIdOrderByDepartureDateTimeDesc(driverId);
+    }
+
+    @Override
+    public Integer retrieveTripSeatsAvailable(Long tripId) {
+        return tripRepository.findSeatsAvailableByTripId(tripId);
     }
 
     @Override
@@ -84,7 +117,6 @@ public class TripServiceImp implements ITripService {
         trip.setDurationMinutes(request.getDurationMinutes());
         trip.setPrice(request.getPrice());
         trip.setSeatsTotal(request.getSeatsTotal());
-        trip.setSeatsAvailable(request.getSeatsTotal());
         trip.setStatus(STATUS_SCHEDULED);
         trip.setBookingMode(normalizeBookingMode(request.getBookingMode()));
         trip.setDriver(driver);
@@ -117,7 +149,6 @@ public class TripServiceImp implements ITripService {
         trip.setDurationMinutes(request.getDurationMinutes());
         trip.setPrice(request.getPrice());
         trip.setSeatsTotal(request.getSeatsTotal());
-        trip.setSeatsAvailable(request.getSeatsTotal() - reservedSeats);
         if (request.getBookingMode() != null && !request.getBookingMode().isBlank()) {
             trip.setBookingMode(normalizeBookingMode(request.getBookingMode()));
         }
@@ -227,6 +258,14 @@ public class TripServiceImp implements ITripService {
         return value.trim().toLowerCase();
     }
 
+    private String normalizeSearchText(String value) {
+        if (value == null || value.isBlank()) {
+            return null;
+        }
+
+        return value.trim();
+    }
+
     private String normalizeBookingMode(String value) {
         if (value == null || value.isBlank()) {
             return BOOKING_MODE_MANUAL;
@@ -238,5 +277,31 @@ public class TripServiceImp implements ITripService {
         }
 
         return BOOKING_MODE_MANUAL;
+    }
+
+    private String normalizeBookingModeFilter(String value) {
+        if (value == null || value.isBlank()) {
+            return null;
+        }
+
+        String normalized = value.trim().toLowerCase();
+        if (BOOKING_MODE_INSTANT.equals(normalized) || BOOKING_MODE_MANUAL.equals(normalized)) {
+            return normalized;
+        }
+
+        return null;
+    }
+
+    private String normalizeStatusFilter(String value) {
+        if (value == null || value.isBlank()) {
+            return null;
+        }
+
+        String normalized = value.trim().toLowerCase();
+        if (STATUS_SCHEDULED.equals(normalized) || STATUS_CANCELED.equals(normalized)) {
+            return normalized;
+        }
+
+        return null;
     }
 }

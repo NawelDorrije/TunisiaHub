@@ -10,7 +10,10 @@ import { CarpoolingDataService } from '../services/carpooling-data.service';
 })
 export class MyTripsComponent implements OnInit {
   trips: Trip[] = [];
+  displayedTrips: Trip[] = [];
   error = '';
+  currentPage = 1;
+  readonly pageSize = 10;
 
   constructor(
     private readonly dataService: CarpoolingDataService,
@@ -25,11 +28,49 @@ export class MyTripsComponent implements OnInit {
     this.dataService.getMyTrips().subscribe({
       next: (trips) => {
         this.trips = trips;
+        this.currentPage = 1;
+        this.updateDisplayedTrips();
       },
       error: () => {
         this.error = 'Unable to load trips from backend.';
       },
     });
+  }
+
+  hasPreviousPage(): boolean {
+    return this.currentPage > 1;
+  }
+
+  hasNextPage(): boolean {
+    return this.currentPage < this.getTotalPages();
+  }
+
+  previousPage(): void {
+    if (!this.hasPreviousPage()) {
+      return;
+    }
+
+    this.currentPage -= 1;
+    this.updateDisplayedTrips();
+  }
+
+  nextPage(): void {
+    if (!this.hasNextPage()) {
+      return;
+    }
+
+    this.currentPage += 1;
+    this.updateDisplayedTrips();
+  }
+
+  getPaginationLabel(): string {
+    if (this.trips.length === 0) {
+      return '0 of 0';
+    }
+
+    const start = (this.currentPage - 1) * this.pageSize + 1;
+    const end = Math.min(this.currentPage * this.pageSize, this.trips.length);
+    return `${start}-${end} of ${this.trips.length}`;
   }
 
   openDetails(tripId: number): void {
@@ -107,8 +148,15 @@ export class MyTripsComponent implements OnInit {
     const startDate = new Date(trip.departureDateTime);
     const durationMinutes = this.estimateDurationMinutes(trip);
     const endDate = new Date(startDate.getTime() + durationMinutes * 60000);
-
     return this.formatTimeFromDate(endDate);
+  }
+
+  isArrivalNextDay(trip: Trip): boolean {
+    const startDate = new Date(trip.departureDateTime);
+    const durationMinutes = this.estimateDurationMinutes(trip);
+    const endDate = new Date(startDate.getTime() + durationMinutes * 60000);
+
+    return !this.isSameDay(startDate, endDate);
   }
 
   formatDurationLabel(trip: Trip): string {
@@ -188,5 +236,15 @@ export class MyTripsComponent implements OnInit {
       firstDate.getMonth() === secondDate.getMonth() &&
       firstDate.getDate() === secondDate.getDate()
     );
+  }
+
+  private updateDisplayedTrips(): void {
+    const startIndex = (this.currentPage - 1) * this.pageSize;
+    const endIndex = startIndex + this.pageSize;
+    this.displayedTrips = this.trips.slice(startIndex, endIndex);
+  }
+
+  private getTotalPages(): number {
+    return Math.ceil(this.trips.length / this.pageSize);
   }
 }

@@ -7,6 +7,7 @@ import { CarpoolingDataService } from '../services/carpooling-data.service';
 type SortKey =
   | 'departure-early'
   | 'lowest-price'
+  | 'highest-rated-driver'
   | 'closest-departure'
   | 'closest-arrival'
   | 'shortest-trip';
@@ -33,6 +34,7 @@ export class SearchRidesComponent implements OnInit {
   searchForm!: FormGroup;
 
   rides: Trip[] = [];
+  filteredRides: Trip[] = [];
   displayedRides: Trip[] = [];
   departureSuggestions: Array<{ label: string; value: string; type: 'city' }> =
     [];
@@ -47,6 +49,8 @@ export class SearchRidesComponent implements OnInit {
   locationError = '';
   activeSort: SortKey = 'departure-early';
   selectedTimeSlots: TimeSlotKey[] = [];
+  currentPage = 1;
+  readonly pageSize = 10;
   readonly sortOptions: SortOption[] = [
     {
       key: 'departure-early',
@@ -57,6 +61,11 @@ export class SearchRidesComponent implements OnInit {
       key: 'lowest-price',
       label: 'Lowest price',
       icon: 'bi bi-cash-stack',
+    },
+    {
+      key: 'highest-rated-driver',
+      label: 'Best driver rating',
+      icon: 'bi bi-star-fill',
     },
     {
       key: 'closest-departure',
@@ -93,7 +102,16 @@ export class SearchRidesComponent implements OnInit {
       destination: [''],
       date: [''],
       returnDate: [''],
-      seatsNeeded: [1, [Validators.required, Validators.min(1), Validators.max(8)]],
+      seatsNeeded: [
+        1,
+        [Validators.required, Validators.min(1), Validators.max(8)],
+      ],
+      minDriverRating: [null],
+      status: [''],
+      bookingMode: [''],
+      minPrice: [null],
+      maxPrice: [null],
+      durationMax: [null],
     });
   }
 
@@ -104,6 +122,18 @@ export class SearchRidesComponent implements OnInit {
     const date = params.get('date') ?? '';
     const returnDate = params.get('returnDate') ?? '';
     const seatsNeeded = Number(params.get('seatsNeeded') ?? 1);
+    const minDriverRatingParam = params.get('minDriverRating');
+    const status = params.get('status') ?? '';
+    const bookingMode = params.get('bookingMode') ?? '';
+    const minPriceParam = params.get('minPrice');
+    const maxPriceParam = params.get('maxPrice');
+    const durationMaxParam = params.get('durationMax');
+    const minPrice = minPriceParam !== null ? Number(minPriceParam) : null;
+    const maxPrice = maxPriceParam !== null ? Number(maxPriceParam) : null;
+    const durationMax =
+      durationMaxParam !== null ? Number(durationMaxParam) : null;
+    const minDriverRating =
+      minDriverRatingParam !== null ? Number(minDriverRatingParam) : null;
 
     this.searchForm.patchValue({
       departure,
@@ -112,6 +142,26 @@ export class SearchRidesComponent implements OnInit {
       returnDate,
       seatsNeeded:
         Number.isFinite(seatsNeeded) && seatsNeeded > 0 ? seatsNeeded : 1,
+      minDriverRating:
+        minDriverRating !== null &&
+        Number.isFinite(minDriverRating) &&
+        minDriverRating >= 1
+          ? minDriverRating
+          : null,
+      status,
+      bookingMode,
+      minPrice:
+        minPrice !== null && Number.isFinite(minPrice) && minPrice >= 0
+          ? minPrice
+          : null,
+      maxPrice:
+        maxPrice !== null && Number.isFinite(maxPrice) && maxPrice > 0
+          ? maxPrice
+          : null,
+      durationMax:
+        durationMax !== null && Number.isFinite(durationMax) && durationMax > 0
+          ? durationMax
+          : null,
     });
 
     this.search();
@@ -123,16 +173,25 @@ export class SearchRidesComponent implements OnInit {
       .searchTrips({
         departure: form.departure,
         destination: form.destination,
-        date: form.date,
+        dateFrom: form.date,
+        dateTo: form.returnDate,
         seatsNeeded: form.seatsNeeded,
+        minDriverRating: form.minDriverRating,
+        status: form.status,
+        bookingMode: form.bookingMode,
+        minPrice: form.minPrice,
+        maxPrice: form.maxPrice,
+        durationMax: form.durationMax,
       })
       .subscribe({
         next: (rides) => {
           this.rides = rides ?? [];
+          this.currentPage = 1;
           this.applyClientFilters();
         },
         error: () => {
           this.rides = [];
+          this.filteredRides = [];
           this.displayedRides = [];
         },
       });
@@ -145,6 +204,26 @@ export class SearchRidesComponent implements OnInit {
         date: form.date || undefined,
         returnDate: form.returnDate || undefined,
         seatsNeeded: form.seatsNeeded || 1,
+        minDriverRating:
+          form.minDriverRating && Number(form.minDriverRating) >= 1
+            ? form.minDriverRating
+            : undefined,
+        status: form.status || undefined,
+        bookingMode: form.bookingMode || undefined,
+        minPrice:
+          form.minPrice !== null &&
+          form.minPrice !== undefined &&
+          Number(form.minPrice) >= 0
+            ? form.minPrice
+            : undefined,
+        maxPrice:
+          form.maxPrice && Number(form.maxPrice) > 0
+            ? form.maxPrice
+            : undefined,
+        durationMax:
+          form.durationMax && Number(form.durationMax) > 0
+            ? form.durationMax
+            : undefined,
       },
       queryParamsHandling: 'merge',
     });
@@ -184,6 +263,7 @@ export class SearchRidesComponent implements OnInit {
 
   setSort(key: SortKey): void {
     this.activeSort = key;
+    this.currentPage = 1;
     this.applyClientFilters();
   }
 
@@ -196,6 +276,7 @@ export class SearchRidesComponent implements OnInit {
       this.selectedTimeSlots = [...this.selectedTimeSlots, key];
     }
 
+    this.currentPage = 1;
     this.applyClientFilters();
   }
 
@@ -206,7 +287,15 @@ export class SearchRidesComponent implements OnInit {
   clearFilters(): void {
     this.activeSort = 'departure-early';
     this.selectedTimeSlots = [];
-    this.applyClientFilters();
+    this.searchForm.patchValue({
+      minDriverRating: null,
+      status: '',
+      bookingMode: '',
+      minPrice: null,
+      maxPrice: null,
+      durationMax: null,
+    });
+    this.search();
   }
 
   getTimeSlotCount(key: TimeSlotKey): number {
@@ -214,31 +303,75 @@ export class SearchRidesComponent implements OnInit {
   }
 
   getSearchDateLabel(): string {
-    const value = this.searchForm.value.date;
-    if (!value) {
+    const dateFrom = this.searchForm.value.date;
+    const dateTo = this.searchForm.value.returnDate;
+
+    if (!dateFrom && !dateTo) {
       return 'Today';
     }
 
-    const date = new Date(value);
-    const today = new Date();
+    if (dateFrom && dateTo) {
+      if (dateFrom === dateTo) {
+        return this.formatSearchDate(dateFrom);
+      }
 
-    if (
-      date.getFullYear() === today.getFullYear() &&
-      date.getMonth() === today.getMonth() &&
-      date.getDate() === today.getDate()
-    ) {
-      return 'Today';
+      return `${this.formatSearchDate(dateFrom)} - ${this.formatSearchDate(dateTo)}`;
     }
 
-    return date.toLocaleDateString('en-GB', {
-      day: 'numeric',
-      month: 'short',
-    });
+    if (dateFrom) {
+      return `From ${this.formatSearchDate(dateFrom)}`;
+    }
+
+    return `To ${this.formatSearchDate(dateTo)}`;
   }
 
   getPassengersLabel(): string {
     const seats = Number(this.searchForm.value.seatsNeeded || 1);
     return seats > 1 ? `${seats} passengers` : '1 passenger';
+  }
+
+  getResultsCountLabel(): string {
+    const count = this.filteredRides.length;
+    return `${count} ${count === 1 ? 'trip' : 'trips'} available`;
+  }
+
+  getPaginationLabel(): string {
+    if (this.filteredRides.length === 0) {
+      return '0 of 0';
+    }
+
+    const start = (this.currentPage - 1) * this.pageSize + 1;
+    const end = Math.min(
+      this.currentPage * this.pageSize,
+      this.filteredRides.length,
+    );
+    return `${start}-${end} of ${this.filteredRides.length}`;
+  }
+
+  hasPreviousPage(): boolean {
+    return this.currentPage > 1;
+  }
+
+  hasNextPage(): boolean {
+    return this.currentPage < this.getTotalPages();
+  }
+
+  previousPage(): void {
+    if (!this.hasPreviousPage()) {
+      return;
+    }
+
+    this.currentPage -= 1;
+    this.updateDisplayedRides();
+  }
+
+  nextPage(): void {
+    if (!this.hasNextPage()) {
+      return;
+    }
+
+    this.currentPage += 1;
+    this.updateDisplayedRides();
   }
 
   getResultsTitle(): string {
@@ -264,6 +397,47 @@ export class SearchRidesComponent implements OnInit {
     return `${hours}:${minutes}`;
   }
 
+  formatRideDate(value: string): string {
+    const tripDate = new Date(value);
+    const today = new Date();
+    const tomorrow = new Date();
+    tomorrow.setDate(today.getDate() + 1);
+
+    if (
+      tripDate.getFullYear() === today.getFullYear() &&
+      tripDate.getMonth() === today.getMonth() &&
+      tripDate.getDate() === today.getDate()
+    ) {
+      return 'Today';
+    }
+
+    if (
+      tripDate.getFullYear() === tomorrow.getFullYear() &&
+      tripDate.getMonth() === tomorrow.getMonth() &&
+      tripDate.getDate() === tomorrow.getDate()
+    ) {
+      return 'Tomorrow';
+    }
+
+    const dayLabels = ['Sun.', 'Mon.', 'Tue.', 'Wed.', 'Thu.', 'Fri.', 'Sat.'];
+    const monthLabels = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
+    ];
+
+    return `${dayLabels[tripDate.getDay()]} ${tripDate.getDate()} ${monthLabels[tripDate.getMonth()]}`;
+  }
+
   formatArrivalTime(ride: Trip): string {
     const departure = new Date(ride.departureDateTime);
     const arrival = new Date(
@@ -272,6 +446,15 @@ export class SearchRidesComponent implements OnInit {
     const hours = `${arrival.getHours()}`.padStart(2, '0');
     const minutes = `${arrival.getMinutes()}`.padStart(2, '0');
     return `${hours}:${minutes}`;
+  }
+
+  isArrivalNextDay(ride: Trip): boolean {
+    const departure = new Date(ride.departureDateTime);
+    const arrival = new Date(
+      departure.getTime() + this.getDurationMinutes(ride) * 60000,
+    );
+
+    return this.isNextDay(departure, arrival);
   }
 
   formatDuration(ride: Trip): string {
@@ -298,16 +481,75 @@ export class SearchRidesComponent implements OnInit {
     return value.split(',')[0].trim();
   }
 
+  private formatSearchDate(value: string): string {
+    const date = new Date(value);
+    const today = new Date();
+
+    if (
+      date.getFullYear() === today.getFullYear() &&
+      date.getMonth() === today.getMonth() &&
+      date.getDate() === today.getDate()
+    ) {
+      return 'Today';
+    }
+
+    return date.toLocaleDateString('en-GB', {
+      day: 'numeric',
+      month: 'short',
+    });
+  }
+
+  private isNextDay(departure: Date, arrival: Date): boolean {
+    return (
+      departure.getFullYear() !== arrival.getFullYear() ||
+      departure.getMonth() !== arrival.getMonth() ||
+      departure.getDate() !== arrival.getDate()
+    );
+  }
+
   getRideAvailabilityLabel(ride: Trip): string {
-    if (ride.seatsAvailable <= 1) {
+    const seatsAvailable = this.getSeatsAvailable(ride);
+    if (seatsAvailable <= 1) {
       return 'Almost full';
     }
 
-    if (ride.bookingMode === 'instant') {
-      return 'Instant booking';
+    return `${seatsAvailable} seats left`;
+  }
+
+  getRideStatusLabel(ride: Trip): string {
+    if (ride.status === 'CANCELED') {
+      return 'Canceled';
     }
 
-    return `${ride.seatsAvailable} seats left`;
+    if (ride.status === 'COMPLETED') {
+      return 'Completed';
+    }
+
+    return 'Scheduled';
+  }
+
+  getDriverReviewLabel(ride: Trip): string {
+    if (!ride.driverReviewsCount || !ride.driverRatingAverage) {
+      return 'No driver review yet';
+    }
+
+    return `${ride.driverRatingAverage.toFixed(1)}/5 · ${ride.driverReviewsCount} review${ride.driverReviewsCount > 1 ? 's' : ''}`;
+  }
+
+  hasDriverReviews(ride: Trip): boolean {
+    return !!ride.driverReviewsCount && !!ride.driverRatingAverage;
+  }
+
+  private getSeatsAvailable(ride: Trip): number {
+    if (
+      ride.seatsAvailable !== undefined &&
+      ride.seatsAvailable !== null &&
+      ride.seatsAvailable >= 0
+    ) {
+      return ride.seatsAvailable;
+    }
+
+    return ride.seatsTotal;
   }
 
   onLocationInput(field: 'departure' | 'destination'): void {
@@ -392,6 +634,10 @@ export class SearchRidesComponent implements OnInit {
   private applyClientFilters(): void {
     let filteredRides = [...this.rides];
 
+    filteredRides = filteredRides.filter((ride) =>
+      this.matchesMinDriverRating(ride),
+    );
+
     if (this.selectedTimeSlots.length > 0) {
       filteredRides = filteredRides.filter((ride) =>
         this.selectedTimeSlots.some((slot) => this.matchesTimeSlot(ride, slot)),
@@ -399,12 +645,45 @@ export class SearchRidesComponent implements OnInit {
     }
 
     filteredRides.sort((left, right) => this.compareRides(left, right));
-    this.displayedRides = filteredRides;
+    this.filteredRides = filteredRides;
+
+    const totalPages = this.getTotalPages();
+    if (totalPages === 0) {
+      this.currentPage = 1;
+    } else if (this.currentPage > totalPages) {
+      this.currentPage = totalPages;
+    }
+
+    this.updateDisplayedRides();
+  }
+
+  private updateDisplayedRides(): void {
+    const startIndex = (this.currentPage - 1) * this.pageSize;
+    const endIndex = startIndex + this.pageSize;
+    this.displayedRides = this.filteredRides.slice(startIndex, endIndex);
+  }
+
+  private getTotalPages(): number {
+    return Math.ceil(this.filteredRides.length / this.pageSize);
   }
 
   private compareRides(left: Trip, right: Trip): number {
     if (this.activeSort === 'lowest-price') {
       return left.pricePerSeat - right.pricePerSeat;
+    }
+
+    if (this.activeSort === 'highest-rated-driver') {
+      const rightRating = right.driverRatingAverage ?? 0;
+      const leftRating = left.driverRatingAverage ?? 0;
+      if (rightRating !== leftRating) {
+        return rightRating - leftRating;
+      }
+
+      const rightCount = right.driverReviewsCount ?? 0;
+      const leftCount = left.driverReviewsCount ?? 0;
+      if (rightCount !== leftCount) {
+        return rightCount - leftCount;
+      }
     }
 
     if (this.activeSort === 'shortest-trip') {
@@ -457,6 +736,19 @@ export class SearchRidesComponent implements OnInit {
     }
 
     return hour > 18;
+  }
+
+  private matchesMinDriverRating(ride: Trip): boolean {
+    const minDriverRating = Number(this.searchForm.value.minDriverRating || 0);
+    if (!Number.isFinite(minDriverRating) || minDriverRating < 1) {
+      return true;
+    }
+
+    if (!ride.driverReviewsCount || !ride.driverRatingAverage) {
+      return false;
+    }
+
+    return ride.driverRatingAverage >= minDriverRating;
   }
 
   private getDurationMinutes(ride: Trip): number {

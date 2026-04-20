@@ -2,7 +2,10 @@
   <div class="my-trips-container">
     <div class="my-trips-header">
       <h2 class="my-trips-title">Your trips</h2>
-      <a class="btn btn-primary my-trips-publish-btn" routerLink="/carpooling/publish">
+      <a
+        class="btn btn-primary my-trips-publish-btn"
+        routerLink="/carpooling/publish"
+      >
         Publish new trip
       </a>
     </div>
@@ -12,17 +15,26 @@
     <div *ngIf="trips.length > 0; else emptyState">
       <div
         class="trip-card"
-        *ngFor="let trip of trips"
+        *ngFor="let trip of displayedTrips"
         (click)="openDetails(trip.id)"
       >
         <div class="trip-card-main">
-          <h3 class="trip-card-day">{{ formatTripLabel(trip.departureDateTime) }}</h3>
+          <h3 class="trip-card-day">
+            {{ formatTripLabel(trip.departureDateTime) }}
+          </h3>
 
           <div class="trip-card-timeline">
             <div class="trip-stop trip-stop-left">
-              <span class="trip-time">{{ formatTripTime(trip.departureDateTime) }}</span>
-              <strong class="trip-place">{{ formatMainPlace(trip.departure) }}</strong>
-              <small class="trip-place-detail" *ngIf="formatPlaceDetails(trip.departure)">
+              <span class="trip-time">{{
+                formatTripTime(trip.departureDateTime)
+              }}</span>
+              <strong class="trip-place">{{
+                formatMainPlace(trip.departure)
+              }}</strong>
+              <small
+                class="trip-place-detail"
+                *ngIf="formatPlaceDetails(trip.departure)"
+              >
                 {{ formatPlaceDetails(trip.departure) }}
               </small>
             </div>
@@ -37,8 +49,16 @@
 
             <div class="trip-stop trip-stop-right">
               <span class="trip-time">{{ formatArrivalTime(trip) }}</span>
-              <strong class="trip-place">{{ formatMainPlace(trip.destination) }}</strong>
-              <small class="trip-place-detail" *ngIf="formatPlaceDetails(trip.destination)">
+              <small class="next-day-label" *ngIf="isArrivalNextDay(trip)">
+                (+1 day)
+              </small>
+              <strong class="trip-place">{{
+                formatMainPlace(trip.destination)
+              }}</strong>
+              <small
+                class="trip-place-detail"
+                *ngIf="formatPlaceDetails(trip.destination)"
+              >
                 {{ formatPlaceDetails(trip.destination) }}
               </small>
             </div>
@@ -49,6 +69,30 @@
             <span>{{ trip.seatsAvailable }}/{{ trip.seatsTotal }} seats</span>
             <span>{{ trip.status }}</span>
           </div>
+        </div>
+      </div>
+
+      <div class="trips-pagination" *ngIf="trips.length > pageSize">
+        <div class="trips-pagination-label">
+          Showing {{ getPaginationLabel() }}
+        </div>
+        <div class="trips-pagination-controls">
+          <button
+            type="button"
+            class="pagination-button"
+            (click)="previousPage()"
+            [disabled]="!hasPreviousPage()"
+          >
+            Previous
+          </button>
+          <button
+            type="button"
+            class="pagination-button primary"
+            (click)="nextPage()"
+            [disabled]="!hasNextPage()"
+          >
+            Next
+          </button>
         </div>
       </div>
     </div>

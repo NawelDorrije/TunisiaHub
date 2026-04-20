@@ -1,114 +1,161 @@
-<div class="trip-details-page" *ngIf="trip; else noTrip">
+<div class="trip-details-page" *ngIf="loading; else tripState">
   <div class="trip-details-shell">
-    <div class="alert alert-danger" *ngIf="error">{{ error }}</div>
-
-    <div class="trip-details-card">
-      <h2 class="trip-details-date">{{ formatTripLabel(trip.departureDateTime) }}</h2>
-
-      <div class="trip-details-timeline">
-        <div class="trip-details-time-col">
-          <span>{{ formatTripTime(trip.departureDateTime) }}</span>
-          <span>{{ formatArrivalTime(trip.departureDateTime) }}</span>
-        </div>
-
-        <div class="trip-details-line-col">
-          <span class="trip-details-dot top"></span>
-          <span class="trip-details-line"></span>
-          <span class="trip-details-dot bottom"></span>
-        </div>
-
-        <div class="trip-details-stop-col">
-          <div class="trip-details-stop">
-            <div class="trip-details-stop-title">
-              <strong>{{ formatMainPlace(trip.departure) }}</strong>
-              <i class="bi bi-map"></i>
-            </div>
-            <small *ngIf="formatPlaceDetails(trip.departure); else fullDeparture">
-              {{ formatPlaceDetails(trip.departure) }}
-            </small>
-            <ng-template #fullDeparture>
-              <small>{{ trip.departure }}</small>
-            </ng-template>
-          </div>
-
-          <div class="trip-details-stop">
-            <div class="trip-details-stop-title">
-              <strong>{{ formatMainPlace(trip.destination) }}</strong>
-              <i class="bi bi-map"></i>
-            </div>
-            <small *ngIf="formatPlaceDetails(trip.destination); else fullDestination">
-              {{ formatPlaceDetails(trip.destination) }}
-            </small>
-            <ng-template #fullDestination>
-              <small>{{ trip.destination }}</small>
-            </ng-template>
-          </div>
-        </div>
-      </div>
-
-      <div class="trip-details-divider"></div>
-
-      <div class="trip-details-passengers">
-        {{ getPassengersLabel() }}
-      </div>
-
-      <div class="trip-details-divider"></div>
-
-      <div class="trip-details-meta">
-        <span>Seats available {{ trip.seatsAvailable }}/{{ trip.seatsTotal }}</span>
-        <span>Price {{ trip.pricePerSeat }} TND</span>
-        <span *ngIf="trip.bookingMode">
-          {{ trip.bookingMode === 'instant' ? 'Instant booking' : 'Manual approval' }}
-        </span>
-        <span class="trip-details-meta-status" *ngIf="isCanceledTrip()">Cancelled</span>
-      </div>
-
-      <div class="trip-details-actions" *ngIf="isOwner; else passengerActions">
-        <button
-          type="button"
-          class="trip-details-action"
-          [class.danger]="!isCanceledTrip()"
-          [class.success]="isCanceledTrip()"
-          (click)="isCanceledTrip() ? makeTripAvailable() : cancelTrip()"
-        >
-          <span>{{ isCanceledTrip() ? 'Make it available' : 'Cancel trip' }}</span>
-          <i class="bi bi-chevron-right"></i>
-        </button>
-        <button
-          type="button"
-          class="trip-details-action"
-          (click)="editTrip()"
-          *ngIf="!isCanceledTrip()"
-        >
-          <span>Modify your announcement</span>
-          <i class="bi bi-chevron-right"></i>
-        </button>
-        <button type="button" class="trip-details-action" (click)="viewPassengers()">
-          <span>View passengers</span>
-          <i class="bi bi-chevron-right"></i>
-        </button>
-      </div>
-
-      <ng-template #passengerActions>
-        <div class="trip-details-actions">
-          <button
-            type="button"
-            class="trip-details-action primary"
-            (click)="bookSeats()"
-            *ngIf="!isCanceledTrip()"
-          >
-            <span>Book seats</span>
-            <i class="bi bi-chevron-right"></i>
-          </button>
-          <button type="button" class="trip-details-action" (click)="reportRide()">
-            <span>Report ride</span>
-            <i class="bi bi-chevron-right"></i>
-          </button>
-        </div>
-      </ng-template>
-    </div>
+    <div class="alert alert-info">Loading trip details...</div>
   </div>
 </div>
+
+<ng-template #tripState>
+  <div class="trip-details-page" *ngIf="trip; else noTrip">
+    <div class="trip-details-shell">
+      <div class="alert alert-danger" *ngIf="error">{{ error }}</div>
+
+      <div class="trip-details-card">
+        <h2 class="trip-details-date">
+          {{ formatTripLabel(trip.departureDateTime) }}
+        </h2>
+
+        <div class="trip-details-timeline">
+          <div class="trip-details-time-col">
+            <span>{{ formatTripTime(trip.departureDateTime) }}</span>
+            <span>{{ formatArrivalTime(trip.departureDateTime) }}</span>
+            <small
+              class="next-day-label"
+              *ngIf="isArrivalNextDay(trip.departureDateTime)"
+            >
+              (+1 day)
+            </small>
+          </div>
+
+          <div class="trip-details-line-col">
+            <span class="trip-details-dot top"></span>
+            <span class="trip-details-line"></span>
+            <span class="trip-details-dot bottom"></span>
+          </div>
+
+          <div class="trip-details-stop-col">
+            <div class="trip-details-stop">
+              <div class="trip-details-stop-title">
+                <strong>{{ formatMainPlace(trip.departure) }}</strong>
+                <i class="bi bi-map"></i>
+              </div>
+              <small
+                *ngIf="formatPlaceDetails(trip.departure); else fullDeparture"
+              >
+                {{ formatPlaceDetails(trip.departure) }}
+              </small>
+              <ng-template #fullDeparture>
+                <small>{{ trip.departure }}</small>
+              </ng-template>
+            </div>
+
+            <div class="trip-details-stop">
+              <div class="trip-details-stop-title">
+                <strong>{{ formatMainPlace(trip.destination) }}</strong>
+                <i class="bi bi-map"></i>
+              </div>
+              <small
+                *ngIf="
+                  formatPlaceDetails(trip.destination);
+                  else fullDestination
+                "
+              >
+                {{ formatPlaceDetails(trip.destination) }}
+              </small>
+              <ng-template #fullDestination>
+                <small>{{ trip.destination }}</small>
+              </ng-template>
+            </div>
+          </div>
+        </div>
+
+        <!-- <div class="trip-details-divider"></div> -->
+
+      <!-- <div class="trip-details-passengers" *ngIf="getPassengersLabel()">
+        {{ getPassengersLabel() }}
+      </div> -->
+
+      <div class="trip-details-divider" *ngIf="getPassengersLabel()"></div>
+
+        <div class="trip-details-meta">
+          <span
+            >Seats available {{ trip.seatsAvailable }}/{{
+              trip.seatsTotal
+            }}</span
+          >
+          <span>Price {{ trip.pricePerSeat }} TND</span>
+          <span>{{ getDriverReviewLabel() }}</span>
+          <span *ngIf="trip.bookingMode">
+            {{
+              trip.bookingMode === "instant"
+                ? "Instant booking"
+                : "Manual approval"
+            }}
+          </span>
+          <span class="trip-details-meta-status" *ngIf="isCanceledTrip()"
+            >Cancelled</span
+          >
+        </div>
+
+        <div
+          class="trip-details-actions"
+          *ngIf="isOwner; else passengerActions"
+        >
+          <button
+            type="button"
+            class="trip-details-action"
+            [class.danger]="!isCanceledTrip()"
+            [class.success]="isCanceledTrip()"
+            (click)="isCanceledTrip() ? makeTripAvailable() : cancelTrip()"
+          >
+            <span>{{
+              isCanceledTrip() ? "Make it available" : "Cancel trip"
+            }}</span>
+            <i class="bi bi-chevron-right"></i>
+          </button>
+          <button
+            type="button"
+            class="trip-details-action"
+            (click)="editTrip()"
+            *ngIf="!isCanceledTrip()"
+          >
+            <span>Modify your announcement</span>
+            <i class="bi bi-chevron-right"></i>
+          </button>
+          <button
+            type="button"
+            class="trip-details-action"
+            (click)="viewPassengers()"
+          >
+            <span>{{ getPassengersActionLabel() }}</span>
+            <i class="bi bi-chevron-right"></i>
+          </button>
+        </div>
+
+        <ng-template #passengerActions>
+          <div class="trip-details-actions">
+            <button
+              type="button"
+              class="trip-details-action primary"
+              (click)="bookSeats()"
+              *ngIf="!isCanceledTrip()"
+            >
+              <span>Book seats</span>
+              <i class="bi bi-chevron-right"></i>
+            </button>
+            <button
+              type="button"
+              class="trip-details-action"
+              (click)="reportRide()"
+            >
+              <span>Report ride</span>
+              <i class="bi bi-chevron-right"></i>
+            </button>
+          </div>
+        </ng-template>
+      </div>
+    </div>
+  </div>
+</ng-template>
 
 <ng-template #noTrip>
   <div class="container py-4">

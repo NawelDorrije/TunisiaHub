@@ -10,6 +10,9 @@ import {
   Complaint,
   ComplaintStatus,
   ComplaintWithContext,
+  DriverReview,
+  DriverReviewSummary,
+  ReservationQuote,
   Trip,
   TripSearchFilters,
 } from '../../../models/Carpooling/carpooling';
@@ -27,7 +30,6 @@ interface TripApi {
   durationMinutes?: number;
   price: number;
   seatsTotal: number;
-  seatsAvailable: number;
   status: string;
   driver?: { id?: number; nom?: string; prenom?: string };
   bookingMode?: string;
@@ -42,6 +44,7 @@ interface ReservationApi {
   numberOfPeople?: number;
   type: string;
   trip?: number | { id: number };
+  reservedBy?: { id?: number; nom?: string; prenom?: string; email?: string };
 }
 
 interface ComplaintApi {
@@ -53,7 +56,26 @@ interface ComplaintApi {
   status?: string;
 }
 
+interface ReservationQuoteApi {
+  seatsRequested: number;
+  driverAmount: number;
+  serviceFee: number;
+  totalAmount: number;
+}
 
+interface DriverReviewApi {
+  id: number;
+  comment: string;
+  rating: number;
+  date: string;
+  reservationId: number;
+  reviewerName?: string;
+}
+
+interface DriverReviewSummaryApi {
+  averageRating: number;
+  reviewsCount: number;
+}
 
 @Injectable({
   providedIn: 'root',
@@ -159,6 +181,8 @@ export class CarpoolingDataService {
       .get<TripApi>(`${this.baseUrl}/api/carpooling/trips/${tripId}`)
       .pipe(
         map((trip) => this.mapTrip(trip)),
+        switchMap((trip) => this.setSeatsAvailableTrip(trip)),
+        switchMap((trip) => this.setDriverReviewSummaryTrip(trip)),
         catchError(() => of(undefined)),
       );
   }
@@ -170,6 +194,8 @@ export class CarpoolingDataService {
       })
       .pipe(
         map((response) => (response ?? []).map((trip) => this.mapTrip(trip))),
+        switchMap((trips) => this.setSeatsAvailableTrips(trips)),
+        switchMap((trips) => this.setDriverReviewSummaryTrips(trips)),
       );
   }
 
@@ -181,23 +207,42 @@ export class CarpoolingDataService {
     if (filters.destination) {
       params = params.set('destination', filters.destination);
     }
-    if (filters.date) {
-      params = params.set('date', filters.date);
+    if (filters.dateFrom) {
+      params = params.set('dateFrom', filters.dateFrom);
+    }
+    if (filters.dateTo) {
+      params = params.set('dateTo', filters.dateTo);
     }
     if (filters.seatsNeeded && filters.seatsNeeded > 0) {
       params = params.set('seatsRequired', filters.seatsNeeded);
+    }
+    if (filters.status) {
+      params = params.set('status', filters.status);
+    }
+    if (filters.bookingMode) {
+      params = params.set('bookingMode', filters.bookingMode);
+    }
+    if (filters.minPrice !== undefined && filters.minPrice !== null && filters.minPrice >= 0) {
+      params = params.set('minPrice', filters.minPrice);
+    }
+    if (filters.maxPrice && filters.maxPrice > 0) {
+      params = params.set('maxPrice', filters.maxPrice);
+    }
+    if (filters.durationMax && filters.durationMax > 0) {
+      params = params.set('durationMax', filters.durationMax);
     }
 
     return this.http
       .get<TripApi[]>(`${this.baseUrl}/api/carpooling/trips`, { params })
       .pipe(
         map((response) => (response ?? []).map((trip) => this.mapTrip(trip))),
+        switchMap((trips) => this.setSeatsAvailableTrips(trips)),
+        switchMap((trips) => this.setDriverReviewSummaryTrips(trips)),
       );
   }
 
   publishTrip(
-        payload: Omit<Trip, 'id' | 'ownerUserId' | 'seatsAvailable' | 'status'>,
-
+    payload: Omit<Trip, 'id' | 'ownerUserId' | 'status'>,
   ): Observable<Trip> {
     const body = {
       departure: payload.departure,
@@ -228,16 +273,21 @@ export class CarpoolingDataService {
       .set('endLat', endLat)
       .set('endLng', endLng);
 
-    return this.http.get<any[]>(`${this.baseUrl}/api/driver/trips/route-suggestions`, {
-      headers: this.userHeaders(),
-      params,
-    });
+    return this.http.get<any[]>(
+      `${this.baseUrl}/api/driver/trips/route-suggestions`,
+      {
+        headers: this.userHeaders(),
+        params,
+      },
+    );
   }
 
   getCountriesAndCities(): Observable<CountryCityData[]> {
     if (!this.countriesAndCities$) {
       this.countriesAndCities$ = this.http
-        .get<{ data: CountryCityData[] }>('https://countriesnow.space/api/v0.1/countries')
+        .get<{
+          data: CountryCityData[];
+        }>('https://countriesnow.space/api/v0.1/countries')
         .pipe(
           map((response) => response.data || []),
           shareReplay(1),
@@ -249,13 +299,16 @@ export class CarpoolingDataService {
 
   getLocationCoordinates(query: string, limit: number = 1): Observable<any> {
     return this.http.get(
-      `https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&namedetails=1&accept-language=en&q=${encodeURIComponent(query)}&limit=${limit}`
+      `https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&namedetails=1&accept-language=en&q=${encodeURIComponent(query)}&limit=${limit}`,
     );
   }
 
-  getTunisiaLocationSuggestions(query: string, limit: number = 8): Observable<any> {
+  getTunisiaLocationSuggestions(
+    query: string,
+    limit: number = 8,
+  ): Observable<any> {
     return this.http.get(
-      `https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&namedetails=1&accept-language=en&countrycodes=tn&viewbox=7.4,37.6,11.7,30.1&bounded=1&dedupe=1&q=${encodeURIComponent(query)}&limit=${limit}`
+      `https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&namedetails=1&accept-language=en&countrycodes=tn&viewbox=7.4,37.6,11.7,30.1&bounded=1&dedupe=1&q=${encodeURIComponent(query)}&limit=${limit}`,
     );
   }
 
@@ -327,7 +380,7 @@ export class CarpoolingDataService {
 
   getLocationName(lat: number, lng: number): Observable<any> {
     return this.http.get(
-      `https://nominatim.openstreetmap.org/reverse?format=json&addressdetails=1&namedetails=1&accept-language=en&lat=${lat}&lon=${lng}`
+      `https://nominatim.openstreetmap.org/reverse?format=json&addressdetails=1&namedetails=1&accept-language=en&lat=${lat}&lon=${lng}`,
     );
   }
 
@@ -357,7 +410,7 @@ export class CarpoolingDataService {
         | 'seatsTotal'
         | 'bookingMode'
       >
-    > ,
+    >,
   ): Observable<{ ok: boolean; error?: string; trip?: Trip }> {
     return this.getTripById(tripId).pipe(
       switchMap((existing) => {
@@ -443,20 +496,18 @@ export class CarpoolingDataService {
         if (trip.ownerUserId === this.getCurrentUserId()) {
           return of({ ok: false, error: 'You cannot book your own trip.' });
         }
-        if (trip.seatsAvailable < seatsRequested) {
-          return of({ ok: false, error: 'Not enough seats available.' });
-        }
 
         const body = {
-          status: 'CONFIRMED',
-          totalPrice: seatsRequested * trip.pricePerSeat,
+          status: trip.bookingMode === 'instant' ? 'CONFIRMED' : 'PENDING',
           numberOfPeople: seatsRequested,
           type: 'TripReservation',
           trip: { id: trip.id },
         };
 
         return this.http
-          .post<ReservationApi>(`${this.baseUrl}/api/reservations`, body)
+          .post<ReservationApi>(`${this.baseUrl}/api/reservations`, body, {
+            headers: this.userHeaders(),
+          })
           .pipe(
             map((reservation) => ({
               ok: true,
@@ -473,9 +524,34 @@ export class CarpoolingDataService {
     );
   }
 
+  getBookingQuote(
+    tripId: number,
+    seatsRequested: number,
+  ): Observable<ReservationQuote | undefined> {
+    const params = new HttpParams()
+      .set('tripId', tripId)
+      .set('seats', seatsRequested);
+
+    return this.http
+      .get<ReservationQuoteApi>(`${this.baseUrl}/api/reservations/quote`, {
+        params,
+      })
+      .pipe(
+        map((quote) => ({
+          seatsRequested: Number(quote.seatsRequested ?? seatsRequested),
+          driverAmount: Number(quote.driverAmount ?? 0),
+          serviceFee: Number(quote.serviceFee ?? 0),
+          totalAmount: Number(quote.totalAmount ?? 0),
+        })),
+        catchError(() => of(undefined)),
+      );
+  }
+
   getMyBookingsWithContext(): Observable<BookingWithContext[]> {
     return this.http
-      .get<ReservationApi[]>(`${this.baseUrl}/api/reservations`)
+      .get<ReservationApi[]>(
+        `${this.baseUrl}/api/reservations/user/${this.getCurrentUserId()}`,
+      )
       .pipe(
         switchMap((reservations) => {
           const bookingReservations = (reservations ?? []).filter(
@@ -488,28 +564,38 @@ export class CarpoolingDataService {
           }
 
           const tripCalls = tripIds.map((id) =>
-            this.http
-              .get<TripApi>(`${this.baseUrl}/api/carpooling/trips/${id}`)
-              .pipe(catchError(() => of(undefined))),
+            this.getTripById(id).pipe(catchError(() => of(undefined))),
           );
 
           return forkJoin(tripCalls).pipe(
-            map((trips: Array<TripApi | undefined>) => {
+            map((trips: Array<Trip | undefined>) => {
               const tripMap = new Map<number, Trip>();
-              trips.forEach((tripApi: TripApi | undefined) => {
-                if (tripApi) {
-                  tripMap.set(tripApi.id, this.mapTrip(tripApi));
+              trips.forEach((trip: Trip | undefined) => {
+                if (trip) {
+                  tripMap.set(trip.id, trip);
                 }
               });
 
               return bookingReservations.map((reservation) => {
                 const booking = this.mapReservationToBooking(reservation);
                 const trip = tripMap.get(booking.tripId);
+                const defaultDriver = trip
+                  ? this.getUserById(trip.ownerUserId)
+                  : undefined;
                 return {
                   booking,
                   trip,
-                  passenger: this.getCurrentUser(),
-                  driver: trip ? this.getUserById(trip.ownerUserId) : undefined,
+                  passenger:
+                    this.mapReservationPassenger(reservation) ||
+                    this.getCurrentUser(),
+                  driver:
+                    trip && defaultDriver
+                      ? {
+                          ...defaultDriver,
+                          fullName:
+                            trip.ownerFullName || defaultDriver.fullName,
+                        }
+                      : undefined,
                 };
               });
             }),
@@ -528,7 +614,9 @@ export class CarpoolingDataService {
         switchMap((reservation) => {
           const body = { ...reservation, status: 'CANCELED' };
           return this.http
-            .put<ReservationApi>(`${this.baseUrl}/api/reservations`, body)
+            .put<ReservationApi>(`${this.baseUrl}/api/reservations`, body, {
+              headers: this.userHeaders(),
+            })
             .pipe(
               map(() => ({ ok: true })),
               catchError((error) =>
@@ -549,11 +637,95 @@ export class CarpoolingDataService {
   }
 
   getPassengersForTrip(tripId: number): Observable<BookingWithContext[]> {
-    return this.getMyBookingsWithContext().pipe(
-      map((bookings) =>
-        bookings.filter((item) => item.booking.tripId === tripId),
-      ),
-    );
+    return this.http
+      .get<ReservationApi[]>(`${this.baseUrl}/api/reservations/trip/${tripId}`, {
+        headers: this.userHeaders(),
+      })
+      .pipe(
+        switchMap((reservations) => {
+          const bookingReservations = (reservations ?? []).filter(
+            (reservation) => reservation.type === 'TripReservation',
+          );
+
+          if (bookingReservations.length === 0) {
+            return of([]);
+          }
+
+          return this.getTripById(tripId).pipe(
+            map((trip) => {
+              const defaultDriver = trip
+                ? this.getUserById(trip.ownerUserId)
+                : undefined;
+
+              return bookingReservations.map((reservation) => {
+                const booking = this.mapReservationToBooking(reservation);
+
+                return {
+                  booking,
+                  trip,
+                  passenger: this.mapReservationPassenger(reservation),
+                  driver:
+                    trip && defaultDriver
+                      ? {
+                          ...defaultDriver,
+                          fullName:
+                            trip.ownerFullName || defaultDriver.fullName,
+                        }
+                      : undefined,
+                };
+              });
+            }),
+            catchError(() => of([])),
+          );
+        }),
+        catchError(() => of([])),
+      );
+  }
+
+  approveBooking(
+    bookingId: number,
+  ): Observable<{ ok: boolean; error?: string; booking?: Booking }> {
+    return this.http
+      .put<ReservationApi>(
+        `${this.baseUrl}/api/reservations/${bookingId}/approve`,
+        {},
+        { headers: this.userHeaders() },
+      )
+      .pipe(
+        map((reservation) => ({
+          ok: true,
+          booking: this.mapReservationToBooking(reservation),
+        })),
+        catchError((error) =>
+          of({
+            ok: false,
+            error: this.extractError(error, 'Unable to approve booking.'),
+          }),
+        ),
+      );
+  }
+
+  rejectBooking(
+    bookingId: number,
+  ): Observable<{ ok: boolean; error?: string; booking?: Booking }> {
+    return this.http
+      .put<ReservationApi>(
+        `${this.baseUrl}/api/reservations/${bookingId}/reject`,
+        {},
+        { headers: this.userHeaders() },
+      )
+      .pipe(
+        map((reservation) => ({
+          ok: true,
+          booking: this.mapReservationToBooking(reservation),
+        })),
+        catchError((error) =>
+          of({
+            ok: false,
+            error: this.extractError(error, 'Unable to reject booking.'),
+          }),
+        ),
+      );
   }
 
   submitComplaint(
@@ -571,6 +743,59 @@ export class CarpoolingDataService {
       .pipe(map((complaint) => this.mapComplaint(complaint, payload.tripId)));
   }
 
+  getReservationReview(
+    reservationId: number,
+  ): Observable<DriverReview | undefined> {
+    return this.http
+      .get<DriverReviewApi>(
+        `${this.baseUrl}/api/carpooling-reviews/reservation/${reservationId}`,
+      )
+      .pipe(
+        map((review) => this.mapDriverReview(review)),
+        catchError(() => of(undefined)),
+      );
+  }
+
+  addReservationReview(
+    reservationId: number,
+    payload: { rating: number; comment: string },
+  ): Observable<DriverReview> {
+    return this.http
+      .post<DriverReviewApi>(
+        `${this.baseUrl}/api/carpooling-reviews/add/${reservationId}`,
+        payload,
+        { headers: this.userHeaders() },
+      )
+      .pipe(map((review) => this.mapDriverReview(review)));
+  }
+
+  updateReservationReview(
+    reviewId: number,
+    payload: { rating: number; comment: string },
+  ): Observable<DriverReview> {
+    return this.http
+      .put<DriverReviewApi>(
+        `${this.baseUrl}/api/carpooling-reviews/update/${reviewId}`,
+        payload,
+        { headers: this.userHeaders() },
+      )
+      .pipe(map((review) => this.mapDriverReview(review)));
+  }
+
+  getDriverReviewSummary(driverId: number): Observable<DriverReviewSummary> {
+    return this.http
+      .get<DriverReviewSummaryApi>(
+        `${this.baseUrl}/api/carpooling-reviews/driver-summary/${driverId}`,
+      )
+      .pipe(
+        map((summary) => ({
+          averageRating: Number(summary.averageRating ?? 0),
+          reviewsCount: Number(summary.reviewsCount ?? 0),
+        })),
+        catchError(() => of({ averageRating: 0, reviewsCount: 0 })),
+      );
+  }
+
   getAdminStats(): Observable<AdminStats> {
     return forkJoin({
       trips: this.searchTrips({}).pipe(catchError(() => of([]))),
@@ -579,16 +804,23 @@ export class CarpoolingDataService {
         catchError(() => of([])),
       ),
     }).pipe(
-      map(({ trips, bookings, complaints }: {
-        trips: Trip[];
-        bookings: BookingWithContext[];
-        complaints: ComplaintWithContext[];
-      }) => ({
-        totalTrips: trips.length,
-        totalBookings: bookings.length,
-        totalComplaints: complaints.length,
-        activeUsers: new Set(trips.map((trip: Trip) => trip.ownerUserId)).size,
-      })),
+      map(
+        ({
+          trips,
+          bookings,
+          complaints,
+        }: {
+          trips: Trip[];
+          bookings: BookingWithContext[];
+          complaints: ComplaintWithContext[];
+        }) => ({
+          totalTrips: trips.length,
+          totalBookings: bookings.length,
+          totalComplaints: complaints.length,
+          activeUsers: new Set(trips.map((trip: Trip) => trip.ownerUserId))
+            .size,
+        }),
+      ),
     );
   }
 
@@ -610,7 +842,6 @@ export class CarpoolingDataService {
     );
   }
 
-  
   updateComplaintStatus(
     complaintId: number,
     status: ComplaintStatus,
@@ -647,24 +878,30 @@ export class CarpoolingDataService {
         catchError(() => of([])),
       ),
     }).pipe(
-      map(({ trips, bookings, complaints }: {
-        trips: Trip[];
-        bookings: BookingWithContext[];
-        complaints: ComplaintWithContext[];
-      }) => {
-        const current = this.getCurrentUser();
-        return [
-          {
-            user: current,
-            tripsCreated: trips.filter(
-              (trip: Trip) => trip.ownerUserId === current.id,
-            ).length,
-            bookingsMade: bookings.length,
-            complaintsSubmitted: complaints.length,
-            complaintsReceived: 0,
-          },
-        ];
-      }),
+      map(
+        ({
+          trips,
+          bookings,
+          complaints,
+        }: {
+          trips: Trip[];
+          bookings: BookingWithContext[];
+          complaints: ComplaintWithContext[];
+        }) => {
+          const current = this.getCurrentUser();
+          return [
+            {
+              user: current,
+              tripsCreated: trips.filter(
+                (trip: Trip) => trip.ownerUserId === current.id,
+              ).length,
+              bookingsMade: bookings.length,
+              complaintsSubmitted: complaints.length,
+              complaintsReceived: 0,
+            },
+          ];
+        },
+      ),
     );
   }
 
@@ -693,14 +930,126 @@ export class CarpoolingDataService {
       durationMinutes: apiTrip.durationMinutes,
       pricePerSeat: Number(apiTrip.price),
       seatsTotal: apiTrip.seatsTotal,
-      seatsAvailable: apiTrip.seatsAvailable,
+      seatsAvailable: undefined,
       ownerUserId: Number.isFinite(ownerUserId) ? ownerUserId : 0,
       ownerFullName: this.buildFullName(
         apiTrip.driver?.nom,
         apiTrip.driver?.prenom,
       ),
       bookingMode: apiTrip.bookingMode,
-      status: apiTrip.status?.toUpperCase() === 'CANCELED' ? 'CANCELED' : 'ACTIVE',
+      status:
+        apiTrip.status?.toUpperCase() === 'CANCELED' ? 'CANCELED' : 'ACTIVE',
+    };
+  }
+
+  private setSeatsAvailableTrip(trip: Trip): Observable<Trip> {
+    return this.http
+      .get<number>(
+        `${this.baseUrl}/api/carpooling/trips/retrieve-seats-available/${trip.id}`,
+      )
+      .pipe(
+        map((seatsAvailable) =>
+          this.setSeatsAvailable(trip, Number(seatsAvailable)),
+        ),
+        catchError(() => of(this.setSeatsAvailable(trip, trip.seatsTotal))),
+      );
+  }
+
+  private setSeatsAvailableTrips(trips: Trip[]): Observable<Trip[]> {
+    if (!trips || trips.length === 0) {
+      return of([]);
+    }
+
+    const requests = trips.map((trip) =>
+      this.http
+        .get<number>(
+          `${this.baseUrl}/api/carpooling/trips/retrieve-seats-available/${trip.id}`,
+        )
+        .pipe(
+          map((seatsAvailable) =>
+            this.setSeatsAvailable(trip, Number(seatsAvailable)),
+          ),
+          catchError(() => of(this.setSeatsAvailable(trip, trip.seatsTotal))),
+        ),
+    );
+
+    return forkJoin(requests).pipe(
+      catchError(() =>
+        of(
+          trips.map((trip) =>
+            this.setSeatsAvailable(trip, trip.seatsTotal),
+          ),
+        ),
+      ),
+    );
+  }
+
+  private setSeatsAvailable(trip: Trip, seatsAvailable: number): Trip {
+    const safeSeatsAvailable =
+      Number.isFinite(seatsAvailable) && seatsAvailable >= 0
+        ? seatsAvailable
+        : trip.seatsTotal;
+
+    return {
+      ...trip,
+      seatsAvailable: safeSeatsAvailable,
+    };
+  }
+
+  private setDriverReviewSummaryTrip(trip: Trip): Observable<Trip> {
+    return this.getDriverReviewSummary(trip.ownerUserId).pipe(
+      map((summary) =>
+        this.setDriverReviewSummary(
+          trip,
+          summary.averageRating,
+          summary.reviewsCount,
+        ),
+      ),
+      catchError(() =>
+        of(this.setDriverReviewSummary(trip, 0, 0)),
+      ),
+    );
+  }
+
+  private setDriverReviewSummaryTrips(trips: Trip[]): Observable<Trip[]> {
+    if (!trips || trips.length === 0) {
+      return of([]);
+    }
+
+    const requests = trips.map((trip) =>
+      this.getDriverReviewSummary(trip.ownerUserId).pipe(
+        map((summary) =>
+          this.setDriverReviewSummary(
+            trip,
+            summary.averageRating,
+            summary.reviewsCount,
+          ),
+        ),
+        catchError(() => of(this.setDriverReviewSummary(trip, 0, 0))),
+      ),
+    );
+
+    return forkJoin(requests).pipe(
+      catchError(() =>
+        of(trips.map((trip) => this.setDriverReviewSummary(trip, 0, 0))),
+      ),
+    );
+  }
+
+  private setDriverReviewSummary(
+    trip: Trip,
+    averageRating: number,
+    reviewsCount: number,
+  ): Trip {
+    const safeAverageRating =
+      Number.isFinite(averageRating) && averageRating > 0 ? averageRating : 0;
+    const safeReviewsCount =
+      Number.isFinite(reviewsCount) && reviewsCount > 0 ? reviewsCount : 0;
+
+    return {
+      ...trip,
+      driverRatingAverage: safeAverageRating,
+      driverReviewsCount: safeReviewsCount,
     };
   }
 
@@ -714,14 +1063,57 @@ export class CarpoolingDataService {
   }
 
   private mapReservationToBooking(reservation: ReservationApi): Booking {
+    const passengerUserId = Number(reservation.reservedBy?.id);
+    const reservationStatus = (reservation.status || '').toUpperCase();
+
     return {
       id: reservation.id,
       tripId: this.extractTripId(reservation),
-      passengerUserId: this.getCurrentUserId(),
+      passengerUserId: Number.isFinite(passengerUserId)
+        ? passengerUserId
+        : this.getCurrentUserId(),
       seatsBooked: Number(reservation.numberOfPeople ?? 1),
       totalPrice: Number(reservation.totalPrice ?? 0),
-      bookingDate: reservation.startDate || reservation.endDate || new Date().toISOString(),
-      status: reservation.status === 'CANCELED' ? 'CANCELED' : 'CONFIRMED',
+      bookingDate:
+        reservation.startDate ||
+        reservation.endDate ||
+        new Date().toISOString(),
+      status:
+        reservationStatus === 'CANCELED'
+          ? 'CANCELED'
+          : reservationStatus === 'PENDING'
+            ? 'PENDING'
+            : 'CONFIRMED',
+    };
+  }
+
+  private mapDriverReview(review: DriverReviewApi): DriverReview {
+    return {
+      id: review.id,
+      reservationId: review.reservationId,
+      rating: Number(review.rating ?? 0),
+      comment: review.comment,
+      date: review.date,
+      reviewerName: review.reviewerName,
+    };
+  }
+
+  private mapReservationPassenger(
+    reservation: ReservationApi,
+  ): CarpoolUser | undefined {
+    const userId = Number(reservation.reservedBy?.id);
+    if (!Number.isFinite(userId)) {
+      return undefined;
+    }
+
+    return {
+      id: userId,
+      fullName:
+        this.buildFullName(
+          reservation.reservedBy?.nom,
+          reservation.reservedBy?.prenom,
+        ) || `User ${userId}`,
+      email: reservation.reservedBy?.email || `user${userId}@example.com`,
     };
   }
 
@@ -730,7 +1122,9 @@ export class CarpoolingDataService {
       id: complaint.id,
       description: complaint.description,
       createdAt: complaint.date,
-      reporterUserId: Number(complaint.reportedByUserId || this.getCurrentUserId()),
+      reporterUserId: Number(
+        complaint.reportedByUserId || this.getCurrentUserId(),
+      ),
       tripId,
       status: (complaint.status as ComplaintStatus) || 'OPEN',
       bookingId: undefined,
@@ -772,7 +1166,6 @@ export class CarpoolingDataService {
 
     return value;
   }
-
 
   private extractTripIds(reservations: ReservationApi[]): number[] {
     return [

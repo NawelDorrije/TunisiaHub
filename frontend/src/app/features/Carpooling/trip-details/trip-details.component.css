@@ -41,6 +41,15 @@
   line-height: 1;
 }
 
+.trip-details-time-col .next-day-label {
+  display: block;
+  color: #61708a;
+  font-size: 0.55em;
+  font-weight: 700;
+  margin-top: -38px;
+  line-height: 1;
+}
+
 .trip-details-line-col {
   display: grid;
   justify-items: center;

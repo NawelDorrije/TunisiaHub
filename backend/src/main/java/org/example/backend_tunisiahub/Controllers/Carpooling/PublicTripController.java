@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -29,9 +30,27 @@ public class PublicTripController {
     public List<Trip> retrieveAllTrips(@RequestParam(required = false) String departurePoint,
                                        @RequestParam(required = false) String destination,
                                        @RequestParam(required = false)
-                                       @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
-                                       @RequestParam(required = false) Integer seatsRequired) {
-        return tripService.retrieveAllTrips(departurePoint, destination, date, seatsRequired);
+                                       @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateFrom,
+                                       @RequestParam(required = false)
+                                       @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateTo,
+                                       @RequestParam(required = false) Integer seatsRequired,
+                                       @RequestParam(required = false) String status,
+                                       @RequestParam(required = false) String bookingMode,
+                                       @RequestParam(required = false) BigDecimal minPrice,
+                                       @RequestParam(required = false) BigDecimal maxPrice,
+                                       @RequestParam(required = false) Integer durationMax) {
+        return tripService.retrieveAllTrips(
+                departurePoint,
+                destination,
+                dateFrom,
+                dateTo,
+                seatsRequired,
+                status,
+                bookingMode,
+                minPrice,
+                maxPrice,
+                durationMax
+        );
     }
 
     @GetMapping("/{id}")
@@ -42,5 +61,15 @@ public class PublicTripController {
             return ResponseEntity.notFound().build();
         }
         return ResponseEntity.ok(trip);
+    }
+
+    @GetMapping("/retrieve-seats-available/{trip-id}")
+    @Operation(summary = "Get available seats for a trip")
+    public ResponseEntity<Integer> retrieveTripSeatsAvailable(@PathVariable("trip-id") Long tripId) {
+        Integer seatsAvailable = tripService.retrieveTripSeatsAvailable(tripId);
+        if (seatsAvailable == null) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(seatsAvailable);
     }
 }

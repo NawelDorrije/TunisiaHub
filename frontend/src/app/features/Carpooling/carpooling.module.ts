@@ -17,6 +17,7 @@ import { AllBookingsComponent } from './all-bookings/all-bookings.component';
 import { ComplaintsManagementComponent } from './complaints-management/complaints-management.component';
 import { UsersSummaryComponent } from './users-summary/users-summary.component';
 import { CarpoolingSearchBarComponent } from './shared/carpooling-search-bar/carpooling-search-bar.component';
+import { ReviewDriverComponent } from './review-driver/review-driver.component';
 
 @NgModule({
   declarations: [
@@ -35,6 +36,7 @@ import { CarpoolingSearchBarComponent } from './shared/carpooling-search-bar/car
     ComplaintsManagementComponent,
     UsersSummaryComponent,
     CarpoolingSearchBarComponent,
+    ReviewDriverComponent,
   ],
   imports: [
     CommonModule,

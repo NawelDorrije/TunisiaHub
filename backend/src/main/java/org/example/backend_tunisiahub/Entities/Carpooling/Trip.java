@@ -46,8 +46,6 @@ public class Trip {
 
     private int seatsTotal;
 
-    private int seatsAvailable;
-
     private String status;
 
     @Column(name = "booking_mode")

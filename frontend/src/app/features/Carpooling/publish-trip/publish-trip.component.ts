@@ -132,6 +132,8 @@ export class PublishTripComponent implements OnInit, OnDestroy {
     '19:00',
     '20:00',
     '21:00',
+    '22:00',
+    '23:00',
   ];
   calendarMonths: any[] = [];
   loadingLocations = false;
@@ -161,7 +163,7 @@ export class PublishTripComponent implements OnInit, OnDestroy {
   constructor(
     private dataService: CarpoolingDataService,
     private route: ActivatedRoute,
-    private router: Router
+    private router: Router,
   ) {}
 
   ngOnInit(): void {
@@ -417,10 +419,14 @@ export class PublishTripComponent implements OnInit, OnDestroy {
       return;
     }
 
-    this.logWizardStep('Step opened from sidebar', this.wizardSteps[index].key, {
-      from: this.currentStepIndex,
-      to: index,
-    });
+    this.logWizardStep(
+      'Step opened from sidebar',
+      this.wizardSteps[index].key,
+      {
+        from: this.currentStepIndex,
+        to: index,
+      },
+    );
     this.currentStepIndex = index;
     this.refreshStepUi();
   }
@@ -596,29 +602,31 @@ export class PublishTripComponent implements OnInit, OnDestroy {
       query: value,
     });
 
-    this.dataService.getTunisiaLocationSuggestions(this.buildPickupSearchQuery(value), 8).subscribe({
-      next: (response: any) => {
-        if (!response || response.length === 0) {
-          this.pickupSearchError = 'Place not found.';
+    this.dataService
+      .getTunisiaLocationSuggestions(this.buildPickupSearchQuery(value), 8)
+      .subscribe({
+        next: (response: any) => {
+          if (!response || response.length === 0) {
+            this.pickupSearchError = 'Place not found.';
+            this.pickupSuggestions = [];
+            return;
+          }
+
+          this.pickupSuggestions = this.buildPickupSuggestions(
+            value,
+            response,
+            this.departureValue,
+          );
+
+          if (autoSelectFirst && this.pickupSuggestions.length > 0) {
+            this.selectPickupSuggestion(this.pickupSuggestions[0]);
+          }
+        },
+        error: () => {
+          this.pickupSearchError = 'Search unavailable.';
           this.pickupSuggestions = [];
-          return;
-        }
-
-        this.pickupSuggestions = this.buildPickupSuggestions(
-          value,
-          response,
-          this.departureValue
-        );
-
-        if (autoSelectFirst && this.pickupSuggestions.length > 0) {
-          this.selectPickupSuggestion(this.pickupSuggestions[0]);
-        }
-      },
-      error: () => {
-        this.pickupSearchError = 'Search unavailable.';
-        this.pickupSuggestions = [];
-      },
-    });
+        },
+      });
   }
 
   selectPickupSuggestion(suggestion: any): void {
@@ -675,29 +683,31 @@ export class PublishTripComponent implements OnInit, OnDestroy {
       query: value,
     });
 
-    this.dataService.getTunisiaLocationSuggestions(this.buildPickupSearchQuery(value), 8).subscribe({
-      next: (response: any) => {
-        if (!response || response.length === 0) {
-          this.dropoffSearchError = 'Place not found.';
+    this.dataService
+      .getTunisiaLocationSuggestions(this.buildPickupSearchQuery(value), 8)
+      .subscribe({
+        next: (response: any) => {
+          if (!response || response.length === 0) {
+            this.dropoffSearchError = 'Place not found.';
+            this.dropoffSuggestions = [];
+            return;
+          }
+
+          this.dropoffSuggestions = this.buildPickupSuggestions(
+            value,
+            response,
+            this.destinationValue,
+          );
+
+          if (autoSelectFirst && this.dropoffSuggestions.length > 0) {
+            this.selectDropoffSuggestion(this.dropoffSuggestions[0]);
+          }
+        },
+        error: () => {
+          this.dropoffSearchError = 'Search unavailable.';
           this.dropoffSuggestions = [];
-          return;
-        }
-
-        this.dropoffSuggestions = this.buildPickupSuggestions(
-          value,
-          response,
-          this.destinationValue
-        );
-
-        if (autoSelectFirst && this.dropoffSuggestions.length > 0) {
-          this.selectDropoffSuggestion(this.dropoffSuggestions[0]);
-        }
-      },
-      error: () => {
-        this.dropoffSearchError = 'Search unavailable.';
-        this.dropoffSuggestions = [];
-      },
-    });
+        },
+      });
   }
 
   selectDropoffSuggestion(suggestion: any): void {
@@ -743,11 +753,11 @@ export class PublishTripComponent implements OnInit, OnDestroy {
     const departureDateTime = `${this.departureDate}T${this.departureTime}:00`;
     const savedDeparture = this.buildSavedLocation(
       this.departureValue,
-      this.pickupPoint
+      this.pickupPoint,
     );
     const savedDestination = this.buildSavedLocation(
       this.destinationValue,
-      this.dropoffPoint
+      this.dropoffPoint,
     );
 
     this.publishError = '';
@@ -756,10 +766,10 @@ export class PublishTripComponent implements OnInit, OnDestroy {
       departure: savedDeparture,
       destination: savedDestination,
       dateTime: departureDateTime,
-        price: this.pricePerSeat,
-        seats: this.seatsTotal,
-        bookingMode: this.bookingMode,
-      });
+      price: this.pricePerSeat,
+      seats: this.seatsTotal,
+      bookingMode: this.bookingMode,
+    });
     const durationMinutes =
       this.routeSuggestions && this.routeSuggestions[this.selectedRouteIndex]
         ? Number(this.routeSuggestions[this.selectedRouteIndex].durationMinutes)
@@ -971,7 +981,7 @@ export class PublishTripComponent implements OnInit, OnDestroy {
     const secondMonth = new Date(
       firstMonth.getFullYear(),
       firstMonth.getMonth() + 1,
-      1
+      1,
     );
 
     this.calendarMonths = [
@@ -1082,115 +1092,133 @@ export class PublishTripComponent implements OnInit, OnDestroy {
       return;
     }
 
-    import('leaflet').then((L) => {
-      const defaultCenter: [number, number] = [36.8065, 10.1815];
-      const locationQuery = this.buildRoutePointQuery('pickup') || 'Tunis';
-      console.log('Leaflet loaded', locationQuery);
+    import('leaflet')
+      .then((L) => {
+        const defaultCenter: [number, number] = [36.8065, 10.1815];
+        const locationQuery = this.buildRoutePointQuery('pickup') || 'Tunis';
+        console.log('Leaflet loaded', locationQuery);
 
-      this.dataService.getLocationCoordinates(locationQuery).subscribe({
-        next: (response: any) => {
-          let center: [number, number] = defaultCenter;
-          let bounds: any = null;
+        this.dataService.getLocationCoordinates(locationQuery).subscribe({
+          next: (response: any) => {
+            let center: [number, number] = defaultCenter;
+            let bounds: any = null;
 
-          if (response && response.length > 0) {
-            center = [Number(response[0].lat), Number(response[0].lon)];
-            this.pickupCoordinates = {
-              lat: center[0],
-              lng: center[1],
-            };
-            if (response[0].boundingbox && response[0].boundingbox.length === 4) {
-              bounds = [
-                [Number(response[0].boundingbox[0]), Number(response[0].boundingbox[2])],
-                [Number(response[0].boundingbox[1]), Number(response[0].boundingbox[3])],
-              ];
-            }
-          }
-
-          console.log('Pickup map center', center);
-          console.log('Pickup map bounds', bounds);
-
-          if (!this.pickupMap) {
-            console.log('Creating pickup map');
-            this.pickupMap = L.map(this.pickupMapElement.nativeElement).setView(center, 13);
-
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-              attribution: '&copy; OpenStreetMap contributors',
-            }).addTo(this.pickupMap);
-
-            this.pickupMarker = L.marker(center, {
-              icon: L.divIcon({
-                className: 'pickup-map-pin-wrapper',
-                html:
-                  '<div class="pickup-map-pin"><span class="pickup-map-pin-hole"></span></div><div class="pickup-map-pin-shadow"></div>',
-                iconSize: [46, 62],
-                iconAnchor: [23, 56],
-              }),
-            }).addTo(this.pickupMap);
-
-            this.pickupMap.on('click', (event: any) => {
-              const lat = event.latlng.lat.toFixed(4);
-              const lng = event.latlng.lng.toFixed(4);
-              console.log('Pickup map click', lat, lng);
-
-              if (this.pickupMarker) {
-                this.pickupMarker.setLatLng(event.latlng);
-              }
-
+            if (response && response.length > 0) {
+              center = [Number(response[0].lat), Number(response[0].lon)];
               this.pickupCoordinates = {
-                lat: event.latlng.lat,
-                lng: event.latlng.lng,
+                lat: center[0],
+                lng: center[1],
               };
+              if (
+                response[0].boundingbox &&
+                response[0].boundingbox.length === 4
+              ) {
+                bounds = [
+                  [
+                    Number(response[0].boundingbox[0]),
+                    Number(response[0].boundingbox[2]),
+                  ],
+                  [
+                    Number(response[0].boundingbox[1]),
+                    Number(response[0].boundingbox[3]),
+                  ],
+                ];
+              }
+            }
 
-              this.dataService.getLocationName(event.latlng.lat, event.latlng.lng).subscribe({
-                next: (locationResponse: any) => {
-                  const locationName = this.formatPickupLocationName(
-                    locationResponse,
-                    this.departureValue
-                  );
+            console.log('Pickup map center', center);
+            console.log('Pickup map bounds', bounds);
 
-                  console.log('Pickup location name', locationName);
-                  this.pickupConfirmed = true;
-                  this.pickupPoint = locationName;
-                  this.pickupSearch = locationName;
+            if (!this.pickupMap) {
+              console.log('Creating pickup map');
+              this.pickupMap = L.map(
+                this.pickupMapElement.nativeElement,
+              ).setView(center, 13);
+
+              L.tileLayer(
+                'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+                {
+                  attribution: '&copy; OpenStreetMap contributors',
                 },
-                error: (error: any) => {
-                  console.log('Pickup reverse geocoding failed', error);
-                  this.pickupConfirmed = true;
-                  this.pickupPoint = this.departureValue || 'Selected pickup point';
-                  this.pickupSearch = this.pickupPoint;
-                },
+              ).addTo(this.pickupMap);
+
+              this.pickupMarker = L.marker(center, {
+                icon: L.divIcon({
+                  className: 'pickup-map-pin-wrapper',
+                  html: '<div class="pickup-map-pin"><span class="pickup-map-pin-hole"></span></div><div class="pickup-map-pin-shadow"></div>',
+                  iconSize: [46, 62],
+                  iconAnchor: [23, 56],
+                }),
+              }).addTo(this.pickupMap);
+
+              this.pickupMap.on('click', (event: any) => {
+                const lat = event.latlng.lat.toFixed(4);
+                const lng = event.latlng.lng.toFixed(4);
+                console.log('Pickup map click', lat, lng);
+
+                if (this.pickupMarker) {
+                  this.pickupMarker.setLatLng(event.latlng);
+                }
+
+                this.pickupCoordinates = {
+                  lat: event.latlng.lat,
+                  lng: event.latlng.lng,
+                };
+
+                this.dataService
+                  .getLocationName(event.latlng.lat, event.latlng.lng)
+                  .subscribe({
+                    next: (locationResponse: any) => {
+                      const locationName = this.formatPickupLocationName(
+                        locationResponse,
+                        this.departureValue,
+                      );
+
+                      console.log('Pickup location name', locationName);
+                      this.pickupConfirmed = true;
+                      this.pickupPoint = locationName;
+                      this.pickupSearch = locationName;
+                    },
+                    error: (error: any) => {
+                      console.log('Pickup reverse geocoding failed', error);
+                      this.pickupConfirmed = true;
+                      this.pickupPoint =
+                        this.departureValue || 'Selected pickup point';
+                      this.pickupSearch = this.pickupPoint;
+                    },
+                  });
               });
-            });
-          } else {
-            console.log('Pickup map already exists, recentering');
-            this.pickupMap.invalidateSize();
-            if (this.pickupMarker) {
-              this.pickupMarker.setLatLng(center);
-            }
-          }
-
-          if (bounds) {
-            this.pickupMap.fitBounds(bounds, {
-              padding: [40, 40],
-            });
-          } else {
-            this.pickupMap.setView(center, 13);
-          }
-
-          setTimeout(() => {
-            if (this.pickupMap) {
-              console.log('Pickup map invalidateSize after render');
+            } else {
+              console.log('Pickup map already exists, recentering');
               this.pickupMap.invalidateSize();
+              if (this.pickupMarker) {
+                this.pickupMarker.setLatLng(center);
+              }
             }
-          }, 300);
-        },
-        error: (error: any) => {
-          console.log('Pickup geocoding failed', error);
-        },
+
+            if (bounds) {
+              this.pickupMap.fitBounds(bounds, {
+                padding: [40, 40],
+              });
+            } else {
+              this.pickupMap.setView(center, 13);
+            }
+
+            setTimeout(() => {
+              if (this.pickupMap) {
+                console.log('Pickup map invalidateSize after render');
+                this.pickupMap.invalidateSize();
+              }
+            }, 300);
+          },
+          error: (error: any) => {
+            console.log('Pickup geocoding failed', error);
+          },
+        });
+      })
+      .catch((error) => {
+        console.log('Leaflet load failed', error);
       });
-    }).catch((error) => {
-      console.log('Leaflet load failed', error);
-    });
   }
 
   private setupDropoffMap(): void {
@@ -1202,122 +1230,142 @@ export class PublishTripComponent implements OnInit, OnDestroy {
       return;
     }
 
-    import('leaflet').then((L) => {
-      const defaultCenter: [number, number] = [36.8065, 10.1815];
-      const locationQuery = this.buildRoutePointQuery('dropoff') || 'Tunis';
-      console.log('Dropoff Leaflet loaded', locationQuery);
+    import('leaflet')
+      .then((L) => {
+        const defaultCenter: [number, number] = [36.8065, 10.1815];
+        const locationQuery = this.buildRoutePointQuery('dropoff') || 'Tunis';
+        console.log('Dropoff Leaflet loaded', locationQuery);
 
-      this.dataService.getLocationCoordinates(locationQuery).subscribe({
-        next: (response: any) => {
-          let center: [number, number] = defaultCenter;
-          let bounds: any = null;
+        this.dataService.getLocationCoordinates(locationQuery).subscribe({
+          next: (response: any) => {
+            let center: [number, number] = defaultCenter;
+            let bounds: any = null;
 
-          if (response && response.length > 0) {
-            center = [Number(response[0].lat), Number(response[0].lon)];
-            this.dropoffCoordinates = {
-              lat: center[0],
-              lng: center[1],
-            };
-            if (response[0].boundingbox && response[0].boundingbox.length === 4) {
-              bounds = [
-                [Number(response[0].boundingbox[0]), Number(response[0].boundingbox[2])],
-                [Number(response[0].boundingbox[1]), Number(response[0].boundingbox[3])],
-              ];
-            }
-          }
-
-          console.log('Dropoff map center', center);
-          console.log('Dropoff map bounds', bounds);
-
-          if (!this.dropoffMap) {
-            console.log('Creating dropoff map');
-            this.dropoffMap = L.map(this.dropoffMapElement.nativeElement).setView(center, 13);
-
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-              attribution: '&copy; OpenStreetMap contributors',
-            }).addTo(this.dropoffMap);
-
-            this.dropoffMarker = L.marker(center, {
-              icon: L.divIcon({
-                className: 'pickup-map-pin-wrapper',
-                html:
-                  '<div class="pickup-map-pin"><span class="pickup-map-pin-hole"></span></div><div class="pickup-map-pin-shadow"></div>',
-                iconSize: [46, 62],
-                iconAnchor: [23, 56],
-              }),
-            }).addTo(this.dropoffMap);
-
-            this.dropoffMap.on('click', (event: any) => {
-              const lat = event.latlng.lat.toFixed(4);
-              const lng = event.latlng.lng.toFixed(4);
-              console.log('Dropoff map click', lat, lng);
-
-              if (this.dropoffMarker) {
-                this.dropoffMarker.setLatLng(event.latlng);
-              }
-
+            if (response && response.length > 0) {
+              center = [Number(response[0].lat), Number(response[0].lon)];
               this.dropoffCoordinates = {
-                lat: event.latlng.lat,
-                lng: event.latlng.lng,
+                lat: center[0],
+                lng: center[1],
               };
+              if (
+                response[0].boundingbox &&
+                response[0].boundingbox.length === 4
+              ) {
+                bounds = [
+                  [
+                    Number(response[0].boundingbox[0]),
+                    Number(response[0].boundingbox[2]),
+                  ],
+                  [
+                    Number(response[0].boundingbox[1]),
+                    Number(response[0].boundingbox[3]),
+                  ],
+                ];
+              }
+            }
 
-              this.dataService.getLocationName(event.latlng.lat, event.latlng.lng).subscribe({
-                next: (locationResponse: any) => {
-                  const locationName = this.formatPickupLocationName(
-                    locationResponse,
-                    this.destinationValue
-                  );
+            console.log('Dropoff map center', center);
+            console.log('Dropoff map bounds', bounds);
 
-                  console.log('Dropoff location name', locationName);
-                  this.dropoffConfirmed = true;
-                  this.dropoffPoint = locationName;
-                  this.dropoffSearch = locationName;
+            if (!this.dropoffMap) {
+              console.log('Creating dropoff map');
+              this.dropoffMap = L.map(
+                this.dropoffMapElement.nativeElement,
+              ).setView(center, 13);
+
+              L.tileLayer(
+                'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+                {
+                  attribution: '&copy; OpenStreetMap contributors',
                 },
-                error: (error: any) => {
-                  console.log('Dropoff reverse geocoding failed', error);
-                  this.dropoffConfirmed = true;
-                  this.dropoffPoint = this.destinationValue || 'Selected dropoff point';
-                  this.dropoffSearch = this.dropoffPoint;
-                },
+              ).addTo(this.dropoffMap);
+
+              this.dropoffMarker = L.marker(center, {
+                icon: L.divIcon({
+                  className: 'pickup-map-pin-wrapper',
+                  html: '<div class="pickup-map-pin"><span class="pickup-map-pin-hole"></span></div><div class="pickup-map-pin-shadow"></div>',
+                  iconSize: [46, 62],
+                  iconAnchor: [23, 56],
+                }),
+              }).addTo(this.dropoffMap);
+
+              this.dropoffMap.on('click', (event: any) => {
+                const lat = event.latlng.lat.toFixed(4);
+                const lng = event.latlng.lng.toFixed(4);
+                console.log('Dropoff map click', lat, lng);
+
+                if (this.dropoffMarker) {
+                  this.dropoffMarker.setLatLng(event.latlng);
+                }
+
+                this.dropoffCoordinates = {
+                  lat: event.latlng.lat,
+                  lng: event.latlng.lng,
+                };
+
+                this.dataService
+                  .getLocationName(event.latlng.lat, event.latlng.lng)
+                  .subscribe({
+                    next: (locationResponse: any) => {
+                      const locationName = this.formatPickupLocationName(
+                        locationResponse,
+                        this.destinationValue,
+                      );
+
+                      console.log('Dropoff location name', locationName);
+                      this.dropoffConfirmed = true;
+                      this.dropoffPoint = locationName;
+                      this.dropoffSearch = locationName;
+                    },
+                    error: (error: any) => {
+                      console.log('Dropoff reverse geocoding failed', error);
+                      this.dropoffConfirmed = true;
+                      this.dropoffPoint =
+                        this.destinationValue || 'Selected dropoff point';
+                      this.dropoffSearch = this.dropoffPoint;
+                    },
+                  });
               });
-            });
-          } else {
-            console.log('Dropoff map already exists, recentering');
-            this.dropoffMap.invalidateSize();
-            if (this.dropoffMarker) {
-              this.dropoffMarker.setLatLng(center);
-            }
-          }
-
-          if (bounds) {
-            this.dropoffMap.fitBounds(bounds, {
-              padding: [40, 40],
-            });
-          } else {
-            this.dropoffMap.setView(center, 13);
-          }
-
-          setTimeout(() => {
-            if (this.dropoffMap) {
-              console.log('Dropoff map invalidateSize after render');
+            } else {
+              console.log('Dropoff map already exists, recentering');
               this.dropoffMap.invalidateSize();
+              if (this.dropoffMarker) {
+                this.dropoffMarker.setLatLng(center);
+              }
             }
-          }, 300);
-        },
-        error: (error: any) => {
-          console.log('Dropoff geocoding failed', error);
-        },
+
+            if (bounds) {
+              this.dropoffMap.fitBounds(bounds, {
+                padding: [40, 40],
+              });
+            } else {
+              this.dropoffMap.setView(center, 13);
+            }
+
+            setTimeout(() => {
+              if (this.dropoffMap) {
+                console.log('Dropoff map invalidateSize after render');
+                this.dropoffMap.invalidateSize();
+              }
+            }, 300);
+          },
+          error: (error: any) => {
+            console.log('Dropoff geocoding failed', error);
+          },
+        });
+      })
+      .catch((error) => {
+        console.log('Dropoff Leaflet load failed', error);
       });
-    }).catch((error) => {
-      console.log('Dropoff Leaflet load failed', error);
-    });
   }
 
   selectRouteSuggestion(index: number): void {
     this.selectedRouteIndex = index;
     this.logWizardStep('Route selected', 'routeSelection', {
       index: index,
-      label: this.routeSuggestions[index] ? this.routeSuggestions[index].label : '',
+      label: this.routeSuggestions[index]
+        ? this.routeSuggestions[index].label
+        : '',
     });
     this.updateRouteMapStyles();
   }
@@ -1343,9 +1391,13 @@ export class PublishTripComponent implements OnInit, OnDestroy {
             next: (routes: any[]) => {
               this.routeSuggestions = routes || [];
               this.routeLoading = false;
-              this.logWizardStep('Route calculation completed', 'routeSelection', {
-                count: this.routeSuggestions.length,
-              });
+              this.logWizardStep(
+                'Route calculation completed',
+                'routeSelection',
+                {
+                  count: this.routeSuggestions.length,
+                },
+              );
 
               if (this.routeSuggestions.length === 0) {
                 this.routeError = 'No route available.';
@@ -1414,7 +1466,11 @@ export class PublishTripComponent implements OnInit, OnDestroy {
   }
 
   private setupRouteMap(): void {
-    if (typeof window === 'undefined' || !this.routeMapElement || this.routeSuggestions.length === 0) {
+    if (
+      typeof window === 'undefined' ||
+      !this.routeMapElement ||
+      this.routeSuggestions.length === 0
+    ) {
       return;
     }
 
@@ -1435,12 +1491,18 @@ export class PublishTripComponent implements OnInit, OnDestroy {
       for (let i = 0; i < this.routeSuggestions.length; i++) {
         const route = this.routeSuggestions[i];
         console.log('ORS geometry:', route.coordinates.length);
-        const routePath = route.coordinates.map((coord: any) => [coord[1], coord[0]]);
+        const routePath = route.coordinates.map((coord: any) => [
+          coord[1],
+          coord[0],
+        ]);
         const line = L.polyline(routePath, {
           color: this.getRouteLineColor(i),
           weight: i === this.selectedRouteIndex ? 7 : 5,
           opacity: i === this.selectedRouteIndex ? 1 : 0.9,
-          dashArray: i === this.selectedRouteIndex ? undefined : this.getRouteLineDash(i),
+          dashArray:
+            i === this.selectedRouteIndex
+              ? undefined
+              : this.getRouteLineDash(i),
         }).addTo(this.routeMap);
 
         this.routeLines.push(line);
@@ -1454,7 +1516,7 @@ export class PublishTripComponent implements OnInit, OnDestroy {
           fillColor: '#ffffff',
           fillOpacity: 1,
           weight: 4,
-        }
+        },
       ).addTo(this.routeMap);
 
       this.routeEndMarker = L.circleMarker(
@@ -1465,7 +1527,7 @@ export class PublishTripComponent implements OnInit, OnDestroy {
           fillColor: '#ffffff',
           fillOpacity: 1,
           weight: 4,
-        }
+        },
       ).addTo(this.routeMap);
 
       this.routeMap.fitBounds(boundsPoints, {
@@ -1490,7 +1552,8 @@ export class PublishTripComponent implements OnInit, OnDestroy {
         color: this.getRouteLineColor(i),
         weight: i === this.selectedRouteIndex ? 7 : 5,
         opacity: i === this.selectedRouteIndex ? 1 : 0.9,
-        dashArray: i === this.selectedRouteIndex ? undefined : this.getRouteLineDash(i),
+        dashArray:
+          i === this.selectedRouteIndex ? undefined : this.getRouteLineDash(i),
       });
 
       if (i === this.selectedRouteIndex) {
@@ -1555,17 +1618,41 @@ export class PublishTripComponent implements OnInit, OnDestroy {
       this.routeSuggestions && this.routeSuggestions[this.selectedRouteIndex]
         ? this.routeSuggestions[this.selectedRouteIndex]
         : null;
-    const tripMinutes = selectedRoute && selectedRoute.durationMinutes
-      ? Number(selectedRoute.durationMinutes)
-      : 20;
+    const tripMinutes =
+      selectedRoute && selectedRoute.durationMinutes
+        ? Number(selectedRoute.durationMinutes)
+        : 20;
     const timeParts = this.departureTime.split(':');
     const hours = Number(timeParts[0]);
     const minutes = Number(timeParts[1]);
     const totalMinutes = hours * 60 + minutes + Math.round(tripMinutes);
-    const nextHours = `${Math.floor((totalMinutes % 1440) / 60)}`.padStart(2, '0');
+    const nextHours = `${Math.floor((totalMinutes % 1440) / 60)}`.padStart(
+      2,
+      '0',
+    );
     const nextMinutes = `${totalMinutes % 60}`.padStart(2, '0');
-
     return `${nextHours}:${nextMinutes}`;
+  }
+
+  isArrivalNextDay(): boolean {
+    if (!this.departureTime) {
+      return false;
+    }
+
+    const selectedRoute =
+      this.routeSuggestions && this.routeSuggestions[this.selectedRouteIndex]
+        ? this.routeSuggestions[this.selectedRouteIndex]
+        : null;
+    const tripMinutes =
+      selectedRoute && selectedRoute.durationMinutes
+        ? Number(selectedRoute.durationMinutes)
+        : 20;
+    const timeParts = this.departureTime.split(':');
+    const hours = Number(timeParts[0]);
+    const minutes = Number(timeParts[1]);
+    const totalMinutes = hours * 60 + minutes + Math.round(tripMinutes);
+
+    return totalMinutes >= 1440;
   }
 
   formatMainPlaceName(value: string): string {
@@ -1617,16 +1704,30 @@ export class PublishTripComponent implements OnInit, OnDestroy {
   }
 
   private formatDateValue(date: any): string {
-    const year = date.getFullYear();
-    const month = `${date.getMonth() + 1}`.padStart(2, '0');
-    const day = `${date.getDate()}`.padStart(2, '0');
+    if (!date) {
+      return '';
+    }
+
+    const dateValue = date instanceof Date ? date : new Date(date);
+    if (Number.isNaN(dateValue.getTime())) {
+      return '';
+    }
+
+    const year = dateValue.getFullYear();
+    const month = `${dateValue.getMonth() + 1}`.padStart(2, '0');
+    const day = `${dateValue.getDate()}`.padStart(2, '0');
 
     return `${year}-${month}-${day}`;
   }
 
-  private formatPickupLocationName(locationResponse: any, fallbackValue: string = ''): string {
+  private formatPickupLocationName(
+    locationResponse: any,
+    fallbackValue: string = '',
+  ): string {
     const address =
-      locationResponse && locationResponse.address ? locationResponse.address : {};
+      locationResponse && locationResponse.address
+        ? locationResponse.address
+        : {};
 
     const streetPart = address.road || '';
     const areaPart =
@@ -1643,7 +1744,7 @@ export class PublishTripComponent implements OnInit, OnDestroy {
     const firstPart = [streetPart, areaPart].filter((part: string) => !!part);
     const secondPart = [cityPart, statePart].filter(
       (part: string, index: number, parts: string[]) =>
-        !!part && parts.indexOf(part) === index
+        !!part && parts.indexOf(part) === index,
     );
 
     if (firstPart.length > 0 && secondPart.length > 0) {
@@ -1666,7 +1767,11 @@ export class PublishTripComponent implements OnInit, OnDestroy {
     return fallbackValue || 'Selected location';
   }
 
-  private buildPickupSuggestions(query: string, results: any[], referenceValue: string): any[] {
+  private buildPickupSuggestions(
+    query: string,
+    results: any[],
+    referenceValue: string,
+  ): any[] {
     const normalizedQuery = query.toLowerCase();
     const normalizedReference = referenceValue.toLowerCase();
     const suggestions: any[] = [];
@@ -1676,7 +1781,8 @@ export class PublishTripComponent implements OnInit, OnDestroy {
       const result = results[i];
       const label = this.formatPickupSuggestionLabel(result);
       const helper = this.formatPickupSuggestionHelper(result);
-      const searchText = `${label} ${helper} ${result.display_name || ''}`.toLowerCase();
+      const searchText =
+        `${label} ${helper} ${result.display_name || ''}`.toLowerCase();
       let score = 0;
       const firstDisplayPart = this.getFirstDisplayPart(result).toLowerCase();
 
@@ -1704,11 +1810,19 @@ export class PublishTripComponent implements OnInit, OnDestroy {
         score += 35;
       }
 
-      if (result.class === 'amenity' || result.class === 'building' || result.class === 'office') {
+      if (
+        result.class === 'amenity' ||
+        result.class === 'building' ||
+        result.class === 'office'
+      ) {
         score += 18;
       }
 
-      if (result.type === 'university' || result.type === 'school' || result.type === 'college') {
+      if (
+        result.type === 'university' ||
+        result.type === 'school' ||
+        result.type === 'college'
+      ) {
         score += 30;
       }
 
@@ -1734,7 +1848,9 @@ export class PublishTripComponent implements OnInit, OnDestroy {
 
   private formatPickupSuggestionHelper(locationResponse: any): string {
     const address =
-      locationResponse && locationResponse.address ? locationResponse.address : {};
+      locationResponse && locationResponse.address
+        ? locationResponse.address
+        : {};
     const helperParts = [
       address.city || address.town || address.county || '',
       address.state || address.country || '',
@@ -1770,7 +1886,11 @@ export class PublishTripComponent implements OnInit, OnDestroy {
   }
 
   private getFirstDisplayPart(locationResponse: any): string {
-    if (locationResponse && locationResponse.namedetails && locationResponse.namedetails.name) {
+    if (
+      locationResponse &&
+      locationResponse.namedetails &&
+      locationResponse.namedetails.name
+    ) {
       return locationResponse.namedetails.name;
     }
 

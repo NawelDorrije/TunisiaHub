@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { Trip } from '../../../models/Carpooling/carpooling';
+import { ReservationQuote, Trip } from '../../../models/Carpooling/carpooling';
 import { CarpoolingDataService } from '../services/carpooling-data.service';
 
 @Component({
@@ -11,8 +11,12 @@ import { CarpoolingDataService } from '../services/carpooling-data.service';
 })
 export class BookTripComponent implements OnInit {
   trip?: Trip;
+  quote?: ReservationQuote;
   error = '';
   success = '';
+  showPriceDetails = false;
+  introMessage =
+    "Hello, I just booked your trip. I'd really like to travel with you!";
 
   bookingForm!: FormGroup;
 
@@ -24,6 +28,7 @@ export class BookTripComponent implements OnInit {
   ) {
     this.bookingForm = this.fb.group({
       seats: [1, [Validators.required, Validators.min(1)]],
+      message: [this.introMessage, [Validators.maxLength(400)]],
     });
   }
 
@@ -37,20 +42,80 @@ export class BookTripComponent implements OnInit {
         }
 
         this.trip = trip;
-        this.bookingForm.patchValue({ seats: 1 });
+        this.bookingForm.patchValue({
+          seats: 1,
+          message: this.introMessage,
+        });
+        this.refreshQuote();
       },
       error: () => {
         this.error = 'Unable to load trip.';
       },
     });
+
+    this.bookingForm.get('seats')?.valueChanges.subscribe(() => {
+      this.refreshQuote();
+    });
   }
 
   get totalPrice(): number {
+    return this.quote?.totalAmount ?? 0;
+  }
+
+  get driverPrice(): number {
+    return this.quote?.driverAmount ?? 0;
+  }
+
+  get serviceFee(): number {
+    return this.quote?.serviceFee ?? 0;
+  }
+
+  get bookingTitle(): string {
     if (!this.trip) {
-      return 0;
+      return 'Check your booking details';
     }
-    const seats = this.bookingForm.getRawValue().seats;
-    return seats * this.trip.pricePerSeat;
+
+    return this.trip.bookingMode === 'instant'
+      ? 'Check your booking details'
+      : 'Check your booking request details';
+  }
+
+  get bookingNotice(): string {
+    if (!this.trip || this.trip.bookingMode === 'instant') {
+      return '';
+    }
+
+    return 'Your booking will be confirmed once the driver accepts your request.';
+  }
+
+  get successMessage(): string {
+    if (!this.trip || this.trip.bookingMode === 'instant') {
+      return 'Booking confirmed successfully.';
+    }
+
+    return 'Booking request sent successfully.';
+  }
+
+  get driverLabel(): string {
+    if (!this.trip) {
+      return 'the driver';
+    }
+
+    return this.trip.ownerFullName || 'the driver';
+  }
+
+  get seatsLabel(): string {
+    const seats =
+      this.quote?.seatsRequested || this.bookingForm.getRawValue().seats || 1;
+    return seats > 1 ? `For ${seats} passengers` : 'For 1 passenger';
+  }
+
+  openPriceDetails(): void {
+    this.showPriceDetails = true;
+  }
+
+  closePriceDetails(): void {
+    this.showPriceDetails = false;
   }
 
   confirmBooking(): void {
@@ -75,9 +140,8 @@ export class BookTripComponent implements OnInit {
           return;
         }
 
-        this.success = 'Booking confirmed successfully.';
-        this.dataService.getTripById(this.trip!.id).subscribe((trip) => {
-          this.trip = trip;
+        this.router.navigate(['/carpooling/my-bookings'], {
+          state: { successMessage: this.successMessage },
         });
       },
       error: () => {
@@ -88,5 +152,96 @@ export class BookTripComponent implements OnInit {
 
   cancel(): void {
     this.router.navigate(['/carpooling/trip', this.trip?.id]);
+  }
+
+  formatTripDate(dateTime: string): string {
+    const tripDate = new Date(dateTime);
+    return tripDate.toLocaleDateString('en-GB', {
+      weekday: 'short',
+      day: 'numeric',
+      month: 'long',
+    });
+  }
+
+  formatTripTime(dateTime: string | Date): string {
+    const value = dateTime instanceof Date ? dateTime : new Date(dateTime);
+    const hours = `${value.getHours()}`.padStart(2, '0');
+    const minutes = `${value.getMinutes()}`.padStart(2, '0');
+    return `${hours}:${minutes}`;
+  }
+
+  formatArrivalTime(): string {
+    if (!this.trip) {
+      return '';
+    }
+
+    const departure = new Date(this.trip.departureDateTime);
+    const arrival = new Date(
+      departure.getTime() + this.getDurationMinutes() * 60000,
+    );
+    return this.formatTripTime(arrival);
+  }
+
+  isArrivalNextDay(): boolean {
+    if (!this.trip) {
+      return false;
+    }
+
+    const departure = new Date(this.trip.departureDateTime);
+    const arrival = new Date(
+      departure.getTime() + this.getDurationMinutes() * 60000,
+    );
+
+    return this.isNextDay(departure, arrival);
+  }
+
+  formatPlace(value: string): string {
+    if (!value) {
+      return '';
+    }
+
+    return value.split(',')[0].trim();
+  }
+
+  formatPrice(value: number): string {
+    return value.toFixed(2);
+  }
+
+  private refreshQuote(): void {
+    if (!this.trip) {
+      this.quote = undefined;
+      return;
+    }
+
+    const seats = Number(this.bookingForm.getRawValue().seats || 1);
+    if (!Number.isFinite(seats) || seats < 1) {
+      this.quote = undefined;
+      return;
+    }
+
+    this.dataService.getBookingQuote(this.trip.id, seats).subscribe({
+      next: (quote) => {
+        this.quote = quote;
+      },
+      error: () => {
+        this.quote = undefined;
+      },
+    });
+  }
+
+  private getDurationMinutes(): number {
+    if (this.trip?.durationMinutes && this.trip.durationMinutes > 0) {
+      return Math.round(this.trip.durationMinutes);
+    }
+
+    return 60;
+  }
+
+  private isNextDay(departure: Date, arrival: Date): boolean {
+    return (
+      departure.getFullYear() !== arrival.getFullYear() ||
+      departure.getMonth() !== arrival.getMonth() ||
+      departure.getDate() !== arrival.getDate()
+    );
   }
 }

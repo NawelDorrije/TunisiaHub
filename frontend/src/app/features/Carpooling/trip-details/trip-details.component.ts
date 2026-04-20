@@ -1,5 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
+import { of } from 'rxjs';
+import { switchMap } from 'rxjs/operators';
 import { Trip } from '../../../models/Carpooling/carpooling';
 import { CarpoolingDataService } from '../services/carpooling-data.service';
 
@@ -14,6 +16,7 @@ export class TripDetailsComponent implements OnInit {
   isOwner = false;
   error = '';
   passengersCount = 0;
+  loading = true;
 
   constructor(
     private readonly route: ActivatedRoute,
@@ -22,34 +25,48 @@ export class TripDetailsComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    const id = Number(this.route.snapshot.paramMap.get('id'));
-    if (!Number.isFinite(id)) {
-      this.error = 'Invalid trip id.';
-      return;
-    }
+    this.route.paramMap
+      .pipe(
+        switchMap((params) => {
+          const id = Number(params.get('id'));
+          this.resetTripState();
 
-    this.dataService.getTripById(id).subscribe({
-      next: (trip) => {
-        if (!trip) {
-          this.error = 'Trip not found.';
-          return;
-        }
+          if (!Number.isFinite(id)) {
+            this.loading = false;
+            this.error = 'Invalid trip id.';
+            return of(undefined);
+          }
 
-        this.trip = trip;
-        this.isOwner =
-          this.dataService.getCurrentUser().id === trip.ownerUserId;
-        this.driverName = this.dataService.getUserById(
-          trip.ownerUserId,
-        ).fullName;
+          return this.dataService.getTripById(id);
+        }),
+      )
+      .subscribe({
+        next: (trip) => {
+          if (!trip) {
+            this.loading = false;
+            if (!this.error) {
+              this.error = 'Trip not found.';
+            }
+            return;
+          }
 
-        if (this.isOwner) {
-          this.loadPassengersCount(trip.id);
-        }
-      },
-      error: () => {
-        this.error = 'Unable to load trip details from backend.';
-      },
-    });
+          this.trip = trip;
+          this.isOwner =
+            this.dataService.getCurrentUser().id === trip.ownerUserId;
+          this.driverName = this.dataService.getUserById(
+            trip.ownerUserId,
+          ).fullName;
+          this.loading = false;
+
+          if (this.isOwner) {
+            this.loadPassengersCount(trip.id);
+          }
+        },
+        error: () => {
+          this.loading = false;
+          this.error = 'Unable to load trip details from backend.';
+        },
+      });
   }
 
   editTrip(): void {
@@ -162,8 +179,19 @@ export class TripDetailsComponent implements OnInit {
 
   formatArrivalTime(dateTime: string): string {
     const tripDate = new Date(dateTime);
-    const arrivalDate = new Date(tripDate.getTime() + this.estimateDurationMinutes() * 60000);
+    const arrivalDate = new Date(
+      tripDate.getTime() + this.estimateDurationMinutes() * 60000,
+    );
     return this.formatTimeFromDate(arrivalDate);
+  }
+
+  isArrivalNextDay(dateTime: string): boolean {
+    const tripDate = new Date(dateTime);
+    const arrivalDate = new Date(
+      tripDate.getTime() + this.estimateDurationMinutes() * 60000,
+    );
+
+    return this.isNextDay(tripDate, arrivalDate);
   }
 
   formatMainPlace(value: string): string {
@@ -202,7 +230,7 @@ export class TripDetailsComponent implements OnInit {
 
   getPassengersLabel(): string {
     if (this.passengersCount <= 0) {
-      return 'No passengers for this trip';
+      return '';
     }
 
     if (this.passengersCount === 1) {
@@ -212,10 +240,33 @@ export class TripDetailsComponent implements OnInit {
     return `${this.passengersCount} passengers for this trip`;
   }
 
+  getPassengersActionLabel(): string {
+    const passengersLabel = this.getPassengersLabel();
+    if (passengersLabel) {
+      return passengersLabel;
+    }
+
+    return 'View passengers';
+  }
+
+  getDriverReviewLabel(): string {
+    if (
+      !this.trip ||
+      !this.trip.driverReviewsCount ||
+      !this.trip.driverRatingAverage
+    ) {
+      return 'No driver review yet';
+    }
+
+    return `${this.trip.driverRatingAverage.toFixed(1)}/5 (${this.trip.driverReviewsCount} review${this.trip.driverReviewsCount > 1 ? 's' : ''})`;
+  }
+
   private loadPassengersCount(tripId: number): void {
     this.dataService.getPassengersForTrip(tripId).subscribe({
       next: (bookings) => {
-        this.passengersCount = bookings.length;
+        this.passengersCount = bookings.filter(
+          (item) => item.booking.status === 'CONFIRMED',
+        ).length;
       },
       error: () => {
         this.passengersCount = 0;
@@ -233,7 +284,9 @@ export class TripDetailsComponent implements OnInit {
     }
 
     const departure = this.formatMainPlace(this.trip.departure).toLowerCase();
-    const destination = this.formatMainPlace(this.trip.destination).toLowerCase();
+    const destination = this.formatMainPlace(
+      this.trip.destination,
+    ).toLowerCase();
 
     if (departure === destination) {
       return 10;
@@ -253,5 +306,22 @@ export class TripDetailsComponent implements OnInit {
     const hours = `${value.getHours()}`.padStart(2, '0');
     const minutes = `${value.getMinutes()}`.padStart(2, '0');
     return `${hours}:${minutes}`;
+  }
+
+  private isNextDay(departure: Date, arrival: Date): boolean {
+    return (
+      departure.getFullYear() !== arrival.getFullYear() ||
+      departure.getMonth() !== arrival.getMonth() ||
+      departure.getDate() !== arrival.getDate()
+    );
+  }
+
+  private resetTripState(): void {
+    this.trip = undefined;
+    this.driverName = '';
+    this.isOwner = false;
+    this.error = '';
+    this.passengersCount = 0;
+    this.loading = true;
   }
 }
