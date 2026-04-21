@@ -74,14 +74,19 @@ public class ReservationController {
     }
     // ✅ FIX IMPORTANT
     @GetMapping("/user/{userId}/event/{eventId}")
-    public ResponseEntity<Reservation> getReservation(@PathVariable Long userId,
-                                                      @PathVariable Long eventId) {
+    public ResponseEntity<?> getReservation(@PathVariable Long userId,
+                                            @PathVariable Long eventId) {
 
         Reservation res = reservationService.findByUserAndEvent(userId, eventId);
 
         if (res == null) {
-            return ResponseEntity.ok(null);
+            return ResponseEntity.notFound().build();
         }
+
+
+        //if (res == null) {
+         //   throw new RuntimeException("Reservation not found");
+       // }
 
         return ResponseEntity.ok(res);
     }

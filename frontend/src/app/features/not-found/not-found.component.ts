@@ -2,6 +2,7 @@ import { AfterViewInit, Component, Inject, PLATFORM_ID } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import lottie from 'lottie-web';
 
+
 @Component({
   selector: 'app-not-found',
   templateUrl: './not-found.component.html',

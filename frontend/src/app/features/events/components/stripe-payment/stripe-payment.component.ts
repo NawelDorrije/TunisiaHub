@@ -1,4 +1,4 @@
-import { Component, Input, OnInit } from '@angular/core';
+import { Component, Input, OnInit, } from '@angular/core';
 import { loadStripe } from '@stripe/stripe-js';
 import { StripeService } from '../../services/stripe.service';
 import { HttpClient } from '@angular/common/http';
@@ -6,7 +6,8 @@ import { HttpClient } from '@angular/common/http';
 @Component({
   selector: 'app-stripe-payment',
   templateUrl: './stripe-payment.component.html',
-  styleUrls: ['./stripe-payment.component.css']
+  styleUrls: ['./stripe-payment.component.css'],
+  
 })
 export class StripePaymentComponent implements OnInit {
 

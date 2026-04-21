@@ -33,6 +33,6 @@ public class Payment {
     @JoinColumn(name = "reservation_id")
     Reservation reservation;
 
-    public void setStatus(String success) {
-    }
+    //public void setStatus(String success) {
+    //}
 }

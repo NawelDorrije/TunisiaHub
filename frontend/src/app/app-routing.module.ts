@@ -3,10 +3,13 @@ import { RouterModule, Routes } from '@angular/router';
 import { NotFoundComponent } from './features/not-found/not-found.component';
 import { HomeComponent } from './core/home/home.component';
 import { AuthGuard } from './features/auth/auth.guard';
+//import { CalendarEventsComponent } from './features/events/components/calendar-events/calendar-events.component';
+import { FullCalendarModule } from '@fullcalendar/angular';
 
 const routes: Routes = [
   { path: 'home', component: HomeComponent },
   { path: '', redirectTo: 'home', pathMatch: 'full' },
+  //{ path: 'calendar', component: CalendarEventsComponent },
   {
     path: 'events',
     loadChildren: () =>
@@ -31,13 +34,12 @@ const routes: Routes = [
     loadChildren: () =>
       import('./features/auth/auth.module').then((m) => m.AuthModule),
   },
-   {
-   path: 'accommodations',
+  {
+    path: 'accommodations',
     loadChildren: () =>
       import('./features/accommodations/accommodations.module')
         .then(m => m.AccommodationsModule),
-},
-
+  },
   {
     path: '**',
     component: NotFoundComponent,
@@ -45,7 +47,7 @@ const routes: Routes = [
 ];
 
 @NgModule({
-  imports: [RouterModule.forRoot(routes)],
+  imports: [RouterModule.forRoot(routes), FullCalendarModule],
   exports: [RouterModule],
 })
 export class AppRoutingModule {}

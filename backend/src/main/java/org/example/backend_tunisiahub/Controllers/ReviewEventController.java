@@ -27,6 +27,7 @@ public class ReviewEventController {
         return reviewService.addReview(userId, reservationId, comment, rating);
     }
 
+
     @PutMapping("/update")
     public Review update(@RequestBody Review review) {
         return reviewService.modifyReview(review);
@@ -36,4 +37,6 @@ public class ReviewEventController {
     public void delete(@PathVariable Long id) {
         reviewService.deleteReview(id);
     }
+
+
 }

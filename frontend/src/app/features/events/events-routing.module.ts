@@ -6,7 +6,9 @@ import { EditEventComponent } from './components/edit-event/edit-event.component
 import { EventDetailsComponent } from './components/event-details/event-details.component';
 import { ListEventsUserComponent } from './components/list-events-user/list-events-user.component';
 import { ReservationEventComponent } from './components/reservation-event/reservation-event.component';
-//import { ReviewEventComponent } from './components/review-event/review-event.component';
+
+//import { CalendarEventsComponent } from './components/calendar-events/calendar-events.component';
+
 
 
 
@@ -18,11 +20,8 @@ const routes: Routes = [
   { path: 'details/:id', component: EventDetailsComponent },
   { path: 'user/events', component: ListEventsUserComponent },
   { path: 'reserve/:id', component: ReservationEventComponent },
-  {path: 'review/:reservationId',
-    loadComponent: () =>
-      import('./components/review-event/review-event.component')
-        .then(m => m.ReviewEventComponent)}
-  //{ path: 'review/:reservationId', component: ReviewEventComponent }
+  
+ //{ path: 'calendar', component: CalendarEventsComponent }
 ];
 
 @NgModule({

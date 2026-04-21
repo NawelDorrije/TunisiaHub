@@ -67,6 +67,9 @@ public class SecurityConfig {
                         .requestMatchers("/stripe/**").permitAll()
                         .requestMatchers("/email/**").permitAll()
                         .requestMatchers("/review/**").permitAll()
+                        .requestMatchers("/weather/**").permitAll()
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                        .requestMatchers("/weather/**").permitAll()
 
                         .anyRequest().authenticated()
                         

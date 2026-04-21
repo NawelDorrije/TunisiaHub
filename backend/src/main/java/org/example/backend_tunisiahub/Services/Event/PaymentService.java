@@ -53,7 +53,9 @@ public class PaymentService implements IPaymentService {
         Payment payment = new Payment();
         payment.setAmount(amount);
         payment.setReservation(reservation);
-        payment.setStatus("SUCCESS");
+        payment.setPaymentDate(LocalDateTime.now());
+        payment.setMethod(PaymentMethod.CARD);
+        //payment.setStatus("SUCCESS");
 
         // ✅ CONFIRM RESERVATION
         reservation.setStatus("CONFIRMED");

@@ -96,6 +96,11 @@ public class ReservationService implements IReservationService {
                 .findByUserIdAndEventId(userId, eventId);
 
         if (existing != null) {
+            // 🔥 IMPORTANT FIX
+            if ("CANCELLED".equals(existing.getStatus())) {
+                existing.setStatus("PENDING");
+                return reservationRepository.save(existing);
+            }
             return existing;
         }
 
@@ -141,5 +146,7 @@ public class ReservationService implements IReservationService {
     public Reservation findByUserAndEvent(Long userId, Long eventId) {
         return reservationRepository.findByUserIdAndEventId(userId, eventId);
     }
+
+
 
 }

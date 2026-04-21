@@ -3,6 +3,12 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { Event } from '../../../models/events/event.model';
 import { catchError, of } from 'rxjs';
+//import { WeatherDTO } from '../../../models/weather.model';
+//import { Reservation } from '../../../models/reservation.model';
+import {
+  WeatherDTO,
+  ForecastResponse
+} from '../../../models/weather.model';
 
 @Injectable({
   providedIn: 'root'
@@ -10,6 +16,7 @@ import { catchError, of } from 'rxjs';
 export class EventService {
 
    private apiUrl = 'http://localhost:8089/event';
+   private weatherUrl = 'http://localhost:8089/weather';
 
   constructor(private http: HttpClient) {}
 
@@ -32,8 +39,8 @@ export class EventService {
   deleteEvent(id: number): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/delete/${id}`);
   }
-  reserveEvent(userId: number, eventId: number) {
-  return this.http.post(
+  reserveEvent(userId: number, eventId: number): Observable<any> {
+  return this.http.post<any>(
     `http://localhost:8089/api/reservations/reserve?userId=${userId}&eventId=${eventId}`,
     {}
   );
@@ -50,12 +57,7 @@ createPendingReservation(userId: number, eventId: number) {
       {}
     );
   }
-addReview(userId: number, reservationId: number, comment: string, rating: number) {
-    return this.http.post(
-      `http://localhost:8089/review/add?userId=${userId}&reservationId=${reservationId}&comment=${comment}&rating=${rating}`,
-      {}
-    );
-  }
+
 
  getUserReservation(userId: number, eventId: number) {
   return this.http.get<any>(
@@ -64,4 +66,25 @@ addReview(userId: number, reservationId: number, comment: string, rating: number
     catchError(() => of(null))
   );
 }
+
+
+
+getWeather(lat: number, lon: number) {
+  return this.http.get<WeatherDTO>(
+    `/weather?lat=${lat}&lon=${lon}`
+  );
+}
+getWeeklyWeather(lat: number, lon: number) {
+  return this.http.get<any>(
+    `http://localhost:8089/weather/weekly?lat=${lat}&lon=${lon}`
+  );
+}
+ // 📅 météo sur 7 jours
+  getWeeklyForecast(lat: number, lon: number): Observable<ForecastResponse> {
+    return this.http.get<ForecastResponse>(
+      `${this.weatherUrl}/weekly?lat=${lat}&lon=${lon}`
+    );
+  }
+ 
+
 }

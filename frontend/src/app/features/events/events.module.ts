@@ -1,6 +1,7 @@
-import { NgModule } from '@angular/core';
+import { NgModule, CUSTOM_ELEMENTS_SCHEMA,  } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { RouterModule } from '@angular/router';
 
 
 import { EventsRoutingModule } from './events-routing.module';
@@ -13,8 +14,8 @@ import { EventDetailsComponent } from './components/event-details/event-details.
 import { ListEventsUserComponent } from './components/list-events-user/list-events-user.component';
 import { ReservationEventComponent } from './components/reservation-event/reservation-event.component';
 import { StripePaymentComponent } from './components/stripe-payment/stripe-payment.component';
-import { ReviewEventComponent } from './components/review-event/review-event.component';
-
+import { FullCalendarModule } from '@fullcalendar/angular';
+//import { CalendarEventsComponent } from './components/calendar-events/calendar-events.component';
 
 
 @NgModule({
@@ -26,14 +27,18 @@ import { ReviewEventComponent } from './components/review-event/review-event.com
     ListEventsUserComponent,
     ReservationEventComponent,
     StripePaymentComponent,
-    ReviewEventComponent
+    
+    //CalendarEventsComponent,
     
   ],
   imports: [
     CommonModule,
     FormsModule,
     ReactiveFormsModule,
-    EventsRoutingModule
-  ]
+    EventsRoutingModule,
+    FullCalendarModule,
+    RouterModule
+  ],
+  //schemas: [CUSTOM_ELEMENTS_SCHEMA]
 })
 export class EventsModule { }

@@ -41,4 +41,6 @@ public class Review {
     @ManyToOne
     @JoinColumn(name = "user_id")
     User user;
+    // Nouveau champ pour l'emoji global
+    String sentimentEmoji;
 }

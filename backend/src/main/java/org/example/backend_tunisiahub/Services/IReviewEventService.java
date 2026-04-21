@@ -8,9 +8,12 @@ public interface IReviewEventService {
 
     List<Review> retrieveAllReviews();
 
-    Review retrieveReview(Long id);
+    //Review retrieveReview(Long id);
+    //List<ReviewResponseDTO> retrieveAllReviews();
 
     Review addReview(Long userId, Long reservationId, String comment, int rating);
+
+    //ReviewResponseDTO addReview(ReviewRequestDTO dto);
 
     void deleteReview(Long id);
 

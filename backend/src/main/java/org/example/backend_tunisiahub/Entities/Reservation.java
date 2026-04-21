@@ -52,7 +52,7 @@ public class Reservation {
 
     @ManyToOne
     @JoinColumn(name = "user_id")
-    @JsonIgnore
+    //@JsonIgnore
     User user;
 
     @OneToMany(mappedBy = "reservation")
@@ -63,7 +63,7 @@ public class Reservation {
 
     @ManyToOne
     @JoinColumn(name = "event_id")
-    @JsonIgnore
+    //@JsonIgnore
     Event event;
 
     @OneToMany(mappedBy = "reservation", cascade = CascadeType.ALL)
