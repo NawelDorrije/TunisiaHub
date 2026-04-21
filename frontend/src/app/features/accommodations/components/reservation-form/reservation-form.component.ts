@@ -27,6 +27,9 @@ export class ReservationFormComponent implements OnInit {
   totalPrice: number = 0;
   today: string = new Date().toISOString().split('T')[0];
   minEndDate: string = '';
+  // Add these properties
+  showFeedback = false;
+  confirmedReservationId: number | null = null;
 
   paymentForm = new FormGroup({
     cardName: new FormControl('', Validators.required),
@@ -57,13 +60,21 @@ export class ReservationFormComponent implements OnInit {
       this.loadReservedDates();
     }
   }
+loadReservedDates(): void {
+  this.reservationService.getReservedDates(this.accommodationId).subscribe({
+    next: (data) => {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
 
-  loadReservedDates(): void {
-    this.reservationService.getReservedDates(this.accommodationId).subscribe({
-      next: (data) => this.reservedRanges = data,
-      error: () => {}
-    });
-  }
+      // ← filter out ranges that are completely in the past
+      this.reservedRanges = data.filter(range => {
+        const endDate = new Date(range.endDate);
+        return endDate >= today;
+      });
+    },
+    error: () => {}
+  });
+}
 
   isDateReserved(date: string): boolean {
     const d = new Date(date);
@@ -129,7 +140,7 @@ export class ReservationFormComponent implements OnInit {
     }
     this.currentStep = 2;
   }
-
+  
   confirmReservation(): void {
     if (this.paymentForm.invalid) {
       this.paymentForm.markAllAsTouched();
@@ -143,17 +154,26 @@ export class ReservationFormComponent implements OnInit {
       startDate: this.startDate,
       endDate: this.endDate
     }).subscribe({
-      next: () => {
-        this.isLoading = false;
-        this.currentStep = 3;
-        this.loadReservedDates();
-      },
+     next: (response: any) => {
+    this.isLoading = false;
+    this.currentStep = 3;
+    this.confirmedReservationId = response.id; // ← save reservation id
+    this.loadReservedDates();
+
+  // Show feedback popup after 2 seconds
+  setTimeout(() => {
+    this.showFeedback = true;
+    }, 2000);
+   },
       error: (err) => {
         this.errorMessage = err.error || 'Reservation failed. Please try again.';
         this.isLoading = false;
       }
     });
   }
+  onFeedbackClosed(): void {
+  this.showFeedback = false;
+}
 
   resetForm(): void {
     this.currentStep = 1;

@@ -16,6 +16,11 @@ import { MapPickerComponent } from './components/map-picker/map-picker.component
 import { MapWeatherComponent } from './components/map-weather/map-weather.component';
 import { ReservationFormComponent } from './components/reservation-form/reservation-form.component';
 import { FormsModule } from '@angular/forms';
+import { FeedbackPopupComponent } from './components/feedback-popup/feedback-popup.component';
+import { AccommodationStatisticsComponent } from './components/accommodation-statistics/accommodation-statistics.component';
+import { NgApexchartsModule } from 'ng-apexcharts';
+
+
 
 @NgModule({
   declarations: [
@@ -29,7 +34,9 @@ import { FormsModule } from '@angular/forms';
     ReviewFormComponent,
     MapPickerComponent,
     MapWeatherComponent,
-    ReservationFormComponent
+    ReservationFormComponent,
+    FeedbackPopupComponent,
+    AccommodationStatisticsComponent
   ],
   imports: [
     CommonModule,
@@ -37,7 +44,7 @@ import { FormsModule } from '@angular/forms';
     RouterModule,
     FormsModule,
     AccommodationsRoutingModule,
-
+    NgApexchartsModule
   ],
   providers:[
     provideHttpClient()

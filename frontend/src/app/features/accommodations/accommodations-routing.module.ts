@@ -6,6 +6,7 @@ import { AddAccommodationComponent } from './components/add-accommodation/add-ac
 import { EditAccommodationComponent } from './components/edit-accommodation/edit-accommodation.component';
 import { DetailsAccommodationComponent } from './components/details-accommodation/details-accommodation.component';
 import { AdminGuard } from '../auth/admin.guard';
+import { AccommodationStatisticsComponent } from './components/accommodation-statistics/accommodation-statistics.component';
 
 const routes: Routes = [
    { path: 'explore', component: UserListAccommodationComponent },                          
@@ -13,7 +14,12 @@ const routes: Routes = [
   { path: 'admin', component: AdminListAccommodationComponent, canActivate: [AdminGuard] },
   { path: 'add', component: AddAccommodationComponent, canActivate: [AdminGuard] },        
   { path: 'edit/:id', component: EditAccommodationComponent, canActivate: [AdminGuard] },  
-  { path: '', redirectTo: 'explore', pathMatch: 'full' }
+  { path: '', redirectTo: 'explore', pathMatch: 'full' },
+  { 
+  path: 'statistics', 
+  component: AccommodationStatisticsComponent, 
+  canActivate: [AdminGuard] 
+}
 ];
 
 @NgModule({

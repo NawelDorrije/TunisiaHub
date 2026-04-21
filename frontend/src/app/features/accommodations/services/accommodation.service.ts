@@ -5,6 +5,7 @@ import { Accommodation } from '../../../models/accommodations/accommodation.mode
 import { PriceRecommendation } from '../../../models/accommodations/price-recommendation.model';
 import { DescriptionRecommendation } from '../../../models/accommodations/description-recommendation.model';
 import { RecommendationResponse } from '../../../models/accommodations/recommendation.model';
+import { AccommodationStats } from '../../../models/accommodations/statistics.model';
 @Injectable({
   providedIn: 'root'
 })
@@ -63,4 +64,5 @@ getRecommendations(): Observable<RecommendationResponse> {
     'http://localhost:8089/api/ai/recommendations'
   );
 }
+
 }

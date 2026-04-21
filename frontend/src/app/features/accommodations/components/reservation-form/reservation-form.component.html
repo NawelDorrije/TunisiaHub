@@ -211,6 +211,13 @@
         Make another reservation
       </button>
     </div>
-
+  
   </div>
 </div>
+<app-feedback-popup
+  *ngIf="showFeedback && confirmedReservationId"
+  [accommodationId]="accommodationId"
+  [reservationId]="confirmedReservationId!"
+  [accommodationTitle]="accommodationTitle"
+  (closed)="onFeedbackClosed()"
+></app-feedback-popup>

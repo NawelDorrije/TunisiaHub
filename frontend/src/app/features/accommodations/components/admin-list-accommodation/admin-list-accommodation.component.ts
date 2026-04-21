@@ -49,6 +49,9 @@ export class AdminListAccommodationComponent implements OnInit {
   goToDetail(id: number): void {
     this.router.navigate(['/accommodations/detail', id]);
   }
+  goToStatistics(): void {
+  this.router.navigate(['/accommodations/statistics']);
+}
 
   deleteAccommodation(id: number): void {
     if (confirm('Are you sure you want to delete this accommodation?')) {
