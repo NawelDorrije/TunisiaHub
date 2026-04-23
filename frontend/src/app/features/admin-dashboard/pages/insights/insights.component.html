@@ -1,0 +1,116 @@
+<div class="insights-container">
+  <h2>Review Insights</h2>
+
+  <!-- Filter Bar -->
+  <div class="filter-bar">
+    <div class="filter-group">
+      <label for="shop-select">Select Shop:</label>
+      <select 
+        id="shop-select" 
+        [(ngModel)]="selectedShopId" 
+        (change)="onShopSelected(selectedShopId)"
+        class="filter-select"
+      >
+        <option [ngValue]="null">All Shops</option>
+        <option *ngFor="let shop of shops" [ngValue]="shop.id">{{ shop.name }}</option>
+      </select>
+    </div>
+
+    <div class="filter-group" *ngIf="selectedShopId && products.length > 0">
+      <label>Select Products:</label>
+      <div class="product-checkboxes">
+        <label *ngFor="let product of products" class="checkbox-label">
+          <input 
+            #checkbox
+            type="checkbox" 
+            [checked]="selectedProductIds.includes(product.id)"
+            (change)="onProductSelected(product.id, checkbox.checked)"
+          />
+          {{ product.name }}
+        </label>
+      </div>
+    </div>
+
+    <button class="btn btn-apply" (click)="applyFilters()">Apply Filters</button>
+  </div>
+
+  <div *ngIf="error" class="alert alert-danger">
+    {{ error }}
+  </div>
+
+  <div *ngIf="isLoading" class="loading-spinner">
+    <div class="spinner"></div>
+    <p>Loading review insights...</p>
+  </div>
+
+  <div *ngIf="!isLoading && reviewInsights" class="insights-content">
+    <div class="info-box">
+      <h3>Overview</h3>
+      <p>{{ reviewInsights.summary }}</p>
+    </div>
+
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-icon">📊</div>
+        <div class="stat-content">
+          <h3>Total Reviews</h3>
+          <p class="stat-value">{{ reviewInsights.totalReviews }}</p>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">🏪</div>
+        <div class="stat-content">
+          <h3>Shop Reviews</h3>
+          <p class="stat-value">{{ reviewInsights.shopReviewCount }}</p>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">📦</div>
+        <div class="stat-content">
+          <h3>Product Reviews</h3>
+          <p class="stat-value">{{ reviewInsights.productReviewCount }}</p>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">⭐</div>
+        <div class="stat-content">
+          <h3>Avg Shop Rating</h3>
+          <p class="stat-value">{{ reviewInsights.averageShopRating | number:'1.1-2' }}</p>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">🌟</div>
+        <div class="stat-content">
+          <h3>Avg Product Rating</h3>
+          <p class="stat-value">{{ reviewInsights.averageProductRating | number:'1.1-2' }}</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="details-grid">
+      <div class="detail-card">
+        <h4>Main Problem</h4>
+        <p>{{ reviewInsights.mainProblem || 'No dominant problem identified.' }}</p>
+      </div>
+      <div class="detail-card">
+        <h4>Most Frequent Problem</h4>
+        <p>{{ reviewInsights.mostFrequentProblem || 'No frequent problem identified.' }}</p>
+      </div>
+      <div class="detail-card feature-list">
+        <h4>Best Features</h4>
+        <ul *ngIf="reviewInsights.bestFeatures?.length; else noFeatures">
+          <li *ngFor="let feature of reviewInsights.bestFeatures">
+            <span class="check-icon">✓</span> {{ feature }}
+          </li>
+        </ul>
+        <ng-template #noFeatures>
+          <p>No best features identified.</p>
+        </ng-template>
+      </div>
+    </div>
+
+    <div class="ai-note">
+      <small>✨ {{ reviewInsights.generatedWithAi ? 'Insights generated with AI analysis.' : 'Insights based on raw review data.' }}</small>
+    </div>
+  </div>
+</div>

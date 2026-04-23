@@ -1,4 +1,4 @@
-﻿import { Component, OnInit } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { Shop } from '../../../../../models/souvenirs-shops/shop.model';
 import { ShopService } from '../../../../../services/souvenirs-shops/shop.service';
 import { AuthService } from '../../../../auth/services/auth.service';
@@ -19,7 +19,7 @@ export class ShopListComponent implements OnInit {
   ) {}
 
   get canManageShops(): boolean {
-    return this.authService.isAdmin() || this.authService.isOwner();
+    return this.authService.isOwner();
   }
 
   ngOnInit(): void {

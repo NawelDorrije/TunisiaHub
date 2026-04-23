@@ -1,4 +1,4 @@
-﻿import { Component, OnInit } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Product } from '../../../../../models/souvenirs-shops/product.model';
 import { ProductService } from '../../../../../services/souvenirs-shops/product.service';
@@ -26,11 +26,11 @@ export class ProductListComponent implements OnInit {
   ) {}
 
   get canManageProducts(): boolean {
-    return this.authService.isAdmin() || this.authService.isOwner();
+    return this.authService.isOwner();
   }
 
   get canAddToCart(): boolean {
-    return this.authService.isClient();
+    return this.authService.isClient() || this.authService.isAdmin();
   }
 
   ngOnInit(): void {

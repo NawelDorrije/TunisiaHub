@@ -1,4 +1,4 @@
-﻿import { Component, OnInit } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { Order } from '../../../../../models/souvenirs-shops/order.model';
 import { OrderService, UpdateOrderStatusRequest } from '../../../../../services/souvenirs-shops/order.service';
@@ -31,6 +31,10 @@ export class OrderListComponent implements OnInit {
   minTotal: number | null = null;
   maxTotal: number | null = null;
   sortBy = 'NEWEST';
+  
+  // Pagination
+  currentPage = 1;
+  itemsPerPage = 4;
 
   public OrderStatus = OrderStatus;
 
@@ -92,7 +96,7 @@ export class OrderListComponent implements OnInit {
 
   get viewTabs(): Array<{ key: 'client' | 'owner'; label: string }> {
     const tabs: Array<{ key: 'client' | 'owner'; label: string }> = [];
-    if (this.authService.isClient()) {
+    if (this.authService.isClient() || this.authService.isAdmin()) {
       tabs.push({ key: 'client', label: 'Client View' });
     }
     if (this.authService.isOwner() || this.authService.isAdmin()) {
@@ -148,6 +152,51 @@ export class OrderListComponent implements OnInit {
       .filter((order) => this.filterByDate(order))
       .filter((order) => this.filterByPrice(order))
       .sort((a, b) => this.sortOrders(a, b));
+  }
+
+  get paginatedOrders(): Order[] {
+    const startIndex = (this.currentPage - 1) * this.itemsPerPage;
+    return this.filteredOrders.slice(startIndex, startIndex + this.itemsPerPage);
+  }
+
+  get totalPages(): number {
+    return Math.ceil(this.filteredOrders.length / this.itemsPerPage);
+  }
+
+  get pages(): number[] {
+    const total = this.totalPages;
+    if (total <= 5) {
+      return Array.from({ length: total }, (_, i) => i + 1);
+    }
+    
+    if (this.currentPage <= 3) {
+      return [1, 2, 3, 4, 5];
+    }
+    
+    if (this.currentPage >= total - 2) {
+      return [total - 4, total - 3, total - 2, total - 1, total];
+    }
+    
+    return [this.currentPage - 2, this.currentPage - 1, this.currentPage, this.currentPage + 1, this.currentPage + 2];
+  }
+
+  goToPage(page: number): void {
+    if (page >= 1 && page <= this.totalPages) {
+      this.currentPage = page;
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  }
+
+  nextPage(): void {
+    if (this.currentPage < this.totalPages) {
+      this.goToPage(this.currentPage + 1);
+    }
+  }
+
+  previousPage(): void {
+    if (this.currentPage > 1) {
+      this.goToPage(this.currentPage - 1);
+    }
   }
 
   private filterByView(order: Order): boolean {
@@ -285,6 +334,7 @@ export class OrderListComponent implements OnInit {
     this.minTotal = null;
     this.maxTotal = null;
     this.sortBy = 'NEWEST';
+    this.currentPage = 1;
   }
 
   setActiveStatusTab(tab: string): void {
@@ -301,6 +351,7 @@ export class OrderListComponent implements OnInit {
     this.minTotal = null;
     this.maxTotal = null;
     this.sortBy = 'NEWEST';
+    this.currentPage = 1;
   }
 
   viewOrder(order: Order): void {
@@ -367,7 +418,7 @@ export class OrderListComponent implements OnInit {
   }
 
   canCancelPending(order: Order): boolean {
-    return this.authService.isClient() && order.status === OrderStatus.PENDING;
+    return (this.authService.isClient() || this.authService.isAdmin()) && order.status === OrderStatus.PENDING;
   }
 
   canProcessOrder(order: Order): boolean {

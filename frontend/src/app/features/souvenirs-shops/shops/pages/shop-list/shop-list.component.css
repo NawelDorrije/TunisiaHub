@@ -232,6 +232,15 @@
   color: #2c1810;
   margin: 0 0 8px;
 }
+.card-description {
+  font-size: 13px;
+  color: #9b8070;
+  margin: 0 0 8px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: block;
+}
 .card-location,
 .card-owner {
   font-size: 13px;

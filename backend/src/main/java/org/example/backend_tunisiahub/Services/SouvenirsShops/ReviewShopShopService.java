@@ -1,14 +1,18 @@
 package org.example.backend_tunisiahub.Services.SouvenirsShops;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.example.backend_tunisiahub.Controllers.SouvenirsShops.dto.OwnerReviewInsightsResponse;
 import org.example.backend_tunisiahub.Controllers.SouvenirsShops.dto.ReviewEligibilityResponse;
 import org.example.backend_tunisiahub.Entities.SouvenirsShops.OrderStatus;
 import org.example.backend_tunisiahub.Entities.SouvenirsShops.Product;
 import org.example.backend_tunisiahub.Entities.SouvenirsShops.Review;
 import org.example.backend_tunisiahub.Entities.SouvenirsShops.ReviewType;
 import org.example.backend_tunisiahub.Entities.SouvenirsShops.Shop;
+import org.example.backend_tunisiahub.Entities.User.RoleUser;
 import org.example.backend_tunisiahub.Entities.User.User;
 import org.example.backend_tunisiahub.Repositories.SouvenirsShops.OrderItemRepository;
 import org.example.backend_tunisiahub.Repositories.SouvenirsShops.OrderRepository;
@@ -35,6 +39,7 @@ public class ReviewShopShopService implements IReviewShopService {
     private final OrderRepository orderRepository;
     private final OrderItemRepository orderItemRepository;
     private final UserRepository userRepository;
+    private final AiReviewInsightsService aiReviewInsightsService;
 
     @Override
     public Review retrieveReview(Long id) {
@@ -55,11 +60,16 @@ public class ReviewShopShopService implements IReviewShopService {
     }
 
     @Override
+    public List<Review> retrieveAllReviews() {
+        return reviewShopRepository.findByDeletedFalseOrderByCreatedAtDesc();
+    }
+
+    @Override
     @Transactional
     public Review addShopReview(Long shopId, Integer rating, String comment) {
         validateRatingAndComment(rating, comment);
         User currentUser = getCurrentUser();
-        assertClientCanWrite();
+        assertClientCanWrite(currentUser);
         Shop shop = findShop(shopId);
         assertNotOwnerOfTargetShop(currentUser, shop);
 
@@ -98,7 +108,7 @@ public class ReviewShopShopService implements IReviewShopService {
     public Review addProductReview(Long productId, Integer rating, String comment) {
         validateRatingAndComment(rating, comment);
         User currentUser = getCurrentUser();
-        assertClientCanWrite();
+        assertClientCanWrite(currentUser);
         Product product = findProduct(productId);
         assertNotOwnerOfTargetProduct(currentUser, product);
 
@@ -136,8 +146,11 @@ public class ReviewShopShopService implements IReviewShopService {
     @Transactional
     public void deleteReview(Long id) {
         Review review = retrieveReview(id);
-        assertClientCanWrite();
-        assertReviewOwner(review);
+        if (!isAdminFromAuth()) {
+            User currentUser = getCurrentUser();
+            assertClientCanWrite(currentUser);
+            assertReviewOwner(review, currentUser);
+        }
         if (Boolean.TRUE.equals(review.getDeleted())) {
             return;
         }
@@ -158,8 +171,9 @@ public class ReviewShopShopService implements IReviewShopService {
     public Review modifyReview(Long reviewId, Integer rating, String comment) {
         validateRatingAndComment(rating, comment);
         Review review = retrieveReview(reviewId);
-        assertClientCanWrite();
-        assertReviewOwner(review);
+        User currentUser = getCurrentUser();
+        assertClientCanWrite(currentUser);
+        assertReviewOwner(review, currentUser);
         if (Boolean.TRUE.equals(review.getDeleted())) {
             throw new ApiException(HttpStatus.BAD_REQUEST, "Deleted review cannot be edited");
         }
@@ -224,8 +238,7 @@ public class ReviewShopShopService implements IReviewShopService {
         return user;
     }
 
-    private void assertReviewOwner(Review review) {
-        User currentUser = getCurrentUser();
+    private void assertReviewOwner(Review review, User currentUser) {
         if (review.getUser() == null || !review.getUser().getId().equals(currentUser.getId())) {
             throw new ApiException(HttpStatus.FORBIDDEN, "You can only modify your own review");
         }
@@ -253,16 +266,9 @@ public class ReviewShopShopService implements IReviewShopService {
         }
     }
 
-    private void assertClientCanWrite() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication == null || authentication.getAuthorities() == null) {
-            throw new ApiException(HttpStatus.UNAUTHORIZED, "Missing authentication");
-        }
-
-        boolean isClient = authentication.getAuthorities().stream()
-                .anyMatch(authority -> "ROLE_CLIENT".equals(authority.getAuthority()));
-        if (!isClient) {
-            throw new ApiException(HttpStatus.FORBIDDEN, "Only clients can write, edit, or delete reviews");
+    private void assertClientCanWrite(User currentUser) {
+        if (currentUser.getRole() != RoleUser.CLIENT && currentUser.getRole() != RoleUser.ADMIN) {
+            throw new ApiException(HttpStatus.FORBIDDEN, "Only clients and admins can write, edit, or delete reviews");
         }
     }
 
@@ -334,12 +340,88 @@ public class ReviewShopShopService implements IReviewShopService {
         return new ReviewEligibilityResponse(reviews, canWriteReview, userReview);
     }
 
-    private boolean isClientUser() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication == null || authentication.getAuthorities() == null) {
-            return false;
+    @Override
+    public OwnerReviewInsightsResponse getOwnerReviewInsights() {
+        return getOwnerReviewInsights(null, null);
+    }
+
+    @Override
+    public OwnerReviewInsightsResponse getOwnerReviewInsights(Long shopId, String productIds) {
+        User currentUser = getCurrentUser();
+        if (currentUser.getRole() != RoleUser.OWNER && currentUser.getRole() != RoleUser.ADMIN) {
+            throw new ApiException(HttpStatus.FORBIDDEN, "Only owners and admins can analyze owner reviews");
         }
-        return authentication.getAuthorities().stream()
-                .anyMatch(authority -> "ROLE_CLIENT".equals(authority.getAuthority()));
+
+        List<Shop> shops;
+        List<Product> products;
+
+        if (currentUser.getRole() == RoleUser.ADMIN) {
+            shops = shopRepository.findAll();
+            products = productRepository.findAll();
+        } else {
+            Long ownerId = currentUser.getId();
+            shops = shopRepository.findByOwnerId(ownerId);
+            products = productRepository.findByShopOwnerId(ownerId);
+        }
+
+        // Filter by shop if specified
+        if (shopId != null) {
+            shops = shops.stream()
+                    .filter(shop -> shop.getId().equals(shopId))
+                    .toList();
+            products = products.stream()
+                    .filter(product -> product.getShop() != null && product.getShop().getId().equals(shopId))
+                    .toList();
+        }
+
+        // Filter by products if specified
+        if (productIds != null && !productIds.isEmpty()) {
+            List<Long> productIdList = Arrays.stream(productIds.split(","))
+                    .map(String::trim)
+                    .map(Long::parseLong)
+                    .toList();
+            products = products.stream()
+                    .filter(product -> productIdList.contains(product.getId()))
+                    .toList();
+        }
+
+        List<Review> shopReviews = findActiveReviewsForTargets(
+                ReviewType.SHOP,
+                shops.stream().map(Shop::getId).toList()
+        );
+        List<Review> productReviews = findActiveReviewsForTargets(
+                ReviewType.PRODUCT,
+                products.stream().map(Product::getId).toList()
+        );
+
+        return aiReviewInsightsService.generateOwnerInsights(
+                currentUser,
+                shops,
+                products,
+                shopReviews,
+                productReviews
+        );
+    }
+
+    private boolean isClientUser() {
+        RoleUser role = getCurrentUser().getRole();
+        return role == RoleUser.CLIENT || role == RoleUser.ADMIN;
+    }
+
+    private boolean isAdmin(User currentUser) {
+        return currentUser.getRole() == RoleUser.ADMIN;
+    }
+
+    private boolean isAdminFromAuth() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        return authentication != null && authentication.getAuthorities().stream()
+                .anyMatch(authority -> "ROLE_ADMIN".equals(authority.getAuthority()));
+    }
+
+    private List<Review> findActiveReviewsForTargets(ReviewType reviewType, List<Long> targetIds) {
+        if (targetIds == null || targetIds.isEmpty()) {
+            return new ArrayList<>();
+        }
+        return reviewShopRepository.findByReviewTypeAndTargetIdInAndDeletedFalseOrderByCreatedAtDesc(reviewType, targetIds);
     }
 }

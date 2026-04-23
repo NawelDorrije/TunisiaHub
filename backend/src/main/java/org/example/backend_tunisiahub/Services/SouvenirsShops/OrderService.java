@@ -15,6 +15,7 @@ import org.example.backend_tunisiahub.Entities.SouvenirsShops.Payment;
 import org.example.backend_tunisiahub.Entities.SouvenirsShops.PaymentStatus;
 import org.example.backend_tunisiahub.Entities.SouvenirsShops.Product;
 import org.example.backend_tunisiahub.Entities.SouvenirsShops.Shop;
+import org.example.backend_tunisiahub.Entities.User.RoleUser;
 import org.example.backend_tunisiahub.Entities.User.User;
 import org.example.backend_tunisiahub.Repositories.SouvenirsShops.OrderItemRepository;
 import org.example.backend_tunisiahub.Repositories.SouvenirsShops.OrderRepository;
@@ -33,6 +34,12 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @RequiredArgsConstructor
 public class OrderService implements IOrderService {
+
+    private static final List<OrderStatus> CANCELLABLE_STATUSES = List.of(
+            OrderStatus.PENDING,
+            OrderStatus.PAID,
+            OrderStatus.PROCESSING
+    );
 
     private final OrderRepository orderRepository;
     private final OrderItemRepository orderItemRepository;
@@ -191,33 +198,26 @@ public class OrderService implements IOrderService {
     @Override
     @Transactional
     public Order updateOrderStatus(Long id, OrderStatus newStatus, Boolean generateAiMessage) {
-        if (!isOwner()) {
-            throw new ApiException(HttpStatus.FORBIDDEN, "Only owners can update order status");
+        User currentUser = getCurrentUser();
+        boolean admin = isAdmin(currentUser);
+        if (!admin && !isOwner(currentUser)) {
+            throw new ApiException(HttpStatus.FORBIDDEN, "Only owners and admins can update order status");
         }
         if (newStatus == null) {
             throw new ApiException(HttpStatus.BAD_REQUEST, "New status is required");
         }
 
         Order order = findOrder(id);
-        if (!order.getShop().getOwner().getId().equals(getCurrentUser().getId())) {
+        if (!admin && !order.getShop().getOwner().getId().equals(currentUser.getId())) {
             throw new ApiException(HttpStatus.FORBIDDEN, "You can only manage orders from your shop");
         }
 
         OrderStatus currentStatus = order.getStatus();
-        if (currentStatus == OrderStatus.DELIVERED
-                || currentStatus == OrderStatus.COMPLETED
-                || currentStatus == OrderStatus.CANCELLED) {
+        if (currentStatus == OrderStatus.COMPLETED || currentStatus == OrderStatus.CANCELLED) {
             throw new ApiException(HttpStatus.BAD_REQUEST, "Completed or cancelled orders cannot be modified");
         }
 
-        boolean allowed =
-                (currentStatus == OrderStatus.PENDING && newStatus == OrderStatus.CANCELLED)
-                        || (currentStatus == OrderStatus.PAID && (newStatus == OrderStatus.PROCESSING || newStatus == OrderStatus.CANCELLED))
-                        || (currentStatus == OrderStatus.PROCESSING
-                        && (newStatus == OrderStatus.DELIVERED
-                        || newStatus == OrderStatus.COMPLETED
-                        || newStatus == OrderStatus.CANCELLED));
-        if (!allowed) {
+        if (!isAllowedStatusTransition(currentStatus, newStatus, admin)) {
             throw new ApiException(HttpStatus.BAD_REQUEST, "Invalid status transition");
         }
 
@@ -277,6 +277,23 @@ public class OrderService implements IOrderService {
                 || status == OrderStatus.DELIVERED
                 || status == OrderStatus.COMPLETED
                 || status == OrderStatus.PAID;
+    }
+
+    private boolean isAllowedStatusTransition(OrderStatus currentStatus, OrderStatus newStatus, boolean admin) {
+        if (newStatus == currentStatus) {
+            return false;
+        }
+        if (newStatus == OrderStatus.CANCELLED) {
+            return CANCELLABLE_STATUSES.contains(currentStatus);
+        }
+
+        return switch (currentStatus) {
+            case PENDING -> admin && newStatus == OrderStatus.PAID;
+            case PAID -> newStatus == OrderStatus.PROCESSING;
+            case PROCESSING -> newStatus == OrderStatus.DELIVERED || newStatus == OrderStatus.COMPLETED;
+            case DELIVERED -> newStatus == OrderStatus.COMPLETED;
+            case COMPLETED, CANCELLED -> false;
+        };
     }
 
     private void validateCartItem(CartItemRequest item) {
@@ -348,29 +365,28 @@ public class OrderService implements IOrderService {
         return authentication.getName();
     }
 
-    private boolean hasRole(String roleName) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication == null || authentication.getAuthorities() == null) {
-            return false;
-        }
-        for (GrantedAuthority authority : authentication.getAuthorities()) {
-            if (roleName.equals(authority.getAuthority())) {
-                return true;
-            }
-        }
-        return false;
+    private boolean isAdmin(User user) {
+        return user.getRole() == RoleUser.ADMIN;
     }
 
     private boolean isAdmin() {
-        return hasRole("ROLE_ADMIN");
+        return isAdmin(getCurrentUser());
+    }
+
+    private boolean isOwner(User user) {
+        return user.getRole() == RoleUser.OWNER;
     }
 
     private boolean isOwner() {
-        return hasRole("ROLE_OWNER");
+        return isOwner(getCurrentUser());
+    }
+
+    private boolean isClient(User user) {
+        return user.getRole() == RoleUser.CLIENT || user.getRole() == RoleUser.ADMIN;
     }
 
     private boolean isClient() {
-        return hasRole("ROLE_CLIENT");
+        return isClient(getCurrentUser());
     }
 
     private record PreparedItem(Product product, int quantity) {

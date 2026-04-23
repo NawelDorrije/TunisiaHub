@@ -15,6 +15,10 @@ public interface ReviewShopRepository extends JpaRepository<Review, Long> {
 
     List<Review> findByReviewTypeAndTargetIdAndDeletedFalseOrderByCreatedAtDesc(ReviewType reviewType, Long targetId);
 
+    List<Review> findByReviewTypeAndTargetIdInAndDeletedFalseOrderByCreatedAtDesc(ReviewType reviewType, List<Long> targetIds);
+
+    List<Review> findByDeletedFalseOrderByCreatedAtDesc();
+
     Optional<Review> findByUserIdAndReviewTypeAndTargetIdAndDeletedFalse(Long userId, ReviewType reviewType, Long targetId);
 
     Optional<Review> findByUserIdAndReviewTypeAndTargetId(Long userId, ReviewType reviewType, Long targetId);

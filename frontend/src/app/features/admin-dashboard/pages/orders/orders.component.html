@@ -1,0 +1,49 @@
+<div class="orders-container">
+  <div class="orders-header">
+    <h2>Manage Orders</h2>
+  </div>
+
+  <div *ngIf="error" class="alert alert-danger">
+    {{ error }}
+  </div>
+
+  <div *ngIf="isLoading" class="loading">
+    <div class="spinner"></div>
+    Loading orders...
+  </div>
+
+  <div *ngIf="!isLoading && orders.length === 0" class="no-data">
+    <p>No orders found.</p>
+  </div>
+
+  <div *ngIf="!isLoading && orders.length > 0" class="table-responsive">
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Customer</th>
+          <th>Shop</th>
+          <th>Total</th>
+          <th>Status</th>
+          <th>Created</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let order of orders">
+          <td>{{ order.user?.nom }} {{ order.user?.prenom }}</td>
+          <td>{{ order.shop?.name }}</td>
+          <td>${{ calculateTotal(order) | number: '1.2-2' }}</td>
+          <td>
+            <span class="badge" [ngClass]="'badge-' + order.status.toLowerCase()">
+              {{ order.status }}
+            </span>
+          </td>
+          <td>{{ order.createdAt | date: 'short' }}</td>
+          <td>
+            <button class="btn btn-sm btn-primary" (click)="viewDetails(order.id)">View</button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>

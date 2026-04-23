@@ -30,6 +30,9 @@
           class="form-control"
           placeholder="Enter product description"
         ></textarea>
+        <small *ngIf="isGeneratingDescription" class="form-text text-info d-block mt-1">
+          <i class="bi bi-hourglass-split"></i> Generating description from image...
+        </small>
       </div>
 
       <div *ngIf="photoUrl" class="mb-3 text-center">
@@ -50,9 +53,11 @@
           type="button"
           class="btn btn-outline-primary mt-2"
           (click)="uploadProductImage()"
-          [disabled]="!selectedFile || isUploadingImage"
+          [disabled]="!selectedFile || isUploadingImage || isGeneratingDescription"
         >
-          {{ isUploadingImage ? 'Uploading...' : 'Upload image' }}
+          <span *ngIf="!isUploadingImage && !isGeneratingDescription">Upload image</span>
+          <span *ngIf="isGeneratingDescription"><i class="bi bi-hourglass-split"></i> Generating description...</span>
+          <span *ngIf="isUploadingImage && !isGeneratingDescription">Uploading...</span>
         </button>
         <div *ngIf="uploadError" class="form-text text-danger">{{ uploadError }}</div>
       </div>

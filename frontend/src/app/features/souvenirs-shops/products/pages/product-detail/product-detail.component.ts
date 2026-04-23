@@ -1,4 +1,4 @@
-﻿import { Component, OnInit } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Product } from '../../../../../models/souvenirs-shops/product.model';
 import { Review, CreateReviewRequest, UpdateReviewRequest, ReviewEligibilityResponse } from '../../../../../models/souvenirs-shops/review.model';
@@ -52,11 +52,11 @@ export class ProductDetailComponent implements OnInit {
   ) {}
 
   get canManageProducts(): boolean {
-    return this.authService.isAdmin() || this.authService.isOwner();
+    return this.authService.isOwner();
   }
 
   get canAddToCart(): boolean {
-    return this.authService.isClient() && !!this.product && this.product.stockQuantity > 0;
+    return (this.authService.isClient() || this.authService.isAdmin()) && !!this.product && this.product.stockQuantity > 0;
   }
 
   ngOnInit(): void {
@@ -125,16 +125,14 @@ decreaseQty(): void {
 
   // Review methods
   private checkReviewPermissions(productId: number): void {
-    // For owners/admins, load reviews directly (read-only)
-    if (this.authService.isAdmin() || this.authService.isOwner()) {
+    if (this.authService.isOwner()) {
       this.canSeeReviews = true;
       this.canWriteReview = false;
       this.loadReviewsWithEligibility(productId);
       return;
     }
 
-    // For clients, use the combined API call
-    if (this.authService.isClient()) {
+    if (this.authService.isClient() || this.authService.isAdmin()) {
       this.loadReviewsWithEligibility(productId);
     } else {
       this.canSeeReviews = false;

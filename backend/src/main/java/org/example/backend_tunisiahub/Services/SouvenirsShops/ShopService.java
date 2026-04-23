@@ -7,6 +7,7 @@ import org.example.backend_tunisiahub.Entities.SouvenirsShops.Product;
 import org.example.backend_tunisiahub.Entities.SouvenirsShops.Review;
 import org.example.backend_tunisiahub.Entities.SouvenirsShops.ReviewType;
 import org.example.backend_tunisiahub.Entities.SouvenirsShops.Shop;
+import org.example.backend_tunisiahub.Entities.User.RoleUser;
 import org.example.backend_tunisiahub.Entities.User.User;
 import org.example.backend_tunisiahub.Repositories.SouvenirsShops.OrderRepository;
 import org.example.backend_tunisiahub.Repositories.SouvenirsShops.ProductRepository;
@@ -16,7 +17,6 @@ import org.example.backend_tunisiahub.Repositories.User.UserRepository;
 import org.example.backend_tunisiahub.shared.exception.ApiException;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
@@ -29,6 +29,7 @@ public class ShopService implements IShopService {
     private final OrderRepository orderRepository;
     private final ReviewShopRepository reviewShopRepository;
     private final UserRepository userRepository;
+    private final AiImageDescriptionService aiImageDescriptionService;
 
     @Override
     public List<Shop> retrieveAllShops() {
@@ -64,6 +65,7 @@ public class ShopService implements IShopService {
     public Shop addShop(Shop shop) {
         User currentUser = getCurrentUser();
         shop.setOwner(currentUser);
+        populateDescriptionIfMissing(shop);
         return shopRepository.save(shop);
     }
 
@@ -93,8 +95,16 @@ public class ShopService implements IShopService {
         existing.setLatitude(shop.getLatitude());
         existing.setLongitude(shop.getLongitude());
         existing.setPhotoUrl(shop.getPhotoUrl());
+        populateDescriptionIfMissing(existing);
 
         return shopRepository.save(existing);
+    }
+
+    private void populateDescriptionIfMissing(Shop shop) {
+        if (shop.getDescription() != null && !shop.getDescription().isBlank()) {
+            return;
+        }
+        shop.setDescription(aiImageDescriptionService.generateShopDescriptionFromUrl(shop));
     }
 
     private User getCurrentUser() {
@@ -107,26 +117,13 @@ public class ShopService implements IShopService {
     }
 
     private void assertOwnerOrAdmin(String ownerEmail) {
-        if (isCurrentUserAdmin()) {
+        User currentUser = getCurrentUser();
+        if (currentUser.getRole() == RoleUser.ADMIN) {
             return;
         }
-        String currentUserEmail = getCurrentUserEmail();
-        if (!currentUserEmail.equalsIgnoreCase(ownerEmail)) {
+        if (!currentUser.getEmail().equalsIgnoreCase(ownerEmail)) {
             throw new ApiException(HttpStatus.FORBIDDEN, "You are not allowed to manage this shop");
         }
-    }
-
-    private boolean isCurrentUserAdmin() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication == null || authentication.getAuthorities() == null) {
-            return false;
-        }
-        for (GrantedAuthority authority : authentication.getAuthorities()) {
-            if ("ROLE_ADMIN".equals(authority.getAuthority())) {
-                return true;
-            }
-        }
-        return false;
     }
 
     private String getCurrentUserEmail() {

@@ -1,0 +1,56 @@
+<div class="admin-dashboard-container">
+  <!-- Sidebar Navigation -->
+  <aside class="admin-sidebar">
+    <div class="sidebar-header">
+      <h3>Admin Dashboard</h3>
+      <p class="admin-name">{{ adminName }}</p>
+    </div>
+
+    <nav class="sidebar-nav">
+      <ul class="nav-list">
+        <li>
+          <a routerLink="/admin-dashboard/overview" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
+            <span class="nav-icon">📊</span> Overview
+          </a>
+        </li>
+        <li>
+          <a routerLink="/admin-dashboard/users" routerLinkActive="active">
+            <span class="nav-icon">👥</span> Users
+          </a>
+        </li>
+        <li>
+          <a routerLink="/admin-dashboard/shops" routerLinkActive="active">
+            <span class="nav-icon">🏪</span> Shops
+          </a>
+        </li>
+        <li>
+          <a routerLink="/admin-dashboard/orders" routerLinkActive="active">
+            <span class="nav-icon">📦</span> Orders
+          </a>
+        </li>
+        <li>
+          <a routerLink="/admin-dashboard/reviews" routerLinkActive="active">
+            <span class="nav-icon">⭐</span> Reviews
+          </a>
+        </li>
+        <li>
+          <a routerLink="/admin-dashboard/insights" routerLinkActive="active">
+            <span class="nav-icon">📈</span> Review Insights
+          </a>
+        </li>
+      </ul>
+    </nav>
+
+    <div class="sidebar-footer">
+      <button class="btn btn-danger w-100" (click)="logout()">Logout</button>
+    </div>
+  </aside>
+
+  <!-- Main Content Area -->
+  <main class="admin-main-content">
+    <div class="content-header">
+      <h1>Admin Dashboard</h1>
+    </div>
+    <router-outlet></router-outlet>
+  </main>
+</div>

@@ -138,9 +138,9 @@
   </div>
 
   <!-- Orders list -->
-  <div *ngIf="!isLoading && filteredOrders.length > 0" class="orders-list">
+  <div *ngIf="!isLoading && paginatedOrders.length > 0" class="orders-list">
 
-    <div *ngFor="let order of filteredOrders" class="order-card">
+    <div *ngFor="let order of paginatedOrders" class="order-card">
 
       <!-- Order card header -->
       <div class="order-card-header">
@@ -208,6 +208,27 @@
       </div>
 
     </div>
+
+    <!-- Pagination Controls -->
+    <div class="pagination" *ngIf="totalPages > 1">
+      <button class="page-btn" (click)="previousPage()" [disabled]="currentPage === 1">
+        &laquo; Previous
+      </button>
+      
+      <div class="page-numbers">
+        <button *ngFor="let page of pages" 
+                class="page-number" 
+                [class.active]="page === currentPage"
+                (click)="goToPage(page)">
+          {{ page }}
+        </button>
+      </div>
+
+      <button class="page-btn" (click)="nextPage()" [disabled]="currentPage === totalPages">
+        Next &raquo;
+      </button>
+    </div>
+
   </div>
 
 </div>

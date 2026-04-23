@@ -5,6 +5,8 @@ import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
+import org.springframework.web.multipart.MultipartException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -56,6 +58,17 @@ public class GlobalExceptionHandler {
                                                                      HttpServletRequest request) {
         log.warn("Method not supported on {}: {}", request.getRequestURI(), ex.getMessage());
         return buildError(HttpStatus.METHOD_NOT_ALLOWED, ex.getMessage(), request.getRequestURI(), null);
+    }
+
+    @ExceptionHandler({MaxUploadSizeExceededException.class, MultipartException.class})
+    public ResponseEntity<ApiErrorResponse> handleMultipartException(Exception ex, HttpServletRequest request) {
+        log.warn("Multipart error on {}: {}", request.getRequestURI(), ex.getMessage());
+        return buildError(
+                HttpStatus.PAYLOAD_TOO_LARGE,
+                "Uploaded file is too large. Maximum allowed size is 10MB.",
+                request.getRequestURI(),
+                null
+        );
     }
 
     @ExceptionHandler(Exception.class)

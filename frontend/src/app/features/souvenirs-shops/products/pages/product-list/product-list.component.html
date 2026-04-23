@@ -20,37 +20,52 @@
     <p class="mt-3 text-muted">No products found.</p>
   </div>
 
-  <div class="row g-4" *ngIf="!isLoading && products.length > 0">
-    <div class="col-md-4" *ngFor="let product of products">
-      <div class="card h-100 shadow-sm">
-        <div class="product-card-img-wrapper position-relative">
+  <div class="products-grid" *ngIf="!isLoading && products.length > 0">
+    <div class="product-card" *ngFor="let product of products">
+
+        <!-- Image -->
+        <div class="card-img-wrap">
           <img *ngIf="product.photoUrl; else productPlaceholder"
                [src]="product.photoUrl"
                [alt]="product.name"
-               class="product-card-img" />
+               class="card-img" />
           <ng-template #productPlaceholder>
-            <div class="product-placeholder">
-              <i class="bi bi-box-seam fs-1"></i>
+            <div class="card-img-placeholder">
+              <i class="bi bi-box-seam"></i>
             </div>
           </ng-template>
-          <span class="badge bg-success position-absolute top-0 end-0 m-3">{{ product.price | currency:'USD' }}</span>
+          <span class="price-badge">{{ product.price | currency:'USD' }}</span>
         </div>
+
+        <!-- Body -->
         <div class="card-body">
-          <h5 class="card-title">{{ product.name }}</h5>
-          <p class="card-text text-muted mb-2">{{ product.description }}</p>
-          <p class="mb-1"><strong>Price:</strong> {{ product.price | currency:'USD' }}</p>
-          <p class="mb-1"><strong>Stock:</strong> {{ product.stockQuantity }}</p>
-          <p *ngIf="product.shop" class="mb-0"><strong>Shop:</strong> {{ product.shop.name || product.shop.id }}</p>
+          <h3 class="card-product-name">{{ product.name }}</h3>
+          <p class="card-description" *ngIf="product.description">{{ product.description }}</p>
+          <p class="card-shop">
+            <i class="bi bi-shop"></i>
+            {{ product.shop?.name || 'Independent' }}
+          </p>
+          <div class="card-stock">
+            <span class="stock-label">Stock:</span> {{ product.stockQuantity }} unit{{ product.stockQuantity !== 1 ? 's' : '' }}
+          </div>
         </div>
-        <div class="card-footer bg-white border-0 d-grid gap-2">
-          <button *ngIf="canAddToCart && product.stockQuantity > 0" class="btn btn-primary btn-sm" (click)="addToCart(product)">Add to cart</button>
-          <button *ngIf="canAddToCart && product.stockQuantity <= 0" class="btn btn-secondary btn-sm" disabled>Out of stock</button>
-          <button *ngIf="!canAddToCart" class="btn btn-secondary btn-sm" disabled>Clients only</button>
-          <button class="btn btn-outline-primary btn-sm" (click)="viewProduct(product)">View</button>
-          <button *ngIf="canManageProducts" class="btn btn-outline-secondary btn-sm" (click)="editProduct(product)">Edit</button>
-          <button *ngIf="canManageProducts" class="btn btn-outline-danger btn-sm" (click)="deleteProduct(product)">Delete</button>
+
+        <!-- Footer -->
+        <div class="card-footer">
+          <button *ngIf="canAddToCart && product.stockQuantity > 0" class="btn-primary-card" (click)="addToCart(product)">Add to cart</button>
+          <button *ngIf="canAddToCart && product.stockQuantity <= 0" class="btn-primary-card" disabled>Out of stock</button>
+          <button class="btn-outline-card" (click)="viewProduct(product)">View</button>
+          <div *ngIf="canManageProducts" class="owner-btns">
+            <button class="icon-btn edit-icon" (click)="editProduct(product)" title="Edit">
+              <i class="bi bi-pencil"></i>
+            </button>
+            <button class="icon-btn delete-icon" (click)="deleteProduct(product)" title="Delete">
+              <i class="bi bi-trash"></i>
+            </button>
+          </div>
         </div>
+
       </div>
     </div>
   </div>
-</div>
+

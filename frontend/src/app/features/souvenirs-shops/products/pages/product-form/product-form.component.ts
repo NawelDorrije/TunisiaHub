@@ -25,6 +25,7 @@ export class ProductFormComponent implements OnInit {
   selectedFile: File | null = null;
   photoUrl = '';
   isUploadingImage = false;
+  isGeneratingDescription = false;
   uploadError = '';
 
   constructor(
@@ -81,22 +82,40 @@ export class ProductFormComponent implements OnInit {
     if (!this.selectedFile) {
       return;
     }
+    this.generateProductDescription();
+  }
+
+  private generateProductDescription(): void {
+    if (!this.selectedFile) {
+      return;
+    }
 
     this.isUploadingImage = true;
+    this.isGeneratingDescription = true;
     this.uploadError = '';
 
-    this.imageService.uploadProductImage(this.selectedFile).subscribe({
-      next: (url) => {
-        this.product.photoUrl = url;
-        this.photoUrl = url;
+    // Pass optional fields to help with description generation
+    this.imageService.describeProductImage(
+      this.selectedFile,
+      this.product.name || undefined,
+      this.product.shop?.name || undefined,
+      this.product.price || undefined
+    ).subscribe({
+      next: (response) => {
+        // Always fill both from the response
+        this.product.photoUrl = response.imageUrl;
+        this.photoUrl = response.imageUrl;
+        this.product.description = response.suggestedDescription;
         this.selectedFile = null;
       },
       error: (err) => {
         console.error(err);
-        this.uploadError = 'Image upload failed. Please try again.';
+        this.uploadError = 'Failed to process image. Please try again.';
+        // Still allow manual upload fallback if needed
       },
       complete: () => {
         this.isUploadingImage = false;
+        this.isGeneratingDescription = false;
       }
     });
   }

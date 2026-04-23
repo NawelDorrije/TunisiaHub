@@ -1,4 +1,4 @@
-﻿import { Component, OnInit } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Shop } from '../../../../../models/souvenirs-shops/shop.model';
 import { Product } from '../../../../../models/souvenirs-shops/product.model';
@@ -54,11 +54,11 @@ export class ShopDetailComponent implements OnInit {
   ) {}
 
   get canManageShop(): boolean {
-    return this.authService.isAdmin() || this.authService.isOwner();
+    return this.authService.isOwner();
   }
 
   get canAddToCart(): boolean {
-    return this.authService.isClient();
+    return this.authService.isClient() || this.authService.isAdmin();
   }
 
   addToCart(product: Product): void {
@@ -135,16 +135,14 @@ export class ShopDetailComponent implements OnInit {
   }
 
   private checkReviewPermissions(shopId: number): void {
-    // For owners/admins, load reviews directly (read-only)
-    if (this.authService.isAdmin() || this.authService.isOwner()) {
+    if (this.authService.isOwner()) {
       this.canSeeReviews = true;
       this.canWriteReview = false;
       this.loadReviewsWithEligibility(shopId);
       return;
     }
 
-    // For clients, use the combined API call
-    if (this.authService.isClient()) {
+    if (this.authService.isClient() || this.authService.isAdmin()) {
       this.loadReviewsWithEligibility(shopId);
     } else {
       this.canSeeReviews = false;

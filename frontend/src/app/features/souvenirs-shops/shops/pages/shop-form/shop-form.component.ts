@@ -22,6 +22,7 @@ export class ShopFormComponent implements OnInit, AfterViewInit, OnDestroy {
   selectedFile: File | null = null;
   photoUrl = '';
   isUploadingImage = false;
+  isGeneratingDescription = false;
   uploadError = '';
   isReverseGeocoding = false;
   @ViewChild('mapContainer', { static: false }) mapContainer!: ElementRef<HTMLDivElement>;
@@ -150,22 +151,40 @@ export class ShopFormComponent implements OnInit, AfterViewInit, OnDestroy {
     if (!this.selectedFile) {
       return;
     }
+    this.generateShopDescription();
+  }
+
+  private generateShopDescription(): void {
+    if (!this.selectedFile) {
+      return;
+    }
 
     this.isUploadingImage = true;
+    this.isGeneratingDescription = true;
     this.uploadError = '';
 
-    this.imageService.uploadShopImage(this.selectedFile).subscribe({
-      next: (url) => {
-        this.shop.photoUrl = url;
-        this.photoUrl = url;
+    // Pass optional fields to help with description generation
+    this.imageService.describeShopImage(
+      this.selectedFile,
+      this.shop.name || undefined,
+      this.shop.category || undefined,
+      this.shop.city || undefined
+    ).subscribe({
+      next: (response) => {
+        // Always fill both from the response
+        this.shop.photoUrl = response.imageUrl;
+        this.photoUrl = response.imageUrl;
+        this.shop.description = response.suggestedDescription;
         this.selectedFile = null;
       },
       error: (err) => {
         console.error(err);
-        this.uploadError = 'Image upload failed. Please try again.';
+        this.uploadError = 'Failed to process image. Please try again.';
+        // Still allow manual upload fallback if needed
       },
       complete: () => {
         this.isUploadingImage = false;
+        this.isGeneratingDescription = false;
       }
     });
   }

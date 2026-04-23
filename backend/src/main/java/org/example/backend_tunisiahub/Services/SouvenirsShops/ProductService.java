@@ -6,13 +6,15 @@ import org.example.backend_tunisiahub.Entities.SouvenirsShops.Product;
 import org.example.backend_tunisiahub.Entities.SouvenirsShops.Review;
 import org.example.backend_tunisiahub.Entities.SouvenirsShops.ReviewType;
 import org.example.backend_tunisiahub.Entities.SouvenirsShops.Shop;
+import org.example.backend_tunisiahub.Entities.User.RoleUser;
+import org.example.backend_tunisiahub.Entities.User.User;
 import org.example.backend_tunisiahub.Repositories.SouvenirsShops.ProductRepository;
 import org.example.backend_tunisiahub.Repositories.SouvenirsShops.ReviewShopRepository;
 import org.example.backend_tunisiahub.Repositories.SouvenirsShops.ShopRepository;
+import org.example.backend_tunisiahub.Repositories.User.UserRepository;
 import org.example.backend_tunisiahub.shared.exception.ApiException;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
@@ -23,6 +25,8 @@ public class ProductService implements IProductService {
     private final ProductRepository productRepository;
     private final ReviewShopRepository reviewShopRepository;
     private final ShopRepository shopRepository;
+    private final UserRepository userRepository;
+    private final AiImageDescriptionService aiImageDescriptionService;
 
     @Override
     public List<Product> retrieveAllProducts() {
@@ -49,6 +53,7 @@ public class ProductService implements IProductService {
         Shop shop = resolveAndValidateShop(product.getShop() == null ? null : product.getShop().getId());
         assertOwnerOrAdmin(shop.getOwner().getEmail());
         product.setShop(shop);
+        populateDescriptionIfMissing(product);
         return productRepository.save(product);
     }
 
@@ -82,8 +87,16 @@ public class ProductService implements IProductService {
         existing.setStockQuantity(product.getStockQuantity());
         existing.setPhotoUrl(product.getPhotoUrl());
         existing.setShop(targetShop);
+        populateDescriptionIfMissing(existing);
 
         return productRepository.save(existing);
+    }
+
+    private void populateDescriptionIfMissing(Product product) {
+        if (product.getDescription() != null && !product.getDescription().isBlank()) {
+            return;
+        }
+        product.setDescription(aiImageDescriptionService.generateProductDescriptionFromUrl(product));
     }
 
     private Shop resolveAndValidateShop(Long shopId) {
@@ -95,26 +108,22 @@ public class ProductService implements IProductService {
     }
 
     private void assertOwnerOrAdmin(String ownerEmail) {
-        if (isCurrentUserAdmin()) {
+        User currentUser = getCurrentUser();
+        if (currentUser.getRole() == RoleUser.ADMIN) {
             return;
         }
-        String currentUserEmail = getCurrentUserEmail();
-        if (!currentUserEmail.equalsIgnoreCase(ownerEmail)) {
+        if (!currentUser.getEmail().equalsIgnoreCase(ownerEmail)) {
             throw new ApiException(HttpStatus.FORBIDDEN, "You are not allowed to manage this product");
         }
     }
 
-    private boolean isCurrentUserAdmin() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication == null || authentication.getAuthorities() == null) {
-            return false;
+    private User getCurrentUser() {
+        String email = getCurrentUserEmail();
+        User user = userRepository.findByEmail(email);
+        if (user == null) {
+            throw new ApiException(HttpStatus.UNAUTHORIZED, "Authenticated user not found");
         }
-        for (GrantedAuthority authority : authentication.getAuthorities()) {
-            if ("ROLE_ADMIN".equals(authority.getAuthority())) {
-                return true;
-            }
-        }
-        return false;
+        return user;
     }
 
     private String getCurrentUserEmail() {

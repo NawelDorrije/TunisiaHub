@@ -38,6 +38,9 @@ export class AuthService {
       localStorage.setItem('email', response.email);
       localStorage.setItem('nom', response.nom);
       localStorage.setItem('prenom', response.prenom);
+      if (response.userId) {
+        localStorage.setItem('userId', response.userId.toString());
+      }
     }
   }
 
@@ -63,6 +66,14 @@ export class AuthService {
 
   getPrenom(): string | null {
     return this.isBrowser ? localStorage.getItem('prenom') : null;
+  }
+
+  getUserId(): number | null {
+    if (this.isBrowser) {
+      const userId = localStorage.getItem('userId');
+      return userId ? parseInt(userId, 10) : null;
+    }
+    return null;
   }
 
   isLoggedIn(): boolean {

@@ -3,7 +3,9 @@ import { RouterModule, Routes } from '@angular/router';
 import { NotFoundComponent } from './features/not-found/not-found.component';
 import { HomeComponent } from './core/home/home.component';
 import { CartComponent } from './features/souvenirs-shops/cart/cart.component';
+import { OwnerDashboardComponent } from './features/souvenirs-shops/owner-dashboard/owner-dashboard.component';
 import { AuthGuard } from './features/auth/auth.guard';
+import { OwnerGuard } from './features/auth/owner.guard';
 
 const routes: Routes = [
   { path: 'home', component: HomeComponent },
@@ -56,13 +58,26 @@ const routes: Routes = [
     path: 'cart',
     component: CartComponent,
   },
+  {
+    path: 'owner-dashboard',
+    component: OwnerDashboardComponent,
+    canActivate: [OwnerGuard],
+  },
 
-   {
-   path: 'accommodations',
+  {
+    path: 'admin-dashboard',
+    loadChildren: () =>
+      import('./features/admin-dashboard/admin-dashboard.module')
+        .then(m => m.AdminDashboardModule),
+  },
+
+  {
+    path: 'accommodations',
     loadChildren: () =>
       import('./features/accommodations/accommodations.module')
         .then(m => m.AccommodationsModule),
-},
+  },
+
   {
     path: '**',
     component: NotFoundComponent,

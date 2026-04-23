@@ -2,6 +2,7 @@ package org.example.backend_tunisiahub.Controllers.SouvenirsShops;
 
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.example.backend_tunisiahub.Controllers.SouvenirsShops.dto.OwnerReviewInsightsResponse;
 import org.example.backend_tunisiahub.Controllers.SouvenirsShops.dto.ReviewEligibilityResponse;
 import org.example.backend_tunisiahub.Controllers.SouvenirsShops.dto.CreateReviewRequest;
 import org.example.backend_tunisiahub.Controllers.SouvenirsShops.dto.UpdateReviewRequest;
@@ -14,6 +15,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -65,6 +67,11 @@ public class ReviewShopController {
         return reviewService.retrieveReviewsByProduct(productId);
     }
 
+    @GetMapping("/all")
+    public List<Review> getAllReviews() {
+        return reviewService.retrieveAllReviews();
+    }
+
     @GetMapping("/shop/{shopId}/with-eligibility")
     public ReviewEligibilityResponse getReviewsWithEligibilityByShop(@PathVariable Long shopId) {
         return reviewService.getReviewsWithEligibilityForShop(shopId);
@@ -73,5 +80,12 @@ public class ReviewShopController {
     @GetMapping("/product/{productId}/with-eligibility")
     public ReviewEligibilityResponse getReviewsWithEligibilityByProduct(@PathVariable Long productId) {
         return reviewService.getReviewsWithEligibilityForProduct(productId);
+    }
+
+    @GetMapping("/owner-summary")
+    public OwnerReviewInsightsResponse getOwnerReviewSummary(
+            @RequestParam(required = false) Long shopId,
+            @RequestParam(required = false) String productIds) {
+        return reviewService.getOwnerReviewInsights(shopId, productIds);
     }
 }

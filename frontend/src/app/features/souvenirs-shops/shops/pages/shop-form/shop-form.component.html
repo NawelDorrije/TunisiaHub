@@ -29,6 +29,9 @@
             <div class="mb-3">
               <label for="description" class="form-label">Description</label>
               <textarea id="description" name="description" [(ngModel)]="shop.description" required rows="5" class="form-control" placeholder="Describe the shop"></textarea>
+              <small *ngIf="isGeneratingDescription" class="form-text text-info d-block mt-1">
+                <i class="bi bi-hourglass-split"></i> Generating description from image...
+              </small>
             </div>
             <div class="row g-3 mb-3">
               <div class="col-md-6">
@@ -82,8 +85,10 @@
               </div>
               <input id="shopImage" type="file" accept="image/*" (change)="onFileSelected($event)" class="upload-input" />
             </div>
-            <button type="button" class="btn btn-primary w-100 mb-3" (click)="uploadShopImage()" [disabled]="!selectedFile || isUploadingImage">
-              {{ isUploadingImage ? 'Uploading...' : 'Upload image' }}
+            <button type="button" class="btn btn-primary w-100 mb-3" (click)="uploadShopImage()" [disabled]="!selectedFile || isUploadingImage || isGeneratingDescription">
+              <span *ngIf="!isUploadingImage && !isGeneratingDescription">Upload image</span>
+              <span *ngIf="isGeneratingDescription"><i class="bi bi-hourglass-split"></i> Generating description...</span>
+              <span *ngIf="isUploadingImage && !isGeneratingDescription">Uploading...</span>
             </button>
             <div *ngIf="photoUrl" class="image-preview rounded-4 overflow-hidden">
               <img [src]="photoUrl" class="img-fluid" alt="Shop image preview" />

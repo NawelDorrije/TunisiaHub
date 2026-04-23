@@ -41,7 +41,7 @@
           </ul>
         </li>
 
-        <li class="nav-item" *ngIf="authService.isClient() || !authService.isLoggedIn()">
+        <li class="nav-item" *ngIf="authService.isClient() || authService.isAdmin() || !authService.isLoggedIn()">
           <a class="nav-link" routerLink="/cart">
             Cart
             <ng-container *ngIf="cartCount$ | async as count">
@@ -58,7 +58,12 @@
 
         <!-- Admin link -->
         <li class="nav-item" *ngIf="authService.isAdmin()">
-          <a class="nav-link" routerLink="/accommodations/admin">Dashboard</a>
+          <a class="nav-link" routerLink="/admin-dashboard">Dashboard</a>
+        </li>
+
+        <!-- Owner link -->
+        <li class="nav-item" *ngIf="authService.isOwner()">
+          <a class="nav-link" routerLink="/owner-dashboard">Dashboard</a>
         </li>
 
         <!-- NOT logged in -->

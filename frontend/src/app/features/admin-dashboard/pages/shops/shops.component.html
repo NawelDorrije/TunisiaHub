@@ -1,0 +1,42 @@
+<div class="shops-container">
+  <div class="shops-header">
+    <h2>Manage Shops</h2>
+  </div>
+
+  <div *ngIf="error" class="alert alert-danger">
+    {{ error }}
+  </div>
+
+  <div *ngIf="isLoading" class="loading">
+    <div class="spinner"></div>
+    Loading shops...
+  </div>
+
+  <div *ngIf="!isLoading && shops.length === 0" class="no-data">
+    <p>No shops found.</p>
+  </div>
+
+  <div *ngIf="!isLoading && shops.length > 0" class="table-responsive">
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Shop Name</th>
+          <th>Owner</th>
+          <th>Created</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let shop of shops">
+          <td>{{ shop.name }}</td>
+          <td>{{ shop.owner?.nom }} {{ shop.owner?.prenom }}</td>
+          <td>{{ shop.createdAt | date: 'short' }}</td>
+          <td>
+            <button class="btn btn-sm btn-primary" (click)="viewDetails(shop.id)">View</button>
+            <button class="btn btn-sm btn-danger" (click)="deleteShop(shop.id)">Delete</button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
