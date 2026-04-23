@@ -1,5 +1,6 @@
 package org.example.backend_tunisiahub.Services.Accommodation;
 
+import org.example.backend_tunisiahub.Controllers.Accommodation.AccommodationStatsDTO;
 import org.example.backend_tunisiahub.Entities.Reservation;
 import java.util.Date;
 import java.util.List;
@@ -17,4 +18,6 @@ public interface IAccommodationReservationService {
     List<Map<String, Date>> getReservedDates(Long accommodationId);
     List<Reservation> getReservationsByUser(String email);
     Reservation editReservation(Long reservationId, Reservation updated, String email);
+    public AccommodationStatsDTO getStatistics();
+
 }

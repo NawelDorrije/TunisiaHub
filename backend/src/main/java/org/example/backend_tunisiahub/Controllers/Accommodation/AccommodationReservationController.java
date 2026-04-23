@@ -96,4 +96,8 @@ public class AccommodationReservationController {
         List<Reservation> reservations = reservationService.getReservationsByUser(email);
         return ResponseEntity.ok(reservations);
     }
+    @GetMapping("/statistics")
+    public ResponseEntity<AccommodationStatsDTO> getStatistics() {
+        return ResponseEntity.ok(reservationService.getStatistics());
+    }
 }

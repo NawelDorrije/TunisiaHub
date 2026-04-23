@@ -2,6 +2,7 @@ package org.example.backend_tunisiahub.Controllers.Accommodation;
 
 import lombok.RequiredArgsConstructor;
 import org.example.backend_tunisiahub.Entities.Accommodation.AccommodationReview;
+import org.example.backend_tunisiahub.Repositories.Accommodation.ReviewRepository;
 import org.example.backend_tunisiahub.Services.Accommodation.IReviewService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -15,6 +16,7 @@ import java.util.List;
 public class ReviewController {
 
     private final IReviewService reviewService;
+    private final ReviewRepository reviewRepository;
 
     @GetMapping("/getAll")
     public ResponseEntity<List<AccommodationReview>> getAllReviews() {
@@ -49,12 +51,17 @@ public class ReviewController {
         if (review.getComment() == null || review.getComment().isEmpty())
             return ResponseEntity.badRequest().body("Comment is required");
 
+        // Check already reviewed BEFORE calling service
+        if (reviewRepository.existsByUserEmailAndAccommodationId(email, accommodationId))
+            return ResponseEntity.status(400)
+                    .body("⚠️ You have already reviewed this accommodation.");
+
         AccommodationReview saved = reviewService.addReview(
                 accommodationId, review, email);
 
         if (saved == null)
             return ResponseEntity.status(400)
-                    .body("⚠️ Your review contains inappropriate or offensive content. Please keep it respectful and try again.");
+                    .body("⚠️ Your review contains inappropriate content.");
 
         return ResponseEntity.status(201).body(saved);
     }

@@ -147,6 +147,7 @@
     <!-- AI Recommendations -->
 <div class="mt-4" *ngIf="authService.isLoggedIn() && recommendations.length > 0">
   <hr/>
+  <!--
   <div class="d-flex align-items-center gap-2 mb-3">
     <h4 class="fw-bold mb-0">🤖 Recommended for you</h4>
     <span class="badge bg-primary">AI Powered</span>
@@ -154,6 +155,7 @@
   <p class="text-muted small fst-italic mb-3" *ngIf="recommendationReasoning">
     {{ recommendationReasoning }}
   </p>
+  -->
 
   <div class="row g-3">
     <div class="col-md-4" *ngFor="let rec of recommendations">

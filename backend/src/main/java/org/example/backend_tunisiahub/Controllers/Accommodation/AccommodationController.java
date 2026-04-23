@@ -2,6 +2,7 @@ package org.example.backend_tunisiahub.Controllers.Accommodation;
 
 import lombok.RequiredArgsConstructor;
 import org.example.backend_tunisiahub.Entities.Accommodation.Accommodation;
+import org.example.backend_tunisiahub.Repositories.Accommodation.UserHistoryRepository;
 import org.example.backend_tunisiahub.Services.Accommodation.IAccommodationService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -37,6 +38,7 @@ public class AccommodationController {
             return ResponseEntity.badRequest().body("Price must be greater than 0");
         if (accommodation.getCapacite() <= 0)
             return ResponseEntity.badRequest().body("Capacity must be greater than 0");
+
         Accommodation saved = accommodationService.addAccommodation(accommodation);
         return ResponseEntity.status(201).body(saved);
     }
@@ -56,6 +58,7 @@ public class AccommodationController {
         if (id <= 0) return ResponseEntity.badRequest().body("Invalid accommodation ID");
         Accommodation existing = accommodationService.retrieveAccommodation(id);
         if (existing == null) return ResponseEntity.status(404).body("Accommodation not found with id: " + id);
+
         accommodationService.removeAccommodation(id);
         return ResponseEntity.ok("Accommodation deleted successfully");
     }

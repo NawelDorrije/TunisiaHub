@@ -67,6 +67,11 @@ public class ReviewService implements IReviewService {
             AccommodationReview review,
             String email) {
 
+        // Check if user already reviewed this accommodation
+        if (reviewRepository.existsByUserEmailAndAccommodationId(email, accommodationId)) {
+            return null; // ← null signals already reviewed
+        }
+
         if (!isReviewAppropriate(review)) {
             return null;
         }

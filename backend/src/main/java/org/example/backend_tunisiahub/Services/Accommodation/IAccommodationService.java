@@ -1,4 +1,5 @@
 package org.example.backend_tunisiahub.Services.Accommodation;
+import org.example.backend_tunisiahub.Controllers.Accommodation.AccommodationStatsDTO;
 import org.example.backend_tunisiahub.Entities.Accommodation.Accommodation;
 import java.util.List;
 

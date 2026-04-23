@@ -1,14 +1,29 @@
 <div class="container py-4">
 
   <!-- Header -->
-  <div class="d-flex align-items-center gap-3 mb-4">
-    <button class="btn btn-outline-secondary btn-sm" (click)="goBack()">
-      ← Back
-    </button>
-    <div>
-      <h2 class="fw-bold mb-0">📊 Accommodation Statistics</h2>
-      <p class="text-muted small mb-0">Full overview of your accommodation module</p>
+  <div class="d-flex align-items-center justify-content-between mb-4">
+    <div class="d-flex align-items-center gap-3">
+      <button class="btn btn-outline-secondary btn-sm" (click)="goBack()">
+        ← Back
+      </button>
+      <div>
+        <h2 class="fw-bold mb-0">📊 Accommodation Statistics</h2>
+        <p class="text-muted small mb-0">Full overview of your accommodation module</p>
+      </div>
     </div>
+
+    <!-- PDF Button -->
+    <button
+      class="btn btn-danger"
+      (click)="generatePDF()"
+      [disabled]="isGeneratingPDF || isLoading"
+    >
+      <span
+        *ngIf="isGeneratingPDF"
+        class="spinner-border spinner-border-sm me-2"
+      ></span>
+      {{ isGeneratingPDF ? 'Generating PDF...' : '📄 Export PDF' }}
+    </button>
   </div>
 
   <!-- Loading -->
@@ -19,7 +34,8 @@
   <!-- Error -->
   <div class="alert alert-danger" *ngIf="errorMessage">{{ errorMessage }}</div>
 
-  <div *ngIf="!isLoading && stats">
+  <!-- Statistics content — captured for PDF -->
+  <div #statisticsContent *ngIf="!isLoading && stats">
 
     <!-- KPI Cards -->
     <div class="row g-3 mb-4">
@@ -40,7 +56,9 @@
       <div class="col-md-3">
         <div class="card border-0 shadow-sm text-center p-3">
           <div style="font-size: 2rem;">💰</div>
-          <h3 class="fw-bold text-warning mb-0">{{ stats.totalRevenue | number:'1.0-0' }} TND</h3>
+          <h3 class="fw-bold text-warning mb-0">
+            {{ stats.totalRevenue | number:'1.0-0' }} TND
+          </h3>
           <p class="text-muted small mb-0">Total Revenue</p>
         </div>
       </div>
@@ -48,15 +66,15 @@
         <div class="card border-0 shadow-sm text-center p-3">
           <div style="font-size: 2rem;">⭐</div>
           <h3 class="fw-bold text-danger mb-0">{{ stats.averageRating }}/5</h3>
-          <p class="text-muted small mb-0">Average Rating ({{ stats.totalReviews }} reviews)</p>
+          <p class="text-muted small mb-0">
+            Average Rating ({{ stats.totalReviews }} reviews)
+          </p>
         </div>
       </div>
     </div>
 
     <!-- Row 2 — Type distribution + Reservation status -->
     <div class="row g-4 mb-4">
-
-      <!-- Pie chart — types -->
       <div class="col-md-6">
         <div class="card border-0 shadow-sm p-3 h-100">
           <h5 class="fw-bold mb-3">🏷️ Accommodation Types</h5>
@@ -69,8 +87,6 @@
           ></apx-chart>
         </div>
       </div>
-
-      <!-- Donut chart — reservation status -->
       <div class="col-md-6">
         <div class="card border-0 shadow-sm p-3 h-100">
           <h5 class="fw-bold mb-3">📋 Reservation Status</h5>
@@ -82,26 +98,26 @@
             [dataLabels]="dataLabels"
             [legend]="legend"
           ></apx-chart>
-          <!-- Extra KPIs -->
           <div class="d-flex justify-content-around mt-2">
             <div class="text-center">
-              <h4 class="fw-bold text-success mb-0">{{ stats.confirmedReservations }}</h4>
+              <h4 class="fw-bold text-success mb-0">
+                {{ stats.confirmedReservations }}
+              </h4>
               <small class="text-muted">Confirmed</small>
             </div>
             <div class="text-center">
-              <h4 class="fw-bold text-danger mb-0">{{ stats.cancelledReservations }}</h4>
+              <h4 class="fw-bold text-danger mb-0">
+                {{ stats.cancelledReservations }}
+              </h4>
               <small class="text-muted">Cancelled</small>
             </div>
           </div>
         </div>
       </div>
-
     </div>
 
-    <!-- Row 3 — Price distribution + Capacity distribution -->
+    <!-- Row 3 — Price + Capacity -->
     <div class="row g-4 mb-4">
-
-      <!-- Bar chart — price range -->
       <div class="col-md-6">
         <div class="card border-0 shadow-sm p-3 h-100">
           <h5 class="fw-bold mb-3">💸 Price Range Distribution</h5>
@@ -115,8 +131,6 @@
           ></apx-chart>
         </div>
       </div>
-
-      <!-- Bar chart — capacity -->
       <div class="col-md-6">
         <div class="card border-0 shadow-sm p-3 h-100">
           <h5 class="fw-bold mb-3">👥 Capacity Distribution</h5>
@@ -130,10 +144,9 @@
           ></apx-chart>
         </div>
       </div>
-
     </div>
 
-    <!-- Row 4 — Top reserved accommodations -->
+    <!-- Row 4 — Top reserved -->
     <div class="row g-4 mb-4">
       <div class="col-md-12">
         <div class="card border-0 shadow-sm p-3">
@@ -166,7 +179,9 @@
               </tr>
             </thead>
             <tbody>
-              <tr *ngFor="let acc of stats.topProfitableAccommodations; let i = index">
+              <tr
+                *ngFor="let acc of stats.topProfitableAccommodations; let i = index"
+              >
                 <td>
                   <span *ngIf="i === 0">🥇</span>
                   <span *ngIf="i === 1">🥈</span>
@@ -174,9 +189,13 @@
                   <span *ngIf="i > 2">#{{ i + 1 }}</span>
                 </td>
                 <td class="fw-semibold">{{ acc['title'] }}</td>
-                <td><span class="badge bg-secondary">{{ acc['type'] }}</span></td>
+                <td>
+                  <span class="badge bg-secondary">{{ acc['type'] }}</span>
+                </td>
                 <td>{{ acc['price'] }} TND</td>
-                <td class="fw-bold text-success">{{ acc['revenue'] | number:'1.0-0' }} TND</td>
+                <td class="fw-bold text-success">
+                  {{ acc['revenue'] | number:'1.0-0' }} TND
+                </td>
               </tr>
             </tbody>
           </table>

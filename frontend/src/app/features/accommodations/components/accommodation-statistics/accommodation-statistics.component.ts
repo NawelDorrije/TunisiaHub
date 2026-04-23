@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
 import { Router } from '@angular/router';
 import { ReservationService } from '../../services/reservation.service';
 import { AccommodationStats } from '../../../../models/accommodations/statistics.model';
@@ -12,7 +12,8 @@ import {
   ApexPlotOptions,
   ApexTitleSubtitle
 } from 'ng-apexcharts';
-
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 @Component({
   selector: 'app-accommodation-statistics',
   templateUrl: './accommodation-statistics.component.html',
@@ -145,7 +146,110 @@ export class AccommodationStatisticsComponent implements OnInit {
         .map(a => a['count'])
     }];
   }
+  @ViewChild('statisticsContent') statisticsContent!: ElementRef;
 
+isGeneratingPDF = false;
+
+async generatePDF(): Promise<void> {
+  this.isGeneratingPDF = true;
+
+  try {
+    const content = this.statisticsContent.nativeElement;
+
+    const canvas = await html2canvas(content, {
+      scale: 2,               // high resolution
+      useCORS: true,
+      backgroundColor: '#ffffff',
+      scrollY: -window.scrollY
+    });
+
+    const imgData = canvas.toDataURL('image/png');
+    const pdf = new jsPDF({
+      orientation: 'portrait',
+      unit: 'mm',
+      format: 'a4'
+    });
+
+    const pdfWidth = pdf.internal.pageSize.getWidth();
+    const pdfHeight = pdf.internal.pageSize.getHeight();
+    const imgWidth = canvas.width;
+    const imgHeight = canvas.height;
+    const ratio = imgWidth / imgHeight;
+    const imgPdfHeight = pdfWidth / ratio;
+
+    // Add header
+    pdf.setFillColor(13, 110, 253);
+    pdf.rect(0, 0, pdfWidth, 20, 'F');
+    pdf.setTextColor(255, 255, 255);
+    pdf.setFontSize(14);
+    pdf.setFont('helvetica', 'bold');
+    pdf.text('TunisiaHub — Accommodation Statistics Report', pdfWidth / 2, 13, {
+      align: 'center'
+    });
+
+    // Add date
+    pdf.setFontSize(9);
+    pdf.setFont('helvetica', 'normal');
+    const date = new Date().toLocaleDateString('en-GB', {
+      day: '2-digit', month: 'long', year: 'numeric'
+    });
+    pdf.text(`Generated on: ${date}`, pdfWidth / 2, 18, { align: 'center' });
+
+    // Add content
+    let yPosition = 25;
+    let remainingHeight = imgPdfHeight;
+
+    while (remainingHeight > 0) {
+      const pageHeight = pdfHeight - yPosition - 10;
+      const sourceY = (imgPdfHeight - remainingHeight) * (imgHeight / imgPdfHeight);
+      const sourceHeight = Math.min(
+        pageHeight * (imgHeight / imgPdfHeight),
+        imgHeight - sourceY
+      );
+
+      const pageCanvas = document.createElement('canvas');
+      pageCanvas.width = imgWidth;
+      pageCanvas.height = sourceHeight;
+      const ctx = pageCanvas.getContext('2d');
+      ctx?.drawImage(
+        canvas, 0, sourceY,
+        imgWidth, sourceHeight,
+        0, 0,
+        imgWidth, sourceHeight
+      );
+
+      const pageImgData = pageCanvas.toDataURL('image/png');
+      const pageImgHeight = (sourceHeight / imgHeight) * imgPdfHeight;
+
+      pdf.addImage(pageImgData, 'PNG', 0, yPosition, pdfWidth, pageImgHeight);
+      remainingHeight -= pageHeight;
+
+      if (remainingHeight > 0) {
+        pdf.addPage();
+        yPosition = 10;
+      }
+    }
+
+    // Add footer on last page
+    pdf.setTextColor(150, 150, 150);
+    pdf.setFontSize(8);
+    pdf.text(
+      'TunisiaHub © 2026 — Confidential Admin Report',
+      pdfWidth / 2,
+      pdfHeight - 5,
+      { align: 'center' }
+    );
+
+    // Save
+    const filename = `TunisiaHub_Accommodation_Stats_${new Date().toISOString().split('T')[0]}.pdf`;
+    pdf.save(filename);
+
+  } catch (error) {
+    console.error('PDF generation error:', error);
+  } finally {
+    this.isGeneratingPDF = false;
+  }
+}
   goBack(): void {
     this.router.navigate(['/accommodations/admin']);
   }
