@@ -1,14 +1,12 @@
 <div class="res-page" *ngIf="camping; else loadingTpl">
 
-  <!-- ══ Progress Stepper ══════════════════════════════════════════════════ -->
+  <!-- ══ Stepper ═══════════════════════════════════════════════════════════ -->
   <nav class="stepper" aria-label="Reservation steps">
     <ng-container *ngFor="let s of [1, 2, 3, 4, 5]; let last = last">
-      <div
-        class="stepper__item"
-        [class.is-active]="step === s"
-        [class.is-done]="step > s"
-        [attr.aria-current]="step === s ? 'step' : null"
-      >
+      <div class="stepper__item"
+           [class.is-active]="step === s"
+           [class.is-done]="step > s"
+           [attr.aria-current]="step === s ? 'step' : null">
         <div class="stepper__circle">
           <span *ngIf="step <= s">{{ s }}</span>
           <svg *ngIf="step > s" width="14" height="14" viewBox="0 0 14 14" fill="none">
@@ -17,52 +15,41 @@
           </svg>
         </div>
         <span class="stepper__label">{{
-          s === 1 ? 'Spot' :
-          s === 2 ? 'Dates' :
-          s === 3 ? 'Equipment' :
-          s === 4 ? 'Activities' : 'Payment'
+          s === 1 ? 'Spot' : s === 2 ? 'Dates' :
+          s === 3 ? 'Equipment' : s === 4 ? 'Activities' : 'Payment'
         }}</span>
       </div>
       <div *ngIf="!last" class="stepper__line" [class.is-done]="step > s"></div>
     </ng-container>
   </nav>
 
-  <!-- ══ Main Layout ═══════════════════════════════════════════════════════ -->
   <div class="res-layout">
-
-    <!-- ── Left: Step Content ─────────────────────────────────────────── -->
     <main class="res-main">
 
-      <!-- ╔═ Step 1 – Spot Selection ══════════════════════════════════════╗ -->
-      <section *ngIf="step === 1" class="step-panel" aria-labelledby="step1-title">
-        <h2 id="step1-title" class="step-title">Choose Your Spot</h2>
+      <!-- ╔═ Step 1 – Spot ════════════════════════════════════════════════╗ -->
+      <section *ngIf="step === 1" class="step-panel">
+        <h2 class="step-title">Choose Your Spot</h2>
         <p class="step-hint">Select the spot that best fits your camping style.</p>
 
         <div class="alert alert--error" *ngIf="spotError" role="alert">
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-            <circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.5"/>
-            <path d="M8 5v4M8 11v.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-          </svg>
           Please select a spot to continue.
         </div>
 
-        <div class="spots-grid" role="radiogroup" aria-label="Available spots">
-          <div
-            class="spot-card"
-            *ngFor="let spot of spots"
-            [class.is-selected]="selectedSpot?.id === spot.id"
-            (click)="selectSpot(spot)"
-            (keydown.enter)="selectSpot(spot)"
-            (keydown.space)="selectSpot(spot)"
-            role="radio"
-            [attr.aria-checked]="selectedSpot?.id === spot.id"
-            tabindex="0"
-          >
-            <div class="spot-card__check" *ngIf="selectedSpot?.id === spot.id" aria-hidden="true">✓</div>
+        <div class="spots-grid" role="radiogroup">
+          <div class="spot-card"
+               *ngFor="let spot of spots"
+               [class.is-selected]="selectedSpot?.id === spot.id"
+               (click)="selectSpot(spot)"
+               (keydown.enter)="selectSpot(spot)"
+               (keydown.space)="selectSpot(spot)"
+               role="radio"
+               [attr.aria-checked]="selectedSpot?.id === spot.id"
+               tabindex="0">
+            <div class="spot-card__check" *ngIf="selectedSpot?.id === spot.id">✓</div>
             <span class="spot-card__type">{{ spot.type }}</span>
             <h3 class="spot-card__name">{{ spot.name }}</h3>
             <p class="spot-card__desc">{{ spot.description }}</p>
-            <ul class="spot-card__tags" aria-label="Spot features">
+            <ul class="spot-card__tags">
               <li *ngIf="spot.viewType">👁 {{ spot.viewType }}</li>
               <li *ngIf="spot.hasShade">🌿 Shade</li>
               <li *ngIf="spot.accessibleForDisabled">♿ Accessible</li>
@@ -74,32 +61,27 @@
           </div>
         </div>
 
-        <p *ngIf="spots.length === 0" class="empty-state">
-          No spots are available for this camping at the moment.
-        </p>
+        <p *ngIf="spots.length === 0" class="empty-state">No spots available.</p>
 
         <div class="step-actions">
           <button class="btn btn--primary" (click)="proceedFromSpotStep()">
-            Continue <span aria-hidden="true">→</span>
+            Continue →
           </button>
         </div>
       </section>
 
-      <!-- ╔═ Step 2 – Dates & Guests ══════════════════════════════════════╗ -->
-      <section *ngIf="step === 2" class="step-panel" aria-labelledby="step2-title"
-               [formGroup]="datesForm">
-        <h2 id="step2-title" class="step-title">Dates &amp; Guests</h2>
+      <!-- ╔═ Step 2 – Dates ═══════════════════════════════════════════════╗ -->
+      <section *ngIf="step === 2" class="step-panel" [formGroup]="datesForm">
+        <h2 class="step-title">Dates &amp; Guests</h2>
         <p class="step-hint">
-          Booking spot <strong>{{ selectedSpot?.name }}</strong>
-          ({{ selectedSpot?.type }}) · {{ selectedSpot?.capacity }} guests max
+          Booking <strong>{{ selectedSpot?.name }}</strong> · {{ selectedSpot?.capacity }} guests max
         </p>
 
         <div class="field-group" [class.has-error]="checkIn.invalid && checkIn.touched">
           <label class="field-label" for="checkIn">Check-in Date *</label>
-          <input id="checkIn" formControlName="checkIn" type="date" class="field-input"
-                 [attr.min]="today" aria-describedby="checkIn-error"/>
-          <div id="checkIn-error" class="field-error" role="alert"
-               *ngIf="checkIn.invalid && checkIn.touched">
+          <input id="checkIn" formControlName="checkIn" type="date"
+                 class="field-input" [attr.min]="today"/>
+          <div class="field-error" *ngIf="checkIn.invalid && checkIn.touched">
             <ng-container *ngIf="checkIn.errors?.['required']">Check-in date is required.</ng-container>
             <ng-container *ngIf="checkIn.errors?.['pastDate']">Check-in cannot be in the past.</ng-container>
           </div>
@@ -107,10 +89,9 @@
 
         <div class="field-group" [class.has-error]="checkOut.invalid && checkOut.touched">
           <label class="field-label" for="checkOut">Check-out Date *</label>
-          <input id="checkOut" formControlName="checkOut" type="date" class="field-input"
-                 [attr.min]="checkIn.value || today" aria-describedby="checkOut-error"/>
-          <div id="checkOut-error" class="field-error" role="alert"
-               *ngIf="checkOut.invalid && checkOut.touched">
+          <input id="checkOut" formControlName="checkOut" type="date"
+                 class="field-input" [attr.min]="checkIn.value || today"/>
+          <div class="field-error" *ngIf="checkOut.invalid && checkOut.touched">
             <ng-container *ngIf="checkOut.errors?.['required']">Check-out date is required.</ng-container>
             <ng-container *ngIf="checkOut.errors?.['checkOutBeforeCheckIn']">Check-out must be after check-in.</ng-container>
           </div>
@@ -118,14 +99,13 @@
 
         <div class="field-group" [class.has-error]="numberOfGuests.invalid && numberOfGuests.touched">
           <label class="field-label" for="guests">Number of Guests *</label>
-          <input id="guests" formControlName="numberOfGuests" type="number" class="field-input"
-                 min="1" [max]="selectedSpot?.capacity ?? null" aria-describedby="guests-error"/>
-          <div id="guests-error" class="field-error" role="alert"
-               *ngIf="numberOfGuests.invalid && numberOfGuests.touched">
-            <ng-container *ngIf="numberOfGuests.errors?.['required']">Number of guests is required.</ng-container>
-            <ng-container *ngIf="numberOfGuests.errors?.['min']">At least 1 guest is required.</ng-container>
+          <input id="guests" formControlName="numberOfGuests" type="number"
+                 class="field-input" min="1" [max]="selectedSpot?.capacity ?? null"/>
+          <div class="field-error" *ngIf="numberOfGuests.invalid && numberOfGuests.touched">
+            <ng-container *ngIf="numberOfGuests.errors?.['required']">Required.</ng-container>
+            <ng-container *ngIf="numberOfGuests.errors?.['min']">At least 1 guest.</ng-container>
             <ng-container *ngIf="numberOfGuests.errors?.['exceedsCapacity']">
-              Maximum capacity is {{ numberOfGuests.errors?.['exceedsCapacity']?.max }} guests.
+              Max {{ numberOfGuests.errors?.['exceedsCapacity']?.max }} guests.
             </ng-container>
           </div>
         </div>
@@ -135,7 +115,7 @@
             Special Notes <span class="field-optional">(optional)</span>
           </label>
           <textarea id="notes" formControlName="notes" class="field-input field-input--textarea"
-                    rows="3" placeholder="Any special requests or requirements…"></textarea>
+                    rows="3" placeholder="Any special requests…"></textarea>
         </div>
 
         <div class="nights-pill" *ngIf="nights > 0">
@@ -143,44 +123,33 @@
         </div>
 
         <div class="step-actions">
-          <button class="btn btn--ghost" type="button" (click)="goBack()">
-            <span aria-hidden="true">←</span> Back
-          </button>
-          <button class="btn btn--primary" type="button" (click)="proceedFromDatesStep()">
-            Continue <span aria-hidden="true">→</span>
-          </button>
+          <button class="btn btn--ghost" (click)="goBack()">← Back</button>
+          <button class="btn btn--primary" (click)="proceedFromDatesStep()">Continue →</button>
         </div>
       </section>
 
-      <!-- ╔═ Step 3 – Equipment ════════════════════════════════════════════╗ -->
-      <section *ngIf="step === 3" class="step-panel" aria-labelledby="step3-title">
-        <h2 id="step3-title" class="step-title">
-          Add Equipment
-          <span class="step-title__badge">Optional</span>
+      <!-- ╔═ Step 3 – Equipment ═══════════════════════════════════════════╗ -->
+      <section *ngIf="step === 3" class="step-panel">
+        <h2 class="step-title">
+          Add Equipment <span class="step-title__badge">Optional</span>
         </h2>
-        <p class="step-hint">Rent camping gear for a more comfortable stay (tents, mattresses, lanterns, etc.).</p>
+        <p class="step-hint">Rent camping gear for a more comfortable stay.</p>
 
-        <div class="activities-grid" *ngIf="equipmentList.length > 0"
-             role="group" aria-label="Available equipment">
-          <div
-            class="activity-card"
-            *ngFor="let equip of equipmentList"
-            [class.is-selected]="isEquipmentSelected(equip)"
-            (click)="toggleEquipment(equip, getEquipmentQuantity(equip) + 1)"
-            (keydown.enter)="toggleEquipment(equip, getEquipmentQuantity(equip) + 1)"
-            (keydown.space)="toggleEquipment(equip, getEquipmentQuantity(equip) + 1)"
-            role="checkbox"
-            [attr.aria-checked]="isEquipmentSelected(equip)"
-            tabindex="0"
-          >
-            <div class="activity-card__check" *ngIf="isEquipmentSelected(equip)" aria-hidden="true">✓</div>
+        <div class="activities-grid" *ngIf="equipmentList.length > 0">
+          <div class="activity-card"
+               *ngFor="let equip of equipmentList"
+               [class.is-selected]="isEquipmentSelected(equip)"
+               (click)="toggleEquipment(equip, getEquipmentQuantity(equip) + 1)"
+               (keydown.enter)="toggleEquipment(equip, getEquipmentQuantity(equip) + 1)"
+               role="checkbox"
+               [attr.aria-checked]="isEquipmentSelected(equip)"
+               tabindex="0">
+            <div class="activity-card__check" *ngIf="isEquipmentSelected(equip)">✓</div>
             <h3 class="activity-card__name">{{ equip.name }}</h3>
             <p class="activity-card__desc">{{ equip.description }}</p>
             <div class="activity-card__meta">
               <span>📦 {{ equip.quantity }} available</span>
             </div>
-
-            <!-- Quantity selector -->
             <div *ngIf="isEquipmentSelected(equip)" class="qty-control">
               <button type="button"
                       (click)="toggleEquipment(equip, getEquipmentQuantity(equip) - 1); $event.stopImmediatePropagation()">−</button>
@@ -191,50 +160,33 @@
           </div>
         </div>
 
-        <p *ngIf="equipmentList.length === 0" class="empty-state">
-          No equipment is available for this camping at the moment.
-        </p>
+        <p *ngIf="equipmentList.length === 0" class="empty-state">No equipment available.</p>
 
-        <div class="alert alert--error" *ngIf="submitError" role="alert">
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-            <circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.5"/>
-            <path d="M8 5v4M8 11v.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-          </svg>
-          {{ submitError }}
-        </div>
+        <div class="alert alert--error" *ngIf="submitError" role="alert">{{ submitError }}</div>
 
         <div class="step-actions">
-          <button class="btn btn--ghost" type="button" (click)="goBack()">
-            <span aria-hidden="true">←</span> Back
-          </button>
-          <button class="btn btn--primary" type="button" (click)="step = 4">
-            Continue to Activities <span aria-hidden="true">→</span>
-          </button>
+          <button class="btn btn--ghost" (click)="goBack()">← Back</button>
+          <button class="btn btn--primary" (click)="step = 4">Continue to Activities →</button>
         </div>
       </section>
 
-      <!-- ╔═ Step 4 – Activities ═══════════════════════════════════════════╗ -->
-      <section *ngIf="step === 4" class="step-panel" aria-labelledby="step4-title">
-        <h2 id="step4-title" class="step-title">
-          Add Activities
-          <span class="step-title__badge">Optional</span>
+      <!-- ╔═ Step 4 – Activities ══════════════════════════════════════════╗ -->
+      <section *ngIf="step === 4" class="step-panel">
+        <h2 class="step-title">
+          Add Activities <span class="step-title__badge">Optional</span>
         </h2>
         <p class="step-hint">Enhance your stay with on-site activities.</p>
 
-        <div class="activities-grid" *ngIf="activities.length > 0"
-             role="group" aria-label="Available activities">
-          <div
-            class="activity-card"
-            *ngFor="let act of activities"
-            [class.is-selected]="isActivitySelected(act)"
-            (click)="toggleActivity(act)"
-            (keydown.enter)="toggleActivity(act)"
-            (keydown.space)="toggleActivity(act)"
-            role="checkbox"
-            [attr.aria-checked]="isActivitySelected(act)"
-            tabindex="0"
-          >
-            <div class="activity-card__check" *ngIf="isActivitySelected(act)" aria-hidden="true">✓</div>
+        <div class="activities-grid" *ngIf="activities.length > 0">
+          <div class="activity-card"
+               *ngFor="let act of activities"
+               [class.is-selected]="isActivitySelected(act)"
+               (click)="toggleActivity(act)"
+               (keydown.enter)="toggleActivity(act)"
+               role="checkbox"
+               [attr.aria-checked]="isActivitySelected(act)"
+               tabindex="0">
+            <div class="activity-card__check" *ngIf="isActivitySelected(act)">✓</div>
             <h3 class="activity-card__name">{{ act.name }}</h3>
             <p class="activity-card__desc">{{ act.description }}</p>
             <div class="activity-card__meta">
@@ -244,124 +196,93 @@
           </div>
         </div>
 
-        <p *ngIf="activities.length === 0" class="empty-state">
-          No activities are available for this camping.
-        </p>
+        <p *ngIf="activities.length === 0" class="empty-state">No activities available.</p>
 
         <div class="step-actions">
-          <button class="btn btn--ghost" type="button" (click)="goBack()">
-            <span aria-hidden="true">←</span> Back
-          </button>
-          <button class="btn btn--primary" type="button" (click)="submitReservation()"
-                  [disabled]="submitting" [attr.aria-busy]="submitting">
-            <span class="btn__spinner" *ngIf="submitting" aria-hidden="true"></span>
+          <button class="btn btn--ghost" (click)="goBack()">← Back</button>
+          <button class="btn btn--primary"
+                  (click)="submitReservation()"
+                  [disabled]="submitting">
+            <span class="btn__spinner" *ngIf="submitting"></span>
             {{ submitting ? 'Creating reservation…' : 'Confirm Reservation →' }}
           </button>
         </div>
       </section>
 
-      <!-- ╔═ Step 5 – Payment ══════════════════════════════════════════════╗ -->
-      <section *ngIf="step === 5 && !success" class="step-panel" aria-labelledby="step5-title"
-               [formGroup]="paymentForm">
-        <h2 id="step5-title" class="step-title">Secure Your Booking</h2>
+      <!-- ╔═ Step 5 – Payment Stripe ══════════════════════════════════════╗ -->
+      <section *ngIf="step === 5 && !success" class="step-panel">
+        <h2 class="step-title">Secure Your Booking</h2>
         <p class="step-hint">
-          Pay a minimum deposit of <strong>{{ minimumDepositPercent }}%</strong> online to confirm.
-          The remaining balance can be settled at the camping reception.
+          Pay a minimum deposit of <strong>{{ minimumDepositPercent }}%</strong> online.
+          The remaining balance is settled at the camping reception.
         </p>
 
-        <!-- Email -->
-        <div class="field-group"
-             [class.has-error]="paymentForm.get('clientEmail')!.invalid && paymentForm.get('clientEmail')!.touched">
-          <label class="field-label" for="clientEmail">
-            Confirmation Email *
-            <span class="field-hint">Your QR check-in code will be sent here</span>
-          </label>
-          <input id="clientEmail" formControlName="clientEmail" type="email"
-                 class="field-input" placeholder="you@example.com"
-                 aria-describedby="email-error"/>
-          <div id="email-error" class="field-error" role="alert"
-               *ngIf="paymentForm.get('clientEmail')!.invalid && paymentForm.get('clientEmail')!.touched">
-            <ng-container *ngIf="paymentForm.get('clientEmail')!.errors?.['required']">Email is required.</ng-container>
-            <ng-container *ngIf="paymentForm.get('clientEmail')!.errors?.['email']">Please enter a valid email.</ng-container>
-          </div>
-        </div>
-
-        <!-- Deposit slider -->
-        <div class="field-group">
-          <label class="field-label" for="depositSlider">
-            Deposit Amount
-            <span class="field-hint">Minimum {{ minimumDepositPercent }}% required</span>
-          </label>
-          <div class="slider-row">
-            <input
-              id="depositSlider"
-              type="range"
-              formControlName="depositPercent"
-              [min]="minimumDepositPercent"
-              max="100"
-              step="5"
-              class="deposit-slider"
-            />
-            <span class="slider-pct">{{ paymentForm.get('depositPercent')?.value }}%</span>
-          </div>
-
-          <div class="deposit-breakdown">
-            <div class="deposit-breakdown__row">
-              <span class="deposit-breakdown__label">Pay now (deposit)</span>
-              <span class="deposit-breakdown__value deposit-breakdown__value--pay">
-                {{ depositPreview | number:'1.2-2' }} TND
-              </span>
-            </div>
-            <div class="deposit-breakdown__row" *ngIf="!isFullPayment">
-              <span class="deposit-breakdown__label">Pay at reception</span>
-              <span class="deposit-breakdown__value deposit-breakdown__value--due">
-                {{ remainingPreview | number:'1.2-2' }} TND
-              </span>
-            </div>
-            <div class="deposit-breakdown__row deposit-breakdown__row--total">
-              <span class="deposit-breakdown__label">Total</span>
-              <span class="deposit-breakdown__value">{{ totalPrice | number:'1.2-2' }} TND</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Online payment method -->
-        <div class="field-group">
-          <label class="field-label">Online Payment Method *</label>
-          <div class="payment-grid" role="radiogroup" aria-label="Online payment methods">
-            <label
-              class="method-card"
-              *ngFor="let m of onlinePaymentMethods"
-              [class.is-selected]="paymentForm.value.method === m.value"
-            >
-              <input type="radio" formControlName="method" [value]="m.value" class="sr-only"/>
-              <span class="method-card__icon" aria-hidden="true">{{ m.icon }}</span>
-              <span class="method-card__label">{{ m.label }}</span>
+        <!-- Sélecteur d'acompte -->
+        <div [formGroup]="paymentForm">
+          <div class="field-group">
+            <label class="field-label">
+              Deposit Amount
+              <span class="field-hint">Minimum {{ minimumDepositPercent }}%</span>
             </label>
+            <div class="slider-row">
+              <input type="range" formControlName="depositPercent"
+                     [min]="minimumDepositPercent" max="100" step="5"
+                     class="deposit-slider"/>
+              <span class="slider-pct">{{ depositPercent }}%</span>
+            </div>
+            <div class="deposit-breakdown">
+              <div class="deposit-breakdown__row">
+                <span class="deposit-breakdown__label">Pay now (deposit)</span>
+                <span class="deposit-breakdown__value deposit-breakdown__value--pay">
+                  {{ depositPreview | number:'1.2-2' }} TND
+                </span>
+              </div>
+              <div class="deposit-breakdown__row" *ngIf="!isFullPayment">
+                <span class="deposit-breakdown__label">Pay at reception</span>
+                <span class="deposit-breakdown__value deposit-breakdown__value--due">
+                  {{ remainingPreview | number:'1.2-2' }} TND
+                </span>
+              </div>
+              <div class="deposit-breakdown__row deposit-breakdown__row--total">
+                <span class="deposit-breakdown__label">Total</span>
+                <span class="deposit-breakdown__value">{{ totalPrice | number:'1.2-2' }} TND</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Méthode réception (si acompte < 100%) -->
+          <div class="field-group" *ngIf="!isFullPayment">
+            <label class="field-label">How will you pay the remaining balance at reception? *</label>
+            <div class="payment-grid payment-grid--reception" role="radiogroup">
+              <label class="method-card"
+                     *ngFor="let m of receptionPaymentMethods"
+                     [class.is-selected]="paymentForm.value.remainingMethod === m.value">
+                <input type="radio" formControlName="remainingMethod"
+                       [value]="m.value" class="sr-only"/>
+                <span class="method-card__icon">{{ m.icon }}</span>
+                <span class="method-card__label">{{ m.label }}</span>
+              </label>
+            </div>
+            <p class="reception-notice">
+              💡 You'll settle <strong>{{ remainingPreview | number:'1.2-2' }} TND</strong>
+              at the camping reception upon check-in.
+            </p>
           </div>
         </div>
 
-        <!-- Reception payment method -->
-        <div class="field-group" *ngIf="!isFullPayment">
-          <label class="field-label">How will you pay the remaining balance at reception? *</label>
-          <div class="payment-grid payment-grid--reception" role="radiogroup"
-               aria-label="Reception payment methods">
-            <label
-              class="method-card"
-              *ngFor="let m of receptionPaymentMethods"
-              [class.is-selected]="paymentForm.value.remainingMethod === m.value"
-            >
-              <input type="radio" formControlName="remainingMethod" [value]="m.value" class="sr-only"/>
-              <span class="method-card__icon" aria-hidden="true">{{ m.icon }}</span>
-              <span class="method-card__label">{{ m.label }}</span>
-            </label>
-          </div>
-          <p class="reception-notice">
-            💡 You'll settle the remaining <strong>{{ remainingPreview | number:'1.2-2' }} TND</strong>
-            when you check in at the camping reception.
-          </p>
-        </div>
+        <!-- ══ Composant Stripe ══════════════════════════════════════════ -->
+        <!-- Monté uniquement quand la réservation est créée (reservationId non null) -->
+        <app-stripe-payment
+          *ngIf="reservationId"
+          [reservationId]="reservationId"
+          [totalAmount]="totalPrice"
+          [depositPercent]="depositPercent"
+          [remainingMethod]="paymentForm.get('remainingMethod')?.value ?? 'CASH'"
+          (paymentSuccess)="onStripeSuccess($event)"
+          (paymentError)="onStripeError($event)">
+        </app-stripe-payment>
 
+        <!-- Erreur globale -->
         <div class="alert alert--error" *ngIf="paymentError" role="alert">
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
             <circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.5"/>
@@ -369,30 +290,14 @@
           </svg>
           {{ paymentError }}
         </div>
-
-        <button
-          class="btn btn--pay"
-          type="button"
-          (click)="processPayment()"
-          [disabled]="submitting || paymentForm.invalid"
-          [attr.aria-busy]="submitting"
-        >
-          <span class="btn__spinner" *ngIf="submitting" aria-hidden="true"></span>
-          {{ submitting
-              ? 'Processing…'
-              : 'Pay deposit ' + (depositPreview | number:'1.2-2') + ' TND →' }}
-        </button>
       </section>
 
-      <!-- ╔═ Success State ═════════════════════════════════════════════════╗ -->
-      <section *ngIf="success && completedPayment" class="success-panel" aria-live="polite"
-               aria-label="Reservation confirmed">
-
-        <div class="success-panel__icon" aria-hidden="true">🎉</div>
+      <!-- ╔═ Succès ═══════════════════════════════════════════════════════╗ -->
+      <section *ngIf="success && completedPayment" class="success-panel" aria-live="polite">
+        <div class="success-panel__icon">🎉</div>
         <h2 class="success-panel__title">Booking Confirmed!</h2>
         <p class="success-panel__sub">
-          A confirmation email with your check-in QR code has been sent to
-          <strong>{{ paymentForm.value.clientEmail }}</strong>.
+          A confirmation email with your QR code has been sent.
         </p>
 
         <div class="receipt">
@@ -404,8 +309,9 @@
             <span>Deposit paid</span>
             <span class="receipt__paid">{{ completedPayment.depositAmount | number:'1.2-2' }} TND</span>
           </div>
-          <div class="receipt__row" *ngIf="completedPayment.remainingAmount && completedPayment.remainingAmount > 0">
-            <span>Balance due at reception</span>
+          <div class="receipt__row"
+               *ngIf="completedPayment.remainingAmount && completedPayment.remainingAmount > 0">
+            <span>Balance at reception</span>
             <span class="receipt__due">{{ completedPayment.remainingAmount | number:'1.2-2' }} TND</span>
           </div>
           <div class="receipt__row receipt__row--total">
@@ -415,55 +321,44 @@
         </div>
 
         <div class="qr-block" *ngIf="completedPayment.qrCodeBase64">
-          <img
-            [src]="'data:image/png;base64,' + completedPayment.qrCodeBase64"
-            alt="Check-in QR code"
-            class="qr-block__img"
-          />
+          <img [src]="'data:image/png;base64,' + completedPayment.qrCodeBase64"
+               alt="Check-in QR code" class="qr-block__img"/>
           <p class="qr-block__caption">
-            Show this QR code at reception — staff will scan it to verify your reservation.
+            Present this QR code at reception — staff will scan it to verify your booking.
           </p>
         </div>
 
-        <div *ngIf="completedPayment.remainingAmount && completedPayment.remainingAmount > 0"
-             class="reception-reminder">
+        <div class="reception-reminder"
+             *ngIf="completedPayment.remainingAmount && completedPayment.remainingAmount > 0">
           <strong>Reminder:</strong> You have
           <strong>{{ completedPayment.remainingAmount | number:'1.2-2' }} TND</strong>
-          to pay at the camping reception.
-          Method chosen:
-          <strong>{{ completedPayment.remainingPaymentMethod === 'CASH' ? 'Cash' : 'Card' }}</strong>.
+          to pay at reception.
+          Method: <strong>{{ completedPayment.remainingPaymentMethod === 'CASH' ? 'Cash' : 'Card' }}</strong>.
         </div>
 
         <div class="step-actions step-actions--center">
-          <a class="btn btn--primary" routerLink="/camping/my-reservations">
-            View My Reservations
-          </a>
-          <a class="btn btn--ghost" routerLink="/campings">
-            Browse More Campings
-          </a>
+          <a class="btn btn--primary" routerLink="/camping/my-reservations">View My Reservations</a>
+          <a class="btn btn--ghost"   routerLink="/campings">Browse More Campings</a>
         </div>
       </section>
 
     </main>
 
-    <!-- ── Right: Booking Summary Sidebar ─────────────────────────────── -->
-    <aside class="res-sidebar" aria-label="Booking summary">
+    <!-- ── Sidebar récapitulatif ───────────────────────────────────────── -->
+    <aside class="res-sidebar">
       <div class="summary">
         <h3 class="summary__title">Booking Summary</h3>
 
         <div class="summary__camping">
-          <img
-            [src]="camping.photos?.[0] || 'assets/images/camping-placeholder.jpg'"
-            [alt]="camping.name"
-            class="summary__thumb"
-          />
+          <img [src]="camping.photos?.[0] || 'assets/images/camping-placeholder.jpg'"
+               [alt]="camping.name" class="summary__thumb"/>
           <div>
             <strong>{{ camping.name }}</strong>
             <p>📍 {{ camping.governorate }}</p>
           </div>
         </div>
 
-        <hr class="summary__divider" />
+        <hr class="summary__divider"/>
 
         <div class="summary__row" *ngIf="selectedSpot">
           <span>Spot</span><span>{{ selectedSpot.name }}</span>
@@ -485,31 +380,28 @@
           <span>{{ spotTotal | number }} TND</span>
         </div>
 
-        <!-- Equipment in summary -->
-        <hr class="summary__divider" *ngIf="selectedEquipment.length > 0" />
+        <hr class="summary__divider" *ngIf="selectedEquipment.length > 0"/>
         <div class="summary__row" *ngFor="let item of selectedEquipment">
           <span>{{ item.equipment.name }} ×{{ item.quantity }}</span>
         </div>
 
-        <!-- Activities in summary -->
-        <hr class="summary__divider" *ngIf="selectedActivities.length > 0" />
+        <hr class="summary__divider" *ngIf="selectedActivities.length > 0"/>
         <div class="summary__row" *ngFor="let act of selectedActivities">
           <span>{{ act.name }}</span>
           <span>{{ act.price | number }} TND</span>
         </div>
 
-        <hr class="summary__divider" />
+        <hr class="summary__divider"/>
 
         <div class="summary__total">
           <span>Total</span>
           <span class="summary__total-price">{{ totalPrice | number }} TND</span>
         </div>
 
-        <!-- Deposit preview in sidebar (step 5 only) -->
         <ng-container *ngIf="step === 5 && !success">
-          <hr class="summary__divider" />
+          <hr class="summary__divider"/>
           <div class="summary__row">
-            <span class="summary__deposit-label">Deposit ({{ paymentForm.get('depositPercent')?.value }}%)</span>
+            <span class="summary__deposit-label">Deposit ({{ depositPercent }}%)</span>
             <span class="summary__deposit-value">{{ depositPreview | number:'1.2-2' }} TND</span>
           </div>
           <div class="summary__row" *ngIf="!isFullPayment">
@@ -519,13 +411,11 @@
         </ng-container>
       </div>
     </aside>
-
   </div>
 </div>
 
-<!-- Loading placeholder -->
 <ng-template #loadingTpl>
-  <div class="loading-placeholder" aria-busy="true" aria-label="Loading camping details">
+  <div class="loading-placeholder" aria-busy="true">
     <div class="skeleton skeleton--title"></div>
     <div class="skeleton skeleton--body"></div>
   </div>

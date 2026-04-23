@@ -4,15 +4,7 @@
       <span class="logo">Discover Tunisia</span>
     </a>
 
-    <button
-      class="navbar-toggler"
-      type="button"
-      data-bs-toggle="collapse"
-      data-bs-target="#navbarNav"
-      aria-controls="navbarNav"
-      aria-expanded="false"
-      aria-label="Toggle navigation"
-    >
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
       <span class="navbar-toggler-icon"></span>
     </button>
 
@@ -23,17 +15,39 @@
           <a class="nav-link" routerLink="/">Home</a>
         </li>
 
+        <li class="nav-item dropdown" *ngIf="authService.isLoggedIn()">
+          <a class="nav-link dropdown-toggle fw-bold text-primary" href="#" id="campingDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+            Camping
+          </a>
+          <ul class="dropdown-menu shadow border-0" aria-labelledby="campingDropdown">
+
+            <ng-container *ngIf="currentRole === 'ADMIN'">
+              <li><h6 class="dropdown-header">Administration</h6></li>
+              <li><a class="dropdown-item" routerLink="/camping/backoffice/admin">Dashboard Admin</a></li>
+            </ng-container>
+
+            <ng-container *ngIf="currentRole === 'OWNER'">
+              <li><h6 class="dropdown-header">Espace Propriétaire</h6></li>
+              <li><a class="dropdown-item" routerLink="/camping/backoffice/owner/">Dashboard Owner</a></li>
+              <li><a class="dropdown-item" routerLink="/camping/backoffice/owner/my-campings">Mes campings</a></li>
+              <li><a class="dropdown-item" routerLink="/camping/backoffice/owner/new">Ajouter un camping</a></li>
+              <li><a class="dropdown-item" routerLink="/camping/backoffice/owner/reservations">Gestion réservations</a></li>
+            </ng-container>
+
+            <ng-container *ngIf="currentRole === 'CLIENT'">
+              <li><h6 class="dropdown-header">Espace Client</h6></li>
+              <li><a class="dropdown-item" routerLink="/camping">Liste des campings</a></li>
+              <li><a class="dropdown-item" routerLink="/camping/my-reservations">Suivi mes réservations</a></li>
+            </ng-container>
+          </ul>
+        </li>
+
         <li class="nav-item dropdown">
-          <a
-            class="nav-link dropdown-toggle"
-            href="#"
-            id="servicesDropdown"
-            role="button"
-            data-bs-toggle="dropdown"
-            aria-expanded="false"
-          >Services </a>
-          <ul class="dropdown-menu" aria-labelledby="servicesDropdown">
-            <li><a class="dropdown-item" routerLink="/campings">Campings</a></li>
+          <a class="nav-link dropdown-toggle" href="#" id="servicesDropdown" role="button" data-bs-toggle="dropdown">
+            Services
+          </a>
+          <ul class="dropdown-menu shadow border-0" aria-labelledby="servicesDropdown">
+            <li><a class="dropdown-item" routerLink="/camping">Campings</a></li>
             <li><a class="dropdown-item" routerLink="/events">Events</a></li>
             <li><a class="dropdown-item" routerLink="/shoppings">Shoppings</a></li>
             <li><a class="dropdown-item" routerLink="/carpooling">Carpooling</a></li>
@@ -45,12 +59,6 @@
           <a class="nav-link" routerLink="/contact">Contact Us</a>
         </li>
 
-        <!-- Admin link -->
-        <li class="nav-item" *ngIf="authService.isAdmin()">
-          <a class="nav-link" routerLink="/accommodations/admin">Dashboard</a>
-        </li>
-
-        <!-- NOT logged in -->
         <ng-container *ngIf="!authService.isLoggedIn()">
           <li class="nav-item">
             <a class="btn btn-outline-primary ms-lg-3" routerLink="/auth/sign-in">Login</a>
@@ -60,33 +68,15 @@
           </li>
         </ng-container>
 
-        <!-- Logged in -->
         <ng-container *ngIf="authService.isLoggedIn()">
           <li class="nav-item dropdown ms-lg-3">
-            <a
-              class="nav-link dropdown-toggle fw-semibold"
-              href="#"
-              role="button"
-              data-bs-toggle="dropdown"
-              aria-expanded="false"
-            >
+            <a class="nav-link dropdown-toggle fw-semibold user-profile" href="#" role="button" data-bs-toggle="dropdown">
               👤 {{ authService.getNom() }} {{ authService.getPrenom() }}
             </a>
-            <ul class="dropdown-menu dropdown-menu-end">
-              <li>
-                <span class="dropdown-item-text text-muted small">
-                  {{ authService.getRole() }}
-                </span>
-              </li>
+            <ul class="dropdown-menu dropdown-menu-end shadow border-0">
+              <li><span class="dropdown-item-text text-muted small">Rôle : {{ currentRole }}</span></li>
               <li><hr class="dropdown-divider"></li>
-              <li>
-                <button
-                  class="dropdown-item text-danger"
-                  (click)="logout()"
-                >
-                  Logout
-                </button>
-              </li>
+              <li><button class="dropdown-item text-danger" (click)="logout()">Logout</button></li>
             </ul>
           </li>
         </ng-container>

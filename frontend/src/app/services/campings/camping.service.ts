@@ -13,7 +13,9 @@ export class CampingService {
   // ── CRUD ──────────────────────────────────────────────
   getAllCampings(): Observable<Camping[]> {
     return this.http.get<Camping[]>(this.API_URL);
+
   }
+ 
 
   getCampingById(id: number): Observable<Camping> {
     return this.http.get<Camping>(`${this.API_URL}/${id}`);

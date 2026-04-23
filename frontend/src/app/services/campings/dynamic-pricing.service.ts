@@ -197,4 +197,15 @@ getPriceLevel(multiplier: number): PriceLevel {
     if (multiplier >= 1.4) return 'spot-card--peak';
     return '';
   }
+  runFullRepricing(): Observable<any> {
+  return this.http.post(`${this.API}/run`, {}).pipe(
+    tap(res => {
+      console.log('🔄 Full repricing triggered:', res);
+    }),
+    catchError(err => {
+      console.error('❌ Repricing failed', err);
+      throw err;
+    })
+  );
+}
 }

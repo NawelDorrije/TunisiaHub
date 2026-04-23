@@ -11,52 +11,45 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 
-import { Camping } from '../../../../models/campings/camping';
-import { Spot } from '../../../../models/campings/spot';
-import { Activity } from '../../../../models/campings/activity';
+import { Camping }   from '../../../../models/campings/camping';
+import { Spot }      from '../../../../models/campings/spot';
+import { Activity }  from '../../../../models/campings/activity';
 import { Equipment } from '../../../../models/campings/equipment';
-import { Payment, OnlinePaymentMethod, ReceptionPaymentMethod } from '../../../../models/shared-reservation/payment';
+import { Payment, ReceptionPaymentMethod } from '../../../../models/shared-reservation/payment';
 
-import { CampingService } from '../../../../services/campings/camping.service';
-import { SpotService } from '../../../../services/campings/spot.service';
-import { ActivityService } from '../../../../services/campings/activity.service';
-import { EquipmentService } from '../../../../services/campings/equipment.service';
+import { CampingService }     from '../../../../services/campings/camping.service';
+import { SpotService }        from '../../../../services/campings/spot.service';
+import { ActivityService }    from '../../../../services/campings/activity.service';
+import { EquipmentService }   from '../../../../services/campings/equipment.service';
 import { ReservationService } from '../../../../services/shared-reservation/reservation-camping.service';
-import { PaymentService } from '../../../../services/shared-reservation/payment.service';
-import { AuthService } from '../../../auth/services/auth.service';
+import { PaymentService }     from '../../../../services/shared-reservation/payment.service';
+import { AuthService }        from '../../../auth/services/auth.service';
 
-// ── Custom Validators ────────────────────────────────────────────────────────
+// ── Validators ───────────────────────────────────────────────────────────────
 
 export function minTodayValidator(): ValidatorFn {
-  return (control: AbstractControl): ValidationErrors | null => {
-    if (!control.value) return null;
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const selected = new Date(control.value);
-    return selected >= today ? null : { pastDate: true };
+  return (c: AbstractControl): ValidationErrors | null => {
+    if (!c.value) return null;
+    const today = new Date(); today.setHours(0, 0, 0, 0);
+    return new Date(c.value) >= today ? null : { pastDate: true };
   };
 }
 
-export function checkOutAfterCheckInValidator(checkInControlName: string): ValidatorFn {
-  return (control: AbstractControl): ValidationErrors | null => {
-    if (!control.value) return null;
-    const parent = control.parent;
-    if (!parent) return null;
-    const checkIn = parent.get(checkInControlName)?.value;
-    if (!checkIn) return null;
-    return new Date(control.value) > new Date(checkIn) ? null : { checkOutBeforeCheckIn: true };
+export function checkOutAfterCheckInValidator(checkInName: string): ValidatorFn {
+  return (c: AbstractControl): ValidationErrors | null => {
+    if (!c.value || !c.parent) return null;
+    const ci = c.parent.get(checkInName)?.value;
+    return ci && new Date(c.value) > new Date(ci) ? null : { checkOutBeforeCheckIn: true };
   };
 }
 
-export function maxCapacityValidator(maxCapacity: () => number): ValidatorFn {
-  return (control: AbstractControl): ValidationErrors | null => {
-    const max = maxCapacity();
-    if (!control.value || !max) return null;
-    return +control.value <= max ? null : { exceedsCapacity: { max } };
+export function maxCapacityValidator(maxFn: () => number): ValidatorFn {
+  return (c: AbstractControl): ValidationErrors | null => {
+    const max = maxFn();
+    if (!c.value || !max) return null;
+    return +c.value <= max ? null : { exceedsCapacity: { max } };
   };
 }
-
-// ── Types ────────────────────────────────────────────────────────────────────
 
 export type Step = 1 | 2 | 3 | 4 | 5;
 
@@ -72,8 +65,8 @@ export class ReservationFormComponent implements OnInit, OnDestroy {
   // ── State ────────────────────────────────────────────────────────────────
   step: Step = 1;
   camping!: Camping;
-  spots: Spot[] = [];
-  activities: Activity[] = [];
+  spots: Spot[]      = [];
+  activities: Activity[]  = [];
   equipmentList: Equipment[] = [];
 
   selectedSpot: Spot | null = null;
@@ -81,33 +74,21 @@ export class ReservationFormComponent implements OnInit, OnDestroy {
   selectedActivities: Activity[] = [];
   selectedEquipment: { equipment: Equipment; quantity: number }[] = [];
 
-  submitting = false;
+  submitting     = false;
   reservationId: number | null = null;
-  success = false;
-  submitError: string | null = null;
-  paymentError: string | null = null;
-   clientId!: number;
+  success        = false;
+  submitError:   string | null = null;
+  paymentError:  string | null = null;
+  clientId!: number;
 
-  /** Payment result from backend */
   completedPayment: Payment | null = null;
-
-  /** Minimum deposit percentage */
   minimumDepositPercent = 30;
 
-  // ── Payment method options ───────────────────────────────────────────────
-
-  readonly onlinePaymentMethods: { value: OnlinePaymentMethod; label: string; icon: string }[] = [
-    { value: 'CREDIT_CARD',   label: 'Credit Card',   icon: '💳' },
-    { value: 'PAYPAL',        label: 'PayPal',         icon: '🅿' },
-    { value: 'BANK_TRANSFER', label: 'Bank Transfer',  icon: '🏦' },
-  ];
-
   readonly receptionPaymentMethods: { value: ReceptionPaymentMethod; label: string; icon: string }[] = [
-    { value: 'CASH',              label: 'Cash',           icon: '💵' },
-    { value: 'CARD_AT_RECEPTION', label: 'Card at desk',   icon: '💳' },
+    { value: 'CASH',              label: 'Cash',         icon: '💵' },
+    { value: 'CARD_AT_RECEPTION', label: 'Card at desk', icon: '💳' },
   ];
 
-  // ── Forms ────────────────────────────────────────────────────────────────
   datesForm!: FormGroup;
   paymentForm!: FormGroup;
 
@@ -123,71 +104,54 @@ export class ReservationFormComponent implements OnInit, OnDestroy {
     private equipmentService: EquipmentService,
     private reservationService: ReservationService,
     private paymentService: PaymentService,
-        private authService: AuthService
+    private authService: AuthService,
   ) {}
 
   // ── Lifecycle ────────────────────────────────────────────────────────────
 
   ngOnInit(): void {
     const id = this.authService.getId();
-    if (!id) {
-      this.router.navigate(['/auth/sign-in']);
-      return;
-    }
+    if (!id) { this.router.navigate(['/auth/sign-in']); return; }
     this.clientId = id;
     this.buildForms();
     this.loadData();
   }
-
-
 
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
   }
 
-  // ── Form builder ─────────────────────────────────────────────────────────
+  // ── Forms ────────────────────────────────────────────────────────────────
 
   private buildForms(): void {
     this.datesForm = this.fb.group({
-      checkIn: ['', [Validators.required, minTodayValidator()]],
-      checkOut: ['', [Validators.required, checkOutAfterCheckInValidator('checkIn')]],
-      numberOfGuests: [
-        1,
-        [
-          Validators.required,
-          Validators.min(1),
-          maxCapacityValidator(() => this.selectedSpot?.capacity ?? Infinity),
-        ],
-      ],
-      notes: [''],
+      checkIn:        ['', [Validators.required, minTodayValidator()]],
+      checkOut:       ['', [Validators.required, checkOutAfterCheckInValidator('checkIn')]],
+      numberOfGuests: [1,  [Validators.required, Validators.min(1),
+                            maxCapacityValidator(() => this.selectedSpot?.capacity ?? Infinity)]],
+      notes:          [''],
     });
 
-    this.datesForm.get('checkIn')!
-      .valueChanges.pipe(takeUntil(this.destroy$))
+    this.datesForm.get('checkIn')!.valueChanges
+      .pipe(takeUntil(this.destroy$))
       .subscribe(() => this.datesForm.get('checkOut')!.updateValueAndValidity());
 
     this.paymentForm = this.fb.group({
-      method:           ['CREDIT_CARD', Validators.required],
-      depositPercent:   [this.minimumDepositPercent, [
+      depositPercent:  [this.minimumDepositPercent, [
         Validators.required,
         Validators.min(this.minimumDepositPercent),
         Validators.max(100),
       ]],
-      remainingMethod:  ['CASH', Validators.required],
-      clientEmail:      ['', [Validators.required, Validators.email]],
+      remainingMethod: ['CASH', Validators.required],
     });
 
-    this.paymentForm.get('depositPercent')!
-      .valueChanges.pipe(takeUntil(this.destroy$))
+    this.paymentForm.get('depositPercent')!.valueChanges
+      .pipe(takeUntil(this.destroy$))
       .subscribe((pct: number) => {
         const ctrl = this.paymentForm.get('remainingMethod')!;
-        if (pct >= 100) {
-          ctrl.clearValidators();
-          ctrl.setValue(null);
-        } else {
-          ctrl.setValidators(Validators.required);
-        }
+        if (pct >= 100) { ctrl.clearValidators(); ctrl.setValue(null); }
+        else            { ctrl.setValidators(Validators.required); }
         ctrl.updateValueAndValidity();
       });
   }
@@ -195,28 +159,20 @@ export class ReservationFormComponent implements OnInit, OnDestroy {
   private loadData(): void {
     const campingId = +this.route.snapshot.params['id'];
 
-    this.campingService.getCampingById(campingId)
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({ next: (c) => (this.camping = c) });
+    this.campingService.getCampingById(campingId).pipe(takeUntil(this.destroy$))
+      .subscribe({ next: c => this.camping = c });
 
-    this.spotService.getSpotsByCamping(campingId)
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({ next: (spots) => (this.spots = spots.filter((s) => s.active)) });
+    this.spotService.getSpotsByCamping(campingId).pipe(takeUntil(this.destroy$))
+      .subscribe({ next: spots => this.spots = spots.filter(s => s.active) });
 
-    this.activityService.getActivitiesByCamping(campingId)
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({ next: (acts) => (this.activities = acts.filter((a) => a.active)) });
+    this.activityService.getActivitiesByCamping(campingId).pipe(takeUntil(this.destroy$))
+      .subscribe({ next: acts => this.activities = acts.filter(a => a.active) });
 
-    this.equipmentService.getEquipmentByCamping(campingId)
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: (equip) => {
-          this.equipmentList = equip.filter((e) => e.available && e.quantity > 0);
-        }
-      });
+    this.equipmentService.getEquipmentByCamping(campingId).pipe(takeUntil(this.destroy$))
+      .subscribe({ next: equip => this.equipmentList = equip.filter(e => e.available && e.quantity > 0) });
   }
 
-  // ── Step 1 – Spot Selection ──────────────────────────────────────────────
+  // ── Step 1 ───────────────────────────────────────────────────────────────
 
   selectSpot(spot: Spot): void {
     this.selectedSpot = spot;
@@ -225,22 +181,16 @@ export class ReservationFormComponent implements OnInit, OnDestroy {
   }
 
   proceedFromSpotStep(): void {
-    if (!this.selectedSpot) {
-      this.spotError = true;
-      return;
-    }
+    if (!this.selectedSpot) { this.spotError = true; return; }
     this.step = 2;
   }
 
-  // ── Step 2 – Dates & Guests ──────────────────────────────────────────────
+  // ── Step 2 ───────────────────────────────────────────────────────────────
 
   get checkIn()        { return this.datesForm.get('checkIn')!; }
   get checkOut()       { return this.datesForm.get('checkOut')!; }
   get numberOfGuests() { return this.datesForm.get('numberOfGuests')!; }
-
-  get today(): string {
-    return new Date().toISOString().split('T')[0];
-  }
+  get today(): string  { return new Date().toISOString().split('T')[0]; }
 
   proceedFromDatesStep(): void {
     this.datesForm.markAllAsTouched();
@@ -248,41 +198,36 @@ export class ReservationFormComponent implements OnInit, OnDestroy {
     this.step = 3;
   }
 
-  // ── Step 3 – Equipment ───────────────────────────────────────────────────
+  // ── Step 3 ───────────────────────────────────────────────────────────────
 
   toggleEquipment(equip: Equipment, qty: number = 1): void {
-    const idx = this.selectedEquipment.findIndex(item => item.equipment.id === equip.id);
-
+    const idx = this.selectedEquipment.findIndex(i => i.equipment.id === equip.id);
     if (idx >= 0) {
-      if (qty <= 0) {
-        this.selectedEquipment.splice(idx, 1);
-      } else {
-        this.selectedEquipment[idx].quantity = qty;
-      }
+      if (qty <= 0) this.selectedEquipment.splice(idx, 1);
+      else          this.selectedEquipment[idx].quantity = qty;
     } else if (qty > 0) {
       this.selectedEquipment.push({ equipment: equip, quantity: qty });
     }
   }
 
   isEquipmentSelected(equip: Equipment): boolean {
-    return this.selectedEquipment.some(item => item.equipment.id === equip.id);
+    return this.selectedEquipment.some(i => i.equipment.id === equip.id);
   }
 
   getEquipmentQuantity(equip: Equipment): number {
-    const item = this.selectedEquipment.find(item => item.equipment.id === equip.id);
-    return item ? item.quantity : 0;
+    return this.selectedEquipment.find(i => i.equipment.id === equip.id)?.quantity ?? 0;
   }
 
-  // ── Step 4 – Activities ──────────────────────────────────────────────────
+  // ── Step 4 ───────────────────────────────────────────────────────────────
 
-  toggleActivity(activity: Activity): void {
-    const idx = this.selectedActivities.findIndex((a) => a.id === activity.id);
+  toggleActivity(act: Activity): void {
+    const idx = this.selectedActivities.findIndex(a => a.id === act.id);
     if (idx >= 0) this.selectedActivities.splice(idx, 1);
-    else          this.selectedActivities.push(activity);
+    else          this.selectedActivities.push(act);
   }
 
-  isActivitySelected(activity: Activity): boolean {
-    return this.selectedActivities.some((a) => a.id === activity.id);
+  isActivitySelected(act: Activity): boolean {
+    return this.selectedActivities.some(a => a.id === act.id);
   }
 
   // ── Pricing ──────────────────────────────────────────────────────────────
@@ -294,23 +239,24 @@ export class ReservationFormComponent implements OnInit, OnDestroy {
     return Math.max(1, Math.ceil((new Date(co).getTime() - new Date(ci).getTime()) / 86_400_000));
   }
 
-  get activitiesTotal(): number {
-    return this.selectedActivities.reduce((sum, a) => sum + a.price, 0);
-  }
-
-
-
   get spotTotal(): number {
     return (this.selectedSpot?.dynamicPrice ?? 0) * this.nights;
   }
 
+  get activitiesTotal(): number {
+    return this.selectedActivities.reduce((s, a) => s + a.price, 0);
+  }
+
   get totalPrice(): number {
-    return this.spotTotal + this.activitiesTotal ;
+    return this.spotTotal + this.activitiesTotal;
+  }
+
+  get depositPercent(): number {
+    return this.paymentForm?.get('depositPercent')?.value ?? this.minimumDepositPercent;
   }
 
   get depositPreview(): number {
-    const pct = this.paymentForm?.get('depositPercent')?.value ?? this.minimumDepositPercent;
-    return Math.ceil(this.totalPrice * pct / 100);
+    return Math.ceil(this.totalPrice * this.depositPercent / 100);
   }
 
   get remainingPreview(): number {
@@ -318,76 +264,58 @@ export class ReservationFormComponent implements OnInit, OnDestroy {
   }
 
   get isFullPayment(): boolean {
-    return (this.paymentForm?.get('depositPercent')?.value ?? 0) >= 100;
+    return this.depositPercent >= 100;
   }
 
-  // ── Submission ───────────────────────────────────────────────────────────
+  // ── Step 4 → créer la réservation ────────────────────────────────────────
 
   submitReservation(): void {
     this.datesForm.markAllAsTouched();
     if (this.datesForm.invalid || !this.selectedSpot) return;
 
-    this.submitting = true;
+    this.submitting  = true;
     this.submitError = null;
 
     const payload = {
-      userId: this.clientId, 
-      spotId: this.selectedSpot.id!,
-      activityIds: this.selectedActivities.map((a) => a.id!),
-      equipmentRequests: this.selectedEquipment.map(item => ({
-        equipmentId: item.equipment.id!,
-        quantity: item.quantity
+      userId:   this.clientId,
+      spotId:   this.selectedSpot.id!,
+      activityIds: this.selectedActivities.map(a => a.id!),
+      equipmentRequests: this.selectedEquipment.map(i => ({
+        equipmentId: i.equipment.id!,
+        quantity: i.quantity,
       })),
-      checkIn: this.datesForm.value.checkIn,
-      checkOut: this.datesForm.value.checkOut,
+      checkIn:        this.datesForm.value.checkIn,
+      checkOut:       this.datesForm.value.checkOut,
       numberOfGuests: this.datesForm.value.numberOfGuests,
-      notes: this.datesForm.value.notes,
+      notes:          this.datesForm.value.notes,
     };
 
     this.reservationService.createReservation(payload)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
-        next: (res) => {
+        next: res => {
           this.reservationId = res.id!;
           this.submitting = false;
-          this.step = 5;
+          this.step = 5;            // → aller à l'étape paiement
         },
         error: () => {
-          this.submitting = false;
+          this.submitting  = false;
           this.submitError = 'Reservation could not be created. Please try again.';
         },
       });
   }
 
-  processPayment(): void {
-    this.paymentForm.markAllAsTouched();
-    if (!this.reservationId || this.paymentForm.invalid) return;
+  // ── Step 5 → callbacks Stripe ─────────────────────────────────────────────
 
-    this.submitting = true;
-    this.paymentError = null;
+  /** Appelé par (paymentSuccess) de app-stripe-payment */
+  onStripeSuccess(payment: Payment): void {
+    this.completedPayment = payment;
+    this.success = true;
+  }
 
-    const { method, depositPercent, remainingMethod, clientEmail } = this.paymentForm.value;
-
-    this.paymentService
-      .processDeposit(
-        this.reservationId,
-        method,
-        clientEmail,
-        depositPercent,
-        this.isFullPayment ? undefined : remainingMethod,
-      )
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: (payment) => {
-          this.completedPayment = payment;
-          this.submitting = false;
-          this.success = true;
-        },
-        error: () => {
-          this.submitting = false;
-          this.paymentError = 'Payment failed. Please check your details and try again.';
-        },
-      });
+  /** Appelé par (paymentError) de app-stripe-payment */
+  onStripeError(message: string): void {
+    this.paymentError = message;
   }
 
   // ── Navigation ───────────────────────────────────────────────────────────

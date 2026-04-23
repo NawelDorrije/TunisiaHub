@@ -1,28 +1,36 @@
 package org.example.backend_tunisiahub.Controllers;
 
-import jakarta.validation.Valid;
+import com.stripe.exception.StripeException;
 import org.example.backend_tunisiahub.Entities.Camping.DTO.PaymentDTO;
 import org.example.backend_tunisiahub.Entities.Camping.DTO.QRScanResultDTO;
 import org.example.backend_tunisiahub.Entities.PaymentMethod;
 import org.example.backend_tunisiahub.Services.IPaymentService;
+import org.example.backend_tunisiahub.Services.PaymentServiceImpl.PaymentIntentRequest;
+import org.example.backend_tunisiahub.Services.PaymentServiceImpl.PaymentIntentResponse;
+import org.example.backend_tunisiahub.Services.PaymentServiceImpl.PaymentStatusResponse;
+import org.example.backend_tunisiahub.Services.PaymentServiceImpl.StripeConfirmResponse;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 /**
- * REST controller for all payment operations.
+ * REST controller pour toutes les opérations de paiement.
  *
- * <pre>
- * POST /api/payments/deposit/{reservationId}   – pay deposit & receive QR code
- * POST /api/payments/{id}/refund               – refund deposit
- * POST /api/payments/{id}/settle               – settle remaining at reception
- * GET  /api/payments/scan                      – scan QR code (reception)
- * GET  /api/payments/{id}                      – get payment by id
- * GET  /api/payments/reservation/{id}          – get payment by reservation
- * GET  /api/payments                           – list all payments
- * POST /api/payments/{id}/resend               – resend confirmation email
- * </pre>
+ * Endpoints Stripe (nouveaux) :
+ *   POST /api/payments/stripe/create-payment-intent
+ *   GET  /api/payments/stripe/status/{paymentIntentId}
+ *   POST /api/payments/stripe/confirm/{paymentIntentId}
+ *
+ * Endpoints existants (inchangés) :
+ *   POST /api/payments/deposit/{reservationId}
+ *   POST /api/payments/{id}/refund
+ *   POST /api/payments/{id}/settle
+ *   GET  /api/payments/scan
+ *   GET  /api/payments/{id}
+ *   GET  /api/payments/reservation/{id}
+ *   GET  /api/payments
+ *   POST /api/payments/{id}/resend
  */
 @RestController
 @RequestMapping("/api/payments")
@@ -34,19 +42,57 @@ public class PaymentController {
         this.paymentService = paymentService;
     }
 
-    // ── Client endpoints ──────────────────────────────────────────────────────
+    // ══════════════════════════════════════════════════════════════════════════
+    // STRIPE — nouveaux endpoints
+    // ══════════════════════════════════════════════════════════════════════════
 
     /**
-     * Pay the deposit to confirm a reservation.
-     *
-     * @param reservationId    which reservation to pay for
-     * @param method           online payment method (CREDIT_CARD, PAYPAL, BANK_TRANSFER)
-     * @param depositPercent   percentage to pay now; must be >= server minimum (default 30%).
-     *                         Omit to use the configured minimum.
-     * @param remainingMethod  how the remaining balance will be settled (CASH / CARD_AT_RECEPTION).
-     *                         Required when depositPercent < 100.
-     * @param clientEmail      email address for the confirmation + QR code
+     * Étape 1 : crée un PaymentIntent et retourne le clientSecret au frontend.
+     * La clé secrète Stripe ne quitte JAMAIS le backend.
      */
+    @PostMapping("/stripe/create-payment-intent")
+    public ResponseEntity<PaymentIntentResponse> createPaymentIntent(
+            @RequestBody PaymentIntentRequest request) {
+        try {
+            return ResponseEntity.ok(paymentService.createStripePaymentIntent(request));
+        } catch (StripeException e) {
+            throw new RuntimeException("Erreur Stripe : " + e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Étape 2 : vérifie le statut d'un PaymentIntent (polling après paiement).
+     */
+    @GetMapping("/stripe/status/{paymentIntentId}")
+    public ResponseEntity<PaymentStatusResponse> getStripeStatus(
+            @PathVariable String paymentIntentId) {
+        try {
+            return ResponseEntity.ok(paymentService.getStripePaymentStatus(paymentIntentId));
+        } catch (StripeException e) {
+            throw new RuntimeException("Erreur Stripe : " + e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Étape 3 : appelé par le frontend après confirmation Stripe.js.
+     * Vérifie le succès avec Stripe puis finalise la réservation (QR, email, statut).
+     */
+    @PostMapping("/stripe/confirm/{paymentIntentId}")
+    public ResponseEntity<StripeConfirmResponse> confirmStripePayment(
+            @PathVariable String paymentIntentId,
+            @RequestBody PaymentIntentRequest request) {
+        try {
+            return ResponseEntity.ok(
+                    paymentService.confirmStripeAndFinalize(paymentIntentId, request));
+        } catch (StripeException e) {
+            throw new RuntimeException("Erreur confirmation Stripe : " + e.getMessage(), e);
+        }
+    }
+
+    // ══════════════════════════════════════════════════════════════════════════
+    // ENDPOINTS EXISTANTS — inchangés
+    // ══════════════════════════════════════════════════════════════════════════
+
     @PostMapping("/deposit/{reservationId}")
     public ResponseEntity<PaymentDTO> payDeposit(
             @PathVariable Long reservationId,
@@ -54,58 +100,33 @@ public class PaymentController {
             @RequestParam(required = false) Integer depositPercent,
             @RequestParam(required = false) PaymentMethod remainingMethod,
             @RequestParam String clientEmail) {
-
         return ResponseEntity.ok(
                 paymentService.processDeposit(
                         reservationId, method, depositPercent, remainingMethod, clientEmail));
     }
 
-    /**
-     * Refund the deposit and cancel the reservation.
-     */
     @PostMapping("/{id}/refund")
     public ResponseEntity<PaymentDTO> refund(@PathVariable Long id) {
         return ResponseEntity.ok(paymentService.refund(id));
     }
 
-    /**
-     * Resend the confirmation email + QR code to the given address.
-     */
     @PostMapping("/{id}/resend")
     public ResponseEntity<Void> resendConfirmation(
-            @PathVariable Long id,
-            @RequestParam String email) {
+            @PathVariable Long id, @RequestParam String email) {
         paymentService.resendConfirmation(id, email);
         return ResponseEntity.noContent().build();
     }
 
-    // ── Reception endpoints ───────────────────────────────────────────────────
-
-    /**
-     * Scan a client's check-in QR code at reception.
-     * Automatically marks the reservation as ACTIVE if valid.
-     *
-     * @param token  the validation token encoded in the QR code
-     */
     @GetMapping("/scan")
     public ResponseEntity<QRScanResultDTO> scanQRCode(@RequestParam String token) {
         return ResponseEntity.ok(paymentService.scanQRCode(token));
     }
 
-    /**
-     * Settle the remaining balance at reception (cash or card).
-     *
-     * @param id              payment id
-     * @param receptionMethod CASH or CARD_AT_RECEPTION
-     */
     @PostMapping("/{id}/settle")
     public ResponseEntity<PaymentDTO> settleRemaining(
-            @PathVariable Long id,
-            @RequestParam PaymentMethod receptionMethod) {
+            @PathVariable Long id, @RequestParam PaymentMethod receptionMethod) {
         return ResponseEntity.ok(paymentService.settleRemainingBalance(id, receptionMethod));
     }
-
-    // ── Query endpoints ───────────────────────────────────────────────────────
 
     @GetMapping("/{id}")
     public ResponseEntity<PaymentDTO> getById(@PathVariable Long id) {

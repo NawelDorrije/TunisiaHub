@@ -35,7 +35,6 @@ export class ListCampingsComponent implements OnInit, OnDestroy {
     this.filterForm = this.fb.group({
       keyword: [''],
       governorate: [''],
-      maxPrice: [''],
       minCapacity: ['']
     });
   }
@@ -54,7 +53,7 @@ export class ListCampingsComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (data) => {
-          this.campings = data.filter(c => c.status === 'ACTIVE');
+          this.campings = data;
           this.filtered = [...this.campings];
           this.loading = false;
         },
@@ -66,20 +65,19 @@ export class ListCampingsComponent implements OnInit, OnDestroy {
   }
 
   applyFilters(): void {
-    const { keyword, governorate, maxPrice, minCapacity } = this.filterForm.value;
+    const { keyword, governorate, minCapacity } = this.filterForm.value;
     this.filtered = this.campings.filter(c => {
       const matchKeyword = !keyword ||
         c.name.toLowerCase().includes(keyword.toLowerCase()) ||
         (c.address || '').toLowerCase().includes(keyword.toLowerCase());
       const matchGov = !governorate || c.governorate === governorate;
-      const matchPrice = !maxPrice || c.price <= +maxPrice;
       const matchCap = !minCapacity || (c.maxCapacity ?? 0) >= +minCapacity;
-      return matchKeyword && matchGov && matchPrice && matchCap;
+      return matchKeyword && matchGov  && matchCap;
     });
   }
 
   resetFilters(): void {
-    this.filterForm.reset({ keyword: '', governorate: '', maxPrice: '', minCapacity: '' });
+    this.filterForm.reset({ keyword: '', governorate:  '', minCapacity: '' });
     this.filtered = [...this.campings];
   }
 
@@ -119,7 +117,7 @@ export class ListCampingsComponent implements OnInit, OnDestroy {
 
   get hasActiveFilters(): boolean {
     const v = this.filterForm.value;
-    return !!(v.keyword || v.governorate || v.maxPrice || v.minCapacity);
+    return !!(v.keyword || v.governorate  || v.minCapacity);
   }
 
   trackById(_: number, item: Camping): number {

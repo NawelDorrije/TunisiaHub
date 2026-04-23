@@ -18,28 +18,27 @@ import { AuthService } from './services/auth.service';
 export class AuthInterceptor implements HttpInterceptor {
 
   constructor(private authService: AuthService, private router: Router) {}
+intercept(request: HttpRequest<unknown>, next: HttpHandler): Observable<HttpEvent<unknown>> {
+  const token = this.authService.getToken();
 
-  intercept(request: HttpRequest<unknown>, next: HttpHandler): Observable<HttpEvent<unknown>> {
-    const token = this.authService.getToken();
+  let headers: { [key: string]: string } = {
+    'ngrok-skip-browser-warning': 'true'
+  };
 
-    // Injecte le token si présent (et que la requête va vers le backend)
-    if (token) {
-      request = request.clone({
-        setHeaders: {
-          Authorization: `Bearer ${token}`
-        }
-      });
-    }
-
-    return next.handle(request).pipe(
-      catchError((error: HttpErrorResponse) => {
-        if (error.status === 401) {
-          // Token expiré ou invalide → déconnexion propre
-          this.authService.logout();
-          this.router.navigate(['/login']);
-        }
-        return throwError(() => error);
-      })
-    );
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
   }
+
+  request = request.clone({ setHeaders: headers });
+
+  return next.handle(request).pipe(
+    catchError((error: HttpErrorResponse) => {
+      if (error.status === 401) {
+        this.authService.logout();
+        this.router.navigate(['/auth/sign-in']);
+      }
+      return throwError(() => error);
+    })
+  );
+}
 }

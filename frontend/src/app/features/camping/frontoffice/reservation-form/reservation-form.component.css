@@ -325,3 +325,107 @@
   min-width: 24px;
   text-align: center;
 }
+.stripe-panel {
+  margin-top: 1.5rem;
+  padding: 1.5rem;
+  border: 1.5px solid var(--sand);
+  border-radius: 14px;
+  background: var(--cream);
+}
+
+.panel-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.1rem;
+  color: var(--forest);
+  margin-bottom: .25rem;
+}
+
+.panel-sub {
+  font-size: .85rem;
+  color: var(--muted);
+  margin-bottom: 1.25rem;
+}
+
+.field { display: flex; flex-direction: column; gap: .3rem; margin-bottom: 1rem; }
+.label { font-size: .82rem; font-weight: 500; color: var(--text); }
+.input {
+  padding: .6rem .85rem;
+  border: 1.5px solid var(--sand);
+  border-radius: 10px;
+  background: white;
+  font-size: .9rem;
+  color: var(--text);
+  outline: none;
+  width: 100%;
+  transition: border-color .2s;
+}
+.input:focus { border-color: var(--sage); }
+.has-error .input { border-color: var(--danger); }
+.err { font-size: .76rem; color: var(--danger); }
+
+/* Zone iframe Stripe */
+.card-element {
+  padding: .7rem .875rem;
+  border: 1.5px solid var(--sand);
+  border-radius: 10px;
+  background: white;
+  transition: border-color .2s;
+}
+.card-element:focus-within { border-color: var(--sage); }
+
+/* Barre de progression */
+.status-row {
+  display: flex;
+  align-items: center;
+  gap: .6rem;
+  font-size: .82rem;
+  color: var(--muted);
+  margin-bottom: .75rem;
+}
+.spinner {
+  width: 14px; height: 14px;
+  border: 2px solid var(--sand);
+  border-top-color: var(--forest);
+  border-radius: 50%;
+  animation: spin .7s linear infinite;
+  flex-shrink: 0;
+}
+
+/* Bouton payer */
+.pay-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: .5rem;
+  padding: .9rem;
+  background: var(--forest);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: .95rem;
+  font-weight: 500;
+  cursor: pointer;
+  margin-top: 1rem;
+  transition: background .2s, opacity .2s;
+}
+.pay-btn:hover:not(:disabled) { background: var(--moss); }
+.pay-btn:disabled { opacity: .55; cursor: not-allowed; }
+
+.spinner-sm {
+  width: 13px; height: 13px;
+  border: 2px solid rgba(255,255,255,.35);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin .7s linear infinite;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.secure-note {
+  text-align: center;
+  font-size: .76rem;
+  color: var(--muted);
+  margin-top: .75rem;
+}

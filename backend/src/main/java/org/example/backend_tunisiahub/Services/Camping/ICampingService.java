@@ -23,7 +23,7 @@ public interface ICampingService {
     List<CampingDTO> getByStatus(CampingStatus status);
     List<CampingDTO> getByGovernorate(String governorate);
     List<CampingDTO> searchByKeyword(String keyword);
-    List<CampingDTO> getAvailableByFilters(String governorate, Double maxPrice, Integer minCapacity);
+    List<CampingDTO> getAvailableByFilters(String governorate, Integer minCapacity);
     List<CampingDTO> getWithAvailableSpotsForDates(LocalDate checkIn, LocalDate checkOut, String governorate);
     List<CampingDTO> getByMinRating(BigDecimal minRating);
 }

@@ -139,7 +139,6 @@ export class CampingFormComponent implements OnInit, OnDestroy {
       longitude:     [null, [Validators.required, Validators.min(7),  Validators.max(12)]],
       numberOfSpots: [null, [Validators.min(1), Validators.max(1000)]],
       maxCapacity:   [null, [Validators.required, Validators.min(1), Validators.max(5000)]],
-      price:         [null, [Validators.required, Validators.min(0), Validators.max(10000)]],
       description:   ['', Validators.maxLength(2000)],
       rules:         ['', Validators.maxLength(1000)],
       checkInTime:   [''],

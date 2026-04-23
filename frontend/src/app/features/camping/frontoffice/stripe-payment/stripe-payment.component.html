@@ -1,0 +1,96 @@
+<div class="stripe-panel">
+
+  <!-- En-tête -->
+  <div class="stripe-panel__header">
+    <h3 class="stripe-panel__title">💳 Paiement sécurisé</h3>
+    <p class="stripe-panel__sub">
+      Acompte de <strong>{{ depositPercent }}%</strong> —
+      <strong>{{ depositAmount | number:'1.2-2' }} TND</strong> à régler maintenant
+    </p>
+  </div>
+
+  <form [formGroup]="form" (ngSubmit)="pay()" novalidate>
+
+    <!-- Email de confirmation -->
+    <div class="sp-field"
+         [class.sp-field--error]="form.get('clientEmail')?.invalid && form.get('clientEmail')?.touched">
+      <label class="sp-label" for="sp-email">
+        Email de confirmation *
+        <span class="sp-hint">Votre QR code de check-in sera envoyé ici</span>
+      </label>
+      <input
+        id="sp-email"
+        formControlName="clientEmail"
+        type="email"
+        class="sp-input"
+        placeholder="vous@exemple.com"
+        autocomplete="email"
+      />
+      <span class="sp-err"
+            *ngIf="form.get('clientEmail')?.hasError('required') && form.get('clientEmail')?.touched">
+        L'email est obligatoire.
+      </span>
+      <span class="sp-err"
+            *ngIf="form.get('clientEmail')?.hasError('email') && form.get('clientEmail')?.touched">
+        Entrez un email valide.
+      </span>
+    </div>
+
+    <!-- Nom du titulaire -->
+    <div class="sp-field"
+         [class.sp-field--error]="form.get('cardholderName')?.invalid && form.get('cardholderName')?.touched">
+      <label class="sp-label" for="sp-name">Nom sur la carte *</label>
+      <input
+        id="sp-name"
+        formControlName="cardholderName"
+        type="text"
+        class="sp-input"
+        placeholder="Prénom Nom"
+        autocomplete="cc-name"
+      />
+      <span class="sp-err"
+            *ngIf="form.get('cardholderName')?.invalid && form.get('cardholderName')?.touched">
+        Le nom du titulaire est obligatoire.
+      </span>
+    </div>
+
+    <!-- Numéro de carte (iframe Stripe sécurisé) -->
+    <div class="sp-field">
+      <label class="sp-label">Numéro de carte *</label>
+      <div #cardElement class="sp-card-element"></div>
+      <span class="sp-err" *ngIf="cardError">{{ cardError }}</span>
+    </div>
+
+    <!-- Barre de progression -->
+    <div class="sp-status" *ngIf="loading" role="status" aria-live="polite">
+      <span class="sp-spinner" aria-hidden="true"></span>
+      <span>{{ statusLabel }}</span>
+    </div>
+
+    <!-- Erreur non-carte -->
+    <div class="sp-alert" *ngIf="status === 'error' && !loading" role="alert">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+        <circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.5"/>
+        <path d="M8 5v4M8 11v.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+      </svg>
+      {{ cardError }}
+    </div>
+
+    <!-- Bouton payer -->
+    <button
+      type="submit"
+      class="sp-pay-btn"
+      [disabled]="loading"
+      [attr.aria-busy]="loading"
+    >
+      <span class="sp-spinner sp-spinner--sm" *ngIf="loading" aria-hidden="true"></span>
+      <span>{{ loading ? statusLabel : 'Payer ' + (depositAmount | number:'1.2-2') + ' TND →' }}</span>
+    </button>
+
+    <!-- Badge sécurité -->
+    <p class="sp-secure">
+      🔒 Paiement chiffré SSL · Traité par Stripe · Clé secrète sécurisée
+    </p>
+
+  </form>
+</div>

@@ -28,9 +28,7 @@ public interface CampingRepository extends JpaRepository<Camping, Long> {
 
     List<Camping> findByGovernorateAndStatus(String governorate, CampingStatus status);
 
-    List<Camping> findByPriceLessThanEqual(double maxPrice);
 
-    List<Camping> findByPriceBetween(double minPrice, double maxPrice);
 
     // ── CLIENT filters ─────────────────────────────────────
 
@@ -45,12 +43,10 @@ public interface CampingRepository extends JpaRepository<Camping, Long> {
         SELECT c FROM Camping c
         WHERE c.status = 'ACTIVE'
         AND (:governorate IS NULL OR c.governorate = :governorate)
-        AND (:maxPrice IS NULL OR c.price <= :maxPrice)
         AND (:minCapacity IS NULL OR c.maxCapacity >= :minCapacity)
     """)
     List<Camping> findAvailableByFilters(
             @Param("governorate") String governorate,
-            @Param("maxPrice") Double maxPrice,
             @Param("minCapacity") Integer minCapacity
     );
 
@@ -90,4 +86,15 @@ public interface CampingRepository extends JpaRepository<Camping, Long> {
         )
     """)
     List<Camping> searchByKeyword(@Param("keyword") String keyword);
+
+    @Query("""
+    SELECT c FROM Camping c 
+    WHERE c.status = 'ACTIVE' 
+    AND c.startDate IS NOT NULL AND c.endDate IS NOT NULL
+    AND c.startDate <= :endDate 
+    AND c.endDate >= :startDate
+""")
+    List<Camping> findAvailableCampingsForDates(
+            @Param("startDate") LocalDate startDate,
+            @Param("endDate") LocalDate endDate);
 }

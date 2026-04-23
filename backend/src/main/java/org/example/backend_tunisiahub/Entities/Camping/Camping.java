@@ -75,8 +75,7 @@ public class Camping {
     @Column(nullable = false)
     LocalDateTime updatedAt = LocalDateTime.now();
 
-    @Column(nullable = false)
-    double price;
+
 
     @Column(columnDefinition = "TEXT")
     String description;

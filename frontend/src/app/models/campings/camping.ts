@@ -14,7 +14,7 @@ export interface Camping {
   checkOutTime?: string;
   ownerId: number;
   ownerName?: string;
-  price: number;
+
   description?: string;
   startDate?: string;
   endDate?: string;

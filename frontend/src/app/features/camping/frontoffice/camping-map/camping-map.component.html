@@ -38,7 +38,6 @@
         <div class="si-info">
           <div class="si-gov">📍 {{ c.governorate }}</div>
           <div class="si-name">{{ c.name }}</div>
-          <div class="si-price">{{ c.price | number }} TND/night</div>
         </div>
       </div>
       <div *ngIf="filteredCampings.length === 0" class="sidebar-empty">
@@ -65,10 +64,7 @@
           {{ selectedCamping.description | slice:0:110 }}…
         </p>
         <div class="dp-meta">
-          <div class="dp-meta-item">
-            <span class="dml">Price</span>
-            <span class="dmv">{{ selectedCamping.price | number }} TND</span>
-          </div>
+       
           <div class="dp-meta-item">
             <span class="dml">Capacity</span>
             <span class="dmv">{{ selectedCamping.maxCapacity }} guests</span>

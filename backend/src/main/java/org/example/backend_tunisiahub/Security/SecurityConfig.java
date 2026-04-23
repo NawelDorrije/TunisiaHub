@@ -68,9 +68,11 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.DELETE, "/api/campings/**").hasAnyRole("OWNER", "ADMIN")
 
                         // ───────────────────────── SPOTS (write) ─────────────────
-                        .requestMatchers(HttpMethod.POST,   "/api/spots/**").hasAnyRole("OWNER", "ADMIN")
-                        .requestMatchers(HttpMethod.PUT,    "/api/spots/**").hasAnyRole("OWNER", "ADMIN")
-                        .requestMatchers(HttpMethod.DELETE, "/api/spots/**").hasAnyRole("OWNER", "ADMIN")
+                                // ───────────────────────── SPOTS (read public) ─────────────────────────
+                                .requestMatchers(HttpMethod.GET, "/api/spots", "/api/spots/**").permitAll()
+                                .requestMatchers(HttpMethod.POST, "/api/spots/**").hasAnyRole("OWNER", "ADMIN")
+                                .requestMatchers(HttpMethod.PUT, "/api/spots/**").hasAnyRole("OWNER", "ADMIN")
+                                .requestMatchers(HttpMethod.DELETE, "/api/spots/**").hasAnyRole("OWNER", "ADMIN")
 
                         // ───────────────────────── ACTIVITIES (write) ────────────
                         .requestMatchers(HttpMethod.POST,   "/api/activities/template").hasRole("ADMIN")
@@ -85,8 +87,8 @@ public class SecurityConfig {
 
                         // ───────────────────────── RESERVATIONS ─────────────────
                         .requestMatchers(HttpMethod.POST,   "/api/reservations").hasAnyRole("CLIENT", "ADMIN")
-                        .requestMatchers(HttpMethod.GET,    "/api/reservations").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.GET,    "/api/reservations/**").hasAnyRole("CLIENT", "OWNER", "ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/api/reservations")
+                        .hasAnyRole("CLIENT", "OWNER", "ADMIN")                        .requestMatchers(HttpMethod.GET,    "/api/reservations/**").hasAnyRole("CLIENT", "OWNER", "ADMIN")
                         .requestMatchers(HttpMethod.PATCH,  "/api/reservations/*/status").hasAnyRole("OWNER", "ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/api/reservations/*/cancel").hasAnyRole("CLIENT", "ADMIN")
 
@@ -103,6 +105,11 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET,  "/api/pricing/**").hasAnyRole("CLIENT", "OWNER", "ADMIN")
                         .requestMatchers(HttpMethod.POST, "/api/pricing/run").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.POST, "/api/pricing/**").hasAnyRole("OWNER", "ADMIN")
+
+                        // ── STRIPE ────────────────────────────────────────────────────────────────────
+                        .requestMatchers(HttpMethod.POST, "/api/payments/stripe/create-payment-intent").hasAnyRole("CLIENT", "ADMIN")
+                        .requestMatchers(HttpMethod.GET,  "/api/payments/stripe/status/**").hasAnyRole("CLIENT", "ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/api/payments/stripe/confirm/**").hasAnyRole("CLIENT", "ADMIN")
 
                         // ───────────────────────── DEFAULT ──────────────────────
                         .anyRequest().authenticated()
@@ -134,8 +141,13 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        // En dev : accepte localhost:4200. En prod, remplace par le vrai domaine.
-        config.setAllowedOrigins(List.of("http://localhost:4200"));
+        config.setAllowedOriginPatterns(List.of(
+                "http://localhost:4200",
+                "http://192.168.0.*:4200",   // ← votre réseau local
+                "https://*.ngrok-free.dev",
+                "https://*.ngrok-free.app",
+                "https://*.ngrok.io"
+        ));
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
         config.setAllowedHeaders(List.of("*"));
         config.setAllowCredentials(true);

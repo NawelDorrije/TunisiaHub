@@ -9,6 +9,7 @@ import { ReservationFormComponent } from './reservation-form/reservation-form.co
 import { MyReservationsComponent } from './my-reservations/my-reservations.component';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { HttpClientModule } from '@angular/common/http';
+import { StripePaymentComponent } from './stripe-payment/stripe-payment.component';
 
 @NgModule({
   declarations: [
@@ -17,6 +18,7 @@ import { HttpClientModule } from '@angular/common/http';
     CampingMapComponent,
     ReservationFormComponent,
     MyReservationsComponent,
+    StripePaymentComponent,
 
 
 

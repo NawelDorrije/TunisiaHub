@@ -65,9 +65,6 @@ public class CampingDTO {
     LocalTime checkInTime;
     LocalTime checkOutTime;
 
-    @NotNull(message = "Price is required")
-    @DecimalMin(value = "0.0", inclusive = false, message = "Price must be positive")
-    Double price;
 
     String description;
 

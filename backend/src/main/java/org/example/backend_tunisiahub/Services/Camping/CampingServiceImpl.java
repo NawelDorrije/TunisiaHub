@@ -74,7 +74,8 @@ public class CampingServiceImpl implements ICampingService {
 
     @Override
     public List<CampingDTO> getAllCampings() {
-        return campingRepository.findAll()
+        LocalDate today = LocalDate.now();
+        return campingRepository.findAvailableCampingsForDates(today, today)
                 .stream()
                 .map(campingMapper::toDTO)
                 .collect(Collectors.toList());
@@ -112,8 +113,8 @@ public class CampingServiceImpl implements ICampingService {
     }
 
     @Override
-    public List<CampingDTO> getAvailableByFilters(String governorate, Double maxPrice, Integer minCapacity) {
-        return campingRepository.findAvailableByFilters(governorate, maxPrice, minCapacity)
+    public List<CampingDTO> getAvailableByFilters(String governorate, Integer minCapacity) {
+        return campingRepository.findAvailableByFilters(governorate, minCapacity)
                 .stream().map(campingMapper::toDTO).collect(Collectors.toList());
     }
 

@@ -88,6 +88,7 @@ pricingData: PricingPopupData | null = null;   // was PricingResponse | null
           error: () => this.errorMessage = 'Failed to load spot data.'
         });
     }
+
   }
 
   ngAfterViewInit(): void {

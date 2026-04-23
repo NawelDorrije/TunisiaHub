@@ -31,7 +31,6 @@ public class CampingMapper {
                 .rules(camping.getRules())
                 .checkInTime(camping.getCheckInTime())
                 .checkOutTime(camping.getCheckOutTime())
-                .price(camping.getPrice())
                 .description(camping.getDescription())
                 .startDate(camping.getStartDate())
                 .endDate(camping.getEndDate())
@@ -56,7 +55,6 @@ public class CampingMapper {
         camping.setRules(dto.getRules());
         camping.setCheckInTime(dto.getCheckInTime());
         camping.setCheckOutTime(dto.getCheckOutTime());
-        camping.setPrice(dto.getPrice());
         camping.setDescription(dto.getDescription());
         camping.setStartDate(dto.getStartDate());
         camping.setEndDate(dto.getEndDate());
@@ -78,7 +76,6 @@ public class CampingMapper {
         camping.setRules(dto.getRules());
         camping.setCheckInTime(dto.getCheckInTime());
         camping.setCheckOutTime(dto.getCheckOutTime());
-        camping.setPrice(dto.getPrice());
         camping.setDescription(dto.getDescription());
         camping.setStartDate(dto.getStartDate());
         camping.setEndDate(dto.getEndDate());

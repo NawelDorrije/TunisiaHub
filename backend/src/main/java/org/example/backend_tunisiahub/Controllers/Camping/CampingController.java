@@ -82,9 +82,8 @@ public class CampingController {
     @GetMapping("/available")
     public ResponseEntity<List<CampingDTO>> getAvailable(
             @RequestParam(required = false) String governorate,
-            @RequestParam(required = false) Double maxPrice,
             @RequestParam(required = false) Integer minCapacity) {
-        return ResponseEntity.ok(campingService.getAvailableByFilters(governorate, maxPrice, minCapacity));
+        return ResponseEntity.ok(campingService.getAvailableByFilters(governorate, minCapacity));
     }
 
     @GetMapping("/available-for-dates")

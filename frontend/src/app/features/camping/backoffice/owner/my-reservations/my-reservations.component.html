@@ -1,1 +1,402 @@
-<p>my-reservations works!</p>
+<!-- ═══════════════════════════════════════════════════════
+     OWNER — RESERVATION MANAGEMENT DASHBOARD
+     ═══════════════════════════════════════════════════════ -->
+<div class="or-page">
+
+  <!-- ── Page Header ─────────────────────────────────────────────── -->
+  <div class="or-topbar">
+    <div class="or-topbar__left">
+      <div class="or-topbar__eyebrow">
+        <span class="or-dot"></span> Owner Portal
+      </div>
+      <h1 class="or-topbar__title">Reservations</h1>
+      <p class="or-topbar__sub">Monitor and manage all bookings across your properties</p>
+    </div>
+    <button class="or-refresh-btn" (click)="loadReservations()" [disabled]="loading">
+      <i class="bi bi-arrow-clockwise" [class.spin]="loading"></i>
+      Refresh
+    </button>
+  </div>
+
+  <!-- ── Alerts ──────────────────────────────────────────────────── -->
+  <div class="or-alerts">
+    <div class="or-alert or-alert--success" *ngIf="successMsg" role="alert">
+      <i class="bi bi-check-circle-fill"></i>
+      <span>{{ successMsg }}</span>
+      <button (click)="successMsg=''" class="or-alert__close"><i class="bi bi-x"></i></button>
+    </div>
+    <div class="or-alert or-alert--error" *ngIf="error && !loading" role="alert">
+      <i class="bi bi-exclamation-triangle-fill"></i>
+      <span>{{ error }}</span>
+      <button (click)="error=''" class="or-alert__close"><i class="bi bi-x"></i></button>
+    </div>
+  </div>
+
+  <!-- ── Stats Cards ─────────────────────────────────────────────── -->
+  <div class="or-stats" *ngIf="!loading">
+    <div class="or-stat-card or-stat-card--total">
+      <div class="or-stat-card__icon"><i class="bi bi-journal-bookmark-fill"></i></div>
+      <div class="or-stat-card__body">
+        <span class="or-stat-card__num">{{ stats.total }}</span>
+        <span class="or-stat-card__label">Total Bookings</span>
+      </div>
+    </div>
+    <div class="or-stat-card or-stat-card--pending">
+      <div class="or-stat-card__icon"><i class="bi bi-hourglass-split"></i></div>
+      <div class="or-stat-card__body">
+        <span class="or-stat-card__num">{{ stats.pending }}</span>
+        <span class="or-stat-card__label">Awaiting Confirm</span>
+      </div>
+    </div>
+    <div class="or-stat-card or-stat-card--confirmed">
+      <div class="or-stat-card__icon"><i class="bi bi-patch-check-fill"></i></div>
+      <div class="or-stat-card__body">
+        <span class="or-stat-card__num">{{ stats.confirmed }}</span>
+        <span class="or-stat-card__label">Confirmed</span>
+      </div>
+    </div>
+    <div class="or-stat-card or-stat-card--active">
+      <div class="or-stat-card__icon"><i class="bi bi-geo-alt-fill"></i></div>
+      <div class="or-stat-card__body">
+        <span class="or-stat-card__num">{{ stats.active }}</span>
+        <span class="or-stat-card__label">Active / On-site</span>
+      </div>
+    </div>
+    <div class="or-stat-card or-stat-card--revenue">
+      <div class="or-stat-card__icon"><i class="bi bi-wallet2"></i></div>
+      <div class="or-stat-card__body">
+        <span class="or-stat-card__num">{{ stats.revenue | number:'1.0-0' }}</span>
+        <span class="or-stat-card__label">Revenue (TND)</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Toolbar ─────────────────────────────────────────────────── -->
+  <div class="or-toolbar">
+
+    <!-- Search -->
+    <div class="or-search">
+      <i class="bi bi-search or-search__icon"></i>
+      <input
+        type="text"
+        class="or-search__input"
+        placeholder="Search by client, spot, camping or ID…"
+        [(ngModel)]="searchQuery"
+        (input)="onSearch()" />
+      <button *ngIf="searchQuery" class="or-search__clear" (click)="searchQuery=''; onSearch()">
+        <i class="bi bi-x-circle-fill"></i>
+      </button>
+    </div>
+
+    <!-- Date range -->
+    <div class="or-date-range">
+      <div class="or-date-field">
+        <label>From</label>
+        <input type="date" [(ngModel)]="dateFrom" (change)="applyFilters()" class="or-date-input" />
+      </div>
+      <div class="or-date-sep">→</div>
+      <div class="or-date-field">
+        <label>To</label>
+        <input type="date" [(ngModel)]="dateTo" (change)="applyFilters()" class="or-date-input" />
+      </div>
+    </div>
+
+    <!-- Clear filters -->
+    <button class="or-clear-btn" *ngIf="hasActiveFilters()" (click)="clearFilters()">
+      <i class="bi bi-funnel-fill"></i> Clear Filters
+    </button>
+  </div>
+
+  <!-- ── Status Tabs ─────────────────────────────────────────────── -->
+  <div class="or-tabs" role="tablist">
+    <button
+      *ngFor="let s of statuses"
+      class="or-tab"
+      [class.or-tab--active]="statusFilter === s"
+      (click)="setStatusFilter(s)"
+      role="tab"
+      [attr.aria-selected]="statusFilter === s">
+      {{ s === 'ALL' ? 'All Reservations' : s | titlecase }}
+      <span class="or-tab__badge" [class.or-tab__badge--zero]="getCount(s) === 0">
+        {{ getCount(s) }}
+      </span>
+    </button>
+  </div>
+
+  <!-- ── Loading ─────────────────────────────────────────────────── -->
+  <div class="or-loading" *ngIf="loading">
+    <div class="or-loading__track">
+      <div class="or-loading__bar"></div>
+    </div>
+    <p>Loading reservations…</p>
+  </div>
+
+  <!-- ── Empty State ─────────────────────────────────────────────── -->
+  <div class="or-empty" *ngIf="!loading && !error && filtered.length === 0">
+    <div class="or-empty__art">
+      <i class="bi bi-calendar2-x"></i>
+    </div>
+    <h3>No reservations found</h3>
+    <p *ngIf="hasActiveFilters()">Try adjusting your search or filter criteria.</p>
+    <p *ngIf="!hasActiveFilters()">Your campings don't have any bookings yet.</p>
+    <button class="or-clear-btn" *ngIf="hasActiveFilters()" (click)="clearFilters()">
+      Clear All Filters
+    </button>
+  </div>
+
+  <!-- ── Reservations Table ──────────────────────────────────────── -->
+  <div class="or-table-wrap" *ngIf="!loading && !error && filtered.length > 0">
+    <div class="or-table-meta">
+      Showing <strong>{{ filtered.length }}</strong> of <strong>{{ reservations.length }}</strong> reservations
+    </div>
+
+    <div class="or-table-scroll">
+      <table class="or-table" aria-label="Reservations table">
+        <thead class="or-table__head">
+          <tr>
+            <th class="or-th or-th--id">#</th>
+            <th class="or-th">Client</th>
+            <th class="or-th">Camping</th>
+            <th class="or-th">Spot</th>
+            <th class="or-th">Check-in</th>
+            <th class="or-th">Check-out</th>
+            <th class="or-th or-th--center">Nights</th>
+            <th class="or-th or-th--right">Total</th>
+            <th class="or-th or-th--center">Status</th>
+            <th class="or-th or-th--center">Actions</th>
+          </tr>
+        </thead>
+        <tbody class="or-table__body">
+          <tr class="or-tr" *ngFor="let r of filtered; trackBy: trackById"
+              [class.or-tr--processing]="isProcessing(r.id)">
+
+            <!-- ID -->
+            <td class="or-td or-td--id">
+              <span class="or-id">#{{ r.id }}</span>
+            </td>
+
+            <!-- Client -->
+            <td class="or-td">
+              <div class="or-client">
+                <div>
+                  <div class="or-client__name">{{ r.clientName}}</div>
+                  <div class="or-client__email" *ngIf="r.clientEmail">{{ r.clientEmail }}</div>
+                </div>
+              </div>
+            </td>
+
+            <!-- Camping -->
+            <td class="or-td">
+              <div class="or-camping-name">
+                <i class="bi bi-tree-fill"></i>
+                {{ r.campingName }}
+              </div>
+            </td>
+
+            <!-- Spot -->
+            <td class="or-td">
+              <span class="or-spot-badge">
+                <i class="bi bi-geo-alt"></i> {{ r.spotName }}
+              </span>
+            </td>
+
+            <!-- Check-in -->
+            <td class="or-td">
+              <div class="or-date-cell">
+                <div class="or-date-cell__day">{{ r.checkIn | date:'d' }}</div>
+                <div class="or-date-cell__mon">{{ r.checkIn | date:'MMM yy' }}</div>
+              </div>
+            </td>
+
+            <!-- Check-out -->
+            <td class="or-td">
+              <div class="or-date-cell">
+                <div class="or-date-cell__day">{{ r.checkOut | date:'d' }}</div>
+                <div class="or-date-cell__mon">{{ r.checkOut | date:'MMM yy' }}</div>
+              </div>
+            </td>
+
+            <!-- Nights -->
+            <td class="or-td or-td--center">
+              <span class="or-nights">{{ getNights(r.checkIn, r.checkOut) }}n</span>
+            </td>
+
+            <!-- Total -->
+            <td class="or-td or-td--right">
+              <span class="or-price">{{ r.totalPrice | number:'1.0-0' }} <small>TND</small></span>
+            </td>
+
+            <!-- Status -->
+            <td class="or-td or-td--center">
+              <span class="or-badge" [ngClass]="'or-badge--' + (r.status | lowercase)">
+                {{ r.status }}
+              </span>
+            </td>
+
+            <!-- Actions -->
+            <td class="or-td or-td--center">
+              <div class="or-actions">
+                <!-- View detail -->
+                <button class="or-action-btn or-action-btn--view"
+                        (click)="openDetail(r)"
+                        title="View details">
+                  <i class="bi bi-eye-fill"></i>
+                </button>
+
+                <!-- Confirm -->
+                <button class="or-action-btn or-action-btn--confirm"
+                        *ngIf="canConfirm(r.status)"
+                        (click)="confirmReservation(r)"
+                        [disabled]="isProcessing(r.id)"
+                        title="Confirm reservation">
+                  <i class="bi bi-check-lg" *ngIf="!isProcessing(r.id)"></i>
+                  <i class="bi bi-arrow-repeat spin" *ngIf="isProcessing(r.id)"></i>
+                </button>
+
+                <!-- Cancel -->
+                <button class="or-action-btn or-action-btn--cancel"
+                        *ngIf="canCancel(r.status)"
+                        (click)="cancelReservation(r)"
+                        [disabled]="isProcessing(r.id)"
+                        title="Cancel reservation">
+                  <i class="bi bi-x-lg"></i>
+                </button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════════
+       DETAIL DRAWER / MODAL
+       ══════════════════════════════════════════════════════════════ -->
+  <div class="or-drawer-overlay" *ngIf="selectedReservation"
+       (click)="closeDetail()" aria-modal="true">
+  </div>
+
+  <aside class="or-drawer" *ngIf="selectedReservation"
+         [class.or-drawer--open]="!!selectedReservation">
+
+    <!-- Drawer header -->
+    <div class="or-drawer__header">
+      <div>
+        <span class="or-drawer__eyebrow">Reservation Detail</span>
+        <h2 class="or-drawer__title">#{{ selectedReservation.id }}</h2>
+      </div>
+      <div class="or-drawer__header-actions">
+        <span class="or-badge" [ngClass]="'or-badge--' + (selectedReservation.status | lowercase)">
+          {{ selectedReservation.status }}
+        </span>
+        <button class="or-drawer__close" (click)="closeDetail()">
+          <i class="bi bi-x-lg"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- Client block -->
+    <div class="or-drawer__section">
+      <h3 class="or-drawer__section-title"><i class="bi bi-person-fill"></i> Client</h3>
+      <div class="or-drawer__client">
+        <div class="or-drawer__avatar">{{ selectedReservation.clientName?.charAt(0)?.toUpperCase() }}</div>
+        <div>
+          <div class="or-drawer__client-name">{{ selectedReservation.clientName }}</div>
+          <div class="or-drawer__client-email" *ngIf="selectedReservation.clientEmail">
+            {{ selectedReservation.clientEmail }}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Booking info grid -->
+    <div class="or-drawer__section">
+      <h3 class="or-drawer__section-title"><i class="bi bi-calendar3"></i> Booking Info</h3>
+      <div class="or-drawer__grid">
+        <div class="or-drawer__item">
+          <span class="or-drawer__label">Camping</span>
+          <span class="or-drawer__value">{{ selectedReservation.campingName }}</span>
+        </div>
+        <div class="or-drawer__item">
+          <span class="or-drawer__label">Spot</span>
+          <span class="or-drawer__value">{{ selectedReservation.spotName }}</span>
+        </div>
+        <div class="or-drawer__item">
+          <span class="or-drawer__label">Check-in</span>
+          <span class="or-drawer__value">
+            {{ selectedReservation.checkIn | date:'EEEE, d MMMM yyyy' }}
+          </span>
+        </div>
+        <div class="or-drawer__item">
+          <span class="or-drawer__label">Check-out</span>
+          <span class="or-drawer__value">
+            {{ selectedReservation.checkOut | date:'EEEE, d MMMM yyyy' }}
+          </span>
+        </div>
+        <div class="or-drawer__item">
+          <span class="or-drawer__label">Duration</span>
+          <span class="or-drawer__value">
+            {{ getNights(selectedReservation.checkIn, selectedReservation.checkOut) }} nights
+          </span>
+        </div>
+        <div class="or-drawer__item">
+          <span class="or-drawer__label">Guests</span>
+          <span class="or-drawer__value">{{ selectedReservation.numberOfGuests }}</span>
+        </div>
+        <div class="or-drawer__item">
+          <span class="or-drawer__label">Total Price</span>
+          <span class="or-drawer__value or-drawer__value--price">
+            {{ selectedReservation.totalPrice | number:'1.2-2' }} TND
+          </span>
+        </div>
+        <div class="or-drawer__item" *ngIf="selectedReservation.createdAt">
+          <span class="or-drawer__label">Booked On</span>
+          <span class="or-drawer__value">
+            {{ selectedReservation.createdAt | date:'d MMM yyyy, HH:mm' }}
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Activities -->
+    <div class="or-drawer__section" *ngIf="selectedReservation.activityNames?.length">
+      <h3 class="or-drawer__section-title"><i class="bi bi-lightning-fill"></i> Activities</h3>
+      <div class="or-drawer__tags">
+        <span class="or-drawer__tag" *ngFor="let a of selectedReservation.activityNames">
+          {{ a }}
+        </span>
+      </div>
+    </div>
+
+    <!-- Notes -->
+    <div class="or-drawer__section" *ngIf="selectedReservation.notes">
+      <h3 class="or-drawer__section-title"><i class="bi bi-chat-left-text-fill"></i> Notes</h3>
+      <p class="or-drawer__notes">{{ selectedReservation.notes }}</p>
+    </div>
+
+    <!-- Drawer actions -->
+    <div class="or-drawer__footer">
+      <button
+        class="or-drawer__action-btn or-drawer__action-btn--confirm"
+        *ngIf="canConfirm(selectedReservation.status)"
+        (click)="confirmReservation(selectedReservation)"
+        [disabled]="isProcessing(selectedReservation.id)">
+        <i class="bi bi-check-circle-fill"></i>
+        Confirm Reservation
+      </button>
+      <button
+        class="or-drawer__action-btn or-drawer__action-btn--cancel"
+        *ngIf="canCancel(selectedReservation.status)"
+        (click)="cancelReservation(selectedReservation)"
+        [disabled]="isProcessing(selectedReservation.id)">
+        <i class="bi bi-x-circle-fill"></i>
+        Cancel Reservation
+      </button>
+      <button class="or-drawer__action-btn or-drawer__action-btn--close"
+              (click)="closeDetail()">
+        Close
+      </button>
+    </div>
+  </aside>
+
+</div>

@@ -10,6 +10,7 @@ import org.example.backend_tunisiahub.Entities.Camping.Mappers.SpotMapper;
 import org.example.backend_tunisiahub.Entities.Camping.Spot;
 import org.example.backend_tunisiahub.Repositories.Camping.CampingRepository;
 import org.example.backend_tunisiahub.Repositories.Camping.SpotRepository;
+import org.example.backend_tunisiahub.Services.Camping.Pricing.DynamicPricingService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -27,6 +28,8 @@ public class SpotServiceImpl implements ISpotService {
     @Autowired private CampingRepository campingRepository;
     @Autowired private Cloudinary cloudinary;
     @Autowired private SpotMapper spotMapper;
+    @Autowired private DynamicPricingService dynamicPricingService;
+
 
     // ── CRUD ───────────────────────────────────────────────
 
@@ -34,6 +37,14 @@ public class SpotServiceImpl implements ISpotService {
     public SpotDTO createSpot(SpotDTO dto, List<MultipartFile> photos) {
         Camping camping = campingRepository.findById(dto.getCampingId())
                 .orElseThrow(() -> new RuntimeException("Camping not found with id: " + dto.getCampingId()));
+
+        // Nouvelle validation obligatoire
+        if (camping.getStartDate() == null || camping.getEndDate() == null) {
+            throw new RuntimeException("Le camping doit avoir une période définie (startDate / endDate)");
+        }
+
+        // Vous pouvez ajouter ici les dates du spot si vous voulez les stocker (voir point 5)
+        // Pour l'instant, on valide simplement que le spot est créé pendant la période du camping
 
         Spot spot = spotMapper.toEntity(dto);
         spot.setCamping(camping);
@@ -71,6 +82,20 @@ public class SpotServiceImpl implements ISpotService {
 
     @Override
     public List<SpotDTO> getAllSpots() {
+        List<Spot> spots = spotRepository.findAll();
+
+        spots.stream()
+                .filter(s -> Boolean.TRUE.equals(s.getActive()))
+                .forEach(s -> {
+                    try {
+                        dynamicPricingService.repriceSpot(s.getId(), LocalDate.now());
+                    } catch (Exception e) {
+                        System.err.printf("[Pricing] Failed to reprice spot %d: %s%n",
+                                s.getId(), e.getMessage());
+                    }
+                });
+
+        // Re-fetch after repricing to get updated prices
         return spotRepository.findAll()
                 .stream().map(spotMapper::toDTO).collect(Collectors.toList());
     }
@@ -82,6 +107,20 @@ public class SpotServiceImpl implements ISpotService {
 
     @Override
     public List<SpotDTO> getSpotsByCampingId(Long campingId) {
+        List<Spot> spots = spotRepository.findByCampingId(campingId);
+
+        spots.stream()
+                .filter(s -> Boolean.TRUE.equals(s.getActive()))
+                .forEach(s -> {
+                    try {
+                        dynamicPricingService.repriceSpot(s.getId(), LocalDate.now());
+                    } catch (Exception e) {
+                        System.err.printf("[Pricing] Failed to reprice spot %d: %s%n",
+                                s.getId(), e.getMessage());
+                    }
+                });
+
+        // Re-fetch after repricing to get updated prices
         return spotRepository.findByCampingId(campingId)
                 .stream().map(spotMapper::toDTO).collect(Collectors.toList());
     }

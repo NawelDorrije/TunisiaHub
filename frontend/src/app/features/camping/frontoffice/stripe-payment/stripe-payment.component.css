@@ -1,0 +1,191 @@
+.stripe-panel {
+  margin-top: 1.5rem;
+  border: 1.5px solid var(--sand, #e8dcc8);
+  border-radius: 14px;
+  background: var(--cream, #faf7f2);
+  overflow: hidden;
+}
+
+.stripe-panel__header {
+  background: white;
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid var(--sand, #e8dcc8);
+}
+
+.stripe-panel__title {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.1rem;
+  color: var(--forest, #1a3a2a);
+  margin-bottom: .2rem;
+}
+
+.stripe-panel__sub {
+  font-size: .85rem;
+  color: var(--muted, #6b7c70);
+}
+
+form {
+  padding: 1.25rem 1.5rem;
+}
+
+/* ── Champs ────────────────────────────────────────────────────────────── */
+
+.sp-field {
+  display: flex;
+  flex-direction: column;
+  gap: .3rem;
+  margin-bottom: 1rem;
+}
+
+.sp-label {
+  font-size: .82rem;
+  font-weight: 500;
+  color: var(--text, #1c2b1f);
+}
+
+.sp-hint {
+  font-size: .75rem;
+  font-weight: 400;
+  color: var(--muted, #6b7c70);
+  margin-left: .4rem;
+}
+
+.sp-input {
+  padding: .65rem .875rem;
+  border: 1.5px solid var(--sand, #e8dcc8);
+  border-radius: 10px;
+  background: white;
+  font-family: 'DM Sans', sans-serif;
+  font-size: .9rem;
+  color: var(--text, #1c2b1f);
+  outline: none;
+  width: 100%;
+  transition: border-color .2s, box-shadow .2s;
+}
+
+.sp-input:focus {
+  border-color: var(--sage, #7aab8a);
+  box-shadow: 0 0 0 3px rgba(122,171,138,.15);
+}
+
+.sp-field--error .sp-input {
+  border-color: var(--danger, #c0392b);
+  background: var(--danger-lt, #fdecea);
+}
+
+.sp-err {
+  font-size: .76rem;
+  color: var(--danger, #c0392b);
+}
+
+.sp-err::before { content: '⚠ '; }
+
+/* ── Zone carte Stripe (iframe) ────────────────────────────────────────── */
+
+.sp-card-element {
+  padding: .7rem .875rem;
+  border: 1.5px solid var(--sand, #e8dcc8);
+  border-radius: 10px;
+  background: white;
+  transition: border-color .2s, box-shadow .2s;
+  min-height: 42px;
+}
+
+.sp-card-element:focus-within {
+  border-color: var(--sage, #7aab8a);
+  box-shadow: 0 0 0 3px rgba(122,171,138,.15);
+}
+
+/* ── Statut ────────────────────────────────────────────────────────────── */
+
+.sp-status {
+  display: flex;
+  align-items: center;
+  gap: .6rem;
+  font-size: .82rem;
+  color: var(--muted, #6b7c70);
+  margin-bottom: .75rem;
+  padding: .5rem .75rem;
+  background: white;
+  border: 1px solid var(--sand, #e8dcc8);
+  border-radius: 8px;
+}
+
+/* ── Alerte erreur ─────────────────────────────────────────────────────── */
+
+.sp-alert {
+  display: flex;
+  align-items: center;
+  gap: .6rem;
+  padding: .7rem 1rem;
+  border-radius: 10px;
+  font-size: .85rem;
+  background: var(--danger-lt, #fdecea);
+  color: var(--danger, #c0392b);
+  border: 1px solid #f5c6c2;
+  margin-bottom: .75rem;
+}
+
+/* ── Spinner ───────────────────────────────────────────────────────────── */
+
+.sp-spinner {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border: 2px solid var(--sand, #e8dcc8);
+  border-top-color: var(--forest, #1a3a2a);
+  border-radius: 50%;
+  animation: sp-spin .7s linear infinite;
+  flex-shrink: 0;
+}
+
+.sp-spinner--sm {
+  border-color: rgba(255,255,255,.35);
+  border-top-color: white;
+}
+
+@keyframes sp-spin { to { transform: rotate(360deg); } }
+
+/* ── Bouton payer ──────────────────────────────────────────────────────── */
+
+.sp-pay-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: .5rem;
+  padding: .9rem 1.25rem;
+  background: var(--forest, #1a3a2a);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: .95rem;
+  font-weight: 500;
+  cursor: pointer;
+  margin-top: .5rem;
+  transition: background .2s, opacity .2s, transform .1s;
+}
+
+.sp-pay-btn:hover:not(:disabled) {
+  background: var(--moss, #2d5a3d);
+  transform: translateY(-1px);
+}
+
+.sp-pay-btn:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.sp-pay-btn:disabled {
+  opacity: .55;
+  cursor: not-allowed;
+}
+
+/* ── Badge sécurité ────────────────────────────────────────────────────── */
+
+.sp-secure {
+  text-align: center;
+  font-size: .74rem;
+  color: var(--muted, #6b7c70);
+  margin-top: .75rem;
+}

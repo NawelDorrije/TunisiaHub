@@ -40,10 +40,7 @@
           <option *ngFor="let g of governorates" [value]="g">{{ g }}</option>
         </select>
       </div>
-      <div class="filter-field narrow">
-        <span class="fi">💰</span>
-        <input formControlName="maxPrice" type="number" min="0" placeholder="Max price (TND)"/>
-      </div>
+
       <div class="filter-field narrow">
         <span class="fi">👥</span>
         <input formControlName="minCapacity" type="number" min="1" placeholder="Min guests"/>
@@ -134,10 +131,7 @@
             <span class="rating-num">{{ c.averageRating | number:'1.1-1' }}</span>
           </div>
           <div class="c-footer">
-            <div class="c-price">
-              <span class="price-val">{{ c.price | number }}</span>
-              <span class="price-unit"> TND/night</span>
-            </div>
+
             <span class="c-capacity">👥 {{ c.maxCapacity }}</span>
           </div>
           <div class="c-actions">
@@ -181,8 +175,6 @@
           </div>
         </div>
         <div class="l-price" (click)="$event.stopPropagation()">
-          <div class="price-val">{{ c.price | number }}</div>
-          <div class="price-unit">TND / night</div>
           <button class="btn-reserve" (click)="goToReserve($event, c.id!)">Book Now</button>
           <button class="btn-detail" (click)="goToDetail(c.id!)">Details</button>
         </div>
