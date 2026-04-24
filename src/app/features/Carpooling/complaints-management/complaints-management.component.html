@@ -1,0 +1,51 @@
+<div class="container py-4">
+  <h2 class="mb-3">Complaints management</h2>
+
+  <div class="card shadow-sm" *ngIf="complaints.length > 0; else emptyState">
+    <div class="table-responsive">
+      <table class="table align-middle mb-0">
+        <thead>
+          <tr>
+            <th>Complaint ID</th>
+            <th>Reporter</th>
+            <th>Related trip</th>
+            <th>Date</th>
+            <th>Description</th>
+            <th>Status</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let row of complaints">
+            <td>#{{ row.complaint.id }}</td>
+            <td>{{ row.reporter?.fullName }}</td>
+            <td>{{ row.trip?.departure }} -> {{ row.trip?.destination }}</td>
+            <td>{{ row.complaint.createdAt | date: "short" }}</td>
+            <td>{{ row.complaint.description }}</td>
+            <td>{{ row.complaint.status }}</td>
+            <td>
+              <div class="d-flex gap-2">
+                <button
+                  class="btn btn-sm btn-outline-secondary"
+                  (click)="updateStatus(row.complaint.id, 'REVIEWED')"
+                >
+                  Mark as reviewed
+                </button>
+                <button
+                  class="btn btn-sm btn-outline-success"
+                  (click)="updateStatus(row.complaint.id, 'CLOSED')"
+                >
+                  Mark as closed
+                </button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <ng-template #emptyState>
+    <div class="alert alert-info">No complaints submitted yet.</div>
+  </ng-template>
+</div>

@@ -1,0 +1,269 @@
+<div class="create-page">
+  <div class="create-shell">
+    <section class="hero-panel">
+      <div class="hero-copy">
+        <p class="eyebrow">Event Management</p>
+        <h1>Create a new event</h1>
+        <p class="hero-text">
+          Fill in the event details, choose the venue on the map, and add a strong visual to publish a polished event.
+        </p>
+
+        <div class="hero-pills">
+          <span class="hero-pill">Simple workflow</span>
+          <span class="hero-pill">Interactive map</span>
+          <span class="hero-pill">Image preview</span>
+        </div>
+      </div>
+
+      <div class="hero-preview">
+        <div class="preview-card">
+          <span class="preview-label">Live preview</span>
+          <strong>{{ addForm.value.title || 'Your event title' }}</strong>
+          <p>{{ addForm.value.lieu || 'Selected location will appear here' }}</p>
+
+          <div class="preview-meta">
+            <span>{{ addForm.value.type || 'Type' }}</span>
+            <span>{{ addForm.value.status || 'Status' }}</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="feedback-stack" *ngIf="errorMessage || successMessage">
+      <div class="feedback feedback-error" *ngIf="errorMessage">
+        {{ errorMessage }}
+      </div>
+
+      <div class="feedback feedback-success" *ngIf="successMessage">
+        {{ successMessage }}
+      </div>
+    </section>
+
+    <form [formGroup]="addForm" (ngSubmit)="onSubmit()" class="form-layout">
+      <div class="form-main">
+        <section class="form-card compact-card">
+          <div class="section-head">
+            <p>Overview</p>
+            <h2>Main details</h2>
+          </div>
+
+          <div class="field-grid four-cols">
+            <div class="field title-field">
+              <label class="form-label">Title</label>
+              <input class="form-control input-modern" formControlName="title" placeholder="Enter event title">
+
+              <small class="text-danger d-block" *ngIf="f.title.touched && f.title.errors?.['required']">
+                Title is required
+              </small>
+              <small class="text-danger d-block" *ngIf="f.title.touched && f.title.errors?.['minlength']">
+                Minimum 3 characters
+              </small>
+              <small class="text-danger d-block" *ngIf="f.title.touched && f.title.errors?.['titleExists']">
+                This title already exists
+              </small>
+            </div>
+
+            <div class="field">
+              <label class="form-label">Status</label>
+              <input class="form-control input-modern" formControlName="status" placeholder="OPEN">
+
+              <small class="text-danger d-block" *ngIf="f.status.touched && f.status.errors?.['required']">
+                Status is required
+              </small>
+            </div>
+
+            <div class="field">
+              <label class="form-label">Type</label>
+              <select class="form-select input-modern" formControlName="type">
+                <option value="">-- Select --</option>
+                <option *ngFor="let t of eventTypes" [value]="t">{{ t }}</option>
+              </select>
+
+              <small class="text-danger d-block" *ngIf="f.type.touched && f.type.errors?.['required']">
+                Type is required
+              </small>
+            </div>
+          </div>
+        </section>
+
+        <section class="form-card compact-card">
+          <div class="section-head">
+            <p>Capacity & Pricing</p>
+            <h2>Commercial setup</h2>
+          </div>
+
+          <div class="field-grid two-cols">
+            <div class="field">
+              <label class="form-label">Price (TND)</label>
+              <input type="number" class="form-control input-modern" formControlName="price" placeholder="0">
+
+              <small class="text-danger d-block" *ngIf="f.price.touched && f.price.errors?.['required']">
+                Price is required
+              </small>
+              <small class="text-danger d-block" *ngIf="f.price.touched && f.price.errors?.['min']">
+                Must be greater than 0
+              </small>
+            </div>
+
+            <div class="field">
+              <label class="form-label">Capacity</label>
+              <input type="number" class="form-control input-modern" formControlName="capacity" placeholder="0">
+
+              <small class="text-danger d-block" *ngIf="f.capacity.touched && f.capacity.errors?.['required']">
+                Capacity is required
+              </small>
+              <small class="text-danger d-block" *ngIf="f.capacity.touched && f.capacity.errors?.['min']">
+                Must be greater than 0
+              </small>
+            </div>
+          </div>
+        </section>
+
+        <section class="form-card">
+          <div class="section-head">
+            <p>Schedule</p>
+            <h2>Planning and story</h2>
+          </div>
+
+          <div class="field-grid schedule-grid">
+            <div class="field">
+              <label class="form-label">Start Date</label>
+              <input type="datetime-local" class="form-control input-modern" formControlName="startDate" [min]="minDate">
+
+              <small class="text-danger d-block" *ngIf="f.startDate.touched && f.startDate.errors?.['required']">
+                Start date is required
+              </small>
+              <small class="text-danger d-block" *ngIf="addForm.errors?.['startInPast']">
+                Start date cannot be in the past
+              </small>
+            </div>
+
+            <div class="field">
+              <label class="form-label">End Date</label>
+              <input type="datetime-local" class="form-control input-modern" formControlName="endDate" [min]="addForm.get('startDate')?.value || minDate">
+
+              <small class="text-danger d-block" *ngIf="f.endDate.touched && f.endDate.errors?.['required']">
+                End date is required
+              </small>
+              <small class="text-danger d-block" *ngIf="addForm.errors?.['dateInvalid']">
+                Start date must be earlier than end date
+              </small>
+            </div>
+
+            <div class="field description-field">
+              <div class="field-head">
+                <label class="form-label">Description</label>
+                <span class="helper-text">{{ descriptionLength }} characters</span>
+              </div>
+
+              <textarea
+                rows="5"
+                class="form-control input-modern textarea-modern"
+                formControlName="description"
+                placeholder="Describe the experience, audience, and what makes this event special"
+                (input)="updateCharCount($event)"></textarea>
+
+              <small class="text-danger d-block" *ngIf="f.description.touched && f.description.errors?.['required']">
+                Description is required
+              </small>
+              <small class="text-danger d-block" *ngIf="f.description.touched && f.description.errors?.['minlength']">
+                Minimum 10 characters
+              </small>
+            </div>
+          </div>
+        </section>
+
+        <section class="form-card">
+          <div class="section-head">
+            <p>Venue</p>
+            <h2>Choose the location</h2>
+          </div>
+
+          <div class="search-row horizontal-search">
+            <div class="field search-field">
+              <label class="form-label">Search Location</label>
+              <input #searchInput class="form-control input-modern" placeholder="Enter location">
+            </div>
+
+            <div class="search-action">
+              <button
+                type="button"
+                class="btn btn-primary btn-modern btn-search"
+                (click)="searchLocation(searchInput.value)">
+                {{ isSearching ? 'Searching...' : 'Search' }}
+              </button>
+            </div>
+          </div>
+
+          <div class="location-summary">
+            <div class="selected-place">
+              <span>Selected location</span>
+              <strong>{{ addForm.value.lieu || selectedLocationName || 'No location selected yet' }}</strong>
+            </div>
+          </div>
+
+          <div class="field">
+            <input class="form-control readonly-input" formControlName="lieu" readonly>
+            <small class="text-danger d-block" *ngIf="f.lieu.touched && f.lieu.errors?.['required']">
+              Location is required
+            </small>
+          </div>
+
+          <div id="map" class="map-box"></div>
+        </section>
+      </div>
+
+      <aside class="form-side">
+        <section class="form-card side-card">
+          <div class="section-head">
+            <p>Media</p>
+            <h2>Event image</h2>
+          </div>
+
+          <label class="upload-trigger">
+            <span>Select image</span>
+            <input type="file" class="upload-input" (change)="onFileSelected($event)">
+          </label>
+
+          <div class="upload-zone">
+            <ng-container *ngIf="addForm.value.image; else placeholder">
+              <img [src]="addForm.value.image" class="upload-preview" alt="Event preview">
+            </ng-container>
+
+            <ng-template #placeholder>
+              <div class="upload-placeholder">
+                <strong>Upload Image</strong>
+                <p>PNG, JPG or JPEG up to 5 MB</p>
+              </div>
+            </ng-template>
+          </div>
+
+          <small class="text-danger d-block" *ngIf="f.image?.errors?.['required'] && f.image.touched">
+            Image is required
+          </small>
+        </section>
+
+        <section class="form-card side-card action-card">
+          <div class="section-head">
+            <p>Actions</p>
+            <h2>Publish event</h2>
+          </div>
+
+          <p class="action-text">
+            Review your information, then create the event when everything looks ready.
+          </p>
+
+          <div class="button-stack">
+            <button type="submit" class="btn btn-primary btn-modern btn-submit" [disabled]="isLoading">
+              {{ isLoading ? 'Saving...' : 'Create Event' }}
+            </button>
+
+            <button type="button" class="btn btn-cancel btn-modern btn-cancel-action" (click)="onCancel()">
+              Cancel
+            </button>
+          </div>
+        </section>
+      </aside>
+    </form>
+  </div>
+</div>

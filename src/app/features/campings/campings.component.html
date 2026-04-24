@@ -1,0 +1,23 @@
+<div class="container py-5">
+  <h2 class="text-center mb-4">List of Campings</h2>
+
+  <!-- Vérifier si on a des campings -->
+  <div *ngIf="campings.length === 0" class="text-center text-muted">
+    Loading campings...
+  </div>
+
+  <!-- Affichage des cartes -->
+  <div class="row g-4">
+    <div class="col-md-4" *ngFor="let camping of campings">
+      <div class="card h-100 shadow-sm">
+        <img [src]="camping.imageUrl || 'https://via.placeholder.com/300x200'" class="card-img-top" alt="{{camping.name}}">
+        <div class="card-body">
+          <h5 class="card-title">{{ camping.name }}</h5>
+          <p class="card-text">{{ camping.description }}</p>
+        </div>
+        <div class="card-footer text-center">
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
