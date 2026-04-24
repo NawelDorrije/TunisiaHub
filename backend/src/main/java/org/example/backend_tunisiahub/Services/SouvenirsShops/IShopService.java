@@ -1,6 +1,7 @@
 package org.example.backend_tunisiahub.Services.SouvenirsShops;
 
 import java.util.List;
+import org.example.backend_tunisiahub.Controllers.SouvenirsShops.dto.NearbyShopResponse;
 import org.example.backend_tunisiahub.Entities.SouvenirsShops.Order;
 import org.example.backend_tunisiahub.Entities.SouvenirsShops.Product;
 import org.example.backend_tunisiahub.Entities.SouvenirsShops.Review;
@@ -19,6 +20,8 @@ public interface IShopService {
     List<Order> retrieveOrdersByShop(Long shopId);
 
     List<Review> retrieveReviewsByShop(Long shopId);
+
+    List<NearbyShopResponse> findNearestShops(double latitude, double longitude, Integer limit);
 
     Shop addShop(Shop shop);
 

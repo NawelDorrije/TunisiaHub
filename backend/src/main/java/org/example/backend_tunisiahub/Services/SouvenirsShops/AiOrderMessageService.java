@@ -25,10 +25,10 @@ public class AiOrderMessageService {
     private final ObjectMapper objectMapper;
     private final RestClient restClient = RestClient.create();
 
-    @Value("${gemini.api.key:}")
+    @Value("${gemini.api.key:${GEMINI_API_KEY:${GOOGLE_API_KEY:}}}")
     private String geminiApiKey;
 
-    @Value("${gemini.model:gemini-2.5-flash}")
+    @Value("${gemini.model:${GEMINI_MODEL:gemini-2.5-flash}}")
     private String geminiModel;
 
     public String generateSmartStatusMessage(Order order, List<OrderItem> orderItems) {

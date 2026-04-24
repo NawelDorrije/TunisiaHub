@@ -59,6 +59,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/souvenir-shops/products/**").hasAnyRole("OWNER", "ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/api/souvenir-shops/products/**").hasAnyRole("OWNER", "ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/api/souvenir-shops/products/**").hasAnyRole("OWNER", "ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/api/souvenir-shops/promotions/**").hasAnyRole("OWNER", "ADMIN")
 
                         // Orders and order items
                         .requestMatchers(HttpMethod.GET, "/api/souvenir-shops/orders/issues").hasAnyRole("OWNER", "ADMIN")

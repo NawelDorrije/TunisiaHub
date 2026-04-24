@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { Shop } from '../../models/souvenirs-shops/shop.model';
+import { Shop, NearbyShopResponse } from '../../models/souvenirs-shops/shop.model';
 import { environment } from '../../environments/environment';
 
 @Injectable({
@@ -47,5 +47,17 @@ export class ShopService {
 
   deleteShop(id: number): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/${id}`);
+  }
+
+  getNearbyShops(latitude: number, longitude: number, limit?: number): Observable<NearbyShopResponse[]> {
+    let params = new HttpParams()
+      .set('latitude', latitude.toString())
+      .set('longitude', longitude.toString());
+    
+    if (limit) {
+      params = params.set('limit', limit.toString());
+    }
+    
+    return this.http.get<NearbyShopResponse[]>(`${this.apiUrl}/nearby`, { params });
   }
 }

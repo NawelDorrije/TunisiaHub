@@ -1,0 +1,238 @@
+<!-- Sliding Side Panel Overlay -->
+<div class="panel-overlay" [class.visible]="isVisible" (click)="closePanel()"></div>
+
+<!-- Sliding Side Panel -->
+<div class="promote-panel" [class.visible]="isVisible">
+  <!-- Header -->
+  <div class="panel-header">
+    <h3>Promote {{ targetType === 'shop' ? 'Shop' : 'Product' }}</h3>
+    <button class="close-btn" (click)="closePanel()" aria-label="Close panel">
+      <span class="close-icon">&times;</span>
+    </button>
+  </div>
+
+  <!-- Tab Navigation -->
+  <div class="tab-navigation">
+    <button 
+      class="tab-btn" 
+      [class.active]="activeTab === 'caption'"
+      (click)="switchTab('caption')"
+    >
+      Caption
+    </button>
+    <button 
+      class="tab-btn" 
+      [class.active]="activeTab === 'image'"
+      (click)="switchTab('image')"
+    >
+      Image
+    </button>
+  </div>
+
+  <!-- Tab Content -->
+  <div class="tab-content">
+    <!-- Shop/Product Selection -->
+    <div class="selection-section" *ngIf="ownerShops && ownerShops.length > 0">
+      <h4>Select What to Promote</h4>
+      <div class="form-row">
+        <div class="form-group">
+          <label for="shopSelect">Shop</label>
+          <select id="shopSelect" [(ngModel)]="selectedShopId" (change)="onShopChange()">
+            <option *ngFor="let shop of ownerShops" [value]="shop.id">{{ shop.name }}</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="productSelect">Product (Optional)</label>
+          <select id="productSelect" [(ngModel)]="selectedProductId" (change)="onProductChange()">
+            <option value="">Promote entire shop</option>
+            <option *ngFor="let product of availableProducts" [value]="product.id">{{ product.name }}</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- Caption Tab -->
+    <div class="tab-pane" [class.active]="activeTab === 'caption'">
+      <!-- Caption Dropdowns -->
+      <div class="form-row">
+        <div class="form-group">
+          <label for="language">Language</label>
+          <select id="language" [(ngModel)]="captionLanguage">
+            <option *ngFor="let lang of languages" [value]="lang">{{ lang }}</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="platform">Platform</label>
+          <select id="platform" [(ngModel)]="captionPlatform">
+            <option *ngFor="let platform of platforms" [value]="platform">{{ platform }}</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="tone">Tone</label>
+          <select id="tone" [(ngModel)]="captionTone">
+            <option *ngFor="let tone of tones" [value]="tone">{{ tone }}</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Enhanced Caption Options -->
+      <div class="form-row">
+        <div class="form-group">
+          <label for="captionStyle">Style</label>
+          <select id="captionStyle" [(ngModel)]="captionStyle">
+            <option *ngFor="let style of styles" [value]="style">{{ style }}</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="captionLength">Length</label>
+          <select id="captionLength" [(ngModel)]="captionLength">
+            <option *ngFor="let length of lengths" [value]="length">{{ length }}</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="captionEmojis">Include Emojis</label>
+          <select id="captionEmojis" [(ngModel)]="captionEmojis">
+            <option [value]="true">Yes</option>
+            <option [value]="false">No</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Generate Button -->
+      <button 
+        class="generate-btn" 
+        (click)="generateCaption()"
+        [disabled]="isGeneratingCaption"
+      >
+        <span *ngIf="!isGeneratingCaption">Generate Caption</span>
+        <span *ngIf="isGeneratingCaption" class="generating-text">
+          <span class="pulse">Generating</span>
+        </span>
+      </button>
+
+      <!-- Caption Result -->
+      <div class="caption-result" *ngIf="generatedCaption || isGeneratingCaption">
+        <div class="result-header">
+          <h4>Generated Caption</h4>
+        </div>
+        
+        <!-- Skeleton Loader -->
+        <div *ngIf="isGeneratingCaption" class="skeleton-loader">
+          <div class="skeleton-line"></div>
+          <div class="skeleton-line"></div>
+          <div class="skeleton-line"></div>
+        </div>
+
+        <!-- Generated Text Area -->
+        <div *ngIf="!isGeneratingCaption && generatedCaption" class="caption-text-area">
+          <textarea 
+            [(ngModel)]="generatedCaption"
+            rows="6"
+            placeholder="Your generated caption will appear here..."
+          ></textarea>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="action-buttons" *ngIf="!isGeneratingCaption && generatedCaption">
+          <button 
+            class="copy-btn" 
+            (click)="copyCaption()"
+            [class.success]="showCopyFeedback"
+          >
+            {{ copyButtonText }}
+          </button>
+          <button class="regenerate-btn" (click)="regenerateCaption()">
+            Regenerate
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Image Tab -->
+    <div class="tab-pane" [class.active]="activeTab === 'image'">
+      <!-- Image Dropdowns -->
+      <div class="form-row">
+        <div class="form-group">
+          <label for="mood">Mood</label>
+          <select id="mood" [(ngModel)]="imageMood">
+            <option *ngFor="let mood of moods" [value]="mood">{{ mood }}</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="colorTheme">Color Theme</label>
+          <select id="colorTheme" [(ngModel)]="imageColorTheme">
+            <option *ngFor="let theme of colorThemes" [value]="theme">{{ theme }}</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="focus">Focus</label>
+          <select id="focus" [(ngModel)]="imageFocus">
+            <option *ngFor="let focus of focuses" [value]="focus">{{ focus }}</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Enhanced Image Options -->
+      <div class="form-row">
+        <div class="form-group">
+          <label for="imageSize">Size</label>
+          <select id="imageSize" [(ngModel)]="imageSize">
+            <option *ngFor="let size of imageSizes" [value]="size">{{ size }}</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="imageQuality">Quality</label>
+          <select id="imageQuality" [(ngModel)]="imageQuality">
+            <option *ngFor="let quality of qualities" [value]="quality">{{ quality }}</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="imageStyle">Style</label>
+          <select id="imageStyle" [(ngModel)]="imageStyle">
+            <option *ngFor="let style of imageStyles" [value]="style">{{ style }}</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Generate Button -->
+      <button 
+        class="generate-btn" 
+        (click)="generateImage()"
+        [disabled]="isGeneratingImage"
+      >
+        <span *ngIf="!isGeneratingImage">Generate Image</span>
+        <span *ngIf="isGeneratingImage" class="generating-text">
+          <span class="pulse">Creating your image...</span>
+        </span>
+      </button>
+
+      <!-- Image Result -->
+      <div class="image-result" *ngIf="generatedImageUrl || isGeneratingImage || isCompositingImage">
+        <div class="result-header">
+          <h4>Generated Image</h4>
+        </div>
+
+        <!-- Loading Indicator -->
+        <div *ngIf="isGeneratingImage || isCompositingImage" class="image-loading">
+          <div class="loading-spinner"></div>
+          <p>{{ isGeneratingImage ? 'Creating your image...' : 'Adding professional overlay...' }}</p>
+        </div>
+
+        <!-- Generated Image Preview -->
+        <div *ngIf="!isGeneratingImage && !isCompositingImage && generatedImageUrl" class="image-preview">
+          <img [src]="compositedImageUrl || generatedImageUrl" alt="Generated promotion image" />
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="action-buttons" *ngIf="!isGeneratingImage && !isCompositingImage && generatedImageUrl">
+          <button class="regenerate-btn" (click)="regenerateImage()">
+            Regenerate
+          </button>
+          <button class="download-btn" (click)="downloadImage()">
+            Download
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

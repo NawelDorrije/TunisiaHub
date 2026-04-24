@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
 import { ShopService } from '../../../services/souvenirs-shops/shop.service';
 import { ProductService } from '../../../services/souvenirs-shops/product.service';
 import { OrderService } from '../../../services/souvenirs-shops/order.service';
@@ -7,16 +8,28 @@ import { AdminReviewService, OwnerReviewInsights } from '../../admin-dashboard/s
 import { AuthService } from '../../auth/services/auth.service';
 import { Router } from '@angular/router';
 import { forkJoin } from 'rxjs';
+import { PromoteComponent } from '../promote/promote.component';
+
+export interface ShopData {
+  id: number;
+  name: string;
+  rating?: number;
+  city?: string;
+  category?: string;
+  products?: any[];
+}
 
 @Component({
   selector: 'app-owner-dashboard',
+  standalone: true,
+  imports: [CommonModule, PromoteComponent],
   templateUrl: './owner-dashboard.component.html',
   styleUrls: ['./owner-dashboard.component.css']
 })
 export class OwnerDashboardComponent implements OnInit {
   isLoading = false;
   errorMessage = '';
-  
+
   ownerName = '';
   shopStats = {
     totalShops: 0,
@@ -32,11 +45,17 @@ export class OwnerDashboardComponent implements OnInit {
   reviewInsights: OwnerReviewInsights | null = null;
   insightsLoading = false;
   insightsError = '';
-  
+
   monthlyStats: { name: string, count: number, revenue: number }[] = [];
   seasonalStats: { name: string, count: number, revenue: number }[] = [];
   maxMonthlyCount = 0;
   maxSeasonalCount = 0;
+
+  // Promotion panel state
+  showPromotePanel = false;
+  promotionTargetType: 'shop' | 'product' = 'shop';
+  promotionTargetId?: number;
+  promotionShopData?: ShopData;
 
   constructor(
     private shopService: ShopService,
@@ -72,7 +91,7 @@ export class OwnerDashboardComponent implements OnInit {
 
   private loadDashboardData(): void {
     this.isLoading = true;
-    
+
     const ownerId = this.authService.getUserId();
     if (!ownerId) {
       this.router.navigate(['/auth/sign-in']);
@@ -111,7 +130,7 @@ export class OwnerDashboardComponent implements OnInit {
 
   private loadOrdersAndRevenue(shops: any[]): void {
     const orderRequests = shops.map(shop => this.orderService.getOrdersByShop(shop.id));
-    
+
     forkJoin(orderRequests).subscribe({
       next: (allOrders: any[]) => {
         let totalOrders = 0;
@@ -122,7 +141,7 @@ export class OwnerDashboardComponent implements OnInit {
           if (Array.isArray(ordersForShop)) {
             totalOrders += ordersForShop.length;
             allOrdersList.push(...ordersForShop);
-            
+
             // Calculate revenue from orders with successful payments
             ordersForShop.forEach((order: any) => {
               if (order.totalAmount) {
@@ -134,7 +153,7 @@ export class OwnerDashboardComponent implements OnInit {
 
         this.shopStats.totalOrders = totalOrders;
         this.shopStats.totalRevenue = totalRevenue;
-        
+
         // Get recent orders (last 5)
         this.recentOrders = allOrdersList
           .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
@@ -165,6 +184,35 @@ export class OwnerDashboardComponent implements OnInit {
 
   navigateToCreateProduct(): void {
     this.router.navigate(['/products/new']);
+  }
+
+  navigateToPromotions(): void {
+    // Show promotion panel with all shops data for selection
+    this.showPromotionPanel('shop', undefined, {
+      id: 0,
+      name: 'Select Shop',
+      rating: 0
+    });
+  }
+
+  showPromotionPanel(targetType: 'shop' | 'product', targetId?: number, shopData?: ShopData): void {
+    this.promotionTargetType = targetType;
+    this.promotionTargetId = targetId;
+    this.promotionShopData = shopData;
+    this.showPromotePanel = true;
+  }
+
+  hidePromotionPanel(): void {
+    this.showPromotePanel = false;
+  }
+
+  private calculateShopRating(shop: any): number {
+    // Calculate average rating from shop reviews if available
+    if (shop.reviews && Array.isArray(shop.reviews) && shop.reviews.length > 0) {
+      const totalRating = shop.reviews.reduce((sum: number, review: any) => sum + (review.rating || 0), 0);
+      return totalRating / shop.reviews.length;
+    }
+    return 0;
   }
 
   navigateToEditShop(shopId: number): void {

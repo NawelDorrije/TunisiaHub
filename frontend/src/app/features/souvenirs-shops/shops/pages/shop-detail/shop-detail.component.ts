@@ -358,6 +358,7 @@ export class ShopDetailComponent implements OnInit {
   closeImageViewer(): void {
     this.selectedImageUrl = null;
   }
+  
 }
 
 

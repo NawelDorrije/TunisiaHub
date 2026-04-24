@@ -2,6 +2,7 @@ package org.example.backend_tunisiahub.Controllers.SouvenirsShops;
 
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.example.backend_tunisiahub.Controllers.SouvenirsShops.dto.NearbyShopResponse;
 import org.example.backend_tunisiahub.Entities.SouvenirsShops.Order;
 import org.example.backend_tunisiahub.Entities.SouvenirsShops.Product;
 import org.example.backend_tunisiahub.Entities.SouvenirsShops.Review;
@@ -13,6 +14,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -36,6 +38,15 @@ public class ShopController {
     @GetMapping("/owner/{ownerId}")
     public List<Shop> getShopsByOwner(@PathVariable Long ownerId) {
         return shopService.retrieveShopsByOwner(ownerId);
+    }
+
+    @GetMapping("/nearby")
+    public List<NearbyShopResponse> getNearbyShops(
+            @RequestParam("latitude") double latitude,
+            @RequestParam("longitude") double longitude,
+            @RequestParam(value = "limit", required = false) Integer limit
+    ) {
+        return shopService.findNearestShops(latitude, longitude, limit);
     }
 
     @GetMapping("/{id}/products")

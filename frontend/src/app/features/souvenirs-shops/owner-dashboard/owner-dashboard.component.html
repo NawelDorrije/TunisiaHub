@@ -175,6 +175,10 @@
           <span class="btn-icon">→</span>
           <span class="btn-text">Manage Products</span>
         </button>
+        <button class="action-btn action-btn-accent" (click)="navigateToPromotions()">
+          <span class="btn-icon">✨</span>
+          <span class="btn-text">AI Promotions</span>
+        </button>
       </div>
     </div>
 
@@ -271,4 +275,13 @@
     </div>
 
   </div>
+  <!-- Promotion Panel -->
+  <app-promote 
+    [isVisible]="showPromotePanel" 
+    [targetType]="promotionTargetType"
+    [targetId]="promotionTargetId"
+    [shopData]="promotionShopData"
+    [ownerShops]="ownerShops"
+    (close)="hidePromotionPanel()">
+  </app-promote>
 </div>

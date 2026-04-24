@@ -27,3 +27,7 @@ export interface Shop {
   reviews?: Review[];
   averageRating?: number;
 }
+
+export interface NearbyShopResponse extends Shop {
+  distanceKm: number;
+}

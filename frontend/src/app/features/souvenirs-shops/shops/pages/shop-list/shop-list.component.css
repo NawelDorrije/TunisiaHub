@@ -67,6 +67,32 @@
   margin: 0;
 }
 .section-actions { display: flex; align-items: center; gap: 10px; }
+.nearby-toggle-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #fff;
+  color: #7a4a31;
+  border: 1px solid rgba(122,74,49,0.2);
+  border-radius: 8px;
+  padding: 9px 18px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.nearby-toggle-btn:hover:not(:disabled) { 
+  background: #f0e0d0; 
+  transform: translateY(-1px);
+}
+.nearby-toggle-btn.active {
+  background: #4CAF50;
+  color: #fff;
+  border-color: #4CAF50;
+}
+.nearby-toggle-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
 .add-shop-btn {
   display: inline-flex;
   align-items: center;
@@ -253,6 +279,17 @@
 }
 .card-location i,
 .card-owner i { flex-shrink: 0; margin-top: 2px; }
+.distance-badge {
+  display: inline-block;
+  background: #4CAF50;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 500;
+  padding: 2px 6px;
+  border-radius: 10px;
+  margin-left: 8px;
+  vertical-align: middle;
+}
 .card-rating {
   display: flex;
   align-items: center;

@@ -14,6 +14,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
+import org.springframework.web.client.RestClientResponseException;
 import org.springframework.web.multipart.MultipartFile;
 
 @Service
@@ -29,11 +30,13 @@ public class AiImageDescriptionService {
     private final ObjectMapper objectMapper;
     private final RestClient restClient = RestClient.create();
 
-    @Value("${gemini.api.key:}")
+    @Value("${gemini.api.key.image:${GEMINI_API_KEY_2:${GEMINI_API_KEY:${GOOGLE_API_KEY:}}}}")
     private String geminiApiKey;
 
-    @Value("${gemini.model:gemini-2.5-flash}")
+    @Value("${gemini.model:${GEMINI_MODEL:gemini-2.5-flash}}")
     private String geminiModel;
+
+    private volatile boolean missingGeminiKeyLogged;
 
     public String generateShopDescription(MultipartFile file, String shopName, String category, String city) {
         String fallback = buildShopFallback(shopName, category, city);
@@ -114,7 +117,7 @@ public class AiImageDescriptionService {
         if (imageUrl == null || imageUrl.isBlank()) {
             return shorten(fallback, maxLength, maxWords);
         }
-        if (geminiApiKey == null || geminiApiKey.isBlank()) {
+        if (!isGeminiConfigured()) {
             return shorten(fallback, maxLength, maxWords);
         }
 
@@ -145,7 +148,7 @@ public class AiImageDescriptionService {
             int maxLength,
             int maxWords
     ) {
-        if (geminiApiKey == null || geminiApiKey.isBlank()) {
+        if (!isGeminiConfigured()) {
             return shorten(fallback, maxLength, maxWords);
         }
 
@@ -162,9 +165,23 @@ public class AiImageDescriptionService {
 
             String text = extractGeminiText(response);
             if (text == null || text.isBlank()) {
+                String apiError = extractGeminiError(response);
+                if (apiError != null) {
+                    log.warn("Gemini returned an error while generating image description. model={} error={}", geminiModel, apiError);
+                } else {
+                    log.warn("Gemini returned an empty image description. model={}", geminiModel);
+                }
                 return shorten(fallback, maxLength, maxWords);
             }
             return shorten(text.trim(), maxLength, maxWords);
+        } catch (RestClientResponseException ex) {
+            log.warn(
+                    "Gemini request failed for image description. model={} status={} response={}",
+                    geminiModel,
+                    ex.getStatusCode(),
+                    truncateForLog(ex.getResponseBodyAsString())
+            );
+            return shorten(fallback, maxLength, maxWords);
         } catch (Exception ex) {
             log.warn("Failed to generate Gemini image description. Falling back. reason={}", ex.getMessage());
             return shorten(fallback, maxLength, maxWords);
@@ -207,6 +224,15 @@ public class AiImageDescriptionService {
             }
         }
         return null;
+    }
+
+    private String extractGeminiError(String rawJson) throws Exception {
+        JsonNode root = objectMapper.readTree(rawJson);
+        String errorMessage = root.path("error").path("message").asText(null);
+        if (errorMessage == null || errorMessage.isBlank()) {
+            return null;
+        }
+        return errorMessage.trim();
     }
 
     private String buildShopPrompt(String shopName, String category, String city) {
@@ -287,6 +313,29 @@ public class AiImageDescriptionService {
 
     private String defaultValue(String value, String fallback) {
         return value == null || value.isBlank() ? fallback : value;
+    }
+
+    private boolean isGeminiConfigured() {
+        if (geminiApiKey != null && !geminiApiKey.isBlank()) {
+            return true;
+        }
+        if (!missingGeminiKeyLogged) {
+            synchronized (this) {
+                if (!missingGeminiKeyLogged) {
+                    log.warn("Gemini API key is missing. Configure gemini.api.key.image or GEMINI_API_KEY_2.");
+                    missingGeminiKeyLogged = true;
+                }
+            }
+        }
+        return false;
+    }
+
+    private String truncateForLog(String value) {
+        if (value == null || value.isBlank()) {
+            return "";
+        }
+        String normalized = value.replaceAll("\\s+", " ").trim();
+        return normalized.length() <= 300 ? normalized : normalized.substring(0, 300) + "...";
     }
 
     private String shorten(String value, int maxLength, int maxWords) {

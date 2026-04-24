@@ -13,10 +13,20 @@
   <!-- Section header -->
   <div class="section-header">
     <div>
-      <h2 class="section-title">Shop Collection</h2>
-      <p class="section-subtitle">Warm hospitality, vibrant storefronts and curated souks in one place.</p>
+      <h2 class="section-title">{{ showNearby ? 'Nearby Shops' : 'Shop Collection' }}</h2>
+      <p class="section-subtitle">
+        {{ showNearby ? 'Shops near your location' : 'Warm hospitality, vibrant storefronts and curated souks in one place.' }}
+      </p>
     </div>
     <div class="section-actions">
+      <button 
+        (click)="toggleNearbyMode()" 
+        class="nearby-toggle-btn"
+        [class.active]="showNearby"
+        [disabled]="isGettingLocation">
+        <i class="bi bi-geo-alt-fill"></i>
+        {{ isGettingLocation ? 'Getting location...' : (showNearby ? 'Show All Shops' : 'Find Nearby') }}
+      </button>
       <a *ngIf="canManageShops" routerLink="/shops/new" class="add-shop-btn">
         <i class="bi bi-plus-lg"></i> Add New Shop
       </a>
@@ -66,7 +76,7 @@
              [alt]="shop.name"
              class="card-img" />
         <div *ngIf="!shop.photoUrl" class="card-img-placeholder">
-          <span>{{ shop.name?.charAt(0)?.toUpperCase() || 'S' }}</span>
+          <span>{{ shop.name ? shop.name.charAt(0).toUpperCase() : 'S' }}</span>
         </div>
         <span class="cat-badge" [ngClass]="'cat-' + (shop.category?.toLowerCase() || 'default')">
           {{ shop.category || 'General' }}
@@ -79,6 +89,9 @@
         <p class="card-location">
           <i class="bi bi-geo-alt-fill"></i>
           {{ shop.city || 'Unknown city' }}{{ shop.address ? ' · ' + shop.address : '' }}
+          <span *ngIf="showNearby" class="distance-badge">
+            {{ $any(shop).distanceKm | number:'1.1-1' }} km away
+          </span>
         </p>
         <p class="card-owner">
           <i class="bi bi-person-fill"></i>
