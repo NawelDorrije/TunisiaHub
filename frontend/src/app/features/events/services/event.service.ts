@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { Event } from '../../../models/events/event.model';
+import { AiEventChatResponse } from '../../../models/events/ai-event-chat.model';
 import { catchError, of } from 'rxjs';
 //import { WeatherDTO } from '../../../models/weather.model';
 //import { Reservation } from '../../../models/reservation.model';
@@ -85,6 +86,27 @@ getWeeklyWeather(lat: number, lon: number) {
       `${this.weatherUrl}/weekly?lat=${lat}&lon=${lon}`
     );
   }
- 
+  searchEvents(keyword: string) {
+  return this.http.get<Event[]>(`http://localhost:8089/event/search?keyword=${keyword}`);
+}
+
+filterByType(type: string) {
+  return this.http.get<Event[]>(`http://localhost:8089/event/filter?type=${type}`);
+}
+
+  chatWithAi(message: string): Observable<AiEventChatResponse> {
+    return this.http.post<AiEventChatResponse>('http://localhost:8089/ai/events/chat', {
+      message
+    }).pipe(
+      catchError((err) => {
+        console.error('AI ERROR:', err);
+        return of({
+          message: 'Backend error: ' + (err?.error?.message || err?.message || 'Unknown error'),
+          events: []
+        });
+      })
+    );
+  }
+
 
 }

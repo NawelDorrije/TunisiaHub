@@ -1,5 +1,6 @@
 import { Component, OnInit, Inject, PLATFORM_ID } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
+import { Router } from '@angular/router';
 import { EventService } from '../../services/event.service';
 import { Event } from '../../../../models/events/event.model';
 import { isPlatformBrowser } from '@angular/common';
@@ -12,6 +13,7 @@ import { isPlatformBrowser } from '@angular/common';
 export class EventDetailsComponent implements OnInit {
 
   event!: Event;
+  returnUrl: string | null = null;
 
   map: any;
   marker: any;
@@ -19,12 +21,16 @@ export class EventDetailsComponent implements OnInit {
 
   constructor(
     private route: ActivatedRoute,
+    private router: Router,
     private eventService: EventService,
     @Inject(PLATFORM_ID) private platformId: Object
   ) {}
 
   ngOnInit(): void {
     const id = this.route.snapshot.params['id'];
+    if (isPlatformBrowser(this.platformId)) {
+      this.returnUrl = window.history.state?.returnUrl ?? null;
+    }
 
     this.eventService.getEventById(id).subscribe({
       next: (data) => {
@@ -38,6 +44,15 @@ export class EventDetailsComponent implements OnInit {
         }, 0);
       }
     });
+  }
+
+  goBack(): void {
+    if (this.returnUrl) {
+      this.router.navigateByUrl(this.returnUrl);
+      return;
+    }
+
+    this.router.navigateByUrl('/events');
   }
 
   // =========================

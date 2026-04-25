@@ -1,105 +1,90 @@
 <div class="page">
 
-  <div class="card">
+  <div class="reservation-card">
 
-    <!-- HEADER EVENT -->
-    <div class="event-header">
+    <!-- LEFT: EVENT INFO -->
+    <div class="event-side">
 
-      <div>
-        <h2>{{ event?.title }}</h2>
-        <p>📍 {{ event?.lieu }}</p>
+      <div class="event-header">
+        <div>
+          <h2>{{ event?.title }}</h2>
+          <p class="location">📍 {{ event?.lieu }}</p>
+        </div>
+
+        <div class="price-tag">
+          {{ event?.price }} <span>TND</span>
+        </div>
       </div>
 
-      <div class="price">
-        {{ event?.price }} TND
+      <img *ngIf="event?.image"
+           [src]="event.image"
+           class="event-img"/>
+
+      <div class="event-info">
+        <div class="info-item">👥 {{ event?.capacity }} seats</div>
+        <div class="info-item">📅 {{ event?.startDate | date:'mediumDate' }}</div>
+        <div class="info-item">⏳ {{ event?.endDate | date:'mediumDate' }}</div>
       </div>
 
     </div>
 
-    <!-- IMAGE -->
-    <img *ngIf="event?.image" [src]="event.image" class="event-img"/>
+    <!-- RIGHT: FORM -->
+    <div class="form-side">
 
-    <!-- ERROR MESSAGE -->
-    <div *ngIf="errorMessage" class="error">
-      {{ errorMessage }}
-    </div>
+      <h3 class="title">Complete your reservation</h3>
 
-    <!-- FORM -->
-    <div class="form-container">
+      <div *ngIf="errorMessage" class="error">
+        {{ errorMessage }}
+      </div>
 
-      <h3>Reservation Form</h3>
-
-      <!-- IMPORTANT -->
       <form [formGroup]="reservationForm" (ngSubmit)="pay()">
 
+        <!-- NAME -->
         <div class="grid">
-          
-          <!-- FIRST NAME -->
-          <div>
+
+          <div class="input-group">
             <input type="text" placeholder="First Name" formControlName="firstName">
             <small *ngIf="f.firstName.touched && f.firstName.invalid">
-              First name must be at least 3 characters
+              Min 3 characters
             </small>
           </div>
 
-          <!-- LAST NAME -->
-          <div>
+          <div class="input-group">
             <input type="text" placeholder="Last Name" formControlName="lastName">
             <small *ngIf="f.lastName.touched && f.lastName.invalid">
-              Last name must be at least 3 characters
+              Min 3 characters
             </small>
           </div>
 
         </div>
 
         <!-- EMAIL -->
-        <div>
+        <div class="input-group">
           <input type="email" placeholder="Email" formControlName="email">
           <small *ngIf="f.email.touched && f.email.invalid">
-            Enter a valid email
+            Invalid email
           </small>
         </div>
 
-        <!-- PAYMENT -->
-        <label>Payment Method</label>
-        <div class="payment">
-
-          <label>
-            <input type="radio" formControlName="paymentMethod" value="CARD">
-            💳 Card
-          </label>
-
-          <label>
-            <input type="radio" formControlName="paymentMethod" value="CASH">
-            💵 Cash
-          </label>
-
-        </div>
+        
 
         <!-- BUTTON -->
-        <button type="submit" class="btn" [disabled]="isLoading">
+        <button class="btn" type="submit" [disabled]="isLoading">
           {{ isLoading ? 'Processing...' : ('Pay ' + event?.price + ' TND') }}
         </button>
 
-        
-
       </form>
-      <!-- ✅ STRIPE POPUP OUTSIDE FORM -->
-<app-stripe-payment
-  *ngIf="showStripe"
-  [reservationId]="reservationId"
-  [amount]="event?.price"
-  (close)="closeStripe()">
-</app-stripe-payment>
-<!--<app-stripe-payment
-  *ngIf="showStripe"
-  [eventId]="eventId"
-  [amount]="event?.price"
-  (close)="closeStripe()">
-</app-stripe-payment>-->
 
     </div>
 
   </div>
+
+  <!-- STRIPE MODAL -->
+  <app-stripe-payment
+    *ngIf="showStripe"
+    [reservationId]="reservationId"
+    [amount]="event?.price"
+    (close)="closeStripe()">
+  </app-stripe-payment>
 
 </div>

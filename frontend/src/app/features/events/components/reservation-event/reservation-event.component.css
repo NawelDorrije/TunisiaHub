@@ -1,126 +1,233 @@
-/* PAGE CENTER */
+/* =========================
+   PAGE BACKGROUND
+========================= */
 .page {
   min-height: 100vh;
   display: flex;
   justify-content: center;
   align-items: center;
-  background: linear-gradient(135deg, #eef2ff, #f8fafc);
-  padding: 20px;
-  font-family: Arial;
+  background: radial-gradient(circle at top, #eef2ff, #f8fafc);
+  padding: 30px;
+  font-family: 'Inter', sans-serif;
 }
 
-/* CARD */
-.card {
-  width: 500px;
+/* =========================
+   MAIN CARD
+========================= */
+.reservation-card {
+  width: 980px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
   background: white;
-  border-radius: 18px;
-  box-shadow: 0 20px 50px rgba(0,0,0,0.1);
-  padding: 25px;
+  border-radius: 22px;
+  box-shadow: 0 25px 70px rgba(0,0,0,0.12);
+  overflow: hidden;
 }
 
-/* EVENT HEADER */
+/* =========================
+   LEFT SIDE (EVENT)
+========================= */
+.event-side {
+  background: linear-gradient(180deg, #f9fafb, #ffffff);
+  padding: 30px;
+}
+
 .event-header {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
 }
 
 .event-header h2 {
   margin: 0;
-  font-size: 22px;
+  font-size: 24px;
+  font-weight: 800;
 }
 
-.event-header p {
-  margin: 5px 0 0;
-  color: #666;
+.location {
+  color: #6b7280;
+  margin-top: 5px;
 }
 
-.price {
+.price-tag {
   background: #4f46e5;
   color: white;
-  padding: 8px 12px;
-  border-radius: 10px;
-  font-weight: bold;
+  padding: 10px 14px;
+  border-radius: 14px;
+  font-weight: 700;
+}
+
+.price-tag span {
+  font-size: 12px;
+  opacity: 0.8;
 }
 
 /* IMAGE */
 .event-img {
   width: 100%;
-  margin-top: 15px;
-  border-radius: 12px;
-}
-
-/* FORM */
-.form-container {
   margin-top: 20px;
+  border-radius: 16px;
+  object-fit: cover;
+  height: 220px;
 }
 
-.form-container h3 {
+/* INFO */
+.event-info {
+  margin-top: 20px;
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.info-item {
+  background: #f3f4f6;
+  padding: 10px 14px;
+  border-radius: 12px;
+  font-size: 13px;
+  color: #374151;
+}
+
+/* =========================
+   RIGHT SIDE (FORM)
+========================= */
+.form-side {
+  padding: 35px;
+  background: #fff;
+}
+
+.title {
+  font-size: 20px;
+  font-weight: 700;
+  margin-bottom: 20px;
+}
+
+/* ERROR */
+.error {
+  background: #fee2e2;
+  color: #b91c1c;
+  padding: 10px;
+  border-radius: 10px;
   margin-bottom: 15px;
 }
 
-/* INPUTS */
-input, select {
+/* =========================
+   INPUTS
+========================= */
+.input-group {
+  margin-bottom: 15px;
+}
+
+input {
   width: 100%;
-  padding: 12px;
-  margin-top: 8px;
-  margin-bottom: 12px;
-  border: 1px solid #ddd;
-  border-radius: 10px;
+  padding: 12px 14px;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
   outline: none;
+  transition: 0.2s;
+  background: #fafafa;
 }
 
 input:focus {
-  border-color: #4f46e5;
+  border-color: #6366f1;
+  background: white;
 }
 
 /* GRID */
 .grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+/* =========================
+   PAYMENT BOX
+========================= */
+.payment-box {
+  margin: 15px 0;
+}
+
+.payment-title {
+  font-size: 13px;
+  color: #6b7280;
+  margin-bottom: 8px;
+  display: block;
+}
+
+.payment-options {
+  display: flex;
   gap: 10px;
 }
 
-/* PAYMENT */
-.payment {
-  display: flex;
-  justify-content: space-between;
-  margin: 10px 0 15px;
-}
-
-.payment label {
-  background: #f3f4f6;
-  padding: 10px;
-  border-radius: 10px;
-  cursor: pointer;
+.pay-option {
   flex: 1;
+  background: #f3f4f6;
+  padding: 12px;
+  border-radius: 12px;
   text-align: center;
-  margin-right: 10px;
+  cursor: pointer;
+  transition: 0.2s;
+  border: 1px solid transparent;
 }
 
-/* BUTTON */
+.pay-option:hover {
+  background: #e5e7eb;
+}
+
+.pay-option input {
+  display: none;
+}
+
+.pay-option input:checked + span {
+  font-weight: 700;
+  color: #4f46e5;
+}
+
+/* =========================
+   BUTTON
+========================= */
 .btn {
   width: 100%;
   padding: 14px;
-  background: #4f46e5;
+  background: linear-gradient(135deg, #4f46e5, #6366f1);
   color: white;
   border: none;
-  border-radius: 12px;
+  border-radius: 14px;
   font-size: 16px;
+  font-weight: 600;
   cursor: pointer;
-  transition: 0.3s;
+  transition: 0.2s;
+  margin-top: 10px;
 }
 
 .btn:hover {
-  background: #3730a3;
-  transform: scale(1.02);
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px rgba(99,102,241,0.4);
 }
 
-/* VALIDATION ERRORS */
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* =========================
+   VALIDATION
+========================= */
 small {
-  color: red;
-  font-size: 13px;
+  color: #ef4444;
+  font-size: 12px;
+  margin-top: 5px;
   display: block;
-  margin-top: -8px;
-  margin-bottom: 8px;
+}
+
+/* =========================
+   RESPONSIVE
+========================= */
+@media (max-width: 900px) {
+  .reservation-card {
+    grid-template-columns: 1fr;
+  }
+
+  .grid {
+    grid-template-columns: 1fr;
+  }
 }

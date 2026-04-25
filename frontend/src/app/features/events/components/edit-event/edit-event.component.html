@@ -1,171 +1,199 @@
-<div class="container py-4">
+<div class="edit-page">
+  <div class="edit-shell">
+    <section class="edit-hero">
+      <div class="hero-copy">
+        <p class="hero-kicker">Event management</p>
+        <h1>Edit Event</h1>
+        <p class="hero-text">
+          Update the event details, refresh the location on the map, and fine-tune the content before publishing changes.
+        </p>
+      </div>
 
-  <h2 class="mb-4 text-primary fw-bold">
-    ✏️ Edit Event
-  </h2>
-
-  <!-- ALERTS -->
-  <div class="alert alert-success shadow-sm" *ngIf="successMessage">
-    {{ successMessage }}
-  </div>
-
-  <div class="alert alert-danger shadow-sm" *ngIf="errorMessage">
-    {{ errorMessage }}
-  </div>
-
-  <div class="card shadow border-0 rounded-4">
-    <div class="card-body p-4">
-
-      <form [formGroup]="editForm" (ngSubmit)="onSubmit()" class="row g-4">
-
-        <!-- TITLE -->
-        <div class="col-md-6">
-          <label class="form-label fw-semibold">Title</label>
-          <input class="form-control form-control-lg"
-                 formControlName="title">
+      <div class="hero-summary">
+        <div class="summary-card">
+          <span class="summary-label">Editing now</span>
+          <strong>{{ editForm.value.title || 'Untitled event' }}</strong>
+          <p>{{ editForm.value.type || 'Choose a category' }}</p>
         </div>
+      </div>
+    </section>
 
-        <!-- STATUS -->
-        <div class="col-md-6">
-          <label class="form-label fw-semibold">Status</label>
-          <input class="form-control form-control-lg"
-                 formControlName="status">
-        </div>
+    <div class="feedback-stack" *ngIf="successMessage || errorMessage">
+      <div class="feedback feedback-success" *ngIf="successMessage">
+        {{ successMessage }}
+      </div>
 
-        <!-- TYPE -->
-        <div class="col-md-6">
-          <label class="form-label fw-semibold">Type</label>
-          <select class="form-select form-select-lg"
-                  formControlName="type">
-            <option *ngFor="let t of eventTypes" [value]="t">
-              {{ t }}
-            </option>
-          </select>
-        </div>
-
-        <!-- PRICE -->
-        <div class="col-md-6">
-          <label class="form-label fw-semibold">Price (TND)</label>
-          <input type="number"
-                 class="form-control form-control-lg"
-                 formControlName="price">
-        </div>
-
-        <!-- DESCRIPTION -->
-        <div class="col-12">
-          <label class="form-label fw-semibold">Description</label>
-          <textarea class="form-control form-control-lg"
-                    rows="3"
-                    formControlName="description"></textarea>
-        </div>
-
-        <!-- DATES -->
-        <div class="col-md-6">
-          <label class="form-label fw-semibold">Start Date</label>
-          <input type="datetime-local"
-                 class="form-control form-control-lg"
-                 formControlName="startDate">
-        </div>
-
-        <div class="col-md-6">
-          <label class="form-label fw-semibold">End Date</label>
-          <input type="datetime-local"
-                 class="form-control form-control-lg"
-                 formControlName="endDate">
-        </div>
-
-        <!-- CAPACITY -->
-        <div class="col-md-6">
-          <label class="form-label fw-semibold">Capacity</label>
-          <input type="number"
-                 class="form-control form-control-lg"
-                 formControlName="capacity">
-        </div>
-
-        <!-- 🔍 SEARCH LOCATION -->
-        <div class="col-md-8">
-          <label class="form-label fw-semibold">Search Location</label>
-          <input #searchInput
-                 class="form-control form-control-lg"
-                 placeholder="Enter place name (ex: Tunis, Sousse...)">
-        </div>
-
-        <div class="col-md-4 d-flex align-items-end">
-          <button type="button"
-                  class="btn btn-primary w-100 btn-lg shadow-sm"
-                  (click)="searchLocation(searchInput.value)">
-            🔍 Search
-          </button>
-        </div>
-
-        <!-- LIEU -->
-        <div class="col-12">
-          <label class="form-label fw-semibold">Selected Location</label>
-          <input class="form-control bg-light"
-                 formControlName="lieu"
-                 readonly>
-        </div>
-
-        <!-- LAT LNG -->
-        <div class="col-md-6">
-          <label class="form-label">Latitude</label>
-          <input type="number"
-                 class="form-control"
-                 formControlName="latitude">
-        </div>
-
-        <div class="col-md-6">
-          <label class="form-label">Longitude</label>
-          <input type="number"
-                 class="form-control"
-                 formControlName="longitude">
-        </div>
-
-        <!-- 🗺️ MAP -->
-        <div class="col-12">
-          <div class="rounded-4 overflow-hidden shadow-sm border">
-            <div id="map" style="height: 400px;"></div>
-          </div>
-        </div>
-
-        <!-- 🖼 IMAGE -->
-        <div class="col-12">
-          <label class="form-label fw-semibold">Event Image</label>
-
-          <input type="file"
-                 class="form-control"
-                 (change)="onFileSelected($event)">
-
-          <!-- PREVIEW -->
-          <div *ngIf="editForm.value.image"
-               class="mt-4 text-center">
-
-            <p class="fw-bold text-muted">Preview</p>
-
-            <img [src]="editForm.value.image"
-                 class="img-thumbnail shadow"
-                 style="max-width: 260px; border-radius: 12px;">
-          </div>
-        </div>
-
-        <!-- BUTTONS -->
-        <div class="col-12 d-flex gap-3 mt-4">
-
-          <button class="btn btn-success w-50 btn-lg shadow">
-            💾 Update Event
-          </button>
-
-          <button type="button"
-                  class="btn btn-outline-secondary w-50 btn-lg"
-                  (click)="onCancel()">
-            Cancel
-          </button>
-
-        </div>
-
-      </form>
-
+      <div class="feedback feedback-error" *ngIf="errorMessage">
+        {{ errorMessage }}
+      </div>
     </div>
-  </div>
 
+    <form [formGroup]="editForm" (ngSubmit)="onSubmit()" class="edit-layout">
+      <div class="edit-main">
+        <section class="form-card">
+          <div class="section-head">
+            <p>Content</p>
+            <h2>Core event information</h2>
+          </div>
+
+          <div class="field-grid two-cols">
+            <div class="field">
+              <label class="form-label">Title</label>
+              <input class="input-modern" formControlName="title">
+            </div>
+
+            <div class="field">
+              <label class="form-label">Status</label>
+              <input class="input-modern" formControlName="status">
+            </div>
+
+            <div class="field">
+              <label class="form-label">Type</label>
+              <select class="input-modern" formControlName="type">
+                <option *ngFor="let t of eventTypes" [value]="t">
+                  {{ t }}
+                </option>
+              </select>
+            </div>
+
+            <div class="field">
+              <label class="form-label">Price (TND)</label>
+              <input type="number" class="input-modern" formControlName="price">
+            </div>
+
+            <div class="field full-span">
+              <label class="form-label">Description</label>
+              <textarea class="input-modern textarea-modern" rows="4" formControlName="description"></textarea>
+            </div>
+          </div>
+        </section>
+
+        <section class="form-card">
+          <div class="section-head">
+            <p>Planning</p>
+            <h2>Date and capacity</h2>
+          </div>
+
+          <div class="field-grid three-cols">
+            <div class="field">
+              <label class="form-label">Start Date</label>
+              <input type="datetime-local" class="input-modern" formControlName="startDate">
+            </div>
+
+            <div class="field">
+              <label class="form-label">End Date</label>
+              <input type="datetime-local" class="input-modern" formControlName="endDate">
+            </div>
+
+            <div class="field">
+              <label class="form-label">Capacity</label>
+              <input type="number" class="input-modern" formControlName="capacity">
+            </div>
+          </div>
+        </section>
+
+        <section class="form-card">
+          <div class="section-head">
+            <p>Location</p>
+            <h2>Search and pin the venue</h2>
+          </div>
+
+          <div class="field-grid location-search-grid">
+            <div class="field">
+              <label class="form-label">Search Location</label>
+              <input
+                #searchInput
+                class="input-modern"
+                placeholder="Enter place name (ex: Tunis, Sousse...)"
+              >
+            </div>
+
+            <div class="field search-action-field">
+              <button
+                type="button"
+                class="btn-modern btn-search"
+                (click)="searchLocation(searchInput.value)"
+              >
+                Search
+              </button>
+            </div>
+          </div>
+
+          <div class="field-grid two-cols compact-gap">
+            <div class="field full-span">
+              <label class="form-label">Selected Location</label>
+              <input class="input-modern readonly-input" formControlName="lieu" readonly>
+            </div>
+
+            <div class="field">
+              <label class="form-label">Latitude</label>
+              <input type="number" class="input-modern" formControlName="latitude">
+            </div>
+
+            <div class="field">
+              <label class="form-label">Longitude</label>
+              <input type="number" class="input-modern" formControlName="longitude">
+            </div>
+          </div>
+
+          <div class="map-shell">
+            <div id="map"></div>
+          </div>
+        </section>
+      </div>
+
+      <aside class="edit-side">
+        <section class="form-card side-card">
+          <div class="section-head">
+            <p>Visual</p>
+            <h2>Event image</h2>
+          </div>
+
+          <label class="upload-trigger" for="edit-event-image">Choose Image</label>
+          <input
+            id="edit-event-image"
+            type="file"
+            class="upload-input"
+            (change)="onFileSelected($event)"
+          >
+
+          <div class="image-preview-shell" *ngIf="editForm.value.image; else emptyPreview">
+            <img [src]="editForm.value.image" alt="Event preview" class="image-preview">
+          </div>
+
+          <ng-template #emptyPreview>
+            <div class="image-empty">
+              <strong>No image selected</strong>
+              <p>Upload a new cover to refresh how the event appears to users.</p>
+            </div>
+          </ng-template>
+        </section>
+
+        <section class="form-card side-card action-card">
+          <div class="section-head">
+            <p>Actions</p>
+            <h2>Save your changes</h2>
+          </div>
+
+          <p class="action-text">
+            Review the information, then update the event or return to the dashboard without saving.
+          </p>
+
+          <div class="button-stack">
+            <button class="btn-modern btn-submit" type="submit">
+              Update Event
+            </button>
+
+            <button
+              type="button"
+              class="btn-modern btn-cancel"
+              (click)="onCancel()"
+            >
+              Cancel
+            </button>
+          </div>
+        </section>
+      </aside>
+    </form>
+  </div>
 </div>

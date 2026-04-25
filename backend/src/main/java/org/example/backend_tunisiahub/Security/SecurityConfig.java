@@ -70,6 +70,7 @@ public class SecurityConfig {
                         .requestMatchers("/weather/**").permitAll()
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers("/weather/**").permitAll()
+                        .requestMatchers("/ai/**").permitAll()
 
                         .anyRequest().authenticated()
                         

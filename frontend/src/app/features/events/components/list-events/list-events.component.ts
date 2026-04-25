@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+import { Router } from '@angular/router';
 import { EventService } from '../../services/event.service';
 import { Event } from '../../../../models/events/event.model';
 
@@ -14,9 +15,12 @@ export class ListEventsComponent implements OnInit {
   activeFilter: string = 'All';
   searchQuery: string = '';
 
-  filters: string[] = ['All', 'Music', 'Sport', 'Tech', 'Art', 'Conference'];
+filters: string[] = ['All', 'SPORT', 'FESTIVAL', 'CONFERENCE', 'COMPETITION'];
 
-  constructor(private eventService: EventService) {}
+  constructor(
+    private eventService: EventService,
+    private router: Router
+  ) {}
 
   ngOnInit(): void {
     this.loadEvents();
@@ -34,34 +38,65 @@ export class ListEventsComponent implements OnInit {
     });
   }
 
+  
+
   deleteEvent(id: number): void {
     this.eventService.deleteEvent(id).subscribe(() => {
       this.loadEvents();
     });
   }
 
+  /* ================= SEARCH ================= */
+  onSearch(): void {
+    if (!this.searchQuery.trim()) {
+      this.loadEvents();
+      return;
+    }
+
+    this.eventService.searchEvents(this.searchQuery).subscribe(data => {
+      this.events = data;
+    });
+  }
+
+  /* ================= FILTER ================= */
+  setFilter(filter: string): void {
+    this.activeFilter = filter;
+
+    if (filter === 'All') {
+      this.loadEvents();
+      return;
+    }
+
+    this.eventService.filterByType(filter).subscribe(data => {
+      this.events = data;
+    });
+  }
+
+  /* ================= VIEW ================= */
   setView(mode: 'cards' | 'list'): void {
     this.viewMode = mode;
   }
 
-  setFilter(filter: string): void {
-    this.activeFilter = filter;
-  }
+  goToDetails(id: number | undefined): void {
+    if (!id) {
+      return;
+    }
 
-  get filteredEvents(): Event[] {
-    return this.events.filter(event => {
-      const matchType = this.activeFilter === 'All' || event.type === this.activeFilter;
-      const matchSearch = !this.searchQuery ||
-        event.title.toLowerCase().includes(this.searchQuery.toLowerCase());
-      return matchType && matchSearch;
+    this.router.navigate(['/events/details', id], {
+      state: { returnUrl: '/events' }
     });
   }
 
-  get totalRevenue(): number {
-    return this.events.reduce((sum, e) => sum + (e.price || 0), 0);
+  /* ================= DISPLAY ================= */
+  get filteredEvents(): Event[] {
+    return this.events;
   }
 
-  get activeEventsCount(): number {
-    return this.events.filter(e => e.status === 'Active').length;
-  }
+  get completedEventsCount(): number {
+  return this.events.filter(e => e.status === 'COMPLETED').length;
+}
+
+get activeEventsCount(): number {
+  return this.events.filter(e => e.status === 'OPEN').length;
+}
 }
