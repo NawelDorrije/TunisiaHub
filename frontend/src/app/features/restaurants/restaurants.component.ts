@@ -83,6 +83,12 @@ export class RestaurantsComponent implements OnInit {
   isSubmittingReservation = false;
   selectedTableIds: number[] = [];
 
+  // AI Suggestion State
+  aiSuggestion: any = null;
+  isAiSuggestionLoading = false;
+  aiSuggestionError = '';
+  lastCheckedDate = '';
+
   ngOnInit(): void {
     this.api.getRestaurants().subscribe({
       next: (data) => {
@@ -487,6 +493,37 @@ export class RestaurantsComponent implements OnInit {
     this.showReservationForm = false;
     this.reservationRestaurant = null;
     this.isSubmittingReservation = false;
+    // Reset AI suggestions
+    this.aiSuggestion = null;
+    this.isAiSuggestionLoading = false;
+    this.aiSuggestionError = '';
+    this.lastCheckedDate = '';
+  }
+
+  onReservationDateChange(): void {
+    if (!this.reservationDateTime) return;
+    
+    // Extract YYYY-MM-DD from datetime string (e.g. "2026-04-26T19:00")
+    const dateStr = this.reservationDateTime.split('T')[0];
+    
+    if (dateStr && dateStr !== this.lastCheckedDate && this.reservationRestaurant?.id) {
+      this.lastCheckedDate = dateStr;
+      this.isAiSuggestionLoading = true;
+      this.aiSuggestionError = '';
+      this.aiSuggestion = null;
+
+      this.api.getAiReservationSuggestion(this.reservationRestaurant.id, dateStr).subscribe({
+        next: (res) => {
+          this.isAiSuggestionLoading = false;
+          this.aiSuggestion = res; // e.g. { bestTime: "19:00", message: "..." }
+        },
+        error: (err) => {
+          console.error('Error fetching AI suggestion:', err);
+          this.isAiSuggestionLoading = false;
+          this.aiSuggestionError = err?.error?.message || 'Could not fetch AI recommendation at this time.';
+        }
+      });
+    }
   }
 
   submitReservation(): void {

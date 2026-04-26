@@ -10,6 +10,7 @@ export class AdminRestaurantReservationsComponent implements OnInit {
   reservations: any[] = [];
   loading = true;
   loadError: string | null = null;
+  selectedStatus: string = 'ALL';
 
   showAssignModal = false;
   assignReservation: any = null;
@@ -25,7 +26,11 @@ export class AdminRestaurantReservationsComponent implements OnInit {
   }
 
   get restaurantReservations(): any[] {
-    return this.reservations.filter((r) => r.type === 'RestaurantReservation');
+    let list = this.reservations.filter((r) => r.type === 'RestaurantReservation');
+    if (this.selectedStatus !== 'ALL') {
+      list = list.filter((r) => r.status === this.selectedStatus);
+    }
+    return list;
   }
 
   loadReservations(): void {

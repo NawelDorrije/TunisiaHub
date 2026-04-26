@@ -8,9 +8,18 @@
         <h1 class="h2 mb-1">Incoming Reservations</h1>
         <p class="mb-0 text-muted">Manage guest bookings and table assignments.</p>
       </div>
-      <button type="button" class="btn-premium btn-premium-outline" (click)="loadReservations()" [disabled]="loading">
-        <i class="bi bi-arrow-clockwise" [class.spinner-border-sm]="loading"></i> Refresh List
-      </button>
+      <div class="d-flex flex-wrap align-items-center gap-3">
+        <select class="premium-filter" (change)="selectedStatus = $any($event.target).value">
+          <option value="ALL" [selected]="selectedStatus === 'ALL'">All Statuses</option>
+          <option value="PENDING" [selected]="selectedStatus === 'PENDING'">Pending</option>
+          <option value="CONFIRMED" [selected]="selectedStatus === 'CONFIRMED'">Confirmed</option>
+          <option value="ARRIVED" [selected]="selectedStatus === 'ARRIVED'">Arrived</option>
+          <option value="CANCELLED" [selected]="selectedStatus === 'CANCELLED'">Cancelled</option>
+        </select>
+        <button type="button" class="btn-premium btn-premium-outline" (click)="loadReservations()" [disabled]="loading">
+          <i class="bi bi-arrow-clockwise" [class.spinner-border-sm]="loading"></i> Refresh List
+        </button>
+      </div>
     </div>
   </div>
 

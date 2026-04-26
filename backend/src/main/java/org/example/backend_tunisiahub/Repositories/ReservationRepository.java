@@ -33,6 +33,24 @@ public interface ReservationRepository  extends JpaRepository<Reservation,Long> 
 
     List<Reservation> findByRestaurant_IdAndStatusOrderByDateTimeAsc(Long restaurantId, ReservationStatus status);
 
+    @Query("""
+            select r
+            from Reservation r
+            where r.restaurant.id = :restaurantId
+              and r.type = :type
+              and r.dateTime >= :startOfDay
+              and r.dateTime < :endOfDay
+              and r.status <> :excludedStatus
+            order by r.dateTime asc
+            """)
+    List<Reservation> findForRestaurantSuggestionDay(
+            @Param("restaurantId") Long restaurantId,
+            @Param("type") ReservationType type,
+            @Param("startOfDay") LocalDateTime startOfDay,
+            @Param("endOfDay") LocalDateTime endOfDay,
+            @Param("excludedStatus") ReservationStatus excludedStatus
+    );
+
     List<Reservation> findByTypeOrderByIdDesc(ReservationType type);
 
     List<Reservation> findByRestaurant_IdAndTypeAndDateTimeAndStatusIn(

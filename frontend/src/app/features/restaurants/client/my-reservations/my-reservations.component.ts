@@ -10,6 +10,7 @@ import { AuthService } from '../../../auth/services/auth.service';
 export class MyReservationsComponent implements OnInit {
   reservations: any[] = [];
   loading = true;
+  selectedStatus: string = 'ALL';
 
   constructor(
     private api: ApiService,
@@ -18,6 +19,13 @@ export class MyReservationsComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadReservations();
+  }
+
+  get filteredReservations(): any[] {
+    if (this.selectedStatus === 'ALL') {
+      return this.reservations;
+    }
+    return this.reservations.filter((r) => r.status === this.selectedStatus);
   }
 
   loadReservations(): void {

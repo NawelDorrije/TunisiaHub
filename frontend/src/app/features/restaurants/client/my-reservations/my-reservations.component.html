@@ -9,15 +9,26 @@
         <p>Fetching your bookings...</p>
     </div>
 
-    <div *ngIf="!loading && reservations.length === 0" class="empty-state">
+    <div class="filter-bar" *ngIf="!loading && reservations.length > 0">
+        <label for="clientStatusFilter">Status:</label>
+        <select id="clientStatusFilter" class="status-select" (change)="selectedStatus = $any($event.target).value">
+            <option value="ALL" [selected]="selectedStatus === 'ALL'">All</option>
+            <option value="PENDING" [selected]="selectedStatus === 'PENDING'">Pending</option>
+            <option value="CONFIRMED" [selected]="selectedStatus === 'CONFIRMED'">Confirmed</option>
+            <option value="ARRIVED" [selected]="selectedStatus === 'ARRIVED'">Arrived</option>
+            <option value="CANCELLED" [selected]="selectedStatus === 'CANCELLED'">Cancelled</option>
+        </select>
+    </div>
+
+    <div *ngIf="!loading && filteredReservations.length === 0" class="empty-state">
         <div class="empty-icon">📅</div>
-        <h2>No reservations yet</h2>
-        <p>Discover great restaurants and book your next table</p>
+        <h2>No reservations found</h2>
+        <p>You don't have any reservations matching this status.</p>
         <button class="btn-primary" routerLink="/restaurants">Explore Restaurants</button>
     </div>
 
-    <div *ngIf="!loading && reservations.length > 0" class="reservations-grid">
-        <div class="reservation-card" *ngFor="let res of reservations" [attr.id]="'res-' + res.id">
+    <div *ngIf="!loading && filteredReservations.length > 0" class="reservations-grid">
+        <div class="reservation-card" *ngFor="let res of filteredReservations" [attr.id]="'res-' + res.id">
             <div class="card-header">
                 <span class="status-badge" [class]="res.status.toLowerCase()">
                     {{res.status}}

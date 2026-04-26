@@ -117,6 +117,12 @@ export class ApiService {
     return this.http.patch(this.BASE_URL + '/api/reservations/' + reservationId + '/cancel', {});
   }
 
+  getAiReservationSuggestion(restaurantId: number, date: string): Observable<any> {
+    return this.http.get(this.BASE_URL + '/api/reservations/ai-suggestions', {
+      params: { restaurantId: restaurantId.toString(), date }
+    });
+  }
+
   getTablesByRestaurant(restaurantId: number, status?: string, dateTime?: string, partySize?: number): Observable<any[]> {
     let url = this.BASE_URL + '/api/restaurant-tables/by-restaurant/' + restaurantId;
     let params: string[] = [];

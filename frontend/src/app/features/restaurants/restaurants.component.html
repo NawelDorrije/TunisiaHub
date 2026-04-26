@@ -176,7 +176,32 @@
               <div class="mb-4">
                 <label class="form-label">Date & Time</label>
                 <input type="datetime-local" class="form-control"
-                  [(ngModel)]="reservationDateTime" [disabled]="isSubmittingReservation" required>
+                  [(ngModel)]="reservationDateTime" (ngModelChange)="onReservationDateChange()" [disabled]="isSubmittingReservation" required>
+              </div>
+
+              <!-- AI RECOMMENDATION BLOCK -->
+              <div class="ai-recommendation-card mb-4 fade-in" *ngIf="isAiSuggestionLoading || aiSuggestion || aiSuggestionError">
+                <div class="ai-header mb-2">
+                  <span class="badge bg-purple-gradient text-white" style="background: linear-gradient(135deg, #8b5cf6, #d946ef);"><i class="bi bi-stars"></i> AI Recommendation</span>
+                </div>
+                
+                <div *ngIf="isAiSuggestionLoading" class="p-3 text-center text-muted rounded-3 bg-light border border-light">
+                   <div class="spinner-border spinner-border-sm me-2 text-primary mb-1"></div>
+                   <div class="small">Analyzing historical data for the best time...</div>
+                </div>
+                
+                <div *ngIf="aiSuggestionError" class="p-3 rounded-3 bg-light text-muted small border-start border-warning border-3">
+                   <i class="bi bi-exclamation-triangle ms-1"></i> {{ aiSuggestionError }}
+                </div>
+                
+                <div *ngIf="aiSuggestion" class="ai-body p-3 rounded-3 shadow-sm border border-primary border-opacity-25 transition-all" style="background: linear-gradient(to right, #f8faff, #ffffff);">
+                   <div class="fw-bold text-dark mb-2">
+                     Best time: <span class="text-primary fw-bolder px-2 py-1 rounded bg-primary bg-opacity-10">{{ aiSuggestion.bestTime }}</span> ⭐
+                   </div>
+                   <div class="small text-muted mb-0 lh-sm">
+                     <i class="bi bi-check-circle-fill text-success opacity-75 me-1"></i> {{ aiSuggestion.message }}
+                   </div>
+                </div>
               </div>
               <div class="mb-4">
                 <label class="form-label">Party Size</label>

@@ -50,6 +50,27 @@
   cursor: pointer;
 }
 
+.form-control[type="datetime-local"]::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+}
+
+.ai-recommendation-card {
+  transition: all 0.3s ease;
+}
+
+.ai-recommendation-card .ai-body {
+  border-left: 4px solid var(--primary, #d4a574) !important;
+}
+
+.ai-recommendation-card .badge.bg-purple-gradient {
+  background: linear-gradient(135deg, #8b5cf6, #d946ef);
+  box-shadow: 0 4px 6px rgba(139, 92, 246, 0.2);
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
 .restaurant-card:hover {
   transform: translateY(-8px);
   box-shadow: 0 20px 40px rgba(0,0,0,0.2);

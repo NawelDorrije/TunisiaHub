@@ -1,11 +1,14 @@
 package org.example.backend_tunisiahub.Controllers;
 
 import lombok.RequiredArgsConstructor;
+import org.example.backend_tunisiahub.Controllers.dto.AiReservationSuggestionResponse;
 import org.example.backend_tunisiahub.Entities.Reservation;
 import org.example.backend_tunisiahub.Entities.ReservationStatus;
+import org.example.backend_tunisiahub.Services.AiRecommendationService;
 import org.example.backend_tunisiahub.Services.IReservationService;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @RestController
@@ -14,6 +17,7 @@ import java.util.List;
 public class ReservationController {
 
     private final IReservationService reservationService;
+    private final AiRecommendationService aiRecommendationService;
 
     @GetMapping
     public List<Reservation> getAllReservations() {
@@ -44,6 +48,12 @@ public class ReservationController {
     public List<Reservation> getRestaurantReservations(@RequestParam(required = false) Long restaurantId,
                                                        @RequestParam(required = false) ReservationStatus status) {
         return reservationService.retrieveRestaurantReservations(restaurantId, status);
+    }
+
+    @GetMapping("/ai-suggestions")
+    public AiReservationSuggestionResponse getAiSuggestion(@RequestParam Long restaurantId,
+                                                           @RequestParam LocalDate date) {
+        return aiRecommendationService.suggestBestTime(restaurantId, date);
     }
 
     @PutMapping
