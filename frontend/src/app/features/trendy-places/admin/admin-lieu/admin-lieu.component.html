@@ -1,223 +1,286 @@
-<div class="admin-container">
+<div class="admin-page">
 
-  <!-- Header -->
-  <div class="admin-header">
-    <div>
-      <h1>🏛️ Gestion des Lieux</h1>
-      <p>{{ lieux.length }} lieu(x) au total</p>
+  <!-- PAGE HEADER -->
+  <div class="page-header">
+    <div class="page-header-left">
+      <div class="page-icon">🏛️</div>
+      <div>
+        <h1>Gestion des Lieux</h1>
+        <p>{{ filteredLieux.length }} / {{ lieux.length }} lieu(x)</p>
+      </div>
     </div>
-    <a routerLink="/trendy-places/admin/activites" class="btn-secondary">🎯 Gérer les Activités</a>
-    <a routerLink="/trendy-places/admin/reservations" class="btn-secondary">🎟️ Réservations</a>
-
-    <button class="btn-add" (click)="openAdd()">+ Ajouter un lieu</button>
+    <div class="page-header-right">
+      <a routerLink="/trendy-places/admin/activites" class="btn-nav">🎯 Activités</a>
+      <a routerLink="/trendy-places/admin/reservations" class="btn-nav">🎟️ Réservations</a>
+      <button class="btn-primary" (click)="openAdd()">+ Ajouter un lieu</button>
+    </div>
   </div>
 
-  <!-- Messages -->
-  <div class="alert success" *ngIf="successMessage">✅ {{ successMessage }}</div>
-  <div class="alert error" *ngIf="errorMessage">❌ {{ errorMessage }}</div>
-
-  <!-- Modal Form -->
-  <div class="modal-overlay" *ngIf="showForm" (click)="closeForm()">
-  <div class="modal-box" (click)="$event.stopPropagation()">
-    
-    <div class="modal-header">
-      <h2>{{ isEditing ? '✏️ Modifier le lieu' : '➕ Ajouter un lieu' }}</h2>
-      <button class="close-btn" (click)="closeForm()">✕</button>
-    </div>
-
-    <!-- ===== SECTION IA ===== -->
-    <div class="ai-section" *ngIf="!isEditing">
-      <div class="ai-header">
-        <span class="ai-badge">🤖 IA</span>
-        <div>
-          <h3>Remplissage automatique par IA</h3>
-          <p>Uploadez une photo du lieu — l'IA remplit tout le formulaire !</p>
-        </div>
-      </div>
-
-      <!-- Upload zone -->
-      <div class="upload-zone"
-           [class.has-image]="uploadedImagePreview"
-           (click)="fileInput.click()">
-        <input #fileInput type="file" accept="image/*"
-               style="display:none"
-               (change)="onImageUpload($event)" />
-
-        <div *ngIf="!uploadedImagePreview" class="upload-placeholder">
-          <span class="upload-icon">📸</span>
-          <p>Cliquez pour uploader une image</p>
-          <span>JPG, PNG, WEBP — max 5MB</span>
-        </div>
-
-        <div *ngIf="uploadedImagePreview" class="upload-preview">
-          <img [src]="uploadedImagePreview" alt="Preview" />
-          <div class="preview-overlay">
-            <span>Changer l'image</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- Bouton analyser -->
-      <button class="btn-ai-analyze"
-              (click)="analyserAvecIA()"
-              [disabled]="!uploadedImagePreview || aiLoading">
-        <span *ngIf="!aiLoading">🔍 Analyser avec l'IA</span>
-        <span *ngIf="aiLoading" class="ai-loading-text">
-          <span class="ai-dots"></span>
-          Analyse en cours...
-        </span>
-      </button>
-
-      <!-- Messages IA -->
-      <div class="ai-success" *ngIf="aiSuccess">{{ aiSuccess }}</div>
-      <div class="ai-error" *ngIf="aiError">⚠️ {{ aiError }}</div>
-
-      <!-- Activités suggérées -->
-      <div class="activites-preview" *ngIf="showActivitesPreview">
-        <h4>🎯 Activités suggérées par l'IA</h4>
-        <p class="preview-hint">Ces activités seront créées automatiquement avec le lieu</p>
-        <div class="activite-chip"
-             *ngFor="let act of suggestedActivites; let i = index">
-          <div class="chip-info">
-            <strong>{{ act.nomActivite }}</strong>
-            <span>{{ act.prix }} TND · {{ act.duree }} min · {{ act.capaciteMax }} pers.</span>
-          </div>
-          <button class="chip-remove" (click)="removeSuggestedActivite(i)">✕</button>
-        </div>
-      </div>
-
-      <div class="ai-divider">
-        <span>ou remplissez manuellement</span>
-      </div>
-    </div>
-    <!-- ===== FIN SECTION IA ===== -->
-
-    <!-- Formulaire normal -->
-    <div class="form-grid">
-      <div class="form-group">
-        <label>Nom</label>
-        <input type="text" [(ngModel)]="form.nom" placeholder="Nom du lieu" />
-      </div>
-
-      <div class="form-group">
-        <label>Type</label>
-        <select [(ngModel)]="form.type">
-          <option value="">-- Choisir --</option>
-          <option value="Culturel">🏛️ Culturel</option>
-          <option value="Naturel">🌿 Naturel</option>
-          <option value="Historique">🏰 Historique</option>
-          <option value="Sportif">⚽ Sportif</option>
-          <option value="Gastronomique">🍽️ Gastronomique</option>
-          <option value="Artistique">🎨 Artistique</option>
-        </select>
-      </div>
-
-      <div class="form-group">
-        <label>Ville</label>
-        <input type="text" [(ngModel)]="form.ville" placeholder="Ville" />
-      </div>
-
-      <div class="form-group">
-        <label>Horaires</label>
-        <input type="text" [(ngModel)]="form.horaires" placeholder="08:00 - 22:00" />
-      </div>
-
-      <div class="form-group">
-        <label>Latitude</label>
-        <input type="number" [(ngModel)]="form.latitude" />
-      </div>
-
-      <div class="form-group">
-        <label>Longitude</label>
-        <input type="number" [(ngModel)]="form.longitude" />
-      </div>
-
-      <div class="form-group full">
-        <label>Image (nom du fichier ou URL)</label>
-        <input type="text" [(ngModel)]="form.image" placeholder="1.jpg ou https://..." />
-        <div class="image-preview" *ngIf="form.image">
-          <img [src]="getImageUrl(form.image)" alt="preview"
-               (error)="$any($event.target).src='/assets/images/lieux/default.jpg'" />
-        </div>
-      </div>
-
-      <div class="form-group full">
-        <label>Description</label>
-        <textarea [(ngModel)]="form.description" rows="3"
-                  placeholder="Description du lieu..."></textarea>
-      </div>
-    </div>
-
-    <div class="modal-footer">
-      <button class="btn-cancel" (click)="closeForm()">Annuler</button>
-      <button class="btn-save" (click)="submit()">
-        {{ isEditing ? 'Modifier' : 'Ajouter' }}
-        <span *ngIf="!isEditing && suggestedActivites.length > 0">
-          + {{ suggestedActivites.length }} activité(s)
-        </span>
-      </button>
-    </div>
-
+  <!-- ALERTS -->
+  <div class="alert alert-success" *ngIf="successMessage">
+    <span>✅</span> {{ successMessage }}
+    <button (click)="successMessage = ''">✕</button>
   </div>
-</div>
+  <div class="alert alert-error" *ngIf="errorMessage">
+    <span>❌</span> {{ errorMessage }}
+    <button (click)="errorMessage = ''">✕</button>
+  </div>
 
-  <!-- Confirm Delete -->
-  <div class="modal-overlay" *ngIf="confirmDeleteId !== null">
-    <div class="confirm-box">
-      <h3>🗑️ Confirmer la suppression</h3>
-      <p>Cette action est irréversible.</p>
-      <div class="confirm-actions">
-        <button class="btn-cancel" (click)="cancelDelete()">Annuler</button>
-        <button class="btn-delete" (click)="deleteLieu(confirmDeleteId!)">Supprimer</button>
+  <!-- STATS CARDS -->
+  <div class="stats-grid">
+    <div class="stat-card stat-blue">
+      <div class="stat-icon">🏛️</div>
+      <div class="stat-body">
+        <div class="stat-value">{{ totalLieux }}</div>
+        <div class="stat-label">Total lieux</div>
+      </div>
+    </div>
+    <div class="stat-card stat-purple">
+      <div class="stat-icon">🏷️</div>
+      <div class="stat-body">
+        <div class="stat-value">{{ totalTypes }}</div>
+        <div class="stat-label">Types différents</div>
+      </div>
+    </div>
+    <div class="stat-card stat-green">
+      <div class="stat-icon">📍</div>
+      <div class="stat-body">
+        <div class="stat-value">{{ totalVilles }}</div>
+        <div class="stat-label">Villes couvertes</div>
+      </div>
+    </div>
+    <div class="stat-card stat-gold">
+      <div class="stat-icon">📊</div>
+      <div class="stat-body">
+        <div class="stat-chips">
+          <span class="type-chip" *ngFor="let s of typeStats"
+                [style.background]="getTypeColor(s.type) + '20'"
+                [style.color]="getTypeColor(s.type)"
+                [style.border]="'1px solid ' + getTypeColor(s.type) + '40'">
+            {{ s.type }} <strong>{{ s.count }}</strong>
+          </span>
+        </div>
+        <div class="stat-label">Répartition par type</div>
       </div>
     </div>
   </div>
 
-  <!-- Loading -->
-  <div *ngIf="loading" class="loading">
-    <div class="spinner"></div>
+  <!-- SEARCH -->
+  <div class="search-bar-wrap">
+    <div class="search-input-wrap">
+      <span class="search-icon-inner">🔍</span>
+      <input class="search-input" type="text" [(ngModel)]="searchTerm"
+             (input)="onSearch()"
+             placeholder="Rechercher par nom, ville ou type..." />
+      <button class="search-clear" *ngIf="searchTerm" (click)="searchTerm=''; onSearch()">✕</button>
+    </div>
+  </div>
+
+  <!-- LOADING -->
+  <div *ngIf="loading" class="loading-state">
+    <div class="spin-ring"></div>
     <p>Chargement...</p>
   </div>
 
-  <!-- Table -->
-  <div class="table-wrapper" *ngIf="!loading">
-    <table class="admin-table">
+  <!-- TABLE -->
+  <div class="table-card" *ngIf="!loading">
+    <table class="data-table">
       <thead>
         <tr>
-          <th>Image</th>
-          <th>Nom</th>
+          <th style="width:70px">Image</th>
+          <th>Nom & Description</th>
           <th>Type</th>
           <th>Ville</th>
           <th>Horaires</th>
-          <th>Actions</th>
+          <th style="width:160px">Actions</th>
         </tr>
       </thead>
       <tbody>
-        <tr *ngFor="let lieu of lieux">
+        <tr *ngFor="let lieu of filteredLieux">
           <td>
-            <img
-              [src]="getImageUrl(lieu.image)"
-              [alt]="lieu.nom"
-              class="table-img"
-              (error)="$any($event.target).src='/assets/images/lieux/default.jpg'"
-            />
+            <img [src]="getImageUrl(lieu.image)" [alt]="lieu.nom" class="tbl-img"
+                 (error)="$any($event.target).src='/assets/images/lieux/default.jpg'" />
           </td>
           <td>
-            <div class="lieu-name">{{ lieu.nom }}</div>
-            <div class="lieu-desc">{{ lieu.description }}</div>
+            <div class="tbl-name">{{ lieu.nom }}</div>
+            <div class="tbl-sub">{{ lieu.description }}</div>
           </td>
-          <td><span class="type-badge">{{ lieu.type }}</span></td>
-          <td>📍 {{ lieu.ville }}</td>
-          <td>🕐 {{ lieu.horaires }}</td>
           <td>
-            <div class="action-btns">
+            <span class="tbl-type-badge"
+                  [style.background]="getTypeColor(lieu.type) + '18'"
+                  [style.color]="getTypeColor(lieu.type)"
+                  [style.border]="'1px solid ' + getTypeColor(lieu.type) + '35'">
+              {{ lieu.type }}
+            </span>
+          </td>
+          <td><span class="tbl-ville">📍 {{ lieu.ville }}</span></td>
+          <td><span class="tbl-horaires">🕐 {{ lieu.horaires }}</span></td>
+          <td>
+            <div class="tbl-actions">
               <button class="btn-edit" (click)="openEdit(lieu)">✏️ Modifier</button>
-              <button class="btn-delete" (click)="confirmDelete(lieu.id)">🗑️ Supprimer</button>
+              <button class="btn-del" (click)="confirmDelete(lieu.id)">🗑️</button>
             </div>
+          </td>
+        </tr>
+        <tr *ngIf="filteredLieux.length === 0">
+          <td colspan="6" class="empty-row">
+            <span>📭</span> Aucun lieu trouvé
           </td>
         </tr>
       </tbody>
     </table>
+  </div>
+
+  <!-- MODAL FORM -->
+  <div class="modal-backdrop" *ngIf="showForm" (click)="closeForm()">
+    <div class="modal-panel" (click)="$event.stopPropagation()">
+
+      <div class="modal-top">
+        <div class="modal-title-wrap">
+          <div class="modal-title-icon">{{ isEditing ? '✏️' : '➕' }}</div>
+          <div>
+            <h2>{{ isEditing ? 'Modifier le lieu' : 'Ajouter un lieu' }}</h2>
+            <p>{{ isEditing ? 'Modifiez les informations' : 'Remplissez les champs obligatoires *' }}</p>
+          </div>
+        </div>
+        <button class="modal-close" (click)="closeForm()">✕</button>
+      </div>
+
+      <!-- VALIDATION ERRORS -->
+      <div class="validation-block" *ngIf="validationErrors.length > 0">
+        <div class="validation-title">⚠️ Veuillez corriger les erreurs :</div>
+        <ul class="validation-list">
+          <li *ngFor="let err of validationErrors">{{ err }}</li>
+        </ul>
+      </div>
+
+      <!-- IA SECTION -->
+      <div class="ai-section" *ngIf="!isEditing">
+        <div class="ai-header-row">
+          <div class="ai-badge">🤖 IA</div>
+          <div>
+            <div class="ai-title">Remplissage automatique par intelligence artificielle</div>
+            <div class="ai-sub">Uploadez une photo — l'IA détecte le lieu et suggère des activités</div>
+          </div>
+        </div>
+
+        <div class="upload-zone" [class.has-img]="uploadedImagePreview" (click)="fileInput.click()">
+          <input #fileInput type="file" accept="image/*" style="display:none" (change)="onImageUpload($event)" />
+          <div *ngIf="!uploadedImagePreview" class="upload-empty">
+            <span>📸</span>
+            <p>Cliquer pour uploader</p>
+            <small>JPG, PNG, WEBP — max 10MB</small>
+          </div>
+          <div *ngIf="uploadedImagePreview" class="upload-filled">
+            <img [src]="uploadedImagePreview" />
+            <div class="upload-change">🔄 Changer</div>
+          </div>
+        </div>
+
+        <button class="btn-ia" (click)="analyserAvecIA()" [disabled]="!uploadedImagePreview || aiLoading">
+          <span *ngIf="!aiLoading">🔍 Analyser avec l'IA</span>
+          <span *ngIf="aiLoading" class="btn-ia-loading"><span class="ia-spin"></span> Analyse...</span>
+        </button>
+
+        <div class="ai-msg success" *ngIf="aiSuccess">{{ aiSuccess }}</div>
+        <div class="ai-msg error" *ngIf="aiError">⚠️ {{ aiError }}</div>
+
+        <div class="activites-suggested" *ngIf="showActivitesPreview">
+          <div class="suggested-title">🎯 Activités suggérées <span class="suggested-count">{{ suggestedActivites.length }}</span></div>
+          <div class="suggested-item" *ngFor="let act of suggestedActivites; let i = index">
+            <div class="suggested-info">
+              <strong>{{ act.nomActivite }}</strong>
+              <span>{{ act.prix }} TND · {{ act.duree }}min · max {{ act.capaciteMax }} pers.</span>
+            </div>
+            <button class="suggested-rm" (click)="removeSuggestedActivite(i)">✕</button>
+          </div>
+        </div>
+
+        <div class="ai-or"><span>— ou remplissez manuellement —</span></div>
+      </div>
+
+      <!-- FORM FIELDS -->
+      <div class="form-body">
+        <div class="form-grid">
+          <div class="field" [class.field-error]="validationErrors.length > 0 && !form.nom?.trim()">
+            <label>Nom <span class="req">*</span></label>
+            <input type="text" [(ngModel)]="form.nom" placeholder="Ex: Amphithéâtre d'El Jem" />
+            <span class="field-hint" *ngIf="validationErrors.length > 0 && !form.nom?.trim()">Champ obligatoire</span>
+          </div>
+
+          <div class="field" [class.field-error]="validationErrors.length > 0 && !form.type">
+            <label>Type <span class="req">*</span></label>
+            <select [(ngModel)]="form.type">
+              <option value="">— Choisir —</option>
+              <option value="Culturel">🏛️ Culturel</option>
+              <option value="Naturel">🌿 Naturel</option>
+              <option value="Historique">🏰 Historique</option>
+              <option value="Sportif">⚽ Sportif</option>
+              <option value="Gastronomique">🍽️ Gastronomique</option>
+              <option value="Artistique">🎨 Artistique</option>
+            </select>
+            <span class="field-hint" *ngIf="validationErrors.length > 0 && !form.type">Champ obligatoire</span>
+          </div>
+
+          <div class="field" [class.field-error]="validationErrors.length > 0 && !form.ville?.trim()">
+            <label>Ville <span class="req">*</span></label>
+            <input type="text" [(ngModel)]="form.ville" placeholder="Ex: Tunis" />
+            <span class="field-hint" *ngIf="validationErrors.length > 0 && !form.ville?.trim()">Champ obligatoire</span>
+          </div>
+
+          <div class="field" [class.field-error]="validationErrors.length > 0 && !form.horaires?.trim()">
+            <label>Horaires <span class="req">*</span></label>
+            <input type="text" [(ngModel)]="form.horaires" placeholder="08:00 - 22:00" />
+            <span class="field-hint" *ngIf="validationErrors.length > 0 && !form.horaires?.trim()">Champ obligatoire</span>
+          </div>
+
+          <div class="field">
+            <label>Latitude</label>
+            <input type="number" [(ngModel)]="form.latitude" step="0.0001" placeholder="36.8065" />
+          </div>
+
+          <div class="field">
+            <label>Longitude</label>
+            <input type="number" [(ngModel)]="form.longitude" step="0.0001" placeholder="10.1815" />
+          </div>
+
+          <div class="field field-full">
+            <label>Image</label>
+            <input type="text" [(ngModel)]="form.image" placeholder="nom.jpg ou https://..." />
+            <div class="img-preview" *ngIf="form.image">
+              <img [src]="getImageUrl(form.image)" (error)="$any($event.target).src='/assets/images/lieux/default.jpg'" />
+            </div>
+          </div>
+
+          <div class="field field-full" [class.field-error]="validationErrors.length > 0 && !form.description?.trim()">
+            <label>Description <span class="req">*</span></label>
+            <textarea [(ngModel)]="form.description" rows="3" placeholder="Description du lieu..."></textarea>
+            <span class="field-hint" *ngIf="validationErrors.length > 0 && !form.description?.trim()">Champ obligatoire</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn-ghost" (click)="closeForm()">Annuler</button>
+        <button class="btn-submit" (click)="submit()">
+          {{ isEditing ? '💾 Enregistrer' : '➕ Ajouter' }}
+          <span *ngIf="!isEditing && suggestedActivites.length > 0" class="submit-badge">+{{ suggestedActivites.length }} activité(s)</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- CONFIRM DELETE -->
+  <div class="modal-backdrop" *ngIf="confirmDeleteId !== null">
+    <div class="confirm-panel">
+      <div class="confirm-icon">🗑️</div>
+      <h3>Confirmer la suppression</h3>
+      <p>Cette action est <strong>irréversible</strong>. Le lieu et toutes ses activités seront supprimés.</p>
+      <div class="confirm-btns">
+        <button class="btn-ghost" (click)="cancelDelete()">Annuler</button>
+        <button class="btn-danger" (click)="deleteLieu(confirmDeleteId!)">Supprimer définitivement</button>
+      </div>
+    </div>
   </div>
 
 </div>

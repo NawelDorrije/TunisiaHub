@@ -1,108 +1,87 @@
-<div class="admin-container">
+<div class="admin-page">
 
-  <!-- Header -->
-  <div class="admin-header">
-    <div>
-      <h1>🎯 Gestion des Activités</h1>
-      <p>{{ activites.length }} activité(s) au total</p>
+  <!-- PAGE HEADER -->
+  <div class="page-header">
+    <div class="page-header-left">
+      <div class="page-icon">🎯</div>
+      <div>
+        <h1>Gestion des Activités</h1>
+        <p>{{ filteredActivites.length }} / {{ activites.length }} activité(s)</p>
+      </div>
     </div>
-    <div class="header-actions">
-      <a routerLink="/trendy-places/admin/lieux" class="btn-secondary">🏛️ Gérer les Lieux</a>
-      <a routerLink="/trendy-places/admin/reservations" class="btn-secondary">🎟️ Réservations</a>
-      <button class="btn-add" (click)="openAdd()">+ Ajouter une activité</button>
+    <div class="page-header-right">
+      <a routerLink="/trendy-places/admin/lieux" class="btn-nav">🏛️ Lieux</a>
+      <a routerLink="/trendy-places/admin/reservations" class="btn-nav">🎟️ Réservations</a>
+      <button class="btn-primary" (click)="openAdd()">+ Ajouter une activité</button>
     </div>
   </div>
 
-  <!-- Messages -->
-  <div class="alert success" *ngIf="successMessage">✅ {{ successMessage }}</div>
-  <div class="alert error" *ngIf="errorMessage">❌ {{ errorMessage }}</div>
+  <!-- ALERTS -->
+  <div class="alert alert-success" *ngIf="successMessage">
+    <span>✅</span> {{ successMessage }}
+    <button (click)="successMessage = ''">✕</button>
+  </div>
+  <div class="alert alert-error" *ngIf="errorMessage">
+    <span>❌</span> {{ errorMessage }}
+    <button (click)="errorMessage = ''">✕</button>
+  </div>
 
-  <!-- Modal Form -->
-  <div class="modal-overlay" *ngIf="showForm" (click)="closeForm()">
-    <div class="modal-box" (click)="$event.stopPropagation()">
-      <div class="modal-header">
-        <h2>{{ isEditing ? '✏️ Modifier l\'activité' : '➕ Ajouter une activité' }}</h2>
-        <button class="close-btn" (click)="closeForm()">✕</button>
+  <!-- STATS -->
+  <div class="stats-grid">
+    <div class="stat-card stat-blue">
+      <div class="stat-icon">🎯</div>
+      <div class="stat-body">
+        <div class="stat-value">{{ totalActivites }}</div>
+        <div class="stat-label">Total activités</div>
       </div>
-
-      <div class="form-grid">
-        <div class="form-group full">
-          <label>Lieu associé *</label>
-          <select [(ngModel)]="selectedLieuId">
-            <option [value]="0">-- Choisir un lieu --</option>
-            <option *ngFor="let lieu of lieux" [value]="lieu.id">{{ lieu.nom }} ({{ lieu.ville }})</option>
-          </select>
-        </div>
-
-        <div class="form-group full">
-          <label>Nom de l'activité</label>
-          <input type="text" [(ngModel)]="form.nomActivite" placeholder="Nom de l'activité" />
-        </div>
-
-        <div class="form-group full">
-          <label>📅 Date de l'événement</label>
-          <input type="date" [(ngModel)]="form.dateEvenement" class="form-input" />
-        </div>
-
-        <div class="form-group">
-          <label>Prix (TND)</label>
-          <input type="number" [(ngModel)]="form.prix" placeholder="25" />
-        </div>
-
-        <div class="form-group">
-          <label>Durée (minutes)</label>
-          <input type="number" [(ngModel)]="form.duree" placeholder="120" />
-        </div>
-
-        <div class="form-group">
-          <label>Capacité max</label>
-          <input type="number" [(ngModel)]="form.capaciteMax" placeholder="20" />
-        </div>
-
-        <div class="form-group">
-          <label>Disponible</label>
-          <select [(ngModel)]="form.disponible">
-            <option [ngValue]="true">✅ Oui</option>
-            <option [ngValue]="false">❌ Non</option>
-          </select>
-        </div>
-
-        <div class="form-group full">
-          <label>Description</label>
-          <textarea [(ngModel)]="form.description" rows="3" placeholder="Description..."></textarea>
-        </div>
+    </div>
+    <div class="stat-card stat-green">
+      <div class="stat-icon">✅</div>
+      <div class="stat-body">
+        <div class="stat-value">{{ activitesDisponibles }}</div>
+        <div class="stat-label">Disponibles</div>
       </div>
-
-      <div class="modal-footer">
-        <button class="btn-cancel" (click)="closeForm()">Annuler</button>
-        <button class="btn-save" (click)="submit()">
-          {{ isEditing ? 'Modifier' : 'Ajouter' }}
-        </button>
+    </div>
+    <div class="stat-card stat-red">
+      <div class="stat-icon">❌</div>
+      <div class="stat-body">
+        <div class="stat-value">{{ activitesIndispo }}</div>
+        <div class="stat-label">Indisponibles</div>
+      </div>
+    </div>
+    <div class="stat-card stat-gold">
+      <div class="stat-icon">💰</div>
+      <div class="stat-body">
+        <div class="stat-value">{{ prixMoyen }} TND</div>
+        <div class="stat-label">Prix moyen</div>
       </div>
     </div>
   </div>
 
-  <!-- Confirm Delete -->
-  <div class="modal-overlay" *ngIf="confirmDeleteId !== null">
-    <div class="confirm-box">
-      <h3>🗑️ Confirmer la suppression</h3>
-      <p>Cette action est irréversible.</p>
-      <div class="confirm-actions">
-        <button class="btn-cancel" (click)="cancelDelete()">Annuler</button>
-        <button class="btn-delete" (click)="deleteActivite(confirmDeleteId!)">Supprimer</button>
-      </div>
+  <!-- SEARCH + FILTERS -->
+  <div class="toolbar">
+    <div class="search-input-wrap">
+      <span class="search-icon-inner">🔍</span>
+      <input class="search-input" type="text" [(ngModel)]="searchTerm"
+             (input)="onSearch()" placeholder="Rechercher par nom, lieu ou description..." />
+      <button class="search-clear" *ngIf="searchTerm" (click)="searchTerm=''; onSearch()">✕</button>
     </div>
+    <select class="filter-select" [(ngModel)]="filterDisponible" (change)="onFilterChange()">
+      <option value="">Tous les statuts</option>
+      <option value="true">✅ Disponibles</option>
+      <option value="false">❌ Indisponibles</option>
+    </select>
   </div>
 
-  <!-- Loading -->
-  <div *ngIf="loading" class="loading">
-    <div class="spinner"></div>
+  <!-- LOADING -->
+  <div *ngIf="loading" class="loading-state">
+    <div class="spin-ring"></div>
     <p>Chargement...</p>
   </div>
 
-  <!-- Table -->
-  <div class="table-wrapper" *ngIf="!loading">
-    <table class="admin-table">
+  <!-- TABLE -->
+  <div class="table-card" *ngIf="!loading">
+    <table class="data-table">
       <thead>
         <tr>
           <th>Activité</th>
@@ -112,34 +91,150 @@
           <th>Durée</th>
           <th>Capacité</th>
           <th>Statut</th>
-          <th>Actions</th>
+          <th style="width:140px">Actions</th>
         </tr>
       </thead>
       <tbody>
-        <tr *ngFor="let activite of activites">
+        <tr *ngFor="let a of filteredActivites">
           <td>
-            <div class="activite-name">{{ activite.nomActivite }}</div>
-            <div class="activite-desc">{{ activite.description }}</div>
+            <div class="tbl-name">{{ a.nomActivite }}</div>
+            <div class="tbl-sub">{{ a.description }}</div>
           </td>
-          <td><span class="lieu-badge">🏛️ {{ getLieuNom(activite) }}</span></td>
-          <td><span class="date-badge">📅 {{ activite.dateEvenement | date:'dd/MM/yyyy' }}</span></td>
-          <td><strong>{{ activite.prix }} TND</strong></td>
-          <td>⏱️ {{ activite.duree }} min</td>
-          <td>👥 {{ activite.capaciteMax }} pers.</td>
           <td>
-            <span class="status-badge" [class.disponible]="activite.disponible" [class.indisponible]="!activite.disponible">
-              {{ activite.disponible ? '✅ Disponible' : '❌ Indisponible' }}
+            <span class="tbl-lieu-badge"
+                  [style.background]="getTypeColor(a.lieu?.type || '') + '18'"
+                  [style.color]="getTypeColor(a.lieu?.type || '')"
+                  [style.border]="'1px solid ' + getTypeColor(a.lieu?.type || '') + '35'">
+              {{ getLieuNom(a) }}
             </span>
           </td>
           <td>
-            <div class="action-btns">
-              <button class="btn-edit" (click)="openEdit(activite)">✏️ Modifier</button>
-              <button class="btn-delete" (click)="confirmDelete(activite.id!)">🗑️ Supprimer</button>
+            <span class="tbl-date">{{ a.dateEvenement ? (a.dateEvenement | date:'dd/MM/yy') : '—' }}</span>
+          </td>
+          <td><span class="tbl-prix">{{ a.prix }} TND</span></td>
+          <td><span class="tbl-mono">{{ a.duree }}min</span></td>
+          <td><span class="tbl-mono">{{ a.capaciteMax }} pers.</span></td>
+          <td>
+            <span class="status-pill" [class.pill-green]="a.disponible" [class.pill-red]="!a.disponible">
+              {{ a.disponible ? '✅ Dispo' : '❌ Indispo' }}
+            </span>
+          </td>
+          <td>
+            <div class="tbl-actions">
+              <button class="btn-edit" (click)="openEdit(a)">✏️ Modifier</button>
+              <button class="btn-del" (click)="confirmDelete(a.id!)">🗑️</button>
             </div>
+          </td>
+        </tr>
+        <tr *ngIf="filteredActivites.length === 0">
+          <td colspan="8" class="empty-row">
+            <span>📭</span> Aucune activité trouvée
           </td>
         </tr>
       </tbody>
     </table>
+  </div>
+
+  <!-- MODAL FORM -->
+  <div class="modal-backdrop" *ngIf="showForm" (click)="closeForm()">
+    <div class="modal-panel" (click)="$event.stopPropagation()">
+
+      <div class="modal-top">
+        <div class="modal-title-wrap">
+          <div class="modal-title-icon">{{ isEditing ? '✏️' : '➕' }}</div>
+          <div>
+            <h2>{{ isEditing ? 'Modifier l\'activité' : 'Ajouter une activité' }}</h2>
+            <p>Les champs marqués * sont obligatoires</p>
+          </div>
+        </div>
+        <button class="modal-close" (click)="closeForm()">✕</button>
+      </div>
+
+      <!-- VALIDATION -->
+      <div class="validation-block" *ngIf="validationErrors.length > 0">
+        <div class="validation-title">⚠️ Veuillez corriger les erreurs :</div>
+        <ul class="validation-list">
+          <li *ngFor="let err of validationErrors">{{ err }}</li>
+        </ul>
+      </div>
+
+      <div class="form-body">
+        <div class="form-grid">
+
+          <div class="field field-full" [class.field-error]="validationErrors.length > 0 && !selectedLieuId">
+            <label>Lieu associé <span class="req">*</span></label>
+            <select [(ngModel)]="selectedLieuId">
+              <option [value]="0">— Choisir un lieu —</option>
+              <option *ngFor="let lieu of lieux" [value]="lieu.id">{{ lieu.nom }} — {{ lieu.ville }}</option>
+            </select>
+            <span class="field-hint" *ngIf="validationErrors.length > 0 && !selectedLieuId">Champ obligatoire</span>
+          </div>
+
+          <div class="field field-full" [class.field-error]="validationErrors.length > 0 && !form.nomActivite?.trim()">
+            <label>Nom de l'activité <span class="req">*</span></label>
+            <input type="text" [(ngModel)]="form.nomActivite" placeholder="Ex: Visite guidée" />
+            <span class="field-hint" *ngIf="validationErrors.length > 0 && !form.nomActivite?.trim()">Champ obligatoire</span>
+          </div>
+
+          <div class="field field-full">
+            <label>Date de l'événement</label>
+            <input type="date" [(ngModel)]="form.dateEvenement" />
+          </div>
+
+          <div class="field" [class.field-error]="validationErrors.length > 0 && (form.prix || 0) < 0">
+            <label>Prix (TND) <span class="req">*</span></label>
+            <input type="number" [(ngModel)]="form.prix" min="0" placeholder="25" />
+            <span class="field-hint" *ngIf="validationErrors.length > 0 && (form.prix || 0) < 0">Prix invalide</span>
+          </div>
+
+          <div class="field" [class.field-error]="validationErrors.length > 0 && (form.duree || 0) <= 0">
+            <label>Durée (minutes) <span class="req">*</span></label>
+            <input type="number" [(ngModel)]="form.duree" min="1" placeholder="90" />
+            <span class="field-hint" *ngIf="validationErrors.length > 0 && (form.duree || 0) <= 0">Durée invalide</span>
+          </div>
+
+          <div class="field" [class.field-error]="validationErrors.length > 0 && (form.capaciteMax || 0) <= 0">
+            <label>Capacité max <span class="req">*</span></label>
+            <input type="number" [(ngModel)]="form.capaciteMax" min="1" placeholder="20" />
+            <span class="field-hint" *ngIf="validationErrors.length > 0 && (form.capaciteMax || 0) <= 0">Capacité invalide</span>
+          </div>
+
+          <div class="field">
+            <label>Disponibilité</label>
+            <select [(ngModel)]="form.disponible">
+              <option [ngValue]="true">✅ Disponible</option>
+              <option [ngValue]="false">❌ Indisponible</option>
+            </select>
+          </div>
+
+          <div class="field field-full">
+            <label>Description</label>
+            <textarea [(ngModel)]="form.description" rows="3" placeholder="Description de l'activité..."></textarea>
+          </div>
+
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn-ghost" (click)="closeForm()">Annuler</button>
+        <button class="btn-submit" (click)="submit()">
+          {{ isEditing ? '💾 Enregistrer' : '➕ Ajouter' }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- CONFIRM DELETE -->
+  <div class="modal-backdrop" *ngIf="confirmDeleteId !== null">
+    <div class="confirm-panel">
+      <div class="confirm-icon">🗑️</div>
+      <h3>Confirmer la suppression</h3>
+      <p>Cette action est <strong>irréversible</strong>.</p>
+      <div class="confirm-btns">
+        <button class="btn-ghost" (click)="cancelDelete()">Annuler</button>
+        <button class="btn-danger" (click)="deleteActivite(confirmDeleteId!)">Supprimer</button>
+      </div>
+    </div>
   </div>
 
 </div>
