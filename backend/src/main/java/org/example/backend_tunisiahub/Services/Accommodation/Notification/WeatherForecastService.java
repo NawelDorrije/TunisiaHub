@@ -7,10 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
-import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -19,8 +16,6 @@ import java.util.List;
 @RequiredArgsConstructor
 @Slf4j
 public class WeatherForecastService {
-
-    private static final ZoneId DEFAULT_ZONE = ZoneId.of("Africa/Tunis");
 
     private final RestTemplate restTemplate;
     private final ObjectMapper objectMapper;
@@ -35,8 +30,8 @@ public class WeatherForecastService {
                     + "?latitude=" + latitude
                     + "&longitude=" + longitude
                     + "&daily=temperature_2m_max,temperature_2m_min,weather_code"
-                    + "&timezone=" + URLEncoder.encode(DEFAULT_ZONE.getId(), StandardCharsets.UTF_8)
-                    + "&forecast_days=10";
+                    + "&forecast_days=5"
+                    + "&timezone=auto";
 
             String response = restTemplate.getForObject(url, String.class);
             if (response == null || response.isBlank()) {
@@ -51,32 +46,46 @@ public class WeatherForecastService {
             JsonNode weatherCodes = daily.path("weather_code");
 
             if (!times.isArray() || !maxTemps.isArray() || !minTemps.isArray() || !weatherCodes.isArray()) {
+                log.warn("Open-Meteo response missing expected daily arrays for lat={}, lon={}", latitude, longitude);
                 return Collections.emptyList();
             }
 
             List<ForecastDay> results = new ArrayList<>();
+            List<ForecastDay> allDays = new ArrayList<>();
             for (int i = 0; i < times.size() && i < maxTemps.size() && i < minTemps.size() && i < weatherCodes.size(); i++) {
                 LocalDate date = LocalDate.parse(times.path(i).asText());
-                if (date.isBefore(startDate)) {
-                    continue;
-                }
-
-                results.add(new ForecastDay(
+                ForecastDay day = new ForecastDay(
                         date,
                         minTemps.path(i).asDouble(),
                         maxTemps.path(i).asDouble(),
                         weatherCodes.path(i).asInt(),
                         weatherLabel(weatherCodes.path(i).asInt())
-                ));
+                );
+                allDays.add(day);
+
+                if (date.isBefore(startDate)) {
+                    continue;
+                }
+
+                results.add(day);
 
                 if (results.size() >= daysCount) {
                     break;
                 }
             }
 
-            return results;
+            if (!results.isEmpty()) {
+                return results;
+            }
+
+            // Fallback: if start-date filtering yields no rows, still return first forecast days.
+            // This keeps reminder emails useful even with timezone/date edge cases.
+            if (allDays.isEmpty()) {
+                return Collections.emptyList();
+            }
+            return allDays.stream().limit(daysCount).toList();
         } catch (Exception ex) {
-            log.warn("Weather forecast lookup failed: {}", ex.getMessage());
+            log.warn("Weather forecast lookup failed for lat={}, lon={}: {}", latitude, longitude, ex.getMessage());
             return Collections.emptyList();
         }
     }

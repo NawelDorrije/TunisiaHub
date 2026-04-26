@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.time.ZoneId;
+import java.time.Instant;
 import java.util.Date;
 import java.util.List;
 
@@ -50,10 +51,14 @@ public class AccommodationReminderScheduler {
 
         for (Reservation reservation : pendingReservations) {
             try {
+            LocalDate reservationStartDate = Instant.ofEpochMilli(reservation.getStartDate().getTime())
+                .atZone(zoneId)
+                .toLocalDate();
+
                 List<WeatherForecastService.ForecastDay> forecast = weatherForecastService.getForecastForStay(
                         reservation.getAccommodation().getLatitude(),
                         reservation.getAccommodation().getLongitude(),
-                        targetDateLocal,
+                reservationStartDate,
                         3
                 );
 
