@@ -1,0 +1,49 @@
+<div class="reservations-container">
+    <div class="header">
+        <h1>My Reservations</h1>
+        <p>Manage your upcoming dining experiences</p>
+    </div>
+
+    <div *ngIf="loading" class="loading-state">
+        <div class="spinner"></div>
+        <p>Fetching your bookings...</p>
+    </div>
+
+    <div *ngIf="!loading && reservations.length === 0" class="empty-state">
+        <div class="empty-icon">📅</div>
+        <h2>No reservations yet</h2>
+        <p>Discover great restaurants and book your next table</p>
+        <button class="btn-primary" routerLink="/restaurants">Explore Restaurants</button>
+    </div>
+
+    <div *ngIf="!loading && reservations.length > 0" class="reservations-grid">
+        <div class="reservation-card" *ngFor="let res of reservations" [attr.id]="'res-' + res.id">
+            <div class="card-header">
+                <span class="status-badge" [class]="res.status.toLowerCase()">
+                    {{res.status}}
+                </span>
+                <span class="date">{{formatDateTime(res.dateTime)}}</span>
+            </div>
+            
+            <div class="card-body">
+                <h3>{{res.restaurant?.name || 'Restaurant'}}</h3>
+                <div class="info">
+                    <span class="icon">👥</span> {{res.partySize}} People
+                </div>
+                <div class="info" *ngIf="res.tables && res.tables.length > 0">
+                    <span class="icon">🪑</span> Table(s): 
+                    <span class="table-tag" *ngFor="let t of res.tables">{{t.tableNumber}}</span>
+                </div>
+            </div>
+
+            <div class="card-footer">
+                <a [routerLink]="['/restaurants', res.restaurant?.id]" class="btn-link">View Restaurant</a>
+                <button *ngIf="res.status === 'PENDING'" 
+                        (click)="cancelReservation(res.id)" 
+                        class="btn-cancel">
+                    Cancel Booking
+                </button>
+            </div>
+        </div>
+    </div>
+</div>

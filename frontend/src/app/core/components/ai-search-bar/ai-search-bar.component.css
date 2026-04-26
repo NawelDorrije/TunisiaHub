@@ -1,0 +1,180 @@
+/* Basic Layout & Containers */
+.ai-search-container {
+  max-width: 800px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 20px;
+  font-family: 'Inter', sans-serif; /* Standard modern font fallback */
+  position: relative;
+}
+
+.search-wrapper {
+  position: relative;
+  background: rgba(255, 255, 255, 0.08); /* Transparent backdrop (glass effect) */
+  backdrop-filter: blur(12px); /* Blur for glassmorphism */
+  border: 1px solid rgba(255, 255, 255, 0.2); /* Soft border for definition */
+  border-radius: 40px; /* Large rounded corners */
+  padding: 8px; /* Padding for inner elements */
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+}
+
+/* AI Badge Styles */
+.ai-badge {
+  position: absolute;
+  top: -14px;
+  left: 30px;
+  background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%); /* Indigo to purple gradient */
+  color: white;
+  padding: 4px 12px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  border-radius: 20px;
+  letter-spacing: 0.05em;
+  box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  text-transform: uppercase;
+}
+
+/* Custom Input Group */
+.input-group-custom {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  background: transparent;
+  border-radius: 35px;
+  padding: 5px 10px;
+}
+
+/* Search Input Styling */
+.search-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  font-size: 1.15rem;
+  color: #333;
+  padding: 15px 20px;
+  outline: none;
+  border-radius: 35px;
+  transition: all 0.3s ease;
+}
+
+.search-input::placeholder {
+  color: #a0a0a0;
+  font-size: 1rem;
+}
+
+/* Active State & Loading Styles */
+.search-wrapper:focus-within {
+  box-shadow: 0 15px 60px rgba(99, 102, 241, 0.4); /* Glow effect on focus */
+  border-color: rgba(99, 102, 241, 0.5);
+  transform: translateY(-2px); /* Slight lift */
+}
+
+/* Actions Section */
+.actions {
+  display: flex;
+  gap: 8px;
+  padding-right: 10px;
+}
+
+/* Button & Icon Styles */
+.btn-icon {
+  background: transparent;
+  border: none;
+  color: #666;
+  font-size: 1.25rem;
+  width: 45px;
+  height: 45px;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.mic-btn.active {
+  color: #ef4444; /* Red for active mic */
+  background: rgba(239, 68, 68, 0.1);
+}
+
+/* Pulsing effect for voice input */
+.voice-pulse {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(239, 68, 68, 0.3);
+  border-radius: 50%;
+  animation: pulse 1.5s infinite;
+  z-index: -1;
+}
+
+@keyframes pulse {
+  0% { transform: scale(0.9); opacity: 0.8; }
+  70% { transform: scale(2); opacity: 0; }
+  100% { transform: scale(1); opacity: 0; }
+}
+
+/* Search Button Styles */
+.btn-search {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%); /* Emerald gradient */
+  color: white;
+  border: none;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  box-shadow: 0 4px 10px rgba(16, 185, 129, 0.3);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.btn-search:hover {
+  transform: scale(1.08); /* Scale up on hover */
+  box-shadow: 0 6px 15px rgba(16, 185, 129, 0.4);
+}
+
+.btn-search:active {
+  transform: scale(0.95);
+}
+
+/* Animations & Transitions */
+.fade-in {
+  animation: fadeIn 0.5s ease-out forwards;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Dark mode fallback / Adjustments for input visibility */
+:host {
+  display: block;
+}
+
+/* Media Query Responsive */
+@media (max-width: 600px) {
+  .ai-search-container {
+    padding: 10px;
+  }
+  .search-input {
+    font-size: 1rem;
+    padding: 12px 15px;
+  }
+  .ai-badge {
+    font-size: 0.65rem;
+    left: 20px;
+  }
+}

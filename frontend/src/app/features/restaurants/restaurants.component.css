@@ -1,48 +1,213 @@
-/* Add custom styles for restaurants component here */
+.container {
+  max-width: 1200px;
+}
 
-.btn-outline-info:hover {
-  background-color: #0dcaf0;
+.page-header {
+  padding: 40px;
+  background: white;
+  border-radius: 24px;
+  margin-bottom: 40px;
+  box-shadow: var(--shadow- premium);
+  border: 1px solid rgba(0,0,0,0.03);
+}
+
+.title-accent {
+  color: var(--primary);
+  display: block;
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 8px;
+}
+
+/* AI Mode Banner */
+.bg-light-ai {
+  background: linear-gradient(135deg, #f5f3ff 0%, #ede9fe 100%);
+  border: 1px solid #ddd6fe;
+}
+
+.badge.bg-purple-gradient {
+  background: linear-gradient(90deg, #7c3aed, #db2777);
+  border: none;
+  padding: 6px 12px;
+}
+
+/* Restaurant Cards */
+.restaurant-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 30px;
+}
+
+.restaurant-card {
+  height: 320px;
+  border-radius: 24px;
+  overflow: hidden;
+  position: relative;
+  transition: var(--transition);
+  border: none;
+  cursor: pointer;
+}
+
+.restaurant-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+}
+
+.card-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(to bottom, rgba(0,0,0,0) 20%, rgba(0,0,0,0.4) 50%, rgba(0,0,0,0.9) 100%);
+  z-index: 1;
+}
+
+.card-content {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  padding: 24px;
+  z-index: 2;
+  color: white;
+}
+
+.card-title {
+  font-family: 'Outfit', sans-serif;
+  font-size: 1.3rem;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.address-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.85rem;
+  opacity: 0.9;
+  margin-bottom: 12px;
+}
+
+.cuisine-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255,255,255,0.15);
+  backdrop-filter: blur(8px);
+  padding: 6px 14px;
+  border-radius: 100px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  border: 1px solid rgba(255,255,255,0.2);
+}
+
+.card-footer-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.btn-card-action {
+  flex: 1;
+  padding: 8px;
+  border-radius: 10px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  border: 1px solid rgba(255,255,255,0.3);
+  background: rgba(255,255,255,0.1);
+  color: white;
+  transition: var(--transition);
+}
+
+.btn-card-action:hover {
+  background: white;
+  color: var(--text-main);
+  border-color: white;
+}
+
+.btn-reserve {
+  background: var(--primary) !important;
+  border-color: var(--primary) !important;
   color: white !important;
-  border-color: #0dcaf0;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(13, 202, 240, 0.4);
 }
 
-.btn-outline-warning:hover {
-  background-color: #ff9800;
-  color: white !important;
-  border-color: #ff9800;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(255, 152, 0, 0.4);
+.btn-reserve:hover {
+  background: var(--primary-dark) !important;
+  transform: scale(1.02);
 }
 
-.btn {
-  transition: all 0.3s ease;
+/* Admin Edit Button */
+.edit-btn {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  border: none;
+  background: white;
+  color: var(--text-main);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+  transition: var(--transition);
 }
 
-.card {
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+.edit-btn:hover {
+  background: var(--primary);
+  color: white;
+  transform: scale(1.1);
 }
 
-.card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1) !important;
+/* Modal Enhancements */
+.modal-xl { max-width: 1100px; }
+
+.modal-content {
+  border-radius: 28px;
+  border: none;
 }
 
-/* Modal styling */
-.modal {
-  z-index: 1050;
+.modal-header {
+  padding: 30px 40px;
+  background: #f8fafc;
+  border-bottom: 1px solid #f1f5f9;
 }
 
-.modal.show {
-  display: block !important;
+.modal-body {
+  padding: 40px;
 }
 
-.modal-backdrop {
-  z-index: 1040;
+.modal-footer {
+  padding: 24px 40px;
+  background: #f8fafc;
 }
 
-.modal-backdrop.show {
-  display: block !important;
-  opacity: 0.5;
+.form-label {
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: #475569;
+  margin-bottom: 8px;
+}
+
+.form-control, .form-select {
+  border-radius: 14px;
+  padding: 12px 18px;
+  border: 2px solid #f1f5f9;
+  transition: var(--transition);
+  background: #f8fafc;
+}
+
+.form-control:focus {
+  background: white;
+  border-color: var(--primary);
+  box-shadow: 0 10px 20px -10px rgba(212, 165, 116, 0.3);
+}
+
+/* Map placeholder */
+#add-restaurant-map {
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
 }

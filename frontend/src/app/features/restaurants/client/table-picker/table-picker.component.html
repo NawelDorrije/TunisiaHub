@@ -1,0 +1,50 @@
+<div class="table-picker-container" [class.loading]="loading">
+  <div class="picker-header">
+    <div class="legend">
+      <div class="legend-item">
+        <span class="dot available"></span> Available
+      </div>
+      <div class="legend-item">
+        <span class="dot reserved"></span> Reserved
+      </div>
+      <div class="legend-item">
+        <span class="dot too-small"></span> Too Small
+      </div>
+      <div class="legend-item">
+        <span class="dot selected"></span> Selected
+      </div>
+    </div>
+    
+    <div class="selection-info" *ngIf="selectedIds.length > 0">
+      <div class="stat">
+        <span class="label">Tables Selected:</span>
+        <span class="value">{{ selectedIds.length }}</span>
+      </div>
+      <div class="stat">
+        <span class="label">Total Capacity:</span>
+        <span class="value" [class.insufficient]="totalSelectedCapacity < partySize">
+          {{ totalSelectedCapacity }} / {{ partySize }}
+        </span>
+      </div>
+      <p class="hint" *ngIf="totalSelectedCapacity < partySize">Select more tables to accommodate {{ partySize }} people.</p>
+    </div>
+  </div>
+
+  <div class="canvas-wrapper">
+    <app-floor-plan-canvas
+      *ngIf="!loading"
+      [mode]="'select'"
+      [tables]="tables"
+      [partySize]="partySize"
+      [selectedTableIds]="selectedIds"
+      [width]="700"
+      [height]="500"
+      (onTableSelect)="handleTableSelect($event)"
+    ></app-floor-plan-canvas>
+    
+    <div class="loading-overlay" *ngIf="loading">
+      <div class="spinner"></div>
+      <p>Updating availability...</p>
+    </div>
+  </div>
+</div>

@@ -92,8 +92,17 @@ export class AdminRestaurantReservationsComponent implements OnInit {
     this.availableTables = [];
     this.showAssignModal = true;
     this.loadingTables = true;
-    this.api.getTablesByRestaurant(rid, 'AVAILABLE').subscribe({
+    
+    // Convert array-style dateTime if needed
+    let dtStr = r.dateTime;
+    if (Array.isArray(dtStr)) {
+        const [y, m, d, h, min] = dtStr;
+        dtStr = `${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}T${String(h).padStart(2, '0')}:${String(min).padStart(2, '0')}:00`;
+    }
+
+    this.api.getTablesByRestaurant(rid, undefined, dtStr, r.partySize).subscribe({
       next: (tables) => {
+        // Map isAvailable to local logic if needed, but the canvas handles it
         this.availableTables = Array.isArray(tables) ? tables : [];
         this.loadingTables = false;
       },
@@ -153,10 +162,11 @@ export class AdminRestaurantReservationsComponent implements OnInit {
     }
     this.submittingConfirm = true;
     this.api.confirmReservation(this.assignReservation.id, this.selectedTableIds).subscribe({
-      next: () => {
+      next: (updatedRes) => {
+        // Update local list without full reload if desired, or reload for freshness
         this.closeAssignModal();
         this.loadReservations();
-        alert('Reservation confirmed and tables assigned.');
+        alert('Reservation accepted and confirmation email with PDF sent');
       },
       error: (err: any) => {
         console.error(err);
@@ -164,7 +174,7 @@ export class AdminRestaurantReservationsComponent implements OnInit {
         const msg =
           err?.error?.message ??
           (typeof err?.error === 'string' ? err.error : null) ??
-          'Could not confirm. Tables must be AVAILABLE and belong to this restaurant.';
+          'Could not accept reservation. Please ensure tables are available.';
         alert(msg);
       },
     });

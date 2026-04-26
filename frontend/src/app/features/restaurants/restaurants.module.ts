@@ -9,7 +9,11 @@ import { AdminRestaurantDashboardComponent } from './admin-restaurant-dashboard/
 import { AdminRestaurantReservationsComponent } from './admin-restaurant-reservations/admin-restaurant-reservations.component';
 import { RestaurantListComponent } from './restaurant-list/restaurant-list.component';
 import { RestaurantsComponent } from './restaurants.component';
-
+import { AiSearchBarComponent } from '../../core/components/ai-search-bar/ai-search-bar.component';
+import { FloorPlanCanvasComponent } from './shared/floor-plan-canvas/floor-plan-canvas.component';
+import { FloorPlanDesignerComponent } from './admin/floor-plan-designer/floor-plan-designer.component';
+import { TablePickerComponent } from './client/table-picker/table-picker.component';
+import { MyReservationsComponent } from './client/my-reservations/my-reservations.component';
 
 @NgModule({
   declarations: [
@@ -18,12 +22,17 @@ import { RestaurantsComponent } from './restaurants.component';
     AdminRestaurantReservationsComponent,
     AdminRestaurantDashboardComponent,
     AdminManageRestaurantsComponent,
+    FloorPlanCanvasComponent,
+    FloorPlanDesignerComponent,
+    TablePickerComponent,
+    MyReservationsComponent,
   ],
   imports: [
     CommonModule,
     RouterModule,
     RestaurantsRoutingModule,
-    FormsModule
+    FormsModule,
+    AiSearchBarComponent
   ]
 })
 export class RestaurantsModule { }

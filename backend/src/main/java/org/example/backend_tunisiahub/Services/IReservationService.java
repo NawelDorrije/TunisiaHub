@@ -3,6 +3,7 @@ package org.example.backend_tunisiahub.Services;
 import org.example.backend_tunisiahub.Entities.Reservation;
 import org.example.backend_tunisiahub.Entities.ReservationStatus;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 public interface IReservationService {
@@ -19,9 +20,17 @@ public interface IReservationService {
 
     List<Reservation> retrieveRestaurantReservations(Long restaurantId, ReservationStatus status);
 
+    List<Reservation> retrieveReservationsByUser(Long userId);
+
+    List<Reservation> retrieveMyReservations();
+
     Reservation confirmRestaurantReservation(Long reservationId, List<Long> tableIds);
+
+    boolean isTableAvailableForReservation(Long restaurantId, Long tableId, LocalDateTime dateTime, Long excludedReservationId);
 
     Reservation cancelReservation(Long reservationId);
 
     Reservation completeReservation(Long reservationId);
+
+    Reservation checkInReservation(String token);
 }

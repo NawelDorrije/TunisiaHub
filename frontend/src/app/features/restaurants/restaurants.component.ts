@@ -1,15 +1,23 @@
-import { Component, OnInit, Inject, PLATFORM_ID } from '@angular/core';
+import { Component, OnInit, Inject, PLATFORM_ID, inject } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { ApiService } from '../../services/api.service';
 import { Router } from '@angular/router';
 import { AuthService } from '../auth/services/auth.service';
+import { AiSearchService } from '../../services/ai-search.service';
+import { AiEnhancedRestaurant } from '../../models/ai-search/ai-enhanced-restaurant.model';
+
 @Component({
   selector: 'app-restaurants',
   templateUrl: './restaurants.component.html',
   styleUrls: ['./restaurants.component.css']
 })
 export class RestaurantsComponent implements OnInit {
+  private aiSearchService = inject(AiSearchService);
+
   restaurants: any[] = [];
+  aiResults: AiEnhancedRestaurant[] = []; // Store AI-enhanced versions
+  isAiMode: boolean = false; // Flag to check if we are showing AI results
+  
   selectedRestaurant: any = null;
   showDetailsModal: boolean = false;
   showAddForm: boolean = false;
@@ -73,6 +81,7 @@ export class RestaurantsComponent implements OnInit {
   reservationPartySize: number | null = 2;
   reservationNotes = '';
   isSubmittingReservation = false;
+  selectedTableIds: number[] = [];
 
   ngOnInit(): void {
     this.api.getRestaurants().subscribe({
@@ -133,6 +142,10 @@ export class RestaurantsComponent implements OnInit {
   }
 
   getFilteredRestaurants(): any[] {
+    if (this.isAiMode) {
+      return this.aiResults;
+    }
+
     let filtered = this.restaurants;
 
     if (this.searchAddress.trim()) {
@@ -150,6 +163,44 @@ export class RestaurantsComponent implements OnInit {
     }
 
     return filtered;
+  }
+
+  onAiSearch(query: string): void {
+    if (!query || !query.trim()) {
+      this.resetSearch();
+      return;
+    }
+
+    this.aiSearchService.search(query).subscribe({
+      next: (response) => {
+        if (response && response.results) {
+          this.isAiMode = true;
+          // Merge results with local restaurant data
+          this.aiResults = response.results.map((item: any) => {
+            const original = this.restaurants.find((r) => r.id === item.id);
+            if (original) {
+              return {
+                ...original,
+                matchScore: item.matchScore,
+                matchReason: item.matchReason,
+                suggestedTime: item.suggestedTime
+              };
+            }
+            return null;
+          }).filter(Boolean) as AiEnhancedRestaurant[];
+        }
+      },
+      error: (err) => {
+        console.error('Error during AI search in Restaurants component:', err);
+      }
+    });
+  }
+
+  resetSearch(): void {
+    this.isAiMode = false;
+    this.aiResults = [];
+    this.searchAddress = '';
+    this.selectedCuisine = '';
   }
 
   onFileSelected(event: any, target: 'new' | 'edit'): void {
@@ -424,7 +475,12 @@ export class RestaurantsComponent implements OnInit {
     this.reservationDateTime = '';
     this.reservationPartySize = 2;
     this.reservationNotes = '';
+    this.selectedTableIds = [];
     this.showReservationForm = true;
+  }
+
+  onTableSelectionChange(ids: number[]): void {
+    this.selectedTableIds = ids;
   }
 
   closeReservationForm(): void {
@@ -453,6 +509,8 @@ export class RestaurantsComponent implements OnInit {
       restaurant: { id: this.reservationRestaurant.id },
       dateTime,
       partySize: party,
+      tables: this.selectedTableIds.map(id => ({ id })),
+      status: 'PENDING'
     };
     const notes = this.reservationNotes?.trim();
     if (notes) payload['notes'] = notes;
@@ -466,7 +524,7 @@ export class RestaurantsComponent implements OnInit {
       error: (err) => {
         console.error('Reservation error:', err);
         this.isSubmittingReservation = false;
-        alert('Could not create reservation. Sign in as a client and try again.');
+        alert('Could not create reservation. Please check your selection and try again.');
       },
     });
   }

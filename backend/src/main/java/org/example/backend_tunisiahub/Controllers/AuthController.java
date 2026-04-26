@@ -36,7 +36,12 @@ public class AuthController {
         userRepository.save(user);
 
         String token = jwtUtil.generateToken(user.getEmail(), user.getRole().name());
-        return ResponseEntity.ok(new AuthResponse(token, user.getRole().name(), user.getEmail(), user.getNom(), user.getPrenom()));
+        return ResponseEntity.ok(new AuthResponse(token, user.getRole().name(), user.getEmail(), user.getNom(), user.getPrenom(), user.getId()));
+    }
+
+    @PostMapping("/signup")
+    public ResponseEntity<?> signup(@RequestBody RegisterRequest request) {
+        return register(request);
     }
 
     @PostMapping("/login")
@@ -46,10 +51,27 @@ public class AuthController {
         if (user == null)
             return ResponseEntity.status(404).body("User not found");
 
-        if (!passwordEncoder.matches(request.getPassword(), user.getMotDePasse()))
+        String storedPassword = user.getMotDePasse();
+        boolean validPassword = false;
+        if (storedPassword != null) {
+            try {
+                validPassword = passwordEncoder.matches(request.getPassword(), storedPassword);
+            } catch (IllegalArgumentException ignored) {
+                validPassword = false;
+            }
+        }
+
+        // Backward compatibility: allow legacy plain-text passwords, then migrate to BCrypt.
+        if (!validPassword && storedPassword != null && storedPassword.equals(request.getPassword())) {
+            user.setMotDePasse(passwordEncoder.encode(request.getPassword()));
+            userRepository.save(user);
+            validPassword = true;
+        }
+
+        if (!validPassword)
             return ResponseEntity.status(401).body("Invalid password");
 
         String token = jwtUtil.generateToken(user.getEmail(), user.getRole().name());
-        return ResponseEntity.ok(new AuthResponse(token, user.getRole().name(), user.getEmail(), user.getNom(), user.getPrenom()));
+        return ResponseEntity.ok(new AuthResponse(token, user.getRole().name(), user.getEmail(), user.getNom(), user.getPrenom(), user.getId()));
     }
 }

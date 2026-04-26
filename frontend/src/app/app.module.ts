@@ -17,6 +17,7 @@ import {
   withInterceptorsFromDi,
 } from '@angular/common/http';
 import { AuthInterceptor } from './features/auth/auth.interceptor';
+import { AiSearchBarComponent } from './core/components/ai-search-bar/ai-search-bar.component';
 
 @NgModule({
   declarations: [
@@ -26,7 +27,7 @@ import { AuthInterceptor } from './features/auth/auth.interceptor';
     NotFoundComponent,
     HomeComponent,
   ],
-  imports: [BrowserModule, AppRoutingModule],
+  imports: [BrowserModule, AppRoutingModule, AiSearchBarComponent],
   providers: [
     provideClientHydration(),
     provideHttpClient(withFetch(), withInterceptorsFromDi()),

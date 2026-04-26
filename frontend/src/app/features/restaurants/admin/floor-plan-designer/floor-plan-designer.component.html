@@ -1,0 +1,114 @@
+<div class="designer-layout" *ngIf="!loading; else loadingTemplate">
+  <!-- Sidebar Toolbox -->
+  <div class="toolbox">
+    <div class="header">
+      <button class="btn-back" routerLink="/restaurants/manage">
+        <i class="bi bi-chevron-left"></i>
+      </button>
+      <div>
+        <p class="subtitle">Restaurant</p>
+        <h1 class="restaurant-name">{{ restaurant?.name }}</h1>
+      </div>
+    </div>
+
+    <div class="toolbox-content">
+      <div class="section">
+        <h3 class="section-title">Canvas Tools</h3>
+        <div class="tool-grid">
+          <button class="btn-tool" (click)="addTable('rectangle')" title="Add Rectangular Table">
+            <i class="bi bi-square-fill"></i>
+            <span>Rect</span>
+          </button>
+          <button class="btn-tool" (click)="addTable('circle')" title="Add Round Table">
+            <i class="bi bi-circle-fill"></i>
+            <span>Round</span>
+          </button>
+          <button class="btn-tool" (click)="addTable('line')" title="Add Wall/Divider">
+            <i class="bi bi-dash-lg"></i>
+            <span>Wall</span>
+          </button>
+          <button class="btn-tool" (click)="duplicateSelected()" [disabled]="!selectedTable && selectedTableIds.length === 0" title="Duplicate Selection">
+            <i class="bi bi-copy"></i>
+            <span>Clone</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Property Panel -->
+      <div class="section property-panel" [class.active]="selectedTable">
+        <h3 class="section-title">Properties</h3>
+        <div class="property-empty" *ngIf="!selectedTable">
+          <i class="bi bi-cursor"></i>
+          <p>Select an item to edit its properties</p>
+        </div>
+
+        <div class="property-form" *ngIf="selectedTable">
+          <div class="form-row" *ngIf="selectedTable.shapeType !== 'line'">
+            <div class="form-group flex-1">
+              <label>Number</label>
+              <input type="number" [(ngModel)]="selectedTable.tableNumber" (ngModelChange)="refreshTables()">
+            </div>
+            <div class="form-group flex-1">
+              <label>Capacity</label>
+              <input type="number" [(ngModel)]="selectedTable.capacity" (ngModelChange)="refreshTables()">
+            </div>
+          </div>
+          
+          <div class="form-group" *ngIf="selectedTable.shapeType === 'line'">
+            <label>Wall Thickness</label>
+            <input type="range" [(ngModel)]="selectedTable.height" min="2" max="20" (ngModelChange)="refreshTables()">
+          </div>
+
+          <div class="form-group">
+            <label>label</label>
+            <input type="text" [(ngModel)]="selectedTable.label" placeholder="e.g. VIP Booth" (ngModelChange)="refreshTables()">
+          </div>
+
+          <div class="form-group">
+            <label>Color</label>
+            <div class="color-picker-wrapper">
+              <input type="color" [(ngModel)]="selectedTable.color" (ngModelChange)="refreshTables()">
+              <span class="color-value">{{ selectedTable.color }}</span>
+            </div>
+          </div>
+
+          <button class="btn-delete" (click)="deleteSelected()">
+            <i class="bi bi-trash3"></i> Delete Selection
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="actions">
+      <button class="btn-save" (click)="save()" [disabled]="saving">
+        <span *ngIf="!saving"><i class="bi bi-cloud-arrow-up-fill"></i> Finish & Save</span>
+        <span *ngIf="saving" class="spinner-border spinner-border-sm"></span>
+        <span *ngIf="saving">Saving...</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Main Canvas Area -->
+  <div class="canvas-area">
+    <div class="canvas-header">
+      <h2>Floor Plan Editor</h2>
+      <p>Drag, resize, and rotate tables to match your restaurant layout.</p>
+    </div>
+    <app-floor-plan-canvas
+      [mode]="'edit'"
+      [tables]="tables"
+      [width]="900"
+      [height]="650"
+      (onTableSelect)="onTableSelect($event)"
+      (onTableModified)="onTableModified($event)"
+      (onDeleteRequest)="deleteSelected()"
+    ></app-floor-plan-canvas>
+  </div>
+</div>
+
+<ng-template #loadingTemplate>
+  <div class="loading-state">
+    <div class="spinner"></div>
+    <p>Loading floor plan...</p>
+  </div>
+</ng-template>

@@ -9,7 +9,7 @@ import java.util.List;
 
 @Repository
 public interface RestaurantTableRepository extends JpaRepository<RestaurantTable, Long> {
-    List<RestaurantTable> findByRestaurant_Id(Long restaurantId);
+    List<RestaurantTable> findByRestaurant_IdAndActiveTrue(Long restaurantId);
 
-    List<RestaurantTable> findByRestaurant_IdAndStatus(Long restaurantId, TableStatus status);
+    List<RestaurantTable> findByRestaurant_IdAndStatusAndActiveTrue(Long restaurantId, TableStatus status);
 }

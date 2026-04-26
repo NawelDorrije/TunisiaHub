@@ -2,10 +2,13 @@ package org.example.backend_tunisiahub.Controllers.Restaurant;
 
 import lombok.RequiredArgsConstructor;
 import org.example.backend_tunisiahub.Entities.Restaurant.Cuisine;
+import org.example.backend_tunisiahub.Entities.Restaurant.FloorPlanDto;
 import org.example.backend_tunisiahub.Entities.Restaurant.Restaurant;
 import org.example.backend_tunisiahub.Services.Restaurant.IRestaurantService;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @RestController
@@ -45,6 +48,13 @@ public class RestaurantController {
     @GetMapping("/get/{id}")
     public Restaurant getRestaurantById(@PathVariable Long id) {
         return restaurantService.retrieveRestaurant(id);
+    }
+
+    @GetMapping("/{id}/floor-plan")
+    public FloorPlanDto getFloorPlanWithAvailability(@PathVariable Long id,
+                                                     @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime dateTime,
+                                                     @RequestParam int partySize) {
+        return restaurantService.getFloorPlanWithAvailability(id, dateTime, partySize);
     }
 
     @PostMapping("/add")

@@ -8,12 +8,12 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.FieldDefaults;
+import org.example.backend_tunisiahub.Entities.Camping.Spot;
 import org.example.backend_tunisiahub.Entities.Restaurant.Restaurant;
 import org.example.backend_tunisiahub.Entities.Restaurant.RestaurantTable;
-import org.example.backend_tunisiahub.carpooling.entity.Trip;
 import org.example.backend_tunisiahub.Entities.User.User;
+import org.example.backend_tunisiahub.carpooling.entity.Trip;
 
-import org.example.backend_tunisiahub.Entities.Camping.Spot;
 import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.List;
@@ -43,9 +43,12 @@ public class Reservation {
     @Enumerated(EnumType.STRING)
     ReservationType type;
 
-
-
     LocalDateTime dateTime;
+
+    @Column(unique = true, length = 120)
+    String checkInToken;
+
+    LocalDateTime checkedInAt;
 
     Integer partySize;
 
@@ -86,4 +89,11 @@ public class Reservation {
     @JsonIgnore
     Review review;
 
+    @Column(nullable = false)
+    boolean tablePreSelected = false;
+
+    @ManyToOne
+    @JoinColumn(name = "last_table_assigned_by")
+    @JsonIgnore
+    User lastTableAssignedBy;
 }

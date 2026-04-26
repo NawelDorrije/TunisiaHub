@@ -23,4 +23,10 @@ export class HomeComponent {
     { title: 'Tours', description: 'Book guided tours and experiences.', icon: 'bi bi-compass', link: '/tours' },
     { title: 'Hotels', description: 'Discover hotels and stays for your trip.', icon: 'bi bi-building', link: '/hotels' },
   ];
+
+  onAiSearch(query: string): void {
+    console.log('AI Search Query received in Home:', query);
+    // You can add logic here to filter services or navigate to a search results page
+    // For now, we just log it as the component is independent.
+  }
 }

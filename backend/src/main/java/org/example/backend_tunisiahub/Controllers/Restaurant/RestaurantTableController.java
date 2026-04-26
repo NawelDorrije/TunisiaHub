@@ -28,8 +28,10 @@ public class RestaurantTableController {
 
     @GetMapping("/by-restaurant/{restaurantId}")
     public List<RestaurantTable> getTablesByRestaurant(@PathVariable Long restaurantId,
-                                                       @RequestParam(required = false) TableStatus status) {
-        return restaurantTableService.retrieveTablesByRestaurant(restaurantId, status);
+                                                       @RequestParam(required = false) TableStatus status,
+                                                       @RequestParam(required = false) @org.springframework.format.annotation.DateTimeFormat(iso = org.springframework.format.annotation.DateTimeFormat.ISO.DATE_TIME) java.time.LocalDateTime dateTime,
+                                                       @RequestParam(required = false) Integer partySize) {
+        return restaurantTableService.retrieveTablesByRestaurant(restaurantId, status, dateTime, partySize);
     }
 
     @GetMapping("/statuses")
@@ -39,20 +41,12 @@ public class RestaurantTableController {
 
     @PostMapping("/add")
     public RestaurantTable createTable(@RequestBody RestaurantTableWriteRequest request) {
-        RestaurantTable table = toEntity(request);
-        return restaurantTableService.addTable(table);
+        return restaurantTableService.addTable(toEntity(request));
     }
 
     @PutMapping("/update")
     public RestaurantTable updateTable(@RequestBody RestaurantTableUpdateRequest request) {
-        RestaurantTable table = toEntity(
-                request.tableNumber(),
-                request.capacity(),
-                request.location(),
-                request.status(),
-                request.restaurantId()
-        );
-        return restaurantTableService.modifyTable(table);
+        return restaurantTableService.modifyTable(toEntity(request));
     }
 
     @DeleteMapping("/delete/{id}")
@@ -60,26 +54,80 @@ public class RestaurantTableController {
         restaurantTableService.deleteTable(id);
     }
 
+    @PutMapping("/bulk/{restaurantId}")
+    public void saveFloorPlan(@PathVariable Long restaurantId, @RequestBody List<RestaurantTableUpdateRequest> requests) {
+        List<RestaurantTable> tables = requests.stream()
+                .map(this::toEntity)
+                .toList();
+        restaurantTableService.saveFloorPlan(restaurantId, tables);
+    }
+
     private RestaurantTable toEntity(RestaurantTableWriteRequest request) {
         return toEntity(
+                null,
                 request.tableNumber(),
                 request.capacity(),
                 request.location(),
                 request.status(),
-                request.restaurantId()
+                request.restaurantId(),
+                request.x(),
+                request.y(),
+                request.width(),
+                request.height(),
+                request.rotation(),
+                request.shapeType(),
+                request.label(),
+                request.color()
         );
     }
 
-    private RestaurantTable toEntity(Integer tableNumber,
+    private RestaurantTable toEntity(RestaurantTableUpdateRequest request) {
+        return toEntity(
+                request.id(),
+                request.tableNumber(),
+                request.capacity(),
+                request.location(),
+                request.status(),
+                request.restaurantId(),
+                request.x(),
+                request.y(),
+                request.width(),
+                request.height(),
+                request.rotation(),
+                request.shapeType(),
+                request.label(),
+                request.color()
+        );
+    }
+
+    private RestaurantTable toEntity(Long id,
+                                     Integer tableNumber,
                                      Integer capacity,
                                      String location,
                                      TableStatus status,
-                                     Long restaurantId) {
+                                     Long restaurantId,
+                                     Double x,
+                                     Double y,
+                                     Double width,
+                                     Double height,
+                                     Double rotation,
+                                     String shapeType,
+                                     String label,
+                                     String color) {
         RestaurantTable table = new RestaurantTable();
+        table.setId(id);
         table.setTableNumber(tableNumber);
         table.setCapacity(capacity);
         table.setLocation(location);
         table.setStatus(status);
+        table.setX(x);
+        table.setY(y);
+        table.setWidth(width);
+        table.setHeight(height);
+        table.setRotation(rotation);
+        table.setShapeType(shapeType);
+        table.setLabel(label);
+        table.setColor(color);
         if (restaurantId != null) {
             Restaurant restaurant = new Restaurant();
             restaurant.setId(restaurantId);
@@ -93,7 +141,15 @@ public class RestaurantTableController {
             Integer capacity,
             String location,
             TableStatus status,
-            Long restaurantId
+            Long restaurantId,
+            Double x,
+            Double y,
+            Double width,
+            Double height,
+            Double rotation,
+            String shapeType,
+            String label,
+            String color
     ) {
     }
 
@@ -103,6 +159,15 @@ public class RestaurantTableController {
             Integer capacity,
             String location,
             TableStatus status,
-            Long restaurantId
-    ) {}
+            Long restaurantId,
+            Double x,
+            Double y,
+            Double width,
+            Double height,
+            Double rotation,
+            String shapeType,
+            String label,
+            String color
+    ) {
+    }
 }

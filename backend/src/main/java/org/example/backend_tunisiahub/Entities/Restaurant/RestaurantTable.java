@@ -48,8 +48,20 @@ public class RestaurantTable {
     @JoinColumn(name = "restaurant_id", nullable = false)
     @JsonIgnoreProperties({"menus", "tables", "reservations"})
     Restaurant restaurant;
-
+    private Double x;
+    private Double y;
+    private Double width;
+    private Double height;
+    private Double rotation;
+    private String shapeType;     // "rectangle", "circle", etc.
+    private String label;
+    private String color;
     @ManyToMany(mappedBy = "tables")
     @JsonIgnore
     List<Reservation> reservations;
+
+    boolean active = true;
+    
+    @jakarta.persistence.Transient
+    private boolean isAvailable = true;
 }

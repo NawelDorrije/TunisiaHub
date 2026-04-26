@@ -41,7 +41,14 @@ public class Restaurant {
     @OneToMany(mappedBy = "restaurant", cascade = CascadeType.ALL)
     @JsonIgnore
     List<RestaurantTable> tables;
-
+    private Double x;                  // position on canvas
+    private Double y;
+    private Double width;              // size of the shape
+    private Double height;
+    private Double rotation;           // degrees, for rotated tables
+    private String shapeType;
+    private String label;              // displayed on the table (optional)
+    private String color;
     @OneToMany(mappedBy = "restaurant")
     @JsonIgnore
     List<org.example.backend_tunisiahub.Entities.Reservation> reservations;

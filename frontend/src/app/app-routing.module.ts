@@ -3,9 +3,11 @@ import { RouterModule, Routes } from '@angular/router';
 import { NotFoundComponent } from './features/not-found/not-found.component';
 import { HomeComponent } from './core/home/home.component';
 import { AuthGuard } from './features/auth/auth.guard';
+import { CheckInComponent } from './features/restaurants/admin/check-in/check-in.component';
 
 const routes: Routes = [
   { path: 'home', component: HomeComponent },
+  { path: 'checkin', component: CheckInComponent },
   { path: '', redirectTo: 'home', pathMatch: 'full' },
   {
     path: 'campings',

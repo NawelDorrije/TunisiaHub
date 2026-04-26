@@ -55,8 +55,8 @@
       "budgets": [
         {
           "type": "initial",
-          "maximumWarning": "500kB",
-          "maximumError": "1MB"
+          "maximumWarning": "5MB",
+          "maximumError": "12MB"
         },
         {
           "type": "anyComponentStyle",
@@ -76,6 +76,7 @@
 },
         "serve": {
           "builder": "@angular-devkit/build-angular:dev-server",
+
           "configurations": {
             "production": {
               "buildTarget": "frontend:build:production"

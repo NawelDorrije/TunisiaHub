@@ -1,65 +1,74 @@
-<div class="container py-4">
-  <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
-    <div>
-      <a routerLink="/restaurants" class="text-decoration-none text-muted small d-inline-flex align-items-center gap-1 mb-1">
-        <i class="bi bi-arrow-left"></i> Back to restaurants
-      </a>
-      <h1 class="h3 mb-0" style="color: #2c3e50;">Restaurant reservations</h1>
+<div class="container py-5 fade-in">
+  <div class="reservations-header mb-5">
+    <div class="d-flex flex-wrap align-items-center justify-content-between gap-4">
+      <div>
+        <a routerLink="/restaurants/dashboard" class="back-link text-decoration-none d-inline-flex align-items-center gap-2 mb-2">
+          <i class="bi bi-arrow-left"></i> Back to Dashboard
+        </a>
+        <h1 class="h2 mb-1">Incoming Reservations</h1>
+        <p class="mb-0 text-muted">Manage guest bookings and table assignments.</p>
+      </div>
+      <button type="button" class="btn-premium btn-premium-outline" (click)="loadReservations()" [disabled]="loading">
+        <i class="bi bi-arrow-clockwise" [class.spinner-border-sm]="loading"></i> Refresh List
+      </button>
     </div>
-    <button type="button" class="btn btn-outline-secondary btn-sm" (click)="loadReservations()" [disabled]="loading">
-      <i class="bi bi-arrow-clockwise"></i> Refresh
-    </button>
   </div>
 
-  <div *ngIf="loading" class="text-center py-5 text-muted">Loading…</div>
-  <div *ngIf="!loading && loadError" class="alert alert-danger">{{ loadError }}</div>
+  <div *ngIf="loading" class="text-center py-5">
+    <div class="spinner-premium mx-auto"></div>
+    <p class="mt-3 text-muted">Fetching latest bookings...</p>
+  </div>
+  
+  <div *ngIf="!loading && loadError" class="alert alert-danger rounded-4 shadow-sm p-4">{{ loadError }}</div>
 
-  <div *ngIf="!loading && !loadError" class="table-responsive shadow-sm rounded border bg-white">
-    <table class="table table-hover table-striped mb-0 align-middle">
-      <thead class="table-light" style="border-bottom: 2px solid #d4a574;">
+  <div *ngIf="!loading && !loadError" class="table-wrap table-responsive">
+    <table class="table table-hover mb-0 align-middle">
+      <thead>
         <tr>
-          <th>ID</th>
+          <th>Ref</th>
           <th>Restaurant</th>
-          <th>Guest</th>
-          <th>Date &amp; time</th>
-          <th>Party</th>
+          <th>Guest Detail</th>
+          <th>Schedule</th>
+          <th>Size</th>
           <th>Status</th>
-          <th>Tables</th>
-          <th>Notes</th>
+          <th>Assignment</th>
           <th class="text-end">Actions</th>
         </tr>
       </thead>
       <tbody>
         <tr *ngFor="let r of restaurantReservations">
-          <td>{{ r.id }}</td>
-          <td>{{ restaurantName(r) }}</td>
-          <td>{{ userLabel(r) }}</td>
-          <td>{{ formatDateTime(r.dateTime) }}</td>
-          <td>{{ r.partySize ?? '—' }}</td>
+          <td><span class="id-pill">#{{ r.id }}</span></td>
+          <td class="fw-bold">{{ restaurantName(r) }}</td>
           <td>
-            <span class="badge" [ngClass]="{
-              'bg-warning text-dark': r.status === 'PENDING',
-              'bg-success': r.status === 'CONFIRMED',
-              'bg-secondary': r.status === 'CANCELLED',
-              'bg-info text-dark': r.status === 'COMPLETED'
-            }">{{ r.status }}</span>
+            <div class="client-info">
+              <div class="client-avatar">{{ (userLabel(r).charAt(0) || '?').toUpperCase() }}</div>
+              <div class="small fw-semibold">{{ userLabel(r) }}</div>
+            </div>
           </td>
-          <td class="small">{{ tablesLabel(r) }}</td>
-          <td class="small text-muted" style="max-width: 180px;">{{ r.notes || '—' }}</td>
-          <td class="text-end text-nowrap">
+          <td>
+            <div class="small fw-semibold text-dark">{{ formatDateTime(r.dateTime).split(' ')[0] }}</div>
+            <div class="small text-muted">{{ formatDateTime(r.dateTime).split(' ')[1] }}</div>
+          </td>
+          <td><span class="badge rounded-pill bg-light text-dark border px-3">{{ r.partySize ?? '—' }}</span></td>
+          <td>
+            <span class="status-badge" [ngClass]="'status-' + r.status">{{ r.status }}</span>
+          </td>
+          <td>
+             <div class="small text-muted" [title]="tablesLabel(r)">
+               {{ tablesLabel(r) || 'No tables yet' }}
+             </div>
+          </td>
+          <td class="text-end action-btns">
             <ng-container *ngIf="isPending(r)">
-              <button type="button" class="btn btn-sm btn-success me-1" (click)="openAssignModal(r)">
-                <i class="bi bi-check-lg"></i> Accept
+              <button class="btn-icon btn-success border-0" (click)="openAssignModal(r)" title="Accept">
+                <i class="bi bi-check-lg"></i>
               </button>
-              <button type="button" class="btn btn-sm btn-outline-danger" (click)="refuseReservation(r)">
-                <i class="bi bi-x-lg"></i> Refuse
+              <button class="btn-icon btn-danger border-0" (click)="refuseReservation(r)" title="Refuse">
+                <i class="bi bi-x-lg"></i>
               </button>
             </ng-container>
-            <span *ngIf="!isPending(r)" class="text-muted small">—</span>
+            <span *ngIf="!isPending(r)" class="text-muted small px-3">Resolved</span>
           </td>
-        </tr>
-        <tr *ngIf="restaurantReservations.length === 0">
-          <td colspan="9" class="text-center text-muted py-4">No restaurant reservations yet.</td>
         </tr>
       </tbody>
     </table>
@@ -107,8 +116,11 @@
           style="background-color: #d4a574; border-color: #d4a574;"
           (click)="submitConfirm()"
           [disabled]="submittingConfirm || loadingTables || availableTables.length === 0 || selectedTableIds.length === 0">
-          <span *ngIf="!submittingConfirm"><i class="bi bi-check-circle"></i> Confirm &amp; assign</span>
-          <span *ngIf="submittingConfirm"><i class="bi bi-spinner"></i> Saving…</span>
+          <span *ngIf="!submittingConfirm"><i class="bi bi-check-circle"></i> Accept &amp; Send Confirmation</span>
+          <span *ngIf="submittingConfirm">
+            <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+            Sending...
+          </span>
         </button>
       </div>
     </div>

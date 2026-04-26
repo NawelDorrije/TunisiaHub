@@ -5,9 +5,12 @@ import { AdminRestaurantDashboardComponent } from './admin-restaurant-dashboard/
 import { AdminManageRestaurantsComponent } from './admin-manage-restaurants/admin-manage-restaurants.component';
 import { AdminRestaurantReservationsComponent } from './admin-restaurant-reservations/admin-restaurant-reservations.component';
 import { RestaurantsComponent } from './restaurants.component';
+import { FloorPlanDesignerComponent } from './admin/floor-plan-designer/floor-plan-designer.component';
+import { MyReservationsComponent } from './client/my-reservations/my-reservations.component';
 
 const routes: Routes = [
   { path: '', component: RestaurantsComponent },
+  { path: 'my-reservations', component: MyReservationsComponent },
   {
     path: 'dashboard',
     component: AdminRestaurantDashboardComponent,
@@ -16,6 +19,11 @@ const routes: Routes = [
   {
     path: 'manage',
     component: AdminManageRestaurantsComponent,
+    canActivate: [AdminGuard],
+  },
+  {
+    path: 'floor-plan/:id',
+    component: FloorPlanDesignerComponent,
     canActivate: [AdminGuard],
   },
   {

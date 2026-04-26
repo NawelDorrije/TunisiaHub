@@ -1,0 +1,63 @@
+<div class="ai-search-container">
+  <div class="search-wrapper" [class.is-loading]="isLoading()" [class.is-listening]="isListening()">
+    <!-- AI Badge -->
+    <div class="ai-badge">
+      <i class="bi bi-magic me-1"></i>
+      <span>AI SEARCH</span>
+    </div>
+
+    <!-- Search Input -->
+    <div class="input-group-custom">
+      <input 
+        type="text" 
+        class="search-input" 
+        [ngModel]="searchQuery()" 
+        (ngModelChange)="searchQuery.set($event)"
+        placeholder="Italian dinner for 4 tomorrow at 8pm near Lac de Tunis, romantic vibe, gluten-free options"
+        [disabled]="isLoading()"
+      />
+
+      <!-- Action Buttons -->
+      <div class="actions">
+        <!-- Mic Icon -->
+        <button 
+          type="button" 
+          class="btn-icon mic-btn" 
+          [class.active]="isListening()"
+          [disabled]="isLoading()"
+          (click)="toggleListening()"
+          title="Voice Input"
+        >
+          @if (isListening()) {
+            <span class="voice-pulse"></span>
+          }
+          <i class="bi bi-mic-fill"></i>
+        </button>
+
+        <!-- Search Icon / Loading Spinner -->
+        <button 
+          type="button" 
+          class="btn-search" 
+          [class.searching]="isLoading()"
+          [disabled]="isLoading()"
+          (click)="onSearch()"
+        >
+          @if (isLoading()) {
+            <div class="spinner-border spinner-border-sm" role="status">
+              <span class="visually-hidden">Loading...</span>
+            </div>
+          } @else {
+            <i class="bi bi-search"></i>
+          }
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading Message (Subtle) -->
+  @if (isLoading()) {
+    <div class="loading-status mt-2 text-center text-muted fade-in">
+      <small>Thinking... generating the best AI results for you.</small>
+    </div>
+  }
+</div>

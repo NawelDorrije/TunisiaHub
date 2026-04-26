@@ -16,4 +16,5 @@ export interface AuthResponse {
   email: string;
   nom: string;
   prenom: string;
+  id: number;
 }

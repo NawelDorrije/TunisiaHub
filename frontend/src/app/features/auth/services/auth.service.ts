@@ -14,7 +14,7 @@ export class AuthService {
   constructor(
     private http: HttpClient,
     @Inject(PLATFORM_ID) private platformId: Object
-  ) {}
+  ) { }
 
   login(request: LoginRequest): Observable<AuthResponse> {
     return this.http.post<AuthResponse>(`${this.baseUrl}/login`, request).pipe(
@@ -30,6 +30,7 @@ export class AuthService {
 
   private storeUser(response: AuthResponse): void {
     if (!isPlatformBrowser(this.platformId)) return;
+    console.log('DEBUG: AuthService storing user data from response:', response);
     localStorage.setItem('token', response.token);
     if (response.role != null && response.role !== '') {
       localStorage.setItem('role', String(response.role));
@@ -37,6 +38,14 @@ export class AuthService {
     localStorage.setItem('email', response.email);
     localStorage.setItem('nom', response.nom);
     localStorage.setItem('prenom', response.prenom);
+    localStorage.setItem('id', String(response.id));
+    console.log('DEBUG: Stored ID in localStorage:', localStorage.getItem('id'));
+  }
+
+  getUserId(): number | null {
+    if (!isPlatformBrowser(this.platformId)) return null;
+    const id = localStorage.getItem('id');
+    return id ? Number(id) : null;
   }
 
   logout(): void {
