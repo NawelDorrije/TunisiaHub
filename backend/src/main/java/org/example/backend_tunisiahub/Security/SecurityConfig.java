@@ -25,6 +25,7 @@ import java.util.List;
 public class SecurityConfig {
 
     private final JwtFilter jwtFilter;
+    private static final List<String> ALLOWED_ORIGIN_PATTERNS = List.of("http://localhost:*", "http://127.0.0.1:*");
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
@@ -62,12 +63,14 @@ public class SecurityConfig {
                         .requestMatchers("/swagger-ui.html").permitAll()
                         // Events (IMPORTANT)
                         .requestMatchers("/event/**").permitAll()
+                        .requestMatchers("/api/events/**").permitAll()
                         .requestMatchers("/api/reservations/**").permitAll()
                         .requestMatchers("/payment/**").permitAll()
                         .requestMatchers("/stripe/**").permitAll()
                         .requestMatchers("/email/**").permitAll()
                         .requestMatchers("/review/**").permitAll()
                         .requestMatchers("/weather/**").permitAll()
+                        .requestMatchers("/uploads/**").permitAll()
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers("/weather/**").permitAll()
                         .requestMatchers("/ai/**").permitAll()
@@ -88,7 +91,7 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOrigins(List.of("http://localhost:4200"));
+        config.setAllowedOriginPatterns(ALLOWED_ORIGIN_PATTERNS);
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
         config.setAllowCredentials(true);
@@ -105,9 +108,10 @@ public class SecurityConfig {
             @Override
             public void addCorsMappings(CorsRegistry registry) {
                 registry.addMapping("/**")
-                        .allowedOrigins("http://localhost:4200")
+                        .allowedOriginPatterns("http://localhost:*", "http://127.0.0.1:*")
                         .allowedMethods("*")
-                        .allowedHeaders("*");
+                        .allowedHeaders("*")
+                        .allowCredentials(true);
             }
         };
     }

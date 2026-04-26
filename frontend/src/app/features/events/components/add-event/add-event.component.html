@@ -221,13 +221,13 @@
           </div>
 
           <label class="upload-trigger">
-            <span>Select image</span>
+            <span>{{ isGeneratingDescription ? 'Uploading...' : 'Upload image' }}</span>
             <input type="file" class="upload-input" (change)="onFileSelected($event)">
           </label>
 
           <div class="upload-zone">
-            <ng-container *ngIf="addForm.value.image; else placeholder">
-              <img [src]="addForm.value.image" class="upload-preview" alt="Event preview">
+            <ng-container *ngIf="imagePreviewUrl; else placeholder">
+              <img [src]="imagePreviewUrl" class="upload-preview" alt="Event preview">
             </ng-container>
 
             <ng-template #placeholder>
@@ -236,6 +236,11 @@
                 <p>PNG, JPG or JPEG up to 5 MB</p>
               </div>
             </ng-template>
+
+            <div class="ai-overlay" *ngIf="isGeneratingDescription">
+              <span class="ai-spinner"></span>
+              <p>Generating AI description...</p>
+            </div>
           </div>
 
           <small class="text-danger d-block" *ngIf="f.image?.errors?.['required'] && f.image.touched">
@@ -254,7 +259,7 @@
           </p>
 
           <div class="button-stack">
-            <button type="submit" class="btn btn-primary btn-modern btn-submit" [disabled]="isLoading">
+            <button type="submit" class="btn btn-primary btn-modern btn-submit" [disabled]="isLoading || isGeneratingDescription">
               {{ isLoading ? 'Saving...' : 'Create Event' }}
             </button>
 

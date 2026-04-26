@@ -1,4 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { HttpClientTestingModule } from '@angular/common/http/testing';
+import { ReactiveFormsModule } from '@angular/forms';
+import { RouterTestingModule } from '@angular/router/testing';
 
 import { AddEventComponent } from './add-event.component';
 
@@ -8,7 +11,8 @@ describe('AddEventComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      declarations: [AddEventComponent]
+      declarations: [AddEventComponent],
+      imports: [ReactiveFormsModule, HttpClientTestingModule, RouterTestingModule]
     })
     .compileComponents();
 

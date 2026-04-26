@@ -17,6 +17,7 @@ import {
 export class EventService {
 
    private apiUrl = 'http://localhost:8089/event';
+   private apiEventsUrl = 'http://localhost:8089/api/events';
    private weatherUrl = 'http://localhost:8089/weather';
 
   constructor(private http: HttpClient) {}
@@ -30,7 +31,7 @@ export class EventService {
   }
 
   addEvent(event: Event): Observable<Event> {
-    return this.http.post<Event>(`${this.apiUrl}/add`, event);
+    return this.http.post<Event>(this.apiEventsUrl, event);
   }
 
   updateEvent(event: Event): Observable<Event> {

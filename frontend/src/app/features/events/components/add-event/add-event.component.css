@@ -400,6 +400,7 @@
 }
 
 .upload-zone {
+  position: relative;
   min-height: 260px;
   border-radius: 22px;
   border: 2px dashed rgba(59, 91, 219, 0.22);
@@ -441,6 +442,41 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
+}
+
+.ai-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  background: rgba(15, 23, 42, 0.45);
+  color: #ffffff;
+  text-align: center;
+  padding: 16px;
+}
+
+.ai-overlay p {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.ai-spinner {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 3px solid rgba(255, 255, 255, 0.35);
+  border-top-color: #ffffff;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .action-card {
