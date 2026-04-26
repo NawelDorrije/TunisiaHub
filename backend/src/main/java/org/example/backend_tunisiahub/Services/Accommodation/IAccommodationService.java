@@ -7,6 +7,8 @@ public interface IAccommodationService {
 
     public List<Accommodation> retrieveAllAccommodations();
 
+    public List<Accommodation> retrieveFilteredAccommodations(String type, Double minPrice, Double maxPrice, Integer minCapacity);
+
     public Accommodation retrieveAccommodation(Long accommodationId);
 
     public Accommodation addAccommodation(Accommodation accommodation);

@@ -33,6 +33,14 @@ public class Reservation {
     @Temporal(TemporalType.DATE)
     Date endDate;
 
+    @Temporal(TemporalType.TIMESTAMP)
+    Date reminderSentAt;
+
+    String reminderStatus;
+
+    @Column(length = 500)
+    String reminderError;
+
     Double totalPrice;
 
     @Enumerated(EnumType.STRING)

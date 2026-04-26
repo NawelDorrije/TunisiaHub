@@ -22,6 +22,8 @@ export class MyAccommodationReservationsComponent implements OnInit {
   editMinEndDate: string = '';
   editError: string = '';
   today: string = new Date().toISOString().split('T')[0];
+  showCancelConfirm = false;
+  pendingCancelReservationId: number | null = null;
 
   constructor(
     private reservationService: ReservationService,
@@ -52,19 +54,32 @@ export class MyAccommodationReservationsComponent implements OnInit {
   }
 
   cancelReservation(id: number): void {
-    if (confirm('Are you sure you want to cancel this reservation?')) {
-      this.reservationService.cancelReservation(id).subscribe({
-        next: () => {
-          this.successMessage = 'Reservation cancelled successfully.';
-          this.errorMessage = '';
-          const index = this.reservations.findIndex(r => r.id === id);
-          if (index !== -1) this.reservations[index].status = 'CANCELLED';
-        },
-        error: () => {
-          this.errorMessage = 'Failed to cancel reservation.';
-        }
-      });
-    }
+    this.pendingCancelReservationId = id;
+    this.showCancelConfirm = true;
+  }
+
+  confirmCancelReservation(): void {
+    if (!this.pendingCancelReservationId) return;
+
+    const id = this.pendingCancelReservationId;
+    this.reservationService.cancelReservation(id).subscribe({
+      next: () => {
+        this.successMessage = 'Reservation cancelled successfully.';
+        this.errorMessage = '';
+        const index = this.reservations.findIndex(r => r.id === id);
+        if (index !== -1) this.reservations[index].status = 'CANCELLED';
+        this.closeCancelModal();
+      },
+      error: () => {
+        this.errorMessage = 'Failed to cancel reservation.';
+        this.closeCancelModal();
+      }
+    });
+  }
+
+  closeCancelModal(): void {
+    this.showCancelConfirm = false;
+    this.pendingCancelReservationId = null;
   }
 
   startEdit(reservation: ReservationResponse): void {

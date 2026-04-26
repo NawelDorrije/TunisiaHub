@@ -125,3 +125,14 @@
     </div>
   </div>
 </div>
+
+<div class="confirm-overlay" *ngIf="showCancelConfirm" (click)="closeCancelModal()">
+  <div class="confirm-dialog" (click)="$event.stopPropagation()">
+    <h5 class="fw-bold mb-2">Cancel reservation?</h5>
+    <p class="text-muted mb-3">Your reservation status will be set to cancelled.</p>
+    <div class="d-flex gap-2 justify-content-end">
+      <button class="btn btn-outline-secondary btn-sm" (click)="closeCancelModal()">Keep</button>
+      <button class="btn btn-danger btn-sm" (click)="confirmCancelReservation()">Cancel reservation</button>
+    </div>
+  </div>
+</div>

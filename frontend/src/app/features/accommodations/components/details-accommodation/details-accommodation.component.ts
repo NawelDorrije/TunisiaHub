@@ -3,6 +3,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { AccommodationService } from '../../services/accommodation.service';
 import { Accommodation } from '../../../../models/accommodations/accommodation.model';
 import { AuthService } from '../../../auth/services/auth.service';
+import { ReviewService } from '../../services/review.service';
 
 @Component({
   selector: 'app-details-accommodation',
@@ -20,24 +21,36 @@ export class DetailsAccommodationComponent implements OnInit {
   recommendations: Accommodation[] = [];
   recommendationReasoning: string = '';
   isLoadingRecommendations: boolean = false;
+  currentAccommodationId: number | null = null;
 
   constructor(
     private accommodationService: AccommodationService,
+    private reviewService: ReviewService,
     private route: ActivatedRoute,
     private router: Router,
     public authService: AuthService
   ) {}
 
   ngOnInit(): void {
-    const id = Number(this.route.snapshot.paramMap.get('id'));
-    this.loadAccommodation(id);
+    this.route.paramMap.subscribe(params => {
+      const id = Number(params.get('id'));
+      if (!id || id <= 0 || id === this.currentAccommodationId) return;
+
+      this.currentAccommodationId = id;
+      this.loadAccommodation(id);
+    });
   }
 
   loadAccommodation(id: number): void {
+    this.isLoading = true;
+    this.errorMessage = '';
+    this.recommendations = [];
+
     this.accommodationService.getAccommodationById(id).subscribe({
       next: (data) => {
         this.accommodation = data;
         this.selectedPhoto = data.photos?.[0] || 'assets/images/placeholder.jpg';
+        this.attachAverageRating(this.accommodation);
         this.isLoading = false;
 
         // Track view if logged in
@@ -94,5 +107,28 @@ export class DetailsAccommodationComponent implements OnInit {
 
   goToDetail(id: number): void {
     this.router.navigate(['/accommodations/detail', id]);
+  }
+
+  goToSignUpForReservation(): void {
+    const returnUrl = `/accommodations/detail/${this.accommodation.id}`;
+    this.router.navigate(['/auth/sign-up'], { queryParams: { returnUrl } });
+  }
+
+  private attachAverageRating(accommodation: Accommodation): void {
+    if (!accommodation.id) return;
+
+    this.reviewService.getReviewsByAccommodation(accommodation.id).subscribe({
+      next: (reviews) => {
+        if (!reviews.length) {
+          accommodation.averageRating = 0;
+          return;
+        }
+        const sum = reviews.reduce((total, r) => total + r.rating, 0);
+        accommodation.averageRating = Math.round((sum / reviews.length) * 10) / 10;
+      },
+      error: () => {
+        accommodation.averageRating = accommodation.averageRating ?? 0;
+      }
+    });
   }
 }

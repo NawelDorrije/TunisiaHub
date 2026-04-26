@@ -349,11 +349,10 @@ From all available accommodations:
 Recommend exactly 3 accommodations the user would most likely enjoy.
 Consider: type preferences, price range, location patterns, capacity needs.
 Do NOT recommend accommodations already in the history.
-
 Respond ONLY with valid JSON:
 {{
     "recommended_ids": [<id1>, <id2>, <id3>],
-    "reasoning": "<one sentence explaining the recommendation logic>"
+    "reasoning": "<one sentence explaining the recommendation logic and the reasoning will be shown to the user so begin with you we will display you reasoning to the user in above the recommnedation >"
 }}"""
 
         response = llm.invoke(prompt)

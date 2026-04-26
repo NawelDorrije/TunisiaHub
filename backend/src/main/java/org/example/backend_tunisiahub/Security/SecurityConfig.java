@@ -34,6 +34,7 @@ public class SecurityConfig {
                         // Public routes
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/api/accommodations/getAll").permitAll()
+                        .requestMatchers("/api/accommodations/filter").permitAll()
                         .requestMatchers("/api/accommodations/get/**").permitAll()
                         .requestMatchers("/api/reviews/getAll").permitAll()
                         .requestMatchers("/api/reviews/get/**").permitAll()

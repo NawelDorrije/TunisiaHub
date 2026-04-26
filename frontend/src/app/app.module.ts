@@ -14,6 +14,7 @@ import { HTTP_INTERCEPTORS, HttpClientModule } from '@angular/common/http';
 import { AuthInterceptor } from './features/auth/auth.interceptor';
 import { ChatWidgetComponent } from './shared/components/chat-widget/chat-widget.component';
 import { ReactiveFormsModule } from '@angular/forms';
+import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 
 @NgModule({
   declarations: [
@@ -28,7 +29,8 @@ import { ReactiveFormsModule } from '@angular/forms';
     BrowserModule,
      AppRoutingModule, 
      HttpClientModule,
-     ReactiveFormsModule
+    ReactiveFormsModule,
+    NoopAnimationsModule
     
     ],
   providers: [provideClientHydration(),

@@ -10,9 +10,8 @@ import org.example.backend_tunisiahub.Entities.User.User;
 import org.example.backend_tunisiahub.Repositories.Accommodation.AccommodationRepository;
 import org.example.backend_tunisiahub.Repositories.Accommodation.AccommodationReservationRepository;
 import org.example.backend_tunisiahub.Repositories.Accommodation.ReviewRepository;
-import org.example.backend_tunisiahub.Repositories.ReservationRepository;
 import org.example.backend_tunisiahub.Repositories.User.UserRepository;
-import org.example.backend_tunisiahub.Services.Accommodation.AccommodationService;
+import org.example.backend_tunisiahub.Services.Accommodation.Notification.ReservationEmailService;
 import org.springframework.stereotype.Service;
 import java.util.Date;
 import java.util.HashMap;
@@ -30,6 +29,7 @@ public class AccommodationReservationService implements IAccommodationReservatio
     final UserRepository userRepository;
     final ReviewRepository reviewRepository;
     final AccommodationRepository accommodationRepository;
+        final ReservationEmailService reservationEmailService;
 
     @Override
     public Reservation addAccommodationReservation(Long accommodationId, Reservation reservation, String email) {
@@ -56,8 +56,14 @@ public class AccommodationReservationService implements IAccommodationReservatio
         reservation.setTotalPrice(totalPrice);
         reservation.setStatus("CONFIRMED");
         reservation.setType(ReservationType.accommodationReservation);
+        reservation.setReminderStatus("PENDING");
+        reservation.setReminderSentAt(null);
+        reservation.setReminderError(null);
 
-        return reservationRepository.save(reservation);
+                Reservation savedReservation = reservationRepository.save(reservation);
+                reservationEmailService.sendAccommodationBookingConfirmation(user, accommodation, savedReservation);
+
+                return savedReservation;
     }
 
     @Override
@@ -75,6 +81,8 @@ public class AccommodationReservationService implements IAccommodationReservatio
         Reservation reservation = reservationRepository.findById(reservationId).orElse(null);
         if (reservation == null) return null;
         reservation.setStatus("CANCELLED");
+                reservation.setReminderStatus("CANCELLED");
+                reservation.setReminderError(null);
         return reservationRepository.save(reservation);
     }
 
@@ -121,6 +129,9 @@ public class AccommodationReservationService implements IAccommodationReservatio
         existing.setStartDate(updated.getStartDate());
         existing.setEndDate(updated.getEndDate());
         existing.setTotalPrice(totalPrice);
+                existing.setReminderSentAt(null);
+                existing.setReminderStatus("PENDING");
+                existing.setReminderError(null);
 
         return reservationRepository.save(existing);
     }

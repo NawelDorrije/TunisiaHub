@@ -69,6 +69,7 @@ loadReviews(): void {
 
   onReviewAdded(review: Review): void {
     this.reviews.unshift(review);
+    this.hasUserReviewed = true;
   }
 
   onReviewUpdated(updated: Review): void {
@@ -79,6 +80,8 @@ loadReviews(): void {
 
   onReviewDeleted(id: number): void {
     this.reviews = this.reviews.filter(r => r.id !== id);
+    const email = this.authService.getEmail();
+    this.hasUserReviewed = !!email && this.reviews.some(r => r.user?.email === email);
   }
 
   onReviewEdit(review: Review): void {

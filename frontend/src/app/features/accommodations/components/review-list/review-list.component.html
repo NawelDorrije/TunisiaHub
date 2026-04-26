@@ -25,14 +25,14 @@
   <!-- Already reviewed message -->
   <div
     class="alert alert-info mb-3"
-    *ngIf="hasUserReviewed"
+    *ngIf="hasUserReviewed && !reviewToEdit"
   >
     ✅ You have already reviewed this accommodation.
   </div>
 
   <!-- Show form only if not reviewed yet and logged in -->
   <app-review-form
-    *ngIf="!hasUserReviewed && authService.isLoggedIn()"
+    *ngIf="authService.isLoggedIn() && (!hasUserReviewed || reviewToEdit)"
     [accommodationId]="accommodationId"
     [reviewToEdit]="reviewToEdit"
     (reviewAdded)="onReviewAdded($event)"

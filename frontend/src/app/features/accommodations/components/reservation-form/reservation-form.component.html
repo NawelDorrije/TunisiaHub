@@ -45,10 +45,11 @@
           <label class="form-label fw-semibold">Check-in date</label>
           <input
             type="date"
-            class="form-control"
-            [(ngModel)]="startDate"
+            class="form-control reservation-date-input"
+            [(ngModel)]="startDateValue"
+            [ngModelOptions]="{ standalone: true }"
             [min]="today"
-            (change)="onStartDateChange()"
+            (ngModelChange)="onStartDateChange()"
           />
         </div>
 
@@ -57,14 +58,29 @@
           <label class="form-label fw-semibold">Check-out date</label>
           <input
             type="date"
-            class="form-control"
-            [(ngModel)]="endDate"
+            class="form-control reservation-date-input"
+            [(ngModel)]="endDateValue"
+            [ngModelOptions]="{ standalone: true }"
             [min]="minEndDate || today"
-            [disabled]="!startDate"
-            (change)="onEndDateChange()"
+            [disabled]="!startDateValue"
+            (ngModelChange)="onEndDateChange()"
           />
         </div>
 
+      </div>
+
+      <div class="alert alert-info py-2 small d-flex align-items-center gap-2" *ngIf="isCheckingAvailability">
+        <span class="spinner-border spinner-border-sm"></span>
+        Checking live availability...
+      </div>
+
+      <div class="alert py-2 small"
+        *ngIf="availabilityMessage && !isCheckingAvailability"
+        [class.alert-success]="isRangeAvailable"
+        [class.alert-warning]="isRangeAvailable === false"
+        [class.alert-secondary]="isRangeAvailable === null"
+      >
+        {{ availabilityMessage }}
       </div>
 
       <!-- Booking summary -->
@@ -91,7 +107,7 @@
       <button
         class="btn btn-primary w-100"
         (click)="goToPayment()"
-        [disabled]="nights <= 0"
+        [disabled]="nights <= 0 || isRangeAvailable === false || isCheckingAvailability"
       >
         Continue to Payment →
       </button>

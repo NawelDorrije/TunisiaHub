@@ -40,3 +40,14 @@
 
   </div>
 </div>
+
+<div class="confirm-overlay" *ngIf="showDeleteConfirm" (click)="closeDeleteModal()">
+  <div class="confirm-dialog" (click)="$event.stopPropagation()">
+    <h6 class="fw-bold mb-2">Delete your review?</h6>
+    <p class="text-muted mb-3">This action cannot be undone.</p>
+    <div class="d-flex gap-2 justify-content-end">
+      <button class="btn btn-outline-secondary btn-sm" (click)="closeDeleteModal()">Keep</button>
+      <button class="btn btn-danger btn-sm" (click)="confirmDelete()">Delete</button>
+    </div>
+  </div>
+</div>

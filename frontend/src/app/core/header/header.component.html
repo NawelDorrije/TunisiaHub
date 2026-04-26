@@ -1,7 +1,7 @@
-<nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
-  <div class="container">
+<nav class="navbar navbar-expand-lg navbar-light luxury-navbar">
+  <div class="container header-container">
     <a class="navbar-brand" routerLink="/">
-      <span class="logo">Discover Tunisia</span>
+      <span class="logo">TunisiaHub</span>
     </a>
 
     <button
@@ -17,15 +17,15 @@
     </button>
 
     <div class="collapse navbar-collapse" id="navbarNav">
-      <ul class="navbar-nav ms-auto align-items-lg-center">
+      <ul class="navbar-nav ms-auto align-items-lg-center nav-links-wrap">
 
         <li class="nav-item">
-          <a class="nav-link" routerLink="/">Home</a>
+          <a class="nav-link nav-link-lux" routerLink="/">Home</a>
         </li>
 
         <li class="nav-item dropdown">
           <a 
-            class="nav-link dropdown-toggle"
+            class="nav-link nav-link-lux dropdown-toggle"
             href="#"
             id="servicesDropdown"
             role="button"
@@ -42,21 +42,21 @@
         </li>
 
         <li class="nav-item">
-          <a class="nav-link" routerLink="/contact">Contact Us</a>
+          <a class="nav-link nav-link-lux" routerLink="/contact">Contact Us</a>
         </li>
 
         <!-- Admin link -->
         <li class="nav-item" *ngIf="authService.isAdmin()">
-          <a class="nav-link" routerLink="/accommodations/admin">Dashboard</a>
+          <a class="nav-link nav-link-lux" routerLink="/accommodations/dashboard">Dashboard</a>
         </li>
 
         <!-- NOT logged in -->
         <ng-container *ngIf="!authService.isLoggedIn()">
           <li class="nav-item">
-            <a class="btn btn-outline-primary ms-lg-3" routerLink="/auth/sign-in">Login</a>
+            <a class="btn btn-outline-primary ms-lg-3 header-btn" routerLink="/auth/sign-in">Login</a>
           </li>
           <li class="nav-item">
-            <a class="btn btn-primary ms-2 text-white" routerLink="/auth/sign-up">Sign Up</a>
+            <a class="btn btn-primary ms-2 text-white header-btn header-btn-primary" routerLink="/auth/sign-up">Sign Up</a>
           </li>
         </ng-container>
 
@@ -64,7 +64,7 @@
         <ng-container *ngIf="authService.isLoggedIn()">
           <li class="nav-item dropdown ms-lg-3">
             <a 
-              class="nav-link dropdown-toggle fw-semibold"
+              class="nav-link nav-link-lux dropdown-toggle fw-semibold"
               href="#"
               role="button"
               data-bs-toggle="dropdown"
@@ -79,7 +79,7 @@
                 </span>
               </li>
               <li><hr class="dropdown-divider"></li>
-               <li>
+               <li *ngIf="authService.getRole()=='CLIENT'">
                  <a class="dropdown-item" routerLink="/my-reservations">
                     📋 My Reservations
                   </a>

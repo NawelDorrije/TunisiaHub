@@ -7,9 +7,11 @@ import { EditAccommodationComponent } from './components/edit-accommodation/edit
 import { DetailsAccommodationComponent } from './components/details-accommodation/details-accommodation.component';
 import { AdminGuard } from '../auth/admin.guard';
 import { AccommodationStatisticsComponent } from './components/accommodation-statistics/accommodation-statistics.component';
+import { AdminDashboardComponent } from './components/admin-dashboard/admin-dashboard.component';
 
 const routes: Routes = [
-   { path: 'explore', component: UserListAccommodationComponent },                          
+  { path: 'dashboard', component: AdminDashboardComponent, canActivate: [AdminGuard] },
+  { path: 'explore', component: UserListAccommodationComponent },                          
   { path: 'detail/:id', component: DetailsAccommodationComponent },                        
   { path: 'admin', component: AdminListAccommodationComponent, canActivate: [AdminGuard] },
   { path: 'add', component: AddAccommodationComponent, canActivate: [AdminGuard] },        

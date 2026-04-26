@@ -1,20 +1,13 @@
 package org.example.backend_tunisiahub.Services.Accommodation;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-import org.example.backend_tunisiahub.Controllers.Accommodation.AccommodationStatsDTO;
 import org.example.backend_tunisiahub.Entities.Accommodation.Accommodation;
-import org.example.backend_tunisiahub.Entities.Accommodation.AccommodationReview;
-import org.example.backend_tunisiahub.Entities.Reservation;
 import org.example.backend_tunisiahub.Repositories.Accommodation.AccommodationRepository;
-import org.example.backend_tunisiahub.Repositories.Accommodation.ReviewRepository;
 import org.example.backend_tunisiahub.Repositories.Accommodation.UserHistoryRepository;
-import org.example.backend_tunisiahub.Repositories.ReservationRepository;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -26,6 +19,30 @@ public class AccommodationService implements IAccommodationService {
     public List<Accommodation> retrieveAllAccommodations() {
         return accommodationRepository.findAll();
     }
+
+    @Override
+    public List<Accommodation> retrieveFilteredAccommodations(String type, Double minPrice, Double maxPrice, Integer minCapacity) {
+        Specification<Accommodation> spec = Specification.where(null);
+
+        if (type != null && !type.isBlank()) {
+            spec = spec.and((root, query, cb) -> cb.equal(cb.lower(root.get("type").as(String.class)), type.toLowerCase()));
+        }
+
+        if (minPrice != null) {
+            spec = spec.and((root, query, cb) -> cb.greaterThanOrEqualTo(root.get("price").as(Double.class), minPrice));
+        }
+
+        if (maxPrice != null) {
+            spec = spec.and((root, query, cb) -> cb.lessThanOrEqualTo(root.get("price").as(Double.class), maxPrice));
+        }
+
+        if (minCapacity != null) {
+            spec = spec.and((root, query, cb) -> cb.greaterThanOrEqualTo(root.get("capacite").as(Integer.class), minCapacity));
+        }
+
+        return accommodationRepository.findAll(spec);
+    }
+
     @Override
     public Accommodation retrieveAccommodation(Long accommodationId) {
         return accommodationRepository.findById(accommodationId).get();

@@ -3,6 +3,7 @@ import { Router } from '@angular/router';
 import { AccommodationService } from '../../services/accommodation.service';
 import { Accommodation } from '../../../../models/accommodations/accommodation.model';
 import { AuthService } from '../../../auth/services/auth.service';
+import { ReviewService } from '../../services/review.service';
 
 @Component({
   selector: 'app-user-list-accommodation',
@@ -19,6 +20,7 @@ export class UserListAccommodationComponent implements OnInit {
   // Filters
   searchKeyword: string = '';
   selectedType: string = '';
+  minPrice: number | null = null;
   maxPrice: number | null = null;
   minCapacity: number | null = null;
   sortOrder: string = '';
@@ -31,6 +33,7 @@ export class UserListAccommodationComponent implements OnInit {
 
   constructor(
     private accommodationService: AccommodationService,
+    private reviewService: ReviewService,
     private router: Router,
     public authService: AuthService
   ) {}
@@ -56,7 +59,10 @@ loadRecommendations(): void {
         this.recommendationReasoning = data.reasoning;
         data.recommended_ids.slice(0, 3).forEach(rid => {
           this.accommodationService.getAccommodationById(rid).subscribe({
-            next: (acc) => this.recommendations.push(acc),
+            next: (acc) => {
+              this.recommendations.push(acc);
+              this.attachAverageRating(acc);
+            },
             error: () => {}
           });
         });
@@ -67,11 +73,21 @@ loadRecommendations(): void {
   });
 }
   loadAccommodations(): void {
+    this.fetchFilteredAccommodations();
+  }
+
+  fetchFilteredAccommodations(): void {
     this.isLoading = true;
-    this.accommodationService.getAllAccommodations().subscribe({
+    this.accommodationService.getFilteredAccommodations(
+      this.selectedType || undefined,
+      this.minPrice ?? undefined,
+      this.maxPrice ?? undefined,
+      this.minCapacity ?? undefined
+    ).subscribe({
       next: (data) => {
         this.allAccommodations = data;
-        this.filteredAccommodations = data;
+        this.allAccommodations.forEach(acc => this.attachAverageRating(acc));
+        this.applyClientSideSearchAndSort();
         this.isLoading = false;
       },
       error: () => {
@@ -82,6 +98,10 @@ loadRecommendations(): void {
   }
 
   applyFilters(): void {
+    this.fetchFilteredAccommodations();
+  }
+
+  applyClientSideSearchAndSort(): void {
     let result = [...this.allAccommodations];
 
     // Search by keyword
@@ -92,21 +112,6 @@ loadRecommendations(): void {
         a.adresse.toLowerCase().includes(keyword) ||
         a.description?.toLowerCase().includes(keyword)
       );
-    }
-
-    // Filter by type
-    if (this.selectedType) {
-      result = result.filter(a => a.type === this.selectedType);
-    }
-
-    // Filter by max price
-    if (this.maxPrice !== null && this.maxPrice > 0) {
-      result = result.filter(a => a.price <= this.maxPrice!);
-    }
-
-    // Filter by min capacity
-    if (this.minCapacity !== null && this.minCapacity > 0) {
-      result = result.filter(a => a.capacite >= this.minCapacity!);
     }
 
     // Sort by price
@@ -122,16 +127,18 @@ loadRecommendations(): void {
   resetFilters(): void {
     this.searchKeyword = '';
     this.selectedType = '';
+    this.minPrice = null;
     this.maxPrice = null;
     this.minCapacity = null;
     this.sortOrder = '';
-    this.filteredAccommodations = [...this.allAccommodations];
+    this.loadAccommodations();
   }
 
   get activeFiltersCount(): number {
     let count = 0;
     if (this.searchKeyword.trim()) count++;
     if (this.selectedType) count++;
+    if (this.minPrice) count++;
     if (this.maxPrice) count++;
     if (this.minCapacity) count++;
     if (this.sortOrder) count++;
@@ -144,6 +151,24 @@ loadRecommendations(): void {
 
   toggleFilters(): void {
     this.showFilters = !this.showFilters;
+  }
+
+  private attachAverageRating(accommodation: Accommodation): void {
+    if (!accommodation.id) return;
+
+    this.reviewService.getReviewsByAccommodation(accommodation.id).subscribe({
+      next: (reviews) => {
+        if (!reviews.length) {
+          accommodation.averageRating = 0;
+          return;
+        }
+        const sum = reviews.reduce((total, r) => total + r.rating, 0);
+        accommodation.averageRating = Math.round((sum / reviews.length) * 10) / 10;
+      },
+      error: () => {
+        accommodation.averageRating = accommodation.averageRating ?? 0;
+      }
+    });
   }
   
 }

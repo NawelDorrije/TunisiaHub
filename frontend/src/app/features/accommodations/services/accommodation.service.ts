@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { Accommodation } from '../../../models/accommodations/accommodation.model';
 import { PriceRecommendation } from '../../../models/accommodations/price-recommendation.model';
@@ -17,6 +18,30 @@ export class AccommodationService {
 
   getAllAccommodations(): Observable<Accommodation[]> {
     return this.http.get<Accommodation[]>(`${this.baseUrl}/getAll`);
+  }
+
+  getFilteredAccommodations(
+    type?: string,
+    minPrice?: number,
+    maxPrice?: number,
+    minCapacity?: number
+  ): Observable<Accommodation[]> {
+    let params = new HttpParams();
+
+    if (type && type.trim()) {
+      params = params.set('type', type.trim());
+    }
+    if (minPrice !== undefined && minPrice !== null) {
+      params = params.set('minPrice', minPrice.toString());
+    }
+    if (maxPrice !== undefined && maxPrice !== null) {
+      params = params.set('maxPrice', maxPrice.toString());
+    }
+    if (minCapacity !== undefined && minCapacity !== null) {
+      params = params.set('minCapacity', minCapacity.toString());
+    }
+
+    return this.http.get<Accommodation[]>(`${this.baseUrl}/filter`, { params });
   }
 
   getAccommodationById(id: number): Observable<Accommodation> {

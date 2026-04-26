@@ -22,6 +22,24 @@ public class AccommodationController {
         return ResponseEntity.ok(accommodations);
     }
 
+    @GetMapping("/filter")
+    public ResponseEntity<?> filterAccommodations(
+            @RequestParam(required = false) String type,
+            @RequestParam(required = false) Double minPrice,
+            @RequestParam(required = false) Double maxPrice,
+            @RequestParam(required = false) Integer minCapacity
+    ) {
+        if (minPrice != null && minPrice < 0) return ResponseEntity.badRequest().body("minPrice must be greater than or equal to 0");
+        if (maxPrice != null && maxPrice < 0) return ResponseEntity.badRequest().body("maxPrice must be greater than or equal to 0");
+        if (minPrice != null && maxPrice != null && minPrice > maxPrice)
+            return ResponseEntity.badRequest().body("minPrice cannot be greater than maxPrice");
+        if (minCapacity != null && minCapacity <= 0)
+            return ResponseEntity.badRequest().body("minCapacity must be greater than 0");
+
+        List<Accommodation> accommodations = accommodationService.retrieveFilteredAccommodations(type, minPrice, maxPrice, minCapacity);
+        return ResponseEntity.ok(accommodations);
+    }
+
     @GetMapping("/get/{id}")
     public ResponseEntity<?> getAccommodationById(@PathVariable Long id) {
         if (id <= 0) return ResponseEntity.badRequest().body("Invalid accommodation ID");

@@ -1,16 +1,28 @@
 <div class="container py-4">
 
- <div class="d-flex justify-content-between align-items-center mb-4">
-  <h2>Manage Accommodations</h2>
-  <div class="d-flex gap-2">
-    <button class="btn btn-outline-primary" (click)="goToStatistics()">
-      📊 Statistics
-    </button>
-    <button class="btn btn-primary" (click)="goToAdd()">
-      + Add Accommodation
-    </button>
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h2 class="mb-1">Manage Accommodations</h2>
+      <p class="text-muted mb-0">
+        {{ filteredAccommodations.length }} accommodation{{ filteredAccommodations.length !== 1 ? 's' : '' }}
+      </p>
+    </div>
+    <div class="d-flex gap-2">
+      <button class="btn btn-outline-primary" (click)="goToStatistics()">
+        📊 Statistics
+      </button>
+      <button class="btn btn-primary" (click)="goToAdd()">
+        + Add Accommodation
+      </button>
+      <button
+        class="btn btn-outline-secondary d-md-none"
+        (click)="toggleFilters()"
+      >
+        🔧
+        <span class="badge bg-secondary ms-1" *ngIf="activeFiltersCount > 0">{{ activeFiltersCount }}</span>
+      </button>
+    </div>
   </div>
-</div>
 
   <!-- Alerts -->
   <div class="alert alert-danger" *ngIf="errorMessage">{{ errorMessage }}</div>
@@ -23,62 +35,143 @@
     </div>
   </div>
 
-  <!-- Empty state -->
-  <div class="alert alert-info" *ngIf="!isLoading && accommodations.length === 0">
-    No accommodations found.
-  </div>
-
-  <!-- Table -->
-  <div class="card shadow-sm" *ngIf="!isLoading && accommodations.length > 0">
-    <div class="card-body p-0">
-      <table class="table table-hover table-striped mb-0">
-        <thead class="table-dark">
-          <tr>
-            <th>#</th>
-            <th>Title</th>
-            <th>Type</th>
-            <th>Address</th>
-            <th>Price (TND)</th>
-            <th>Capacity</th>
-            <th class="text-center">Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr *ngFor="let accommodation of accommodations">
-            <td>{{ accommodation.id }}</td>
-            <td>{{ accommodation.title }}</td>
-            <td>
-              <span class="badge bg-secondary">{{ accommodation.type }}</span>
-            </td>
-            <td>{{ accommodation.adresse }}</td>
-            <td>{{ accommodation.price }} TND</td>
-            <td>{{ accommodation.capacite }} persons</td>
-            <td class="text-center">
-              <div class="d-flex gap-2 justify-content-center">
-                <button
-                  class="btn btn-outline-primary btn-sm"
-                  (click)="goToDetail(accommodation.id!)"
-                >
-                  View
-                </button>
-                <button
-                  class="btn btn-outline-secondary btn-sm"
-                  (click)="goToEdit(accommodation.id!)"
-                >
-                  Edit
-                </button>
-                <button
-                  class="btn btn-outline-danger btn-sm"
-                  (click)="deleteAccommodation(accommodation.id!)"
-                >
-                  Delete
-                </button>
-              </div>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+  <!-- Search -->
+  <div class="card border-0 shadow-sm mb-4">
+    <div class="card-body py-3">
+      <div class="input-group">
+        <span class="input-group-text bg-white border-end-0">🔍</span>
+        <input
+          type="text"
+          class="form-control border-start-0"
+          placeholder="Search by title, location, description..."
+          [(ngModel)]="searchKeyword"
+          (input)="applyClientSideSearchAndSort()"
+        />
+        <button
+          class="btn btn-outline-secondary"
+          *ngIf="searchKeyword"
+          (click)="searchKeyword = ''; applyClientSideSearchAndSort()"
+        >✕</button>
+      </div>
     </div>
   </div>
 
+  <div class="row g-4">
+    <div class="col-md-3" [class.d-none]="!showFilters" [class.d-md-block]="true">
+      <div class="card border-0 shadow-sm sticky-top" style="top: 80px;">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h6 class="fw-bold mb-0">
+              🔧 Filters
+              <span class="badge bg-primary ms-1" *ngIf="activeFiltersCount > 0">{{ activeFiltersCount }}</span>
+            </h6>
+            <button class="btn btn-link btn-sm text-muted p-0" *ngIf="activeFiltersCount > 0" (click)="resetFilters()">
+              Reset all
+            </button>
+          </div>
+
+          <hr class="my-2" />
+
+          <div class="mb-4">
+            <label class="form-label fw-semibold small text-uppercase text-muted">Type</label>
+            <div class="d-flex flex-wrap gap-2">
+              <button class="btn btn-sm" [class.btn-primary]="selectedType === ''" [class.btn-outline-secondary]="selectedType !== ''" (click)="selectedType = ''; applyFilters()">All</button>
+              <button
+                *ngFor="let type of accommodationTypes"
+                class="btn btn-sm"
+                [class.btn-primary]="selectedType === type"
+                [class.btn-outline-secondary]="selectedType !== type"
+                (click)="selectedType = type; applyFilters()"
+              >{{ type }}</button>
+            </div>
+          </div>
+
+          <hr class="my-2" />
+
+          <div class="mb-4">
+            <label class="form-label fw-semibold small text-uppercase text-muted">Min price per night</label>
+            <input type="number" class="form-control form-control-sm" placeholder="e.g. 100" min="0" [(ngModel)]="minPrice" (input)="applyFilters()" />
+          </div>
+
+          <hr class="my-2" />
+
+          <div class="mb-4">
+            <label class="form-label fw-semibold small text-uppercase text-muted">Max price per night</label>
+            <div class="d-flex align-items-center gap-2 mb-2">
+              <span class="text-primary fw-bold">{{ maxPrice ? maxPrice + ' TND' : 'Any' }}</span>
+            </div>
+            <input type="range" class="form-range" min="0" max="1000" step="50" [(ngModel)]="maxPrice" (input)="applyFilters()" />
+            <div class="d-flex justify-content-between">
+              <small class="text-muted">0 TND</small>
+              <small class="text-muted">1000 TND</small>
+            </div>
+          </div>
+
+          <hr class="my-2" />
+
+          <div class="mb-4">
+            <label class="form-label fw-semibold small text-uppercase text-muted">Min capacity (persons)</label>
+            <input type="number" class="form-control form-control-sm" placeholder="e.g. 2" min="1" [(ngModel)]="minCapacity" (input)="applyFilters()" />
+          </div>
+
+          <hr class="my-2" />
+
+          <div class="mb-3">
+            <label class="form-label fw-semibold small text-uppercase text-muted">Sort by price</label>
+            <div class="d-flex gap-2">
+              <button class="btn btn-sm flex-fill" [class.btn-primary]="sortOrder === 'asc'" [class.btn-outline-secondary]="sortOrder !== 'asc'" (click)="sortOrder = sortOrder === 'asc' ? '' : 'asc'; applyClientSideSearchAndSort()">↑ Low to High</button>
+              <button class="btn btn-sm flex-fill" [class.btn-primary]="sortOrder === 'desc'" [class.btn-outline-secondary]="sortOrder !== 'desc'" (click)="sortOrder = sortOrder === 'desc' ? '' : 'desc'; applyClientSideSearchAndSort()">↓ High to Low</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-9">
+      <!-- Empty state -->
+      <div class="alert alert-info" *ngIf="!isLoading && filteredAccommodations.length === 0">
+        No accommodations found.
+      </div>
+
+      <div class="row g-3" *ngIf="!isLoading && filteredAccommodations.length > 0">
+        <div class="col-12 col-sm-6 col-lg-4" *ngFor="let accommodation of filteredAccommodations">
+          <div class="card admin-accommodation-card border-0 shadow-sm h-100">
+            <div class="position-relative">
+              <img
+                [src]="accommodation.photos[0] || 'assets/images/placeholder.jpg'"
+                class="card-img-top"
+                alt="{{ accommodation.title }}"
+              />
+              <span class="badge bg-dark position-absolute top-0 start-0 m-2">{{ accommodation.type }}</span>
+            </div>
+
+            <div class="card-body p-3">
+              <h6 class="fw-bold mb-1 text-truncate" [title]="accommodation.title">{{ accommodation.title }}</h6>
+              <p class="small text-muted mb-2 text-truncate">{{ accommodation.adresse }}</p>
+              <div class="d-flex justify-content-between align-items-center mb-3">
+                <span class="small fw-semibold text-primary">{{ accommodation.price }} TND</span>
+                <span class="small text-muted">{{ accommodation.capacite }} guests</span>
+              </div>
+              <div class="d-flex gap-2">
+                <button class="btn btn-outline-secondary btn-sm w-50" (click)="goToEdit(accommodation.id!)">Edit</button>
+                <button class="btn btn-outline-danger btn-sm w-50" (click)="deleteAccommodation(accommodation.id!)">Delete</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="confirm-overlay" *ngIf="showDeleteConfirm" (click)="closeDeleteModal()">
+  <div class="confirm-dialog" (click)="$event.stopPropagation()">
+    <h5 class="fw-bold mb-2">Delete accommodation?</h5>
+    <p class="text-muted mb-3">This action cannot be undone.</p>
+    <div class="d-flex gap-2 justify-content-end">
+      <button class="btn btn-outline-secondary btn-sm" (click)="closeDeleteModal()">Keep</button>
+      <button class="btn btn-danger btn-sm" (click)="confirmDeleteAccommodation()">Delete</button>
+    </div>
+  </div>
 </div>

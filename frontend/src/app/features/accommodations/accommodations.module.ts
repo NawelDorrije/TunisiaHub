@@ -19,6 +19,7 @@ import { FormsModule } from '@angular/forms';
 import { FeedbackPopupComponent } from './components/feedback-popup/feedback-popup.component';
 import { AccommodationStatisticsComponent } from './components/accommodation-statistics/accommodation-statistics.component';
 import { NgApexchartsModule } from 'ng-apexcharts';
+import { AdminDashboardComponent } from './components/admin-dashboard/admin-dashboard.component';
 
 
 
@@ -36,7 +37,8 @@ import { NgApexchartsModule } from 'ng-apexcharts';
     MapWeatherComponent,
     ReservationFormComponent,
     FeedbackPopupComponent,
-    AccommodationStatisticsComponent
+    AccommodationStatisticsComponent,
+    AdminDashboardComponent
   ],
   imports: [
     CommonModule,

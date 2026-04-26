@@ -15,6 +15,7 @@ export class ReviewItemComponent {
   @Output() reviewEdit = new EventEmitter<Review>();
 
   errorMessage: string = '';
+  showDeleteConfirm = false;
 
   constructor(
     private reviewService: ReviewService,
@@ -40,15 +41,23 @@ export class ReviewItemComponent {
   }
 
   onDelete(): void {
-    if (confirm('Are you sure you want to delete this review?')) {
-      this.reviewService.deleteReview(this.review.id!).subscribe({
-        next: () => {
-          this.reviewDeleted.emit(this.review.id!);
-        },
-        error: () => {
-          this.errorMessage = 'Failed to delete review.';
-        }
-      });
-    }
+    this.showDeleteConfirm = true;
+  }
+
+  confirmDelete(): void {
+    this.reviewService.deleteReview(this.review.id!).subscribe({
+      next: () => {
+        this.reviewDeleted.emit(this.review.id!);
+        this.closeDeleteModal();
+      },
+      error: () => {
+        this.errorMessage = 'Failed to delete review.';
+        this.closeDeleteModal();
+      }
+    });
+  }
+
+  closeDeleteModal(): void {
+    this.showDeleteConfirm = false;
   }
 }
