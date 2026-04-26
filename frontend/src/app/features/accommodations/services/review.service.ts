@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { Review } from '../../../models/accommodations/review.model';
+import { catchError, throwError } from 'rxjs';
 
 @Injectable({
   providedIn: 'root'
@@ -21,7 +22,18 @@ export class ReviewService {
   }
 
   addReview(accommodationId: number, review: Review): Observable<Review> {
-    return this.http.post<Review>(`${this.baseUrl}/add/${accommodationId}`, review);
+    return this.http.post<Review>(
+      `${this.baseUrl}/add/${accommodationId}`,
+      review
+    ).pipe(
+      catchError((err) => {
+        // Extract the plain text error message from backend
+        const message = typeof err.error === 'string'
+          ? err.error
+          : 'Failed to add review.';
+        return throwError(() => new Error(message));
+      })
+    );
   }
 
   updateReview(id: number, review: Review): Observable<Review> {

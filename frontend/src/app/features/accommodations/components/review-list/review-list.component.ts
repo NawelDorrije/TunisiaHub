@@ -1,6 +1,7 @@
 import { Component, Input, OnChanges, SimpleChanges, OnInit } from '@angular/core';
 import { Review } from '../../../../models/accommodations/review.model';
 import { ReviewService } from '../../services/review.service';
+import { AuthService } from '../../../auth/services/auth.service';
 
 @Component({
   selector: 'app-review-list',
@@ -15,8 +16,10 @@ export class ReviewListComponent implements OnChanges,OnInit {
   errorMessage: string = '';
   isLoading: boolean = true;
   reviewToEdit: Review | null = null;
+  hasUserReviewed: boolean = false;
 
-  constructor(private reviewService: ReviewService) {}
+
+  constructor(private reviewService: ReviewService,public authService: AuthService) {}
 
 ngOnInit(): void {
     if (this.accommodationId) {
@@ -28,20 +31,27 @@ ngOnChanges(changes: SimpleChanges): void {
     this.loadReviews();
   }
 }
+loadReviews(): void {
+  this.isLoading = true;
+  this.reviewService.getReviewsByAccommodation(this.accommodationId).subscribe({
+    next: (data) => {
+      this.reviews = data;
+      this.isLoading = false;
 
-  loadReviews(): void {
-    this.isLoading = true;
-    this.reviewService.getReviewsByAccommodation(this.accommodationId).subscribe({
-      next: (data) => {
-        this.reviews = data;
-        this.isLoading = false;
-      },
-      error: () => {
-        this.errorMessage = 'Failed to load reviews.';
-        this.isLoading = false;
+      // Check if current user already reviewed
+      const email = this.authService.getEmail();
+      if (email) {
+        this.hasUserReviewed = this.reviews.some(
+          r => r.user?.email === email
+        );
       }
-    });
-  }
+    },
+    error: () => {
+      this.errorMessage = 'Failed to load reviews.';
+      this.isLoading = false;
+    }
+  });
+}
 
   get averageRating(): number {
     if (this.reviews.length === 0) return 0;
@@ -59,6 +69,7 @@ ngOnChanges(changes: SimpleChanges): void {
 
   onReviewAdded(review: Review): void {
     this.reviews.unshift(review);
+    this.hasUserReviewed = true;
   }
 
   onReviewUpdated(updated: Review): void {
@@ -69,6 +80,8 @@ ngOnChanges(changes: SimpleChanges): void {
 
   onReviewDeleted(id: number): void {
     this.reviews = this.reviews.filter(r => r.id !== id);
+    const email = this.authService.getEmail();
+    this.hasUserReviewed = !!email && this.reviews.some(r => r.user?.email === email);
   }
 
   onReviewEdit(review: Review): void {

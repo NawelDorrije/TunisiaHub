@@ -2,6 +2,7 @@ package org.example.backend_tunisiahub.Controllers.Accommodation;
 
 import lombok.RequiredArgsConstructor;
 import org.example.backend_tunisiahub.Entities.Accommodation.Accommodation;
+import org.example.backend_tunisiahub.Repositories.Accommodation.UserHistoryRepository;
 import org.example.backend_tunisiahub.Services.Accommodation.IAccommodationService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -21,6 +22,24 @@ public class AccommodationController {
         return ResponseEntity.ok(accommodations);
     }
 
+    @GetMapping("/filter")
+    public ResponseEntity<?> filterAccommodations(
+            @RequestParam(required = false) String type,
+            @RequestParam(required = false) Double minPrice,
+            @RequestParam(required = false) Double maxPrice,
+            @RequestParam(required = false) Integer minCapacity
+    ) {
+        if (minPrice != null && minPrice < 0) return ResponseEntity.badRequest().body("minPrice must be greater than or equal to 0");
+        if (maxPrice != null && maxPrice < 0) return ResponseEntity.badRequest().body("maxPrice must be greater than or equal to 0");
+        if (minPrice != null && maxPrice != null && minPrice > maxPrice)
+            return ResponseEntity.badRequest().body("minPrice cannot be greater than maxPrice");
+        if (minCapacity != null && minCapacity <= 0)
+            return ResponseEntity.badRequest().body("minCapacity must be greater than 0");
+
+        List<Accommodation> accommodations = accommodationService.retrieveFilteredAccommodations(type, minPrice, maxPrice, minCapacity);
+        return ResponseEntity.ok(accommodations);
+    }
+
     @GetMapping("/get/{id}")
     public ResponseEntity<?> getAccommodationById(@PathVariable Long id) {
         if (id <= 0) return ResponseEntity.badRequest().body("Invalid accommodation ID");
@@ -37,6 +56,7 @@ public class AccommodationController {
             return ResponseEntity.badRequest().body("Price must be greater than 0");
         if (accommodation.getCapacite() <= 0)
             return ResponseEntity.badRequest().body("Capacity must be greater than 0");
+
         Accommodation saved = accommodationService.addAccommodation(accommodation);
         return ResponseEntity.status(201).body(saved);
     }
@@ -56,6 +76,7 @@ public class AccommodationController {
         if (id <= 0) return ResponseEntity.badRequest().body("Invalid accommodation ID");
         Accommodation existing = accommodationService.retrieveAccommodation(id);
         if (existing == null) return ResponseEntity.status(404).body("Accommodation not found with id: " + id);
+
         accommodationService.removeAccommodation(id);
         return ResponseEntity.ok("Accommodation deleted successfully");
     }

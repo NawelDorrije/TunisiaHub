@@ -2,10 +2,11 @@ package org.example.backend_tunisiahub.Repositories.Accommodation;
 
 import org.example.backend_tunisiahub.Entities.Accommodation.Accommodation;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 
 import java.util.List;
 
-public interface AccommodationRepository extends JpaRepository<Accommodation,Long> {
+public interface AccommodationRepository extends JpaRepository<Accommodation,Long>, JpaSpecificationExecutor<Accommodation> {
     List<Accommodation> findByType(String type);
     List<Accommodation> findByPriceLessThanEqual(double price);
     List<Accommodation> findByCapaciteGreaterThanEqual(int capacite);

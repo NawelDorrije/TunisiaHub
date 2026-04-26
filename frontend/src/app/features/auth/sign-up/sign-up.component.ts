@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { AuthService } from '../services/auth.service';
 
 @Component({
@@ -13,6 +13,7 @@ export class SignUpComponent {
   errorMessage: string = '';
   successMessage: string = '';
   isLoading: boolean = false;
+  returnUrl: string | null;
 
   signUpForm = new FormGroup({
     nom: new FormControl('', Validators.required),
@@ -25,7 +26,13 @@ export class SignUpComponent {
     return this.signUpForm.controls;
   }
 
-  constructor(private authService: AuthService, private router: Router) {}
+  constructor(
+    private authService: AuthService,
+    private router: Router,
+    private route: ActivatedRoute
+  ) {
+    this.returnUrl = this.route.snapshot.queryParamMap.get('returnUrl');
+  }
 
   onSubmit(): void {
     if (this.signUpForm.invalid) {
@@ -44,6 +51,10 @@ export class SignUpComponent {
     }).subscribe({
       next: () => {
         this.isLoading = false;
+        if (this.returnUrl && this.returnUrl.startsWith('/')) {
+          this.router.navigateByUrl(this.returnUrl);
+          return;
+        }
         this.router.navigate(['/accommodations/explore']);
       },
       error: (err) => {

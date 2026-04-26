@@ -1,0 +1,239 @@
+<div class="card border-0 shadow-sm mt-4">
+  <div class="card-body p-4">
+
+    <!-- Step indicator -->
+    <div class="d-flex align-items-center gap-2 mb-4">
+      <span class="badge rounded-pill px-3 py-2"
+        [class.bg-primary]="currentStep >= 1"
+        [class.bg-secondary]="currentStep < 1">
+        1. Dates
+      </span>
+      <div class="flex-grow-1 border-top"></div>
+      <span class="badge rounded-pill px-3 py-2"
+        [class.bg-primary]="currentStep >= 2"
+        [class.bg-secondary]="currentStep < 2">
+        2. Payment
+      </span>
+      <div class="flex-grow-1 border-top"></div>
+      <span class="badge rounded-pill px-3 py-2"
+        [class.bg-primary]="currentStep >= 3"
+        [class.bg-secondary]="currentStep < 3">
+        3. Confirmed
+      </span>
+    </div>
+
+    <!-- Step 1 — Dates -->
+    <div *ngIf="currentStep === 1">
+      <h5 class="fw-bold mb-3">📅 Select your dates</h5>
+
+      <div class="alert alert-danger" *ngIf="errorMessage">{{ errorMessage }}</div>
+
+      <!-- Reserved dates info -->
+      <div class="alert alert-warning small" *ngIf="reservedRanges.length > 0">
+        ⚠️ Some dates are already reserved:
+        <ul class="mb-0 mt-1">
+          <li *ngFor="let range of reservedRanges">
+            {{ range.startDate | date:'dd MMM yyyy' }} → {{ range.endDate | date:'dd MMM yyyy' }}
+          </li>
+        </ul>
+      </div>
+
+      <div class="row g-3 mb-3">
+
+        <!-- Check-in -->
+        <div class="col-md-6">
+          <label class="form-label fw-semibold">Check-in date</label>
+          <input
+            type="date"
+            class="form-control reservation-date-input"
+            [(ngModel)]="startDateValue"
+            [ngModelOptions]="{ standalone: true }"
+            [min]="today"
+            (ngModelChange)="onStartDateChange()"
+          />
+        </div>
+
+        <!-- Check-out -->
+        <div class="col-md-6">
+          <label class="form-label fw-semibold">Check-out date</label>
+          <input
+            type="date"
+            class="form-control reservation-date-input"
+            [(ngModel)]="endDateValue"
+            [ngModelOptions]="{ standalone: true }"
+            [min]="minEndDate || today"
+            [disabled]="!startDateValue"
+            (ngModelChange)="onEndDateChange()"
+          />
+        </div>
+
+      </div>
+
+      <div class="alert alert-info py-2 small d-flex align-items-center gap-2" *ngIf="isCheckingAvailability">
+        <span class="spinner-border spinner-border-sm"></span>
+        Checking live availability...
+      </div>
+
+      <div class="alert py-2 small"
+        *ngIf="availabilityMessage && !isCheckingAvailability"
+        [class.alert-success]="isRangeAvailable"
+        [class.alert-warning]="isRangeAvailable === false"
+        [class.alert-secondary]="isRangeAvailable === null"
+      >
+        {{ availabilityMessage }}
+      </div>
+
+      <!-- Booking summary -->
+      <div class="card bg-light border-0 p-3 mb-3" *ngIf="nights > 0">
+        <div class="d-flex justify-content-between mb-1">
+          <span class="text-muted">{{ pricePerNight }} TND × {{ nights }} nights</span>
+          <span class="fw-bold">{{ totalPrice }} TND</span>
+        </div>
+        <div class="d-flex justify-content-between mb-1">
+          <span class="text-muted">Check-in</span>
+          <span>{{ startDate | date:'dd MMM yyyy' }}</span>
+        </div>
+        <div class="d-flex justify-content-between mb-1">
+          <span class="text-muted">Check-out</span>
+          <span>{{ endDate | date:'dd MMM yyyy' }}</span>
+        </div>
+        <hr class="my-2"/>
+        <div class="d-flex justify-content-between fw-bold">
+          <span>Total</span>
+          <span class="text-primary">{{ totalPrice }} TND</span>
+        </div>
+      </div>
+
+      <button
+        class="btn btn-primary w-100"
+        (click)="goToPayment()"
+        [disabled]="nights <= 0 || isRangeAvailable === false || isCheckingAvailability"
+      >
+        Continue to Payment →
+      </button>
+    </div>
+
+    <!-- Step 2 — Fake payment -->
+    <div *ngIf="currentStep === 2">
+      <h5 class="fw-bold mb-1">💳 Payment details</h5>
+      <p class="text-muted small mb-3">Your information is secure and encrypted</p>
+
+      <div class="alert alert-danger" *ngIf="errorMessage">{{ errorMessage }}</div>
+
+      <div class="alert alert-info d-flex justify-content-between mb-3">
+        <span>{{ accommodationTitle }} — {{ nights }} nights</span>
+        <span class="fw-bold">{{ totalPrice }} TND</span>
+      </div>
+
+      <form [formGroup]="paymentForm" class="row g-3">
+
+        <div class="col-12">
+          <label class="form-label">Cardholder Name</label>
+          <input
+            class="form-control"
+            formControlName="cardName"
+            [class.is-invalid]="f['cardName'].invalid && f['cardName'].touched"
+            placeholder="Name on card"
+          />
+          <div class="invalid-feedback">Name is required.</div>
+        </div>
+
+        <div class="col-12">
+          <label class="form-label">Card Number</label>
+          <div class="input-group">
+            <input
+              class="form-control"
+              formControlName="cardNumber"
+              [class.is-invalid]="f['cardNumber'].invalid && f['cardNumber'].touched"
+              placeholder="1234567890123456"
+              maxlength="16"
+            />
+            <span class="input-group-text">💳</span>
+          </div>
+          <div class="invalid-feedback">Enter a valid 16-digit card number.</div>
+        </div>
+
+        <div class="col-6">
+          <label class="form-label">Expiry Date</label>
+          <input
+            class="form-control"
+            formControlName="expiry"
+            [class.is-invalid]="f['expiry'].invalid && f['expiry'].touched"
+            placeholder="MM/YY"
+            maxlength="5"
+          />
+          <div class="invalid-feedback">Enter valid expiry (MM/YY).</div>
+        </div>
+
+        <div class="col-6">
+          <label class="form-label">CVV</label>
+          <input
+            class="form-control"
+            formControlName="cvv"
+            [class.is-invalid]="f['cvv'].invalid && f['cvv'].touched"
+            placeholder="123"
+            maxlength="3"
+            type="password"
+          />
+          <div class="invalid-feedback">Enter valid 3-digit CVV.</div>
+        </div>
+
+      </form>
+
+      <div class="d-flex gap-2 mt-4">
+        <button class="btn btn-outline-secondary" (click)="currentStep = 1">← Back</button>
+        <button
+          class="btn btn-primary flex-fill"
+          (click)="confirmReservation()"
+          [disabled]="isLoading"
+        >
+          <span *ngIf="isLoading" class="spinner-border spinner-border-sm me-2"></span>
+          {{ isLoading ? 'Processing...' : '🔒 Pay ' + totalPrice + ' TND' }}
+        </button>
+      </div>
+
+      <p class="text-center text-muted small mt-3">
+        🔒 This is a simulated payment — no real charge will be made
+      </p>
+    </div>
+
+    <!-- Step 3 — Confirmed -->
+    <div *ngIf="currentStep === 3" class="text-center py-3">
+      <div style="font-size: 4rem;">✅</div>
+      <h4 class="fw-bold mt-3">Reservation Confirmed!</h4>
+      <p class="text-muted">
+        Your stay at <strong>{{ accommodationTitle }}</strong> is confirmed.
+      </p>
+      <div class="card bg-light border-0 p-3 mb-4 text-start">
+        <div class="d-flex justify-content-between mb-1">
+          <span class="text-muted">Check-in</span>
+          <span class="fw-semibold">{{ startDate | date:'dd MMM yyyy' }}</span>
+        </div>
+        <div class="d-flex justify-content-between mb-1">
+          <span class="text-muted">Check-out</span>
+          <span class="fw-semibold">{{ endDate | date:'dd MMM yyyy' }}</span>
+        </div>
+        <div class="d-flex justify-content-between mb-1">
+          <span class="text-muted">Nights</span>
+          <span class="fw-semibold">{{ nights }}</span>
+        </div>
+        <hr class="my-2"/>
+        <div class="d-flex justify-content-between">
+          <span class="fw-bold">Total Paid</span>
+          <span class="fw-bold text-primary">{{ totalPrice }} TND</span>
+        </div>
+      </div>
+      <button class="btn btn-outline-primary" (click)="resetForm()">
+        Make another reservation
+      </button>
+    </div>
+  
+  </div>
+</div>
+<app-feedback-popup
+  *ngIf="showFeedback && confirmedReservationId"
+  [accommodationId]="accommodationId"
+  [reservationId]="confirmedReservationId!"
+  [accommodationTitle]="accommodationTitle"
+  (closed)="onFeedbackClosed()"
+></app-feedback-popup>

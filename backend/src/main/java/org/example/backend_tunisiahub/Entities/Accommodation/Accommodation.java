@@ -1,11 +1,14 @@
 package org.example.backend_tunisiahub.Entities.Accommodation;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.FieldDefaults;
+import org.example.backend_tunisiahub.Entities.Reservation;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -38,6 +41,11 @@ public class Accommodation {
 
     @Column(nullable = false)
     int capacite;
+    @Column
+    Double latitude;
+
+    @Column
+    Double longitude;
 
     @ElementCollection
     @CollectionTable(name = "accommodation_photos", joinColumns = @JoinColumn(name = "accommodation_id"))
@@ -46,4 +54,8 @@ public class Accommodation {
 
     @OneToMany(mappedBy = "accommodation", cascade = CascadeType.ALL, orphanRemoval = true)
     List<AccommodationReview> accommodationReviews = new ArrayList<>();
+
+    @OneToMany(mappedBy = "accommodation", cascade = CascadeType.ALL)
+    @JsonIgnore
+    List<Reservation> reservations = new ArrayList<>();
 }

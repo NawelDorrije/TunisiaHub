@@ -9,8 +9,7 @@ public interface IReviewService {
 
     AccommodationReview retrieveReview(Long reviewId);
 
-    AccommodationReview addReview(Long accommodationId, AccommodationReview accommodationReview);
-
+    AccommodationReview addReview(Long accommodationId, AccommodationReview review, String email);
     void removeReview(Long reviewId);
 
     AccommodationReview modifyReview(Long id, AccommodationReview accommodationReview);

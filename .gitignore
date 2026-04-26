@@ -1,1 +1,7 @@
 docs/CARPOOLING_TRIPS_API.md
+
+# Environment files
+.env
+**/.env
+.env.local
+**/.env.local
