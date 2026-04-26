@@ -1,0 +1,552 @@
+<!-- ══════════════════════════════════════════
+     ROOT WRAPPER
+══════════════════════════════════════════ -->
+<div class="am-page">
+
+  <!-- ══════ TOAST NOTIFICATIONS ══════ -->
+  <div class="toast toast--success" [class.toast--show]="successMsg" role="alert" aria-live="polite">
+    <div class="toast__icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+        <path d="M22 11.08V12a10 10 0 11-5.93-9.14"/>
+        <polyline points="22,4 12,14.01 9,11.01"/>
+      </svg>
+    </div>
+    <span>{{ successMsg }}</span>
+  </div>
+  <div class="toast toast--error" [class.toast--show]="errorMsg && view === 'list'" role="alert" aria-live="polite">
+    <div class="toast__icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+        <circle cx="12" cy="12" r="10"/>
+        <line x1="12" y1="8" x2="12" y2="12"/>
+        <line x1="12" y1="16" x2="12.01" y2="16"/>
+      </svg>
+    </div>
+    <span>{{ errorMsg }}</span>
+  </div>
+
+  <!-- ══════════════════════════════════
+       VIEW: LIST
+  ══════════════════════════════════ -->
+  <ng-container *ngIf="view === 'list'">
+
+    <!-- Page Header -->
+    <header class="am-header">
+      <div class="am-header__left">
+        <button class="back-btn" (click)="goBack()" aria-label="Back to My Campings">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+            <path d="M19 12H5M12 5l-7 7 7 7"/>
+          </svg>
+          My Campings
+        </button>
+        <div class="am-title-row">
+          <div class="am-title-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+              <circle cx="12" cy="12" r="10"/>
+              <polygon points="10,8 16,12 10,16 10,8"/>
+            </svg>
+          </div>
+          <div>
+            <h1 class="am-title">Activities</h1>
+            <p class="am-subtitle" *ngIf="camping">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+                <polyline points="9,22 9,12 15,12 15,22"/>
+              </svg>
+              {{ camping.name }}
+            </p>
+          </div>
+        </div>
+      </div>
+      <div class="am-header__right">
+        <!-- Stats chips -->
+        <div class="stat-chips" *ngIf="!loading && activities.length > 0">
+          <span class="stat-chip stat-chip--total">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"/><polygon points="10,8 16,12 10,16 10,8"/>
+            </svg>
+            {{ activities.length }} total
+          </span>
+          <span class="stat-chip stat-chip--active" *ngIf="activeCount > 0">
+            <span class="sdot sdot--green"></span>{{ activeCount }} active
+          </span>
+          <span class="stat-chip stat-chip--off" *ngIf="inactiveCount > 0">
+            <span class="sdot sdot--gray"></span>{{ inactiveCount }} inactive
+          </span>
+        </div>
+        <button class="btn-add" (click)="openCreate()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3">
+            <line x1="12" y1="5" x2="12" y2="19"/>
+            <line x1="5" y1="12" x2="19" y2="12"/>
+          </svg>
+          Add Activity
+        </button>
+      </div>
+    </header>
+
+    <!-- Loading Skeletons -->
+    <div class="act-grid" *ngIf="loading">
+      <div class="skeleton-card" *ngFor="let i of [1,2,3,4,5,6]">
+        <div class="sk sk-head"></div>
+        <div class="sk sk-line w70"></div>
+        <div class="sk sk-line w50"></div>
+        <div class="sk sk-chips"></div>
+      </div>
+    </div>
+
+    <!-- Empty State -->
+    <div class="empty-wrap" *ngIf="!loading && activities.length === 0">
+      <div class="empty-art">
+        <svg viewBox="0 0 120 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="60" cy="50" r="36" fill="#eef6f1"/>
+          <circle cx="60" cy="50" r="28" fill="#c6dece"/>
+          <polygon points="52,38 72,50 52,62 52,38" fill="#2D5A3D"/>
+          <circle cx="90" cy="22" r="10" fill="#fde68a" opacity=".9"/>
+          <line x1="90" y1="10" x2="90" y2="4"  stroke="#f59e0b" stroke-width="2" stroke-linecap="round"/>
+          <line x1="90" y1="34" x2="90" y2="40" stroke="#f59e0b" stroke-width="2" stroke-linecap="round"/>
+          <line x1="78" y1="22" x2="72" y2="22" stroke="#f59e0b" stroke-width="2" stroke-linecap="round"/>
+          <line x1="102" y1="22" x2="108" y2="22" stroke="#f59e0b" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <h3 class="empty-title">No activities yet</h3>
+      <p class="empty-desc">Add activities like hikes, guided tours, or workshops to enrich your guests' experience.</p>
+      <button class="btn-add btn-add--lg" (click)="openCreate()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3">
+          <line x1="12" y1="5" x2="12" y2="19"/>
+          <line x1="5" y1="12" x2="19" y2="12"/>
+        </svg>
+        Add First Activity
+      </button>
+    </div>
+
+    <!-- Activities Grid -->
+    <div class="act-grid" *ngIf="!loading && activities.length > 0">
+      <article
+        class="act-card"
+        *ngFor="let a of activities; let i = index"
+        [class.act-card--inactive]="!a.active"
+        [style.animation-delay]="(i * 55) + 'ms'"
+      >
+        <!-- Card Header -->
+        <div class="act-card__top">
+          <div class="act-card__icon-wrap">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"/>
+              <polygon points="10,8 16,12 10,16 10,8"/>
+            </svg>
+          </div>
+          <div class="act-card__title-group">
+            <h3 class="act-card__name">{{ a.name }}</h3>
+          </div>
+          <span class="act-status" [ngClass]="a.active ? 'act-status--on' : 'act-status--off'">
+            <span class="sdot" [ngClass]="a.active ? 'sdot--green' : 'sdot--gray'"></span>
+            {{ a.active ? 'Active' : 'Inactive' }}
+          </span>
+        </div>
+
+        <!-- Description -->
+        <p class="act-card__desc" *ngIf="a.description">
+          {{ a.description | slice:0:110 }}{{ (a.description?.length ?? 0) > 110 ? '…' : '' }}
+        </p>
+        <p class="act-card__desc act-card__desc--empty" *ngIf="!a.description">No description provided.</p>
+
+        <!-- Meta Chips -->
+        <div class="act-card__meta">
+          <span class="meta-chip meta-chip--price">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="12" y1="1" x2="12" y2="23"/>
+              <path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/>
+            </svg>
+            {{ a.price | number }} TND / person
+          </span>
+          <span class="meta-chip meta-chip--duration" *ngIf="a.duration">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"/>
+              <polyline points="12,6 12,12 16,14"/>
+            </svg>
+            {{ a.duration }} hr{{ a.duration !== 1 ? 's' : '' }}
+          </span>
+        </div>
+
+        <!-- Actions -->
+        <div class="act-card__actions">
+          <button class="act-btn act-btn--edit" (click)="openEdit(a)" aria-label="Edit activity">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1">
+              <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/>
+              <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>
+            </svg>
+            Edit
+          </button>
+          <button class="act-btn act-btn--delete" (click)="confirmDelete(a)" aria-label="Delete activity">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1">
+              <polyline points="3,6 5,6 21,6"/>
+              <path d="M19 6l-1 14H6L5 6"/>
+              <path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/>
+            </svg>
+            Delete
+          </button>
+        </div>
+      </article>
+    </div>
+
+  </ng-container>
+
+  <!-- ══════════════════════════════════
+       VIEW: FORM (CREATE / EDIT)
+       Rendered INLINE — no modal backdrop
+       This fixes the display issue where
+       modal z-index / stopPropagation or
+       missing ReactiveFormsModule caused
+       the form to never appear.
+  ══════════════════════════════════ -->
+  <ng-container *ngIf="view === 'form'">
+
+    <!-- Form Header -->
+    <header class="form-header">
+      <button class="back-btn" (click)="closeForm()" aria-label="Back to activities list">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+          <path d="M19 12H5M12 5l-7 7 7 7"/>
+        </svg>
+        Back to Activities
+      </button>
+      <div class="form-title-row">
+        <div class="form-title-icon" [class.form-title-icon--edit]="editTarget">
+          <svg *ngIf="!editTarget" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"/>
+            <polygon points="10,8 16,12 10,16 10,8"/>
+            <line x1="12" y1="5" x2="12" y2="19" stroke-width="2.2"/>
+            <line x1="5" y1="12" x2="19" y2="12" stroke-width="2.2"/>
+          </svg>
+          <svg *ngIf="editTarget" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/>
+            <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>
+          </svg>
+        </div>
+        <div>
+          <h1 class="form-title">{{ editTarget ? 'Edit Activity' : 'New Activity' }}</h1>
+          <p class="form-subtitle">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+              <polyline points="9,22 9,12 15,12 15,22"/>
+            </svg>
+            {{ camping?.name ?? 'Camping' }}
+          </p>
+        </div>
+      </div>
+    </header>
+
+    <!-- ── THE FORM ── -->
+    <div class="form-shell">
+      <form [formGroup]="form" (ngSubmit)="submit()" novalidate autocomplete="off">
+
+        <!-- Server error banner -->
+        <div class="form-error-banner" *ngIf="errorMsg" role="alert">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+            <line x1="12" y1="9" x2="12" y2="13"/>
+            <line x1="12" y1="17" x2="12.01" y2="17"/>
+          </svg>
+          {{ errorMsg }}
+        </div>
+
+        <!-- ── SECTION 1: Basic Info ── -->
+        <section class="form-section">
+          <div class="form-section__label">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="8" y1="6" x2="21" y2="6"/>
+              <line x1="8" y1="12" x2="21" y2="12"/>
+              <line x1="8" y1="18" x2="21" y2="18"/>
+              <line x1="3" y1="6" x2="3.01" y2="6"/>
+              <line x1="3" y1="12" x2="3.01" y2="12"/>
+              <line x1="3" y1="18" x2="3.01" y2="18"/>
+            </svg>
+            Basic Information
+          </div>
+
+          <!-- Activity Name -->
+          <div class="field" [class.field--error]="invalid('name')" [class.field--valid]="f('name').valid && f('name').touched">
+            <label class="field__label" for="act-name">
+              Activity Name
+              <span class="req-star">*</span>
+            </label>
+            <div class="field__input-wrap">
+              <span class="field__prefix-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="12" cy="12" r="10"/>
+                  <polygon points="10,8 16,12 10,16 10,8"/>
+                </svg>
+              </span>
+              <input
+                id="act-name"
+                type="text"
+                formControlName="name"
+                placeholder="e.g. Desert Hike, Stargazing Night, Guided Bird Tour"
+                class="field__input field__input--icon"
+                [attr.aria-invalid]="invalid('name')"
+                aria-describedby="name-err"
+                maxlength="100"
+              />
+              <span class="field__valid-icon" *ngIf="f('name').valid && f('name').touched">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <polyline points="20,6 9,17 4,12"/>
+                </svg>
+              </span>
+            </div>
+            <div class="field__errors" id="name-err" role="alert" *ngIf="invalid('name')">
+              <span *ngIf="f('name').errors?.['required']">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                Activity name is required.
+              </span>
+              <span *ngIf="f('name').errors?.['minlength']">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                Minimum 2 characters required.
+              </span>
+              <span *ngIf="f('name').errors?.['maxlength']">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                Maximum 100 characters allowed.
+              </span>
+            </div>
+          </div>
+
+          <!-- Description -->
+          <div class="field" [class.field--error]="invalid('description')">
+            <label class="field__label" for="act-desc">
+              Description
+              <span class="optional-tag">Optional</span>
+            </label>
+            <div class="field__textarea-wrap">
+              <textarea
+                id="act-desc"
+                formControlName="description"
+                rows="4"
+                placeholder="Describe the activity — what guests will experience, equipment needed, difficulty level…"
+                class="field__textarea"
+                maxlength="500"
+                aria-describedby="desc-count"
+              ></textarea>
+            </div>
+            <div class="field__footer">
+              <div class="field__errors" *ngIf="invalid('description')">
+                <span *ngIf="f('description').errors?.['maxlength']">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                  Maximum 500 characters allowed.
+                </span>
+              </div>
+              <span class="char-count" id="desc-count" [class.char-count--warn]="descRemaining < 50">
+                {{ descRemaining }} characters remaining
+              </span>
+            </div>
+          </div>
+        </section>
+
+        <!-- ── SECTION 2: Pricing & Duration ── -->
+        <section class="form-section">
+          <div class="form-section__label">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="12" y1="1" x2="12" y2="23"/>
+              <path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/>
+            </svg>
+            Pricing &amp; Duration
+          </div>
+
+          <div class="grid-2">
+            <!-- Price -->
+            <div class="field" [class.field--error]="invalid('price')" [class.field--valid]="f('price').valid && f('price').touched">
+              <label class="field__label" for="act-price">
+                Price per Person (TND)
+                <span class="req-star">*</span>
+              </label>
+              <div class="field__input-wrap">
+                <span class="field__prefix-icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="12" y1="1" x2="12" y2="23"/>
+                    <path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/>
+                  </svg>
+                </span>
+                <input
+                  id="act-price"
+                  type="number"
+                  formControlName="price"
+                  min="0"
+                  step="0.5"
+                  placeholder="0.00"
+                  class="field__input field__input--icon"
+                  [attr.aria-invalid]="invalid('price')"
+                  aria-describedby="price-err"
+                />
+                <span class="field__suffix">TND</span>
+                <span class="field__valid-icon" *ngIf="f('price').valid && f('price').touched">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20,6 9,17 4,12"/></svg>
+                </span>
+              </div>
+              <div class="field__errors" id="price-err" role="alert" *ngIf="invalid('price')">
+                <span *ngIf="f('price').errors?.['required']">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                  Price is required.
+                </span>
+                <span *ngIf="f('price').errors?.['min']">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                  Price must be 0 or greater.
+                </span>
+              </div>
+            </div>
+
+            <!-- Duration -->
+            <div class="field" [class.field--error]="invalid('duration')" [class.field--valid]="f('duration').valid && f('duration').value !== null && f('duration').touched">
+              <label class="field__label" for="act-duration">
+                Duration (hours)
+                <span class="optional-tag">Optional</span>
+              </label>
+              <div class="field__input-wrap">
+                <span class="field__prefix-icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"/>
+                    <polyline points="12,6 12,12 16,14"/>
+                  </svg>
+                </span>
+                <input
+                  id="act-duration"
+                  type="number"
+                  formControlName="duration"
+                  min="0.5"
+                  step="0.5"
+                  placeholder="e.g. 2"
+                  class="field__input field__input--icon"
+                  aria-describedby="duration-err"
+                />
+                <span class="field__suffix">hrs</span>
+              </div>
+              <div class="field__errors" id="duration-err" role="alert" *ngIf="invalid('duration')">
+                <span>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                  Minimum duration is 0.5 hours.
+                </span>
+              </div>
+              <p class="field__hint">Enter duration in 0.5-hour increments (e.g. 1, 1.5, 2…)</p>
+            </div>
+          </div>
+
+          <!-- Max Participants -->
+          <div class="field" [class.field--error]="invalid('maxParticipants')" [class.field--valid]="f('maxParticipants').valid && f('maxParticipants').value !== null && f('maxParticipants').touched">
+            <label class="field__label" for="act-max">
+              Max Participants
+              <span class="optional-tag">Optional</span>
+            </label>
+            <div class="field__input-wrap field__input-wrap--half">
+              <span class="field__prefix-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/>
+                  <circle cx="9" cy="7" r="4"/>
+                  <path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/>
+                </svg>
+              </span>
+              <input
+                id="act-max"
+                type="number"
+                formControlName="maxParticipants"
+                min="1"
+                placeholder="e.g. 20"
+                class="field__input field__input--icon"
+                aria-describedby="max-err"
+              />
+              <span class="field__suffix">people</span>
+            </div>
+            <div class="field__errors" id="max-err" role="alert" *ngIf="invalid('maxParticipants')">
+              <span>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                Minimum 1 participant required.
+              </span>
+            </div>
+            <p class="field__hint">Leave blank for unlimited participants.</p>
+          </div>
+        </section>
+
+        <!-- ── SECTION 3: Status ── -->
+        <section class="form-section">
+          <div class="form-section__label">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+            </svg>
+            Availability
+          </div>
+
+          <div class="toggle-field">
+            <div class="toggle-field__info">
+              <div class="toggle-field__title">Activity Status</div>
+              <div class="toggle-field__desc">
+                {{ form.value.active ? 'Guests can see and book this activity.' : 'This activity is hidden from guests.' }}
+              </div>
+            </div>
+            <label class="toggle-switch" [class.toggle-switch--on]="form.value.active" aria-label="Toggle activity status">
+              <input type="checkbox" formControlName="active" />
+              <span class="toggle-switch__track">
+                <span class="toggle-switch__thumb"></span>
+              </span>
+              <span class="toggle-switch__label">{{ form.value.active ? 'Active' : 'Inactive' }}</span>
+            </label>
+          </div>
+        </section>
+
+        <!-- ── FORM ACTIONS ── -->
+        <div class="form-actions">
+          <button type="button" class="form-btn form-btn--cancel" (click)="closeForm()" [disabled]="saving">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+              <line x1="18" y1="6" x2="6" y2="18"/>
+              <line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+            Cancel
+          </button>
+          <button type="submit" class="form-btn form-btn--submit" [disabled]="saving">
+            <span class="spinner" *ngIf="saving"></span>
+            <svg *ngIf="!saving && !editTarget" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+              <line x1="12" y1="5" x2="12" y2="19"/>
+              <line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
+            <svg *ngIf="!saving && editTarget" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+              <path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v14a2 2 0 01-2 2z"/>
+              <polyline points="17,21 17,13 7,13 7,21"/>
+              <polyline points="7,3 7,8 15,8"/>
+            </svg>
+            {{ saving ? 'Saving…' : (editTarget ? 'Save Changes' : 'Create Activity') }}
+          </button>
+        </div>
+
+      </form>
+    </div>
+
+  </ng-container>
+
+  <!-- ══════════════════════════════════
+       DELETE CONFIRMATION MODAL
+  ══════════════════════════════════ -->
+  <div class="modal-backdrop" *ngIf="deleteTarget" (click)="cancelDelete()" role="dialog" aria-modal="true" aria-labelledby="del-title">
+    <div class="del-modal" (click)="$event.stopPropagation()">
+      <div class="del-modal__icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+          <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+          <line x1="12" y1="9" x2="12" y2="13"/>
+          <line x1="12" y1="17" x2="12.01" y2="17"/>
+        </svg>
+      </div>
+      <div class="del-modal__content">
+        <h2 class="del-modal__title" id="del-title">Delete Activity</h2>
+        <p class="del-modal__desc">
+          You are about to permanently delete <strong class="hl">{{ deleteTarget?.name }}</strong>.
+          This action cannot be undone.
+        </p>
+      </div>
+      <div class="del-modal__actions">
+        <button class="form-btn form-btn--cancel" (click)="cancelDelete()" [disabled]="deleting">Keep Activity</button>
+        <button class="form-btn form-btn--danger" (click)="executeDelete()" [disabled]="deleting">
+          <span class="spinner" *ngIf="deleting"></span>
+          <svg *ngIf="!deleting" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+            <polyline points="3,6 5,6 21,6"/>
+            <path d="M19 6l-1 14H6L5 6"/>
+            <path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/>
+          </svg>
+          {{ deleting ? 'Deleting…' : 'Yes, Delete' }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /am-page -->

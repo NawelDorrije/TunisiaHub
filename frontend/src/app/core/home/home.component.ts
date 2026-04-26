@@ -14,7 +14,7 @@ interface ServiceCard {
 })
 export class HomeComponent {
   services: ServiceCard[] = [
-    { title: 'Campings', description: 'Find the best camping spots across Tunisia.', icon: 'bi bi-tree', link: '/campings' },
+    { title: 'Campings', description: 'Find the best camping spots across Tunisia.', icon: 'bi bi-tree', link: '/camping' },
     { title: 'Events', description: 'Discover amazing events near you.', icon: 'bi bi-calendar-event', link: '/events' },
     { title: 'Trendy Places', description: 'Explorez les lieux les plus tendance de Tunisie.', icon: 'bi bi-geo-alt', link: '/trendy-places' },
     { title: 'Shoppings', description: 'Explore top shopping destinations.', icon: 'bi bi-cart4', link: '/shoppings' },

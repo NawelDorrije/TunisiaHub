@@ -1,58 +1,75 @@
 package org.example.backend_tunisiahub.Entities;
 
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 import lombok.experimental.FieldDefaults;
-import org.example.backend_tunisiahub.carpooling.entity.Trip;
+import org.example.backend_tunisiahub.Entities.Camping.Activity;
+import org.example.backend_tunisiahub.Entities.Camping.Enums.ReservationStatus;
+import org.example.backend_tunisiahub.Entities.Camping.Spot;
 import org.example.backend_tunisiahub.Entities.User.User;
 
-import org.example.backend_tunisiahub.Entities.Camping.Spot;
-import java.util.Date;
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
 @Getter
 @Setter
-@FieldDefaults(level = AccessLevel.PRIVATE)
 @NoArgsConstructor
+@AllArgsConstructor
+@Builder
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class Reservation {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     Long id;
 
-    String status;
-
-    @Temporal(TemporalType.DATE)
-    Date startDate;
-
-    @Temporal(TemporalType.DATE)
-    Date endDate;
-
-    Double totalPrice;
-
-    @Enumerated(EnumType.STRING)
-    ReservationType type;
-
-    @ManyToOne
-    @JoinColumn(name = "trip_id")
-    Trip trip;
-
-    @ManyToOne
-    @JoinColumn(name = "spot_id")
-    Spot spot;
-
-    @ManyToOne
-    @JoinColumn(name = "user_id")
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
     User user;
 
-    @OneToMany(mappedBy = "reservation")
-    List<Complaint> complaints;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "spot_id", nullable = false)
+    Spot spot;
+    @Builder.Default
 
-    @OneToOne(mappedBy = "reservation")
-    Review review;
+    @ManyToMany
+    @JoinTable(
+            name = "reservation_activities",
+            joinColumns = @JoinColumn(name = "reservation_id"),
+            inverseJoinColumns = @JoinColumn(name = "activity_id")
+    )
+    List<Activity> activities = new ArrayList<>();
 
+    @Column(nullable = false)
+    LocalDate checkIn;
+
+    @Column(nullable = false)
+    LocalDate checkOut;
+
+    @Column( nullable = false)  // ← matches your DB column
+    Integer numberOfGuests;
+
+    @Column(nullable = false, precision = 10, scale = 2)
+    BigDecimal totalPrice;
+
+    @Builder.Default
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    ReservationStatus status = ReservationStatus.PENDING;
+
+    @Column(columnDefinition = "TEXT")
+    String notes;
+
+    @Builder.Default
+    @Column(nullable = false)
+    LocalDateTime createdAt = LocalDateTime.now();
+
+    LocalDateTime updatedAt;
+
+    @OneToOne(mappedBy = "reservation", cascade = CascadeType.ALL)
+    Payment payment;
 }

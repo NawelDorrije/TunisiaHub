@@ -4,51 +4,31 @@ import { NotFoundComponent } from './features/not-found/not-found.component';
 import { HomeComponent } from './core/home/home.component';
 
 const routes: Routes = [
-  { path: 'home', component: HomeComponent },
-  { path: '', redirectTo: 'home', pathMatch: 'full' },
-  {
-    path: 'campings',
-    loadChildren: () =>
-      import('./features/campings/campings.module').then(
-        (m) => m.CampingsModule,
-      ),
-  },
-  {
-    path: 'carpooling',
-    loadChildren: () =>
-      import('./features/Carpooling/carpooling.module').then(
-        (m) => m.CarpoolingModule,
-      ),
-  },
-  {
-    path: 'auth',
-    loadChildren: () =>
-      import('./features/auth/auth.module').then((m) => m.AuthModule),
-  },
-   {
-  path: 'accommodations',
-  loadChildren: () =>
-    import('./features/accommodations/accommodations.module')
-      .then(m => m.AccommodationsModule)
-},
+ { path : 'home', component: HomeComponent},
+  { path : '', redirectTo: 'home', pathMatch: 'full'},
 
+  { path: 'auth', loadChildren: () => import('./features/auth/auth.module').then(m => m.AuthModule) },
   {
-      path: 'trendy-places',
-      loadChildren: () =>
-        import('./features/trendy-places/trendy-places.module')
-          .then(m => m.TrendyPlacesModule)
-    },
+    path: 'camping',
+    loadChildren: () =>
+      import('./features/camping/camping.module')
+        .then(m => m.CampingModule)
+  },
+  
+  {
+    path: 'trendy-places',
+    loadChildren: () =>
+      import('./features/trendy-places/trendy-places.module')
+        .then(m => m.TrendyPlacesModule)
+  },
   {
     path: '**',
-    component: NotFoundComponent,
-  },
-  
-  
-
+    component: NotFoundComponent
+  }
 ];
 
 @NgModule({
   imports: [RouterModule.forRoot(routes)],
-  exports: [RouterModule],
+  exports: [RouterModule]
 })
-export class AppRoutingModule {}
+export class AppRoutingModule { }
