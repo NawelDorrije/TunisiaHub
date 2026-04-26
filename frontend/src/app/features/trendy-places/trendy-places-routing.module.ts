@@ -9,6 +9,7 @@ import { PaiementReservationComponent } from './paiement-reservation/paiement-re
 import { AdminReservationsComponent } from './admin/admin-reservations/admin-reservations.component';
 import { FactureComponent } from './facture/facture.component';
 import { VerifyBilletComponent } from './verify-billet/verify-billet.component';
+import { ComparateurLieuxComponent } from './comparateur-lieux/comparateur-lieux.component';
 
 const routes: Routes = [
   { path: '', component: LieuListComponent },
@@ -20,6 +21,7 @@ const routes: Routes = [
   { path: 'admin/lieux', component: AdminLieuComponent },
   { path: 'admin/activites', component: AdminActiviteComponent },
   { path: 'admin/reservations', component: AdminReservationsComponent }, // ← AJOUTE
+  { path: 'comparer', component: ComparateurLieuxComponent },
   { path: ':id', component: LieuDetailComponent }
 ];
 

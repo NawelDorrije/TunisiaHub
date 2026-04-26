@@ -19,7 +19,6 @@ public class NotificationScheduler {
     private final ReservationActiviteRepository reservationRepo;
     private final EmailService emailService;
 
-    // Exécuté tous les jours à 8h00 du matin
     @Scheduled(cron = "0 15 18 * * *")
     public void envoyerRappels() {
         log.info("🔔 Vérification des rappels de notifications...");

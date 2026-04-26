@@ -18,7 +18,6 @@ public class FactureController {
     private final FactureService factureService;
     private final ReservationActiviteRepository reservationRepo;
 
-    // Générer/obtenir le token d'une réservation
     @PostMapping("/generer/{reservationId}")
     public ResponseEntity<?> genererFacture(@PathVariable Long reservationId) {
         return reservationRepo.findById(reservationId)

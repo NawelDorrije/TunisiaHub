@@ -11,18 +11,18 @@ import { TrendyPlacesService } from '../../../services/trendy-places.service';
 export class LieuListComponent implements OnInit {
   lieux: Lieu[] = [];
   filteredLieux: Lieu[] = [];
-  searchTerm: string = '';
-  selectedType: string = '';
-  selectedVille: string = '';
-  loading: boolean = true;
-
+  searchTerm = '';
+  selectedType = '';
+  selectedVille = '';
+  loading = true;
   types: string[] = [];
   villes: string[] = [];
 
-  constructor(
-    private trendyService: TrendyPlacesService,
-    private router: Router
-  ) {}
+  // Comparateur
+  selectedForCompare: Lieu[] = [];
+  showCompareBar = false;
+
+  constructor(private trendyService: TrendyPlacesService, private router: Router) {}
 
   ngOnInit(): void {
     this.trendyService.getAllLieux().subscribe({
@@ -33,10 +33,7 @@ export class LieuListComponent implements OnInit {
         this.villes = [...new Set(data.map(l => l.ville))];
         this.loading = false;
       },
-      error: (err) => {
-        console.error(err);
-        this.loading = false;
-      }
+      error: () => { this.loading = false; }
     });
   }
 
@@ -50,44 +47,52 @@ export class LieuListComponent implements OnInit {
     });
   }
 
-  onSearchChange(value: string): void {
-    this.searchTerm = value;
-    this.filter();
+  onSearchChange(value: string): void { this.searchTerm = value; this.filter(); }
+  onTypeChange(value: string): void { this.selectedType = value; this.filter(); }
+  onVilleChange(value: string): void { this.selectedVille = value; this.filter(); }
+  goToDetail(id: number): void { this.router.navigate(['/trendy-places', id]); }
+
+  // ===== COMPARATEUR =====
+  toggleCompare(event: Event, lieu: Lieu): void {
+    event.stopPropagation();
+    const idx = this.selectedForCompare.findIndex(l => l.id === lieu.id);
+    if (idx > -1) {
+      this.selectedForCompare.splice(idx, 1);
+    } else {
+      if (this.selectedForCompare.length >= 3) return;
+      this.selectedForCompare.push(lieu);
+    }
+    this.showCompareBar = this.selectedForCompare.length >= 1;
   }
 
-  onTypeChange(value: string): void {
-    this.selectedType = value;
-    this.filter();
+  isSelectedForCompare(lieu: Lieu): boolean {
+    return this.selectedForCompare.some(l => l.id === lieu.id);
   }
 
-  onVilleChange(value: string): void {
-    this.selectedVille = value;
-    this.filter();
+  lancerComparaison(): void {
+    const ids = this.selectedForCompare.map(l => l.id).join(',');
+    this.router.navigate(['/trendy-places/comparer'], { queryParams: { ids } });
   }
 
-  goToDetail(id: number): void {
-    this.router.navigate(['/trendy-places', id]);
+  clearCompare(): void {
+    this.selectedForCompare = [];
+    this.showCompareBar = false;
   }
 
-getImageUrl(image: string): string {
-  if (!image) return '/assets/images/lieux/default.jpg';
-  if (image.startsWith('http')) return image;  // ← ✅ gère http://localhost:8089/...
-  return `/assets/images/lieux/${image}`;       // ← ✅ gère 1.jpg, 2.jpg...
-}
+  getImageUrl(image: string): string {
+    if (!image) return '/assets/images/lieux/default.jpg';
+    if (image.startsWith('http')) return image;
+    return `/assets/images/lieux/${image}`;
+  }
 
-onImageError(event: Event): void {
-  const img = event.target as HTMLImageElement;
-  img.src = '/assets/images/lieux/default.jpg';
-}
+  onImageError(event: Event): void {
+    (event.target as HTMLImageElement).src = '/assets/images/lieux/default.jpg';
+  }
 
   getTypeIcon(type: string): string {
     const icons: {[key: string]: string} = {
-      'Culturel': '🏛️',
-      'Naturel': '🌿',
-      'Sportif': '⚽',
-      'Gastronomique': '🍽️',
-      'Historique': '🏰',
-      'Artistique': '🎨'
+      'Culturel': '🏛️', 'Naturel': '🌿', 'Sportif': '⚽',
+      'Gastronomique': '🍽️', 'Historique': '🏰', 'Artistique': '🎨'
     };
     return icons[type] || '📍';
   }
