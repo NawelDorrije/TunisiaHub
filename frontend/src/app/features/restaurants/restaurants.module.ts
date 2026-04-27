@@ -14,6 +14,7 @@ import { FloorPlanCanvasComponent } from './shared/floor-plan-canvas/floor-plan-
 import { FloorPlanDesignerComponent } from './admin/floor-plan-designer/floor-plan-designer.component';
 import { TablePickerComponent } from './client/table-picker/table-picker.component';
 import { MyReservationsComponent } from './client/my-reservations/my-reservations.component';
+import { RestaurantRecommendationsComponent } from './shared/restaurant-recommendations/restaurant-recommendations.component';
 
 @NgModule({
   declarations: [
@@ -26,6 +27,7 @@ import { MyReservationsComponent } from './client/my-reservations/my-reservation
     FloorPlanDesignerComponent,
     TablePickerComponent,
     MyReservationsComponent,
+    RestaurantRecommendationsComponent
   ],
   imports: [
     CommonModule,

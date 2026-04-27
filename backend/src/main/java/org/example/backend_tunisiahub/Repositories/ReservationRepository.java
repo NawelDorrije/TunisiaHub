@@ -53,6 +53,41 @@ public interface ReservationRepository  extends JpaRepository<Reservation,Long> 
 
     List<Reservation> findByTypeOrderByIdDesc(ReservationType type);
 
+    @Query("""
+            select r
+            from Reservation r
+            left join fetch r.restaurant restaurant
+            where r.user.id = :userId
+              and r.type = :type
+              and r.restaurant is not null
+              and r.status <> :excludedStatus
+              and (r.dateTime is null or r.dateTime <= :referenceDateTime)
+            order by r.dateTime desc, r.id desc
+            """)
+    List<Reservation> findRecommendationHistoryByUser(
+            @Param("userId") Long userId,
+            @Param("type") ReservationType type,
+            @Param("excludedStatus") ReservationStatus excludedStatus,
+            @Param("referenceDateTime") LocalDateTime referenceDateTime
+    );
+
+    @Query("""
+            select r
+            from Reservation r
+            where r.user.id = :userId
+              and r.type = :type
+              and r.restaurant is not null
+              and r.status <> :excludedStatus
+              and r.dateTime >= :cutoffDateTime
+            order by r.dateTime desc, r.id desc
+            """)
+    List<Reservation> findRecentRestaurantReservationsByUser(
+            @Param("userId") Long userId,
+            @Param("type") ReservationType type,
+            @Param("excludedStatus") ReservationStatus excludedStatus,
+            @Param("cutoffDateTime") LocalDateTime cutoffDateTime
+    );
+
     List<Reservation> findByRestaurant_IdAndTypeAndDateTimeAndStatusIn(
             Long restaurantId,
             ReservationType type,

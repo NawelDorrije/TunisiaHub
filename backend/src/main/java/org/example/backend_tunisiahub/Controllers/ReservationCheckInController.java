@@ -24,7 +24,7 @@ public class ReservationCheckInController {
                     ? escapeHtml(reservation.getRestaurant().getName())
                     : "the restaurant";
             return """
-                    <!DOCTYPE html>
+                    <!DOCTY02PE html>
                     <html lang="en">
                     <head>
                         <meta charset="UTF-8">

@@ -30,6 +30,8 @@ public class Restaurant {
     Double longitude;
     @Convert(converter = CuisineConverter.class)
     Cuisine cuisine;
+    String priceRange;
+    Double rating;
     @Column(unique = true)
     String email;
     @Column(unique = true)

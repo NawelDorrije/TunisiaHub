@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, of } from 'rxjs';
+import { delay } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
 
 @Injectable({
@@ -55,6 +56,10 @@ export class ApiService {
 
   addRestaurant(restaurant: any): Observable<any> {
     return this.http.post(this.BASE_URL + '/api/restaurants/add', restaurant);
+  }
+
+  getRestaurantRecommendations(): Observable<any> {
+    return this.http.get(this.BASE_URL + '/api/restaurants/recommendations');
   }
 
   updateRestaurant(restaurant: any): Observable<any> {

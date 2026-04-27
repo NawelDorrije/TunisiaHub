@@ -1,0 +1,39 @@
+<div class="recommendations-wrapper fade-in" *ngIf="loading || recommendationData?.restaurants?.length">
+  
+  <div class="section-header d-flex flex-column mb-3">
+    <h2 class="section-title">✨ Recommended for you</h2>
+    
+    <!-- AI Explanation Box -->
+    <div class="ai-explanation-box fade-in" *ngIf="!loading && recommendationData?.reason">
+      <div class="ai-icon"><i class="bi bi-sparkles"></i> AI Insight</div>
+      <p class="mb-0">{{ recommendationData.reason }}</p>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div class="horizontal-scroll layout-grid" *ngIf="loading">
+    <div class="skeleton-card" *ngFor="let i of [1, 2, 3, 4]">
+      <div class="skeleton-img"></div>
+      <div class="skeleton-text title"></div>
+      <div class="skeleton-text sub"></div>
+    </div>
+  </div>
+
+  <!-- Recommendations List -->
+  <div class="horizontal-scroll" *ngIf="!loading && recommendationData?.restaurants?.length">
+    <div class="rec-card fade-in-up" *ngFor="let rec of recommendationData.restaurants; let i = index" [style.animation-delay]="(i * 0.1) + 's'">
+      <div class="rec-img" [style.background-image]="rec.picture ? 'url(' + getImageUrl(rec.picture) + ')' : 'url(/assets/images/placeholder-restaurant.jpg)'">
+        <div class="rec-badge">Recommended ⭐</div>
+        <div class="rec-rating"><i class="bi bi-star-fill"></i> {{ rec.rating != null ? (rec.rating | number:'1.1-1') : 'New' }}</div>
+      </div>
+      <div class="rec-content">
+        <h4 class="rec-name">{{ rec.name }}</h4>
+        <span class="rec-cuisine"><i class="bi bi-cup-hot"></i> {{ rec.cuisine || 'Various cuisines' }}</span>
+        <div class="rec-actions">
+          <button class="btn-view" (click)="onViewClick(rec)">View</button>
+          <button class="btn-book" (click)="onBookClick(rec)">Book Now</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
