@@ -83,9 +83,10 @@ public class PromptBuilderService {
         String mood       = defaultValue(choices.getTone(), "premium and inviting");
         String category   = shop != null ? defaultValue(stringify(shop.getCategory()), "artisan") : "artisan";
         String city       = shop != null ? defaultValue(shop.getCity(), "Tunis") : "Tunis";
-        String subject    = product != null
+        // Fix 1: Explicit product context in subject
+        String subject = product != null
                 ? defaultValue(product.getName(), "artisan product")
-                : defaultValue(shop != null ? shop.getName() : null, "Tunisian boutique");
+                : category + " products, " + defaultValue(shop != null ? shop.getName() : null, "boutique") + " collection";
 
         String moodStyle = switch (mood.toLowerCase()) {
             case "luxury", "luxurious", "premium and inviting" ->
@@ -142,7 +143,26 @@ public class PromptBuilderService {
             default -> "balanced natural color grading, professional color palette";
         };
 
-        return ("A stunning high-end advertisement poster for a " + category + " brand called \""
+        // Fix 3: Category-specific visual direction
+        String categoryVisual = switch (category.toLowerCase()) {
+            case "clothing", "leather", "fashion" ->
+                    "luxury leather handbags and accessories arranged on a dark marble surface, " +
+                    "close-up product hero shot, studio lighting";
+            case "jewelry" ->
+                    "fine jewelry pieces on black velvet, macro photography, " +
+                    "sparkling gems, studio lighting";
+            case "food", "restaurant" ->
+                    "gourmet food plating, overhead shot, fine dining presentation";
+            case "art", "crafts", "souvenir" ->
+                    "handcrafted artisan objects arranged as flat lay, " +
+                    "natural linen background, product photography";
+            default ->
+                    "product hero shot on neutral background, studio lighting, " +
+                    "commercial photography";
+        };
+
+        return ("NOT a travel photo, NOT a landscape, NOT a street scene, commercial studio advertisement. "
+                + "A stunning high-end advertisement poster for a " + category + " brand called \""
                 + subject + "\" from " + city + ", Tunisia. "
                 + moodStyle + ". "
                 + colorStyle + ". "
@@ -154,6 +174,11 @@ public class PromptBuilderService {
                 + "luxurious product styling and prop arrangement, "
                 + "professional retouching and color grading, "
                 + "magazine double-page spread quality. "
+                + categoryVisual + ". "
+                // Fix 2: Strong negative prompts
+                + "AVOID: street markets, people, crowds, food, vegetables, outdoor scenes, "
+                + "tourism photography, travel photography, medina scenes. "
+                + "SHOW: the actual product isolated, studio setting, product hero shot. "
                 + "No text, no words, no letters, no numbers, no watermark, no logo, "
                 + "no people, no faces, no hands.")
                 .replaceAll("\\s+", " ")

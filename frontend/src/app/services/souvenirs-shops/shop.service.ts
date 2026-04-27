@@ -49,14 +49,11 @@ export class ShopService {
     return this.http.delete<void>(`${this.apiUrl}/${id}`);
   }
 
-  getNearbyShops(latitude: number, longitude: number, limit?: number): Observable<NearbyShopResponse[]> {
-    let params = new HttpParams()
+  getNearbyShops(latitude: number, longitude: number, radiusKm: number = 5): Observable<NearbyShopResponse[]> {
+    const params = new HttpParams()
       .set('latitude', latitude.toString())
-      .set('longitude', longitude.toString());
-    
-    if (limit) {
-      params = params.set('limit', limit.toString());
-    }
+      .set('longitude', longitude.toString())
+      .set('radiusKm', radiusKm.toString());
     
     return this.http.get<NearbyShopResponse[]>(`${this.apiUrl}/nearby`, { params });
   }

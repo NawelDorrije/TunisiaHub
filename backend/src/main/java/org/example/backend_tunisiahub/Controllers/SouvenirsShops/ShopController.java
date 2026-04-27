@@ -44,9 +44,10 @@ public class ShopController {
     public List<NearbyShopResponse> getNearbyShops(
             @RequestParam("latitude") double latitude,
             @RequestParam("longitude") double longitude,
+            @RequestParam(value = "radiusKm", required = false, defaultValue = "5") Double radiusKm,
             @RequestParam(value = "limit", required = false) Integer limit
     ) {
-        return shopService.findNearestShops(latitude, longitude, limit);
+        return shopService.findNearestShops(latitude, longitude, radiusKm, limit);
     }
 
     @GetMapping("/{id}/products")

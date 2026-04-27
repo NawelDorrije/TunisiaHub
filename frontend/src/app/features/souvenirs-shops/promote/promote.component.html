@@ -32,24 +32,34 @@
   <!-- Tab Content -->
   <div class="tab-content">
     <!-- Shop/Product Selection -->
-    <div class="selection-section" *ngIf="ownerShops && ownerShops.length > 0">
-      <h4>Select What to Promote</h4>
-      <div class="form-row">
-        <div class="form-group">
-          <label for="shopSelect">Shop</label>
-          <select id="shopSelect" [(ngModel)]="selectedShopId" (change)="onShopChange()">
-            <option *ngFor="let shop of ownerShops" [value]="shop.id">{{ shop.name }}</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label for="productSelect">Product (Optional)</label>
-          <select id="productSelect" [(ngModel)]="selectedProductId" (change)="onProductChange()">
-            <option value="">Promote entire shop</option>
-            <option *ngFor="let product of availableProducts" [value]="product.id">{{ product.name }}</option>
-          </select>
-        </div>
-      </div>
+    <!-- Shop/Product Selection -->
+<div class="selection-section" *ngIf="ownerShops && ownerShops.length > 0">
+  <h4>Select What to Promote</h4>
+  <div class="form-row">
+    <div class="form-group">
+      <label for="shopSelect">Shop</label>
+      <select id="shopSelect" [(ngModel)]="selectedShopId" (change)="onShopChange()">
+        <option *ngFor="let shop of ownerShops" [ngValue]="shop.id">{{ shop.name }}</option>
+      </select>
     </div>
+    <div class="form-group">
+      <label for="productSelect">Product (Optional)</label>
+      <select 
+        id="productSelect" 
+        [(ngModel)]="selectedProductId" 
+        (change)="onProductChange()">
+        
+        <option value="">Promote entire shop</option>
+        <option 
+          *ngFor="let product of productOptions" 
+          [ngValue]="product.id">
+          {{ product.name }}
+        </option>
+      </select>
+      <small *ngIf="availableProducts.length === 0" class="no-products-hint">No products in this shop — promoting entire shop</small>
+    </div>
+  </div>
+</div>
 
     <!-- Caption Tab -->
     <div class="tab-pane" [class.active]="activeTab === 'caption'">
@@ -140,6 +150,9 @@
             [class.success]="showCopyFeedback"
           >
             {{ copyButtonText }}
+          </button>
+          <button class="share-btn" (click)="shareCaption()">
+            Share to {{ captionPlatform }}
           </button>
           <button class="regenerate-btn" (click)="regenerateCaption()">
             Regenerate

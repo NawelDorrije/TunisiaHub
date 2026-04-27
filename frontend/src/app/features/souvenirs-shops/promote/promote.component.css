@@ -170,6 +170,14 @@
   box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
 }
 
+.no-products-hint {
+  display: block;
+  margin-top: 6px;
+  font-size: 11px;
+  color: #888;
+  font-style: italic;
+}
+
 /* Generate Button */
 .generate-btn {
   width: 100%;
@@ -298,7 +306,8 @@
 
 .copy-btn,
 .regenerate-btn,
-.download-btn {
+.download-btn,
+.share-btn {
   flex: 1;
   padding: 10px;
   border: none;
@@ -329,6 +338,15 @@
 
 .regenerate-btn:hover {
   background: #5a6268;
+}
+
+.share-btn {
+  background: #1877f2;
+  color: white;
+}
+
+.share-btn:hover {
+  background: #166fe5;
 }
 
 .download-btn {

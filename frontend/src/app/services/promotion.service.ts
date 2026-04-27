@@ -3,11 +3,12 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
 export interface ShopData {
-  id: number;
-  name: string;
+  id?: number;
+  name?: string;
   rating?: number;
   city?: string;
   category?: string;
+  photoUrl?: string;
   products?: ProductData[];
 }
 

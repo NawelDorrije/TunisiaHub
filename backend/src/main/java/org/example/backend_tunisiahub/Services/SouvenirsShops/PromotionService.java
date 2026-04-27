@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.security.SecureRandom;
 import java.util.Base64;
 import java.util.Comparator;
 import java.util.List;
@@ -78,10 +79,11 @@ public class PromotionService {
         String encodedPrompt = URLEncoder.encode(prompt, StandardCharsets.UTF_8)
                 .replace("+", "%20");
 
+        int seed = new SecureRandom().nextInt(1_000_000);
         String pollinationsUrl = "https://image.pollinations.ai/prompt/"
                 + encodedPrompt
                 + "?width=1080&height=1080&nologo=true&model=flux&seed="
-                + System.currentTimeMillis() % 10000;
+                + seed;
 
         log.info("Fetching image from Pollinations server-side: {}", pollinationsUrl);
 

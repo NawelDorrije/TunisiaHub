@@ -21,7 +21,7 @@ public interface IShopService {
 
     List<Review> retrieveReviewsByShop(Long shopId);
 
-    List<NearbyShopResponse> findNearestShops(double latitude, double longitude, Integer limit);
+    List<NearbyShopResponse> findNearestShops(double latitude, double longitude, Double radiusKm, Integer limit);
 
     Shop addShop(Shop shop);
 

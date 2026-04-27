@@ -1,24 +1,30 @@
 <div class="shop-list-page">
 
-  <!-- Hero -->
+  <!-- Hero Section -->
   <section class="shop-hero rounded-4 mb-5">
     <div class="hero-overlay"></div>
     <div class="hero-content">
       <span class="hero-eyebrow">Tunisian Market</span>
       <h1 class="hero-title">Browse Authentic Shops</h1>
-      <p class="hero-desc">Discover handcrafted souvenirs, artisanal leather, carpets, jewelry and local design across Tunisia.</p>
+      <p class="hero-desc">
+        Discover handcrafted souvenirs, artisanal leather, carpets, jewelry and local design across Tunisia.
+      </p>
     </div>
   </section>
 
-  <!-- Section header -->
+  <!-- Section Header -->
   <div class="section-header">
     <div>
       <h2 class="section-title">{{ showNearby ? 'Nearby Shops' : 'Shop Collection' }}</h2>
       <p class="section-subtitle">
-        {{ showNearby ? 'Shops near your location' : 'Warm hospitality, vibrant storefronts and curated souks in one place.' }}
+        {{ showNearby 
+            ? 'Shops near your current location' 
+            : 'Warm hospitality, vibrant storefronts and curated souks in one place.' }}
       </p>
     </div>
+
     <div class="section-actions">
+      <!-- Nearby Toggle -->
       <button 
         (click)="toggleNearbyMode()" 
         class="nearby-toggle-btn"
@@ -27,91 +33,128 @@
         <i class="bi bi-geo-alt-fill"></i>
         {{ isGettingLocation ? 'Getting location...' : (showNearby ? 'Show All Shops' : 'Find Nearby') }}
       </button>
+
+      <!-- Radius Selector -->
+      <div *ngIf="showNearby" class="radius-selector">
+        <label class="radius-label">Within:</label>
+        <select 
+          class="form-select form-select-sm radius-select"
+          [ngModel]="selectedRadius"
+          (ngModelChange)="onRadiusChange($event)">
+          <option *ngFor="let r of radiusOptions" [value]="r">{{ r }} km</option>
+        </select>
+      </div>
+
+      <!-- Owner Actions -->
       <a *ngIf="canManageShops" routerLink="/shops/new" class="add-shop-btn">
         <i class="bi bi-plus-lg"></i> Add New Shop
       </a>
-      <span *ngIf="!canManageShops" class="muted-note">Only owners and admins can create shops.</span>
+      <span *ngIf="!canManageShops" class="muted-note">
+        Only shop owners and admins can create new shops.
+      </span>
     </div>
   </div>
 
-  <!-- Category filter -->
+  <!-- Category Filters -->
   <div class="category-bar">
-    <button class="cat-pill"
-            [class.active]="activeCategory === 'ALL'"
-            (click)="filterByCategory('ALL')">
+    <button 
+      class="cat-pill"
+      [class.active]="activeCategory === 'ALL'"
+      (click)="filterByCategory('ALL')">
       All
     </button>
-    <button *ngFor="let cat of categories"
-            class="cat-pill"
-            [class.active]="activeCategory === cat.value"
-            [style.--cat-color]="cat.color"
-            (click)="filterByCategory(cat.value)">
+    <button 
+      *ngFor="let cat of categories"
+      class="cat-pill"
+      [class.active]="activeCategory === cat.value"
+      [style.--cat-color]="cat.color"
+      (click)="filterByCategory(cat.value)">
       {{ cat.label }}
     </button>
   </div>
 
-  <!-- Loading -->
+  <!-- Loading State -->
   <div *ngIf="isLoading" class="loading-state">
     <div class="spinner"></div>
     <p>Loading shops...</p>
   </div>
 
-  <!-- Error -->
-  <div *ngIf="errorMessage" class="msg-error">{{ errorMessage }}</div>
-
-  <!-- Empty -->
-  <div *ngIf="!isLoading && filteredShops.length === 0 && !errorMessage" class="empty-state">
-    <i class="bi bi-shop"></i>
-    <p>No shops found{{ activeCategory !== 'ALL' ? ' in this category' : '' }}.</p>
+  <!-- Error Message -->
+  <div *ngIf="errorMessage" class="msg-error alert alert-danger">
+    {{ errorMessage }}
   </div>
 
-  <!-- Grid -->
+  <!-- Empty State -->
+  <div *ngIf="!isLoading && filteredShops.length === 0 && !errorMessage" class="empty-state">
+    <i class="bi bi-shop"></i>
+    <p>
+      No shops found{{ activeCategory !== 'ALL' ? ' in this category' : '' }}.
+      {{ showNearby ? ' Try increasing the search radius.' : '' }}
+    </p>
+  </div>
+
+  <!-- Shops Grid -->
   <div class="shops-grid" *ngIf="!isLoading && filteredShops.length > 0">
     <div *ngFor="let shop of filteredShops" class="shop-card">
 
-      <!-- Image -->
+      <!-- Card Image -->
       <div class="card-img-wrap">
-        <img *ngIf="shop.photoUrl"
-             [src]="shop.photoUrl"
-             [alt]="shop.name"
-             class="card-img" />
+        <img 
+          *ngIf="shop.photoUrl" 
+          [src]="shop.photoUrl" 
+          [alt]="shop.name || 'Shop image'"
+          class="card-img"
+          (error)="handleImageError($event, shop)" />
+       
         <div *ngIf="!shop.photoUrl" class="card-img-placeholder">
-          <span>{{ shop.name ? shop.name.charAt(0).toUpperCase() : 'S' }}</span>
-        </div>
+<span>{{ shop.name.charAt(0).toUpperCase() || 'S' }}</span>        </div>
+
         <span class="cat-badge" [ngClass]="'cat-' + (shop.category?.toLowerCase() || 'default')">
           {{ shop.category || 'General' }}
         </span>
       </div>
 
-      <!-- Body -->
+      <!-- Card Body -->
       <div class="card-body">
         <h3 class="card-shop-name">{{ shop.name }}</h3>
+       
         <p class="card-location">
           <i class="bi bi-geo-alt-fill"></i>
-          {{ shop.city || 'Unknown city' }}{{ shop.address ? ' · ' + shop.address : '' }}
-          <span *ngIf="showNearby" class="distance-badge">
+          {{ shop.city || 'Unknown city' }}
+          <span *ngIf="shop.address"> · {{ shop.address }}</span>
+         
+          <span *ngIf="showNearby && $any(shop).distanceKm" class="distance-badge">
             {{ $any(shop).distanceKm | number:'1.1-1' }} km away
           </span>
         </p>
-        <p class="card-owner">
+
+        <p class="card-owner" *ngIf="shop.owner?.prenom || shop.owner?.nom">
           <i class="bi bi-person-fill"></i>
           {{ shop.owner?.prenom }} {{ shop.owner?.nom }}
         </p>
-        <div *ngIf="shop.reviews?.length" class="card-rating">
-          <i *ngFor="let s of [1,2,3,4,5]" class="bi bi-star-fill"></i>
-          <span>{{ shop.reviews?.length }} review{{ shop.reviews!.length > 1 ? 's' : '' }}</span>
+
+        <!-- FIXED RATING SECTION - No more NG2 error -->
+        <div *ngIf="shop.reviews && shop.reviews.length > 0" class="card-rating">
+          <i class="bi bi-star-fill" *ngFor="let s of [1,2,3,4,5]"></i>
+          <span>
+            {{ shop.reviews.length }} review{{ shop.reviews.length > 1 ? 's' : '' }}
+          </span>
         </div>
       </div>
 
-      <!-- Footer -->
+      <!-- Card Footer -->
       <div class="card-footer">
         <a [routerLink]="['/shops', shop.id]" class="btn-primary-card">View Shop</a>
-        <a [routerLink]="['/products', 'shop', shop.id]" class="btn-outline-card">Products</a>
+        <a [routerLink]="['/products', 'shop', shop.id]" class="btn-outline-card">Browse Products</a>
+       
         <div *ngIf="canManageShops" class="owner-btns">
-          <a [routerLink]="['/shops', shop.id, 'edit']" class="icon-btn edit-icon" title="Edit">
+          <a [routerLink]="['/shops', shop.id, 'edit']" class="icon-btn edit-icon" title="Edit Shop">
             <i class="bi bi-pencil"></i>
           </a>
-          <button class="icon-btn delete-icon" disabled title="Delete">
+          <button 
+            class="icon-btn delete-icon" 
+            (click)="deleteShop(shop)" 
+            title="Delete Shop">
             <i class="bi bi-trash"></i>
           </button>
         </div>

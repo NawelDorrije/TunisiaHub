@@ -16,6 +16,8 @@ import org.example.backend_tunisiahub.Repositories.SouvenirsShops.ReviewShopRepo
 import org.example.backend_tunisiahub.Repositories.SouvenirsShops.ShopRepository;
 import org.example.backend_tunisiahub.Repositories.User.UserRepository;
 import org.example.backend_tunisiahub.shared.exception.ApiException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -24,6 +26,8 @@ import org.springframework.stereotype.Service;
 @Service
 @RequiredArgsConstructor
 public class ShopService implements IShopService {
+
+    private static final Logger log = LoggerFactory.getLogger(ShopService.class);
 
     private static final int DEFAULT_NEARBY_LIMIT = 10;
     private static final int MAX_NEARBY_LIMIT = 50;
@@ -67,15 +71,25 @@ public class ShopService implements IShopService {
     }
 
     @Override
-    public List<NearbyShopResponse> findNearestShops(double latitude, double longitude, Integer limit) {
+    public List<NearbyShopResponse> findNearestShops(double latitude, double longitude, Double radiusKm, Integer limit) {
         validateCoordinates(latitude, longitude);
 
-        int safeLimit = sanitizeLimit(limit);
+        double safeRadius = radiusKm != null && radiusKm > 0 ? radiusKm : 5.0;
+
+        log.info("Finding shops near ({}, {}) within {} km", latitude, longitude, safeRadius);
+
+        List<Shop> allShops = shopRepository.findAll();
+        log.info("Total shops in database: {}", allShops.size());
+
+        long shopsWithCoords = allShops.stream().filter(this::hasCoordinates).count();
+        log.info("Shops with coordinates: {}", shopsWithCoords);
+
         return shopRepository.findAll().stream()
                 .filter(this::hasCoordinates)
                 .map(shop -> toNearbyShopResponse(shop, latitude, longitude))
+                .filter(shop -> shop.distanceKm() <= safeRadius)
                 .sorted((a, b) -> Double.compare(a.distanceKm(), b.distanceKm()))
-                .limit(safeLimit)
+                .limit(1)  // Note: You might want to increase this limit later
                 .toList();
     }
 
@@ -159,19 +173,6 @@ public class ShopService implements IShopService {
         if (longitude < -180 || longitude > 180) {
             throw new ApiException(HttpStatus.BAD_REQUEST, "longitude must be between -180 and 180");
         }
-    }
-
-    private int sanitizeLimit(Integer limit) {
-        if (limit == null) {
-            return DEFAULT_NEARBY_LIMIT;
-        }
-        if (limit < 1 || limit > MAX_NEARBY_LIMIT) {
-            throw new ApiException(
-                    HttpStatus.BAD_REQUEST,
-                    "limit must be between 1 and " + MAX_NEARBY_LIMIT
-            );
-        }
-        return limit;
     }
 
     private boolean hasCoordinates(Shop shop) {

@@ -11,11 +11,12 @@ import { forkJoin } from 'rxjs';
 import { PromoteComponent } from '../promote/promote.component';
 
 export interface ShopData {
-  id: number;
-  name: string;
+  id?: number;
+  name?: string;
   rating?: number;
   city?: string;
   category?: string;
+  photoUrl?: string;
   products?: any[];
 }
 
@@ -41,7 +42,7 @@ export class OwnerDashboardComponent implements OnInit {
   };
 
   recentOrders: any[] = [];
-  ownerShops: any[] = [];
+  ownerShops: ShopData[] = [];
   reviewInsights: OwnerReviewInsights | null = null;
   insightsLoading = false;
   insightsError = '';
@@ -188,11 +189,20 @@ export class OwnerDashboardComponent implements OnInit {
 
   navigateToPromotions(): void {
     // Show promotion panel with all shops data for selection
-    this.showPromotionPanel('shop', undefined, {
-      id: 0,
-      name: 'Select Shop',
-      rating: 0
-    });
+    const firstShop = this.ownerShops.length > 0 ? this.ownerShops[0] : null;
+    if (firstShop) {
+      this.showPromotionPanel('shop', firstShop.id || undefined, {
+        id: firstShop.id,
+        name: firstShop.name || 'Unnamed Shop',
+        rating: firstShop.rating || 0,
+        city: firstShop.city,
+        category: firstShop.category,
+        products: firstShop.products || []
+      });
+    } else {
+      // No shops available - still open panel with empty data
+      this.showPromotionPanel('shop', undefined, undefined);
+    }
   }
 
   showPromotionPanel(targetType: 'shop' | 'product', targetId?: number, shopData?: ShopData): void {
@@ -215,7 +225,8 @@ export class OwnerDashboardComponent implements OnInit {
     return 0;
   }
 
-  navigateToEditShop(shopId: number): void {
+  navigateToEditShop(shopId?: number): void {
+    if (!shopId) return;
     this.router.navigate(['/shops', shopId, 'edit']);
   }
 
