@@ -63,6 +63,9 @@ export class AuthService {
   getNom(): string | null {
     return this.isBrowser ? localStorage.getItem('nom') : null;
   }
+  getEmail(): string | null {
+  return this.isBrowser ? localStorage.getItem('email') : null;
+}
 
   getPrenom(): string | null {
     return this.isBrowser ? localStorage.getItem('prenom') : null;

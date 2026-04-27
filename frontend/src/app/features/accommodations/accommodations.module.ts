@@ -12,6 +12,15 @@ import { AccommodationsRoutingModule } from './accommodations-routing.module';
 import { ReviewListComponent } from './components/review-list/review-list.component';
 import { ReviewItemComponent } from './components/review-item/review-item.component';
 import { ReviewFormComponent } from './components/review-form/review-form.component';
+import { MapPickerComponent } from './components/map-picker/map-picker.component';
+import { MapWeatherComponent } from './components/map-weather/map-weather.component';
+import { ReservationFormComponent } from './components/reservation-form/reservation-form.component';
+import { FormsModule } from '@angular/forms';
+import { FeedbackPopupComponent } from './components/feedback-popup/feedback-popup.component';
+import { AccommodationStatisticsComponent } from './components/accommodation-statistics/accommodation-statistics.component';
+import { NgApexchartsModule } from 'ng-apexcharts';
+import { AdminDashboardComponent } from './components/admin-dashboard/admin-dashboard.component';
+
 
 
 @NgModule({
@@ -23,13 +32,21 @@ import { ReviewFormComponent } from './components/review-form/review-form.compon
     UserListAccommodationComponent,
     ReviewListComponent,
     ReviewItemComponent,
-    ReviewFormComponent
+    ReviewFormComponent,
+    MapPickerComponent,
+    MapWeatherComponent,
+    ReservationFormComponent,
+    FeedbackPopupComponent,
+    AccommodationStatisticsComponent,
+    AdminDashboardComponent
   ],
   imports: [
     CommonModule,
     ReactiveFormsModule,
     RouterModule,
-    AccommodationsRoutingModule
+    FormsModule,
+    AccommodationsRoutingModule,
+    NgApexchartsModule
   ],
   providers:[
     provideHttpClient()

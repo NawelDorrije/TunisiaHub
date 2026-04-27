@@ -1,0 +1,138 @@
+<div class="container py-4">
+
+  <!-- Header -->
+  <div class="d-flex align-items-center gap-3 mb-4">
+    <button class="btn btn-outline-secondary btn-sm" (click)="goBack()">← Back</button>
+    <div>
+      <h2 class="fw-bold mb-0">🏨 My Accommodation Reservations</h2>
+      <p class="text-muted small mb-0">View, edit or cancel your bookings</p>
+    </div>
+  </div>
+
+  <!-- Alerts -->
+  <div class="alert alert-success" *ngIf="successMessage">{{ successMessage }}</div>
+  <div class="alert alert-danger" *ngIf="errorMessage">{{ errorMessage }}</div>
+
+  <!-- Loading -->
+  <div class="text-center py-5" *ngIf="isLoading">
+    <div class="spinner-border text-primary" role="status"></div>
+  </div>
+
+  <!-- Empty -->
+  <div class="alert alert-info" *ngIf="!isLoading && reservations.length === 0">
+    You have no accommodation reservations yet.
+    <a routerLink="/accommodations/explore" class="alert-link ms-1">Explore accommodations</a>
+  </div>
+
+  <!-- Reservations list -->
+  <div class="row g-4" *ngIf="!isLoading && reservations.length > 0">
+    <div class="col-md-6" *ngFor="let reservation of reservations">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-body">
+
+          <!-- Status badge -->
+          <div class="d-flex justify-content-between align-items-start mb-3">
+            <h5 class="fw-bold mb-0">Reservation #{{ reservation.id }}</h5>
+            <span
+              class="badge"
+              [class.bg-success]="reservation.status === 'CONFIRMED'"
+              [class.bg-danger]="reservation.status === 'CANCELLED'"
+            >
+              {{ reservation.status }}
+            </span>
+          </div>
+
+          <!-- Normal view -->
+          <div *ngIf="editingId !== reservation.id">
+            <div class="d-flex justify-content-between mb-1">
+              <span class="text-muted">Check-in</span>
+              <span class="fw-semibold">{{ reservation.startDate | date:'dd MMM yyyy' }}</span>
+            </div>
+            <div class="d-flex justify-content-between mb-1">
+              <span class="text-muted">Check-out</span>
+              <span class="fw-semibold">{{ reservation.endDate | date:'dd MMM yyyy' }}</span>
+            </div>
+            <div class="d-flex justify-content-between mb-1">
+              <span class="text-muted">Nights</span>
+              <span class="fw-semibold">{{ getNights(reservation.startDate, reservation.endDate) }}</span>
+            </div>
+            <hr/>
+            <div class="d-flex justify-content-between mb-3">
+              <span class="fw-bold">Total</span>
+              <span class="fw-bold text-primary">{{ reservation.totalPrice }} TND</span>
+            </div>
+
+            <!-- Actions — only for confirmed -->
+            <div class="d-flex gap-2" *ngIf="reservation.status === 'CONFIRMED'">
+              <button
+                class="btn btn-outline-secondary btn-sm flex-fill"
+                (click)="startEdit(reservation)"
+              >
+                ✏️ Edit dates
+              </button>
+              <button
+                class="btn btn-outline-danger btn-sm flex-fill"
+                (click)="cancelReservation(reservation.id)"
+              >
+                ❌ Cancel
+              </button>
+            </div>
+          </div>
+
+          <!-- Edit view -->
+          <div *ngIf="editingId === reservation.id">
+            <div class="alert alert-danger small" *ngIf="editError">{{ editError }}</div>
+
+            <div class="mb-3">
+              <label class="form-label fw-semibold">New Check-in date</label>
+              <input
+                type="date"
+                class="form-control"
+                [(ngModel)]="editStartDate"
+                [min]="today"
+                (change)="updateMinEndDate()"
+              />
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label fw-semibold">New Check-out date</label>
+              <input
+                type="date"
+                class="form-control"
+                [(ngModel)]="editEndDate"
+                [min]="editMinEndDate"
+              />
+            </div>
+
+            <div class="d-flex gap-2">
+              <button
+                class="btn btn-primary btn-sm flex-fill"
+                (click)="saveEdit()"
+              >
+                ✅ Save changes
+              </button>
+              <button
+                class="btn btn-outline-secondary btn-sm flex-fill"
+                (click)="cancelEdit()"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="confirm-overlay" *ngIf="showCancelConfirm" (click)="closeCancelModal()">
+  <div class="confirm-dialog" (click)="$event.stopPropagation()">
+    <h5 class="fw-bold mb-2">Cancel reservation?</h5>
+    <p class="text-muted mb-3">Your reservation status will be set to cancelled.</p>
+    <div class="d-flex gap-2 justify-content-end">
+      <button class="btn btn-outline-secondary btn-sm" (click)="closeCancelModal()">Keep</button>
+      <button class="btn btn-danger btn-sm" (click)="confirmCancelReservation()">Cancel reservation</button>
+    </div>
+  </div>
+</div>

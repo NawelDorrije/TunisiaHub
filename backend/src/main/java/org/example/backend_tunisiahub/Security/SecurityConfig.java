@@ -35,11 +35,16 @@ public class SecurityConfig {
                         // Public routes
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/api/accommodations/getAll").permitAll()
+                        .requestMatchers("/api/accommodations/filter").permitAll()
                         .requestMatchers("/api/accommodations/get/**").permitAll()
                         .requestMatchers("/api/reviews/getAll").permitAll()
                         .requestMatchers("/api/reviews/get/**").permitAll()
                         .requestMatchers("/api/reviews/accommodation/**").permitAll()
                         .requestMatchers("/api/reviews/add/**").permitAll()
+                        .requestMatchers("/api/accommodation-reservations/check-availability/**").permitAll()
+                        .requestMatchers("/api/accommodation-reservations/reserved-dates/**").permitAll()
+                        .requestMatchers("/api/ai/**").permitAll()
+
 
                         // Souvenir shops/products visibility
                         .requestMatchers(HttpMethod.GET, "/api/souvenir-shops/reviews/owner-summary").hasAnyRole("OWNER", "ADMIN")
@@ -84,10 +89,16 @@ public class SecurityConfig {
                         .requestMatchers("/api/accommodations/update/**").hasRole("ADMIN")
                         .requestMatchers("/api/accommodations/delete/**").hasRole("ADMIN")
                         .requestMatchers("/api/users/**").hasRole("ADMIN")
+                        .requestMatchers("/api/accommodation-reservations/statistics").hasRole("ADMIN")
                         // Authenticated users
                        // .requestMatchers("/api/reviews/add/**").hasAnyRole("CLIENT", "ADMIN")
                         .requestMatchers("/api/reviews/update/**").hasAnyRole("CLIENT", "ADMIN")
                         .requestMatchers("/api/reviews/delete/**").hasAnyRole("CLIENT", "ADMIN")
+                        .requestMatchers("/api/accommodation-reservations/**").hasAnyRole("CLIENT", "ADMIN")
+                        .requestMatchers("/api/accommodation-reservations/my-reservations").hasAnyRole("CLIENT", "ADMIN")
+                        .requestMatchers("/api/history/**").hasAnyRole("CLIENT", "ADMIN")
+                        .requestMatchers("/api/feedback/accommodation/**").permitAll()
+                        .requestMatchers("/api/feedback/**").hasAnyRole("CLIENT", "ADMIN")
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);

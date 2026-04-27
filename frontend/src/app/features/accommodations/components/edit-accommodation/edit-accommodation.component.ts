@@ -3,6 +3,7 @@ import { FormControl, FormGroup, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { AccommodationService } from '../../services/accommodation.service';
 import { Accommodation } from '../../../../models/accommodations/accommodation.model';
+import { PriceRecommendation } from '../../../../models/accommodations/price-recommendation.model';
 
 @Component({
   selector: 'app-edit-accommodation',
@@ -26,7 +27,9 @@ export class EditAccommodationComponent implements OnInit {
     type: new FormControl('', Validators.required),
     price: new FormControl<number | null>(null, [Validators.required, Validators.min(1)]),
     capacite: new FormControl<number | null>(null, [Validators.required, Validators.min(1)]),
-    photos: new FormControl('')
+    photos: new FormControl(''),
+    latitude: new FormControl<number | null>(null),
+    longitude: new FormControl<number | null>(null)
   });
 
   constructor(
@@ -56,7 +59,9 @@ export class EditAccommodationComponent implements OnInit {
           type: data.type,
           price: data.price,
           capacite: data.capacite,
-          photos: data.photos?.join(', ') // array → comma separated string
+          photos: data.photos?.join(', '),
+          latitude: data.latitude ?? null,
+          longitude: data.longitude ?? null // array → comma separated string
         });
         this.isLoading = false;
       },
@@ -97,8 +102,75 @@ export class EditAccommodationComponent implements OnInit {
       }
     });
   }
+  onLocationSelected(event: { lat: number; lng: number }): void {
+  this.editForm.patchValue({
+    latitude: event.lat,
+    longitude: event.lng
+  });
+}
 
   goBack(): void {
     this.router.navigate(['/accommodations/admin']);
   }
+  isPriceLoading = false;
+priceRecommendation: PriceRecommendation | null = null;
+priceError = '';
+
+getSuggestedPrice(): void {
+  const type = this.editForm.value.type;
+  const adresse = this.editForm.value.adresse;
+  const capacite = this.editForm.value.capacite;
+
+  if (!type || !adresse || !capacite) {
+    this.priceError = 'Please fill type, address and capacity first.';
+    return;
+  }
+
+  this.isPriceLoading = true;
+  this.priceError = '';
+  this.priceRecommendation = null;
+
+  this.accommodationService.suggestPrice(type, adresse, capacite).subscribe({
+    next: (data) => {
+      this.priceRecommendation = data;
+      this.editForm.patchValue({ price: data.recommended });
+      this.isPriceLoading = false;
+    },
+    error: () => {
+      this.priceError = 'Failed to get price suggestion.';
+      this.isPriceLoading = false;
+    }
+  });
+}
+isDescriptionLoading = false;
+descriptionError = '';
+
+generateDescription(): void {
+  const title = this.editForm.value.title;
+  const type = this.editForm.value.type;
+  const adresse = this.editForm.value.adresse;
+  const capacite = this.editForm.value.capacite;
+  const price = this.editForm.value.price;
+
+  if (!title || !type || !adresse || !capacite || !price) {
+    this.descriptionError = 'Please fill title, type, address, capacity and price first.';
+    return;
+  }
+
+  this.isDescriptionLoading = true;
+  this.descriptionError = '';
+
+  this.accommodationService.generateDescription(
+    title, type, adresse, capacite, price
+  ).subscribe({
+    next: (data) => {
+      this.editForm.patchValue({ description: data.description });
+      this.isDescriptionLoading = false;
+    },
+    error: () => {
+      this.descriptionError = 'Failed to generate description.';
+      this.isDescriptionLoading = false;
+    }
+  });
+}
 }

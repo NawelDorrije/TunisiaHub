@@ -63,26 +63,26 @@ export class ReviewFormComponent implements OnChanges {
     if (this.isEditMode) {
       this.reviewService.updateReview(this.reviewToEdit!.id!, review).subscribe({
         next: (updated) => {
-          this.successMessage = 'Review updated successfully!';
+          this.successMessage = '✅ Review edited successfully!';
           this.isLoading = false;
           this.reviewUpdated.emit(updated);
           this.resetForm();
         },
-        error: () => {
-          this.errorMessage = 'Failed to update review.';
+        error: (err) => {
+          this.errorMessage = this.extractErrorMessage(err, '❌ Failed to edit review. Please try again.');
           this.isLoading = false;
         }
       });
     } else {
       this.reviewService.addReview(this.accommodationId, review).subscribe({
         next: (added) => {
-          this.successMessage = 'Review added successfully!';
+          this.successMessage = '✅ Review added successfully!';
           this.isLoading = false;
           this.reviewAdded.emit(added);
           this.resetForm();
         },
-        error: () => {
-          this.errorMessage = 'Failed to add review.';
+        error: (err) => {
+          this.errorMessage = this.extractErrorMessage(err, '❌ Failed to add review.');
           this.isLoading = false;
         }
       });
@@ -97,5 +97,12 @@ export class ReviewFormComponent implements OnChanges {
   onCancel(): void {
     this.resetForm();
     this.cancelled.emit();
+  }
+
+  private extractErrorMessage(err: any, fallback: string): string {
+    if (typeof err?.error === 'string') return err.error;
+    if (typeof err?.error?.message === 'string') return err.error.message;
+    if (typeof err?.message === 'string') return err.message;
+    return fallback;
   }
 }

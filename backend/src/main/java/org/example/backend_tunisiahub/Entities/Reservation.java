@@ -6,6 +6,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.FieldDefaults;
+import org.example.backend_tunisiahub.Entities.Accommodation.Accommodation;
 import org.example.backend_tunisiahub.carpooling.entity.Trip;
 import org.example.backend_tunisiahub.Entities.User.User;
 
@@ -32,6 +33,14 @@ public class Reservation {
     @Temporal(TemporalType.DATE)
     Date endDate;
 
+    @Temporal(TemporalType.TIMESTAMP)
+    Date reminderSentAt;
+
+    String reminderStatus;
+
+    @Column(length = 500)
+    String reminderError;
+
     Double totalPrice;
 
     @Enumerated(EnumType.STRING)
@@ -54,5 +63,9 @@ public class Reservation {
 
     @OneToOne(mappedBy = "reservation")
     Review review;
+
+    @ManyToOne
+    @JoinColumn(name = "accommodation_id")
+    Accommodation accommodation;
 
 }

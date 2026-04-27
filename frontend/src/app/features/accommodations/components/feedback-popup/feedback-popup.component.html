@@ -1,0 +1,90 @@
+<div class="feedback-overlay" *ngIf="isVisible" (click)="close()"></div>
+
+<div class="feedback-popup" *ngIf="isVisible">
+
+  <!-- Success state -->
+  <div class="text-center py-3" *ngIf="isSubmitted">
+    <div style="font-size: 3rem;">🎉</div>
+    <h5 class="fw-bold mt-2">Thank you for your feedback!</h5>
+    <p class="text-muted">Your feedback helps us improve.</p>
+  </div>
+
+  <!-- Form state -->
+  <div *ngIf="!isSubmitted">
+
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-start mb-3">
+      <div>
+        <h5 class="fw-bold mb-1">How was your booking experience? 🌟</h5>
+        <p class="text-muted small mb-0">{{ accommodationTitle }}</p>
+      </div>
+      <button class="btn-close" (click)="close()"></button>
+    </div>
+
+    <div class="alert alert-danger small" *ngIf="errorMessage">
+      {{ errorMessage }}
+    </div>
+
+    <form [formGroup]="feedbackForm" (ngSubmit)="onSubmit()">
+
+      <!-- Star rating -->
+      <div class="mb-3 text-center">
+        <p class="text-muted small mb-2">Rate your experience</p>
+        <div class="d-flex justify-content-center gap-2">
+          <ng-container *ngFor="let star of [1,2,3,4,5]">
+            <i
+              class="bi fs-2"
+              [class.bi-star-fill]="(f['rating'].value ?? 0) >= star"
+              [class.bi-star]="(f['rating'].value ?? 0) < star"
+              [class.text-warning]="(f['rating'].value ?? 0) >= star"
+              [class.text-muted]="(f['rating'].value ?? 0) < star"
+              style="cursor: pointer;"
+              (click)="setRating(star)"
+            ></i>
+          </ng-container>
+        </div>
+        <div class="text-danger small mt-1"
+          *ngIf="f['rating'].invalid && f['rating'].touched">
+          Please select a rating.
+        </div>
+      </div>
+
+      <!-- Labels -->
+      <div class="d-flex justify-content-between mb-3 px-2">
+        <small class="text-muted">😞 Poor</small>
+        <small class="text-muted">😐 Average</small>
+        <small class="text-muted">😊 Excellent</small>
+      </div>
+
+      <!-- Comment -->
+      <div class="mb-3">
+        <textarea
+          class="form-control"
+          rows="3"
+          formControlName="comment"
+          placeholder="Share your experience (optional)..."
+        ></textarea>
+      </div>
+
+      <!-- Buttons -->
+      <div class="d-flex gap-2">
+        <button
+          type="submit"
+          class="btn btn-primary flex-fill"
+          [disabled]="isLoading"
+        >
+          <span *ngIf="isLoading" class="spinner-border spinner-border-sm me-2"></span>
+          {{ isLoading ? 'Submitting...' : '✅ Submit Feedback' }}
+        </button>
+        <button
+          type="button"
+          class="btn btn-outline-secondary"
+          (click)="close()"
+        >
+          Skip
+        </button>
+      </div>
+
+    </form>
+  </div>
+</div>

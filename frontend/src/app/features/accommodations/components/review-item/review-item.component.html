@@ -12,8 +12,8 @@
         <small class="text-muted">{{ review.reviewDate }}</small>
       </div>
 
-      <!-- Actions -->
-      <div class="d-flex gap-2">
+      <!-- Actions — only for owner -->
+      <div class="d-flex gap-2" *ngIf="isOwner">
         <button
           class="btn btn-outline-secondary btn-sm"
           (click)="onEdit()"
@@ -31,18 +31,23 @@
 
     <!-- Stars -->
     <div class="mb-2">
-      <i
-        *ngFor="let star of stars"
-        class="bi bi-star-fill text-warning"
-      ></i>
-      <i
-        *ngFor="let star of emptyStars"
-        class="bi bi-star text-muted"
-      ></i>
+      <i *ngFor="let star of stars" class="bi bi-star-fill text-warning"></i>
+      <i *ngFor="let star of emptyStars" class="bi bi-star text-muted"></i>
     </div>
 
     <!-- Comment -->
     <p class="text-secondary mb-0">{{ review.comment }}</p>
 
+  </div>
+</div>
+
+<div class="confirm-overlay" *ngIf="showDeleteConfirm" (click)="closeDeleteModal()">
+  <div class="confirm-dialog" (click)="$event.stopPropagation()">
+    <h6 class="fw-bold mb-2">Delete your review?</h6>
+    <p class="text-muted mb-3">This action cannot be undone.</p>
+    <div class="d-flex gap-2 justify-content-end">
+      <button class="btn btn-outline-secondary btn-sm" (click)="closeDeleteModal()">Keep</button>
+      <button class="btn btn-danger btn-sm" (click)="confirmDelete()">Delete</button>
+    </div>
   </div>
 </div>

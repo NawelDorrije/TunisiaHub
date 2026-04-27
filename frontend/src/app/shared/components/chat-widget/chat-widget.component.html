@@ -1,0 +1,80 @@
+<!-- Floating button -->
+<div class="chat-launcher" (click)="toggleChat()">
+  <span *ngIf="!isOpen">💬</span>
+  <span *ngIf="isOpen">✕</span>
+</div>
+
+<!-- Chat window -->
+<div class="chat-window" [class.open]="isOpen">
+
+  <!-- Header -->
+  <div class="chat-header">
+    <div class="d-flex align-items-center gap-2">
+      <div class="ai-avatar">🤖</div>
+      <div>
+        <p class="fw-bold mb-0 small">TunisiaHub AI</p>
+        <p class="text-white-50 mb-0" style="font-size: 0.7rem;">
+          Powered by Groq + LangChain
+        </p>
+      </div>
+    </div>
+    <button class="btn btn-link text-white p-0" (click)="clearChat()">
+      🗑️
+    </button>
+  </div>
+
+  <!-- Messages -->
+  <div class="chat-messages" id="chat-messages">
+    <div
+      *ngFor="let msg of messages"
+      class="message-wrapper"
+      [class.user-wrapper]="msg.role === 'user'"
+      [class.assistant-wrapper]="msg.role === 'assistant'"
+    >
+      <div
+        class="message"
+        [class.user-message]="msg.role === 'user'"
+        [class.assistant-message]="msg.role === 'assistant'"
+      >
+        {{ msg.content }}
+      </div>
+      <small class="text-muted message-time">
+        {{ msg.timestamp | date:'HH:mm' }}
+      </small>
+    </div>
+
+    <!-- Loading indicator -->
+    <div class="message-wrapper assistant-wrapper" *ngIf="isLoading">
+      <div class="message assistant-message">
+        <span class="typing-dot"></span>
+        <span class="typing-dot"></span>
+        <span class="typing-dot"></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Input -->
+  <div class="chat-input">
+    <div class="input-group">
+      <input
+        type="text"
+        class="form-control"
+        placeholder="Ask about accommodations..."
+        [formControl]="messageInput"
+        (keypress)="onKeyPress($event)"
+        [disabled]="isLoading"
+      />
+      <button
+        class="btn btn-primary"
+        (click)="sendMessage()"
+        [disabled]="isLoading || !messageInput.value?.trim()"
+      >
+        ➤
+      </button>
+    </div>
+    <small class="text-muted d-block mt-1 text-center" style="font-size: 0.65rem;">
+      Press Enter to send
+    </small>
+  </div>
+
+</div>
