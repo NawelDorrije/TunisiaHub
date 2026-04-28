@@ -1,6 +1,7 @@
 package org.example.backend_tunisiahub.Security;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -17,6 +18,7 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
+import java.util.Arrays;
 import java.util.List;
 
 @Configuration
@@ -25,7 +27,8 @@ import java.util.List;
 public class SecurityConfig {
 
     private final JwtFilter jwtFilter;
-    private static final List<String> ALLOWED_ORIGIN_PATTERNS = List.of("http://localhost:*", "http://127.0.0.1:*");
+    @Value("${app.cors.allowed-origin-patterns:http://localhost:*,http://127.0.0.1:*}")
+    private String allowedOriginPatternsProperty;
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
@@ -62,21 +65,35 @@ public class SecurityConfig {
                         .requestMatchers("/swagger-ui/**").permitAll()
                         .requestMatchers("/swagger-ui.html").permitAll()
                         // Events (IMPORTANT)
-                        .requestMatchers("/event/**").permitAll()
-                        .requestMatchers("/api/events/**").permitAll()
-                        .requestMatchers("/api/reservations/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/event/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/share/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/events/upload-image").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/events").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/event/add").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/event/*/publish-facebook").permitAll()
+                        .requestMatchers(HttpMethod.PUT, "/event/update").permitAll()
+                        .requestMatchers(HttpMethod.DELETE, "/event/delete/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/events/recommendation").permitAll()
+
+                        .requestMatchers(HttpMethod.POST, "/api/reservations/reserve").hasRole("CLIENT")
+                        .requestMatchers(HttpMethod.POST, "/api/reservations/create-pending").hasRole("CLIENT")
+                        .requestMatchers(HttpMethod.POST, "/api/reservations/confirm/**").hasRole("CLIENT")
+                        .requestMatchers(HttpMethod.GET, "/api/reservations/user/**").hasRole("CLIENT")
+                        .requestMatchers(HttpMethod.GET, "/api/reservations/**").hasAnyRole("ADMIN", "CLIENT")
                         .requestMatchers("/payment/**").permitAll()
                         .requestMatchers("/stripe/**").permitAll()
                         .requestMatchers("/email/**").permitAll()
-                        .requestMatchers("/review/**").permitAll()
                         .requestMatchers("/weather/**").permitAll()
                         .requestMatchers("/uploads/**").permitAll()
+                        .requestMatchers("/ws").permitAll()
+                        .requestMatchers("/ws/**").permitAll()
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers("/weather/**").permitAll()
                         .requestMatchers("/ai/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/share/**").permitAll()
 
                         .anyRequest().authenticated()
-                        
+
                 )
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
 
@@ -91,7 +108,8 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOriginPatterns(ALLOWED_ORIGIN_PATTERNS);
+        config.setAllowedOriginPatterns(resolveAllowedOriginPatterns());
+
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
         config.setAllowCredentials(true);
@@ -108,11 +126,18 @@ public class SecurityConfig {
             @Override
             public void addCorsMappings(CorsRegistry registry) {
                 registry.addMapping("/**")
-                        .allowedOriginPatterns("http://localhost:*", "http://127.0.0.1:*")
+                        .allowedOriginPatterns(resolveAllowedOriginPatterns().toArray(new String[0]))
                         .allowedMethods("*")
                         .allowedHeaders("*")
                         .allowCredentials(true);
             }
         };
+    }
+
+    private List<String> resolveAllowedOriginPatterns() {
+        return Arrays.stream(allowedOriginPatternsProperty.split(","))
+                .map(String::trim)
+                .filter(origin -> !origin.isBlank())
+                .toList();
     }
 }

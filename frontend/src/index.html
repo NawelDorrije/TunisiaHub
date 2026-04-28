@@ -5,6 +5,11 @@
   <title>Frontend</title>
   <base href="/">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script>
+    // Public frontend base URL used to generate share links to /events/details/{id}
+    // Example: https://app.example.com
+    window.APP_FRONTEND_BASE_URL = window.APP_FRONTEND_BASE_URL || window.location.origin;
+  </script>
   <link rel="icon" type="image/x-icon" href="favicon.ico">
 </head>
 <body>

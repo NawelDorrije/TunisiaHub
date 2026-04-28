@@ -12,6 +12,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Locale;
+
 @RestController
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
@@ -31,12 +33,12 @@ public class AuthController {
         user.setPrenom(request.getPrenom());
         user.setEmail(request.getEmail());
         user.setMotDePasse(passwordEncoder.encode(request.getPassword()));
-        user.setRole(RoleUser.CLIENT);
+        user.setRole(resolveRole(request.getRole()));
 
         userRepository.save(user);
 
         String token = jwtUtil.generateToken(user.getEmail(), user.getRole().name(),user.getId());
-        return ResponseEntity.ok(new AuthResponse(token, user.getRole().name(), user.getEmail(), user.getNom(), user.getPrenom()));
+        return ResponseEntity.ok(new AuthResponse(token, user.getRole().name(), user.getEmail(), user.getNom(), user.getPrenom(), user.getId()));
     }
 
     @PostMapping("/login")
@@ -50,6 +52,22 @@ public class AuthController {
             return ResponseEntity.status(401).body("Invalid password");
 
         String token = jwtUtil.generateToken(user.getEmail(), user.getRole().name(), user.getId());
-        return ResponseEntity.ok(new AuthResponse(token, user.getRole().name(), user.getEmail(), user.getNom(), user.getPrenom()));
+        return ResponseEntity.ok(new AuthResponse(token, user.getRole().name(), user.getEmail(), user.getNom(), user.getPrenom(), user.getId()));
+    }
+
+    private RoleUser resolveRole(String roleValue) {
+        if (roleValue == null || roleValue.isBlank()) {
+            return RoleUser.CLIENT;
+        }
+
+        String normalized = roleValue.trim().toUpperCase(Locale.ROOT);
+        if ("ADMIN".equals(normalized)) {
+            return RoleUser.ADMIN;
+        }
+        if ("USER".equals(normalized) || "CLIENT".equals(normalized)) {
+            return RoleUser.CLIENT;
+        }
+
+        return RoleUser.CLIENT;
     }
 }

@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { EventService } from '../../services/event.service';
-import { Event } from '../../../../models/events/event.model';
+import { Event as AppEvent } from '../../../../models/events/event.model';
 
 @Component({
   selector: 'app-list-events',
@@ -9,8 +9,12 @@ import { Event } from '../../../../models/events/event.model';
   styleUrls: ['./list-events.component.css']
 })
 export class ListEventsComponent implements OnInit {
+  private readonly backendBaseUrl = 'http://localhost:8089';
 
-  events: Event[] = [];
+  private readonly fallbackCardImage =
+    'data:image/svg+xml;utf8,' +
+    encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#10233f"/><stop offset="1" stop-color="#2f5bea"/></linearGradient></defs><rect width="800" height="500" fill="url(#g)"/><text x="50%" y="52%" dominant-baseline="middle" text-anchor="middle" fill="#ffffff" font-family="Arial,sans-serif" font-size="34" opacity="0.92">Event Image</text></svg>');
+  events: AppEvent[] = [];
   viewMode: 'cards' | 'list' = 'cards';
   activeFilter: string = 'All';
   searchQuery: string = '';
@@ -88,7 +92,7 @@ filters: string[] = ['All', 'SPORT', 'FESTIVAL', 'CONFERENCE', 'COMPETITION'];
   }
 
   /* ================= DISPLAY ================= */
-  get filteredEvents(): Event[] {
+  get filteredEvents(): AppEvent[] {
     return this.events;
   }
 
@@ -99,4 +103,50 @@ filters: string[] = ['All', 'SPORT', 'FESTIVAL', 'CONFERENCE', 'COMPETITION'];
 get activeEventsCount(): number {
   return this.events.filter(e => e.status === 'OPEN').length;
 }
+
+  getCardImageSrc(image?: string): string {
+    const candidate = (image ?? '').trim();
+    if (!candidate) {
+      return this.fallbackCardImage;
+    }
+
+    const slashNormalized = candidate.replace(/\\/g, '/');
+    const lower = slashNormalized.toLowerCase();
+    const uploadsIdx = lower.indexOf('/uploads/');
+
+    if (uploadsIdx >= 0) {
+      return `${this.backendBaseUrl}${slashNormalized.substring(uploadsIdx)}`;
+    }
+
+    if (slashNormalized.startsWith('http://') || slashNormalized.startsWith('https://') || slashNormalized.startsWith('data:')) {
+      return slashNormalized;
+    }
+
+    if (slashNormalized.startsWith('//localhost') || slashNormalized.startsWith('//127.0.0.1')) {
+      return `http:${slashNormalized}`;
+    }
+
+    if (lower.startsWith('//uploads/')) {
+      return `${this.backendBaseUrl}${slashNormalized.substring(1)}`;
+    }
+
+    if (slashNormalized.startsWith('/')) {
+      return `${this.backendBaseUrl}${slashNormalized}`;
+    }
+
+    return `${this.backendBaseUrl}/${slashNormalized}`;
+  }
+
+  onCardImageError(event: globalThis.Event): void {
+    const imageElement = event.target as HTMLImageElement | null;
+    if (!imageElement) {
+      return;
+    }
+
+    if (imageElement.src === this.fallbackCardImage) {
+      return;
+    }
+
+    imageElement.src = this.fallbackCardImage;
+  }
 }

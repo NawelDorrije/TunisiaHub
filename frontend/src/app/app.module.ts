@@ -20,6 +20,8 @@ import { EventsModule } from './features/events/events.module'; // ✅ AJOUT
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { ToastrModule } from 'ngx-toastr';
 import { provideToastr } from 'ngx-toastr';
+import { HTTP_INTERCEPTORS } from '@angular/common/http';
+import { AuthInterceptor } from './features/auth/auth.interceptor';
 
 @NgModule({
   declarations: [
@@ -34,7 +36,15 @@ import { provideToastr } from 'ngx-toastr';
   ],
   imports: [BrowserModule, AppRoutingModule, HttpClientModule, BrowserAnimationsModule, FormsModule, EventsModule,  // ✅ IMPORTANT
     ToastrModule.forRoot()],
-  providers: [provideClientHydration(), provideToastr()],
+  providers: [
+    provideClientHydration(),
+    provideToastr(),
+    {
+      provide: HTTP_INTERCEPTORS,
+      useClass: AuthInterceptor,
+      multi: true
+    }
+  ],
   bootstrap: [AppComponent],
 })
 export class AppModule {}

@@ -33,11 +33,18 @@ export class AuthService {
 
   private storeUser(response: AuthResponse): void {
     if (this.isBrowser) {
+      const role = response.user?.role ?? response.role;
+      const email = response.user?.email ?? response.email;
+      const userId = response.user?.id ?? response.id;
+
       localStorage.setItem('token', response.token);
-      localStorage.setItem('role', response.role);
-      localStorage.setItem('email', response.email);
+      localStorage.setItem('role', role);
+      localStorage.setItem('email', email);
       localStorage.setItem('nom', response.nom);
       localStorage.setItem('prenom', response.prenom);
+      if (userId !== undefined && userId !== null) {
+        localStorage.setItem('userId', String(userId));
+      }
     }
   }
 

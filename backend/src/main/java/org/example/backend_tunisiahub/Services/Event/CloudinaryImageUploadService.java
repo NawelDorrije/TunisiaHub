@@ -9,6 +9,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -24,6 +25,7 @@ public class CloudinaryImageUploadService implements ImageUploadService {
     private final Cloudinary cloudinaryClient;
     private final Path localUploadsPath;
     private final String publicBaseUrl;
+    private static final String DEFAULT_LOCAL_BASE_URL = "http://localhost:8089";
 
     public CloudinaryImageUploadService(
             @Value("${cloudinary.cloud-name:}") String cloudName,
@@ -85,7 +87,7 @@ public class CloudinaryImageUploadService implements ImageUploadService {
             Files.copy(inputStream, targetFile, StandardCopyOption.REPLACE_EXISTING);
         }
 
-        return stripTrailingSlash(publicBaseUrl) + "/uploads/events/" + fileName;
+        return resolveStablePublicBaseUrl() + "/uploads/events/" + fileName;
     }
 
     private String resolveFileExtension(String originalFileName) {
@@ -107,8 +109,36 @@ public class CloudinaryImageUploadService implements ImageUploadService {
 
     private String stripTrailingSlash(String value) {
         if (Objects.isNull(value) || value.isBlank()) {
-            return "http://localhost:8089";
+            return DEFAULT_LOCAL_BASE_URL;
         }
         return value.endsWith("/") ? value.substring(0, value.length() - 1) : value;
+    }
+
+    private String resolveStablePublicBaseUrl() {
+        String normalizedBase = stripTrailingSlash(publicBaseUrl);
+        try {
+            URI uri = URI.create(normalizedBase);
+            String host = uri.getHost();
+            if (host == null || host.isBlank()) {
+                return DEFAULT_LOCAL_BASE_URL;
+            }
+
+            String lowerHost = host.toLowerCase();
+            if (lowerHost.endsWith("trycloudflare.com")) {
+                // Cloudflare tunnel subdomains are ephemeral and may break later.
+                return DEFAULT_LOCAL_BASE_URL;
+            }
+            if (lowerHost.endsWith("ngrok-free.app")
+                    || lowerHost.endsWith("ngrok.io")
+                    || lowerHost.endsWith("ngrok.app")) {
+                // Ngrok tunnel subdomains are ephemeral and commonly expire.
+                return DEFAULT_LOCAL_BASE_URL;
+            }
+
+            return normalizedBase;
+        } catch (Exception ex) {
+            log.warn("Invalid app.public-base-url '{}', fallback to localhost.", publicBaseUrl);
+            return DEFAULT_LOCAL_BASE_URL;
+        }
     }
 }

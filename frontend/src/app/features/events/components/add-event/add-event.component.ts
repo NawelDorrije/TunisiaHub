@@ -2,10 +2,15 @@ import { Component, Inject, OnDestroy, OnInit, PLATFORM_ID } from '@angular/core
 import { AbstractControl, FormControl, FormGroup, ValidationErrors, Validators } from '@angular/forms';
 import { isPlatformBrowser } from '@angular/common';
 import { Router } from '@angular/router';
-import { finalize } from 'rxjs';
+import { HttpErrorResponse } from '@angular/common/http';
+import { debounceTime, finalize, merge, Subscription } from 'rxjs';
 import { EventType } from '../../../../models/events/event.model';
 import { EventService } from '../../services/event.service';
 import { EventImageAiService, EventImageUploadResponse } from '../../services/event-image-ai.service';
+import {
+  EventRecommendationResponse,
+  RecommendedSlot
+} from '../../../../models/events/event-recommendation.model';
 
 @Component({
   selector: 'app-add-event',
@@ -13,6 +18,7 @@ import { EventImageAiService, EventImageUploadResponse } from '../../services/ev
   styleUrls: ['./add-event.component.css']
 })
 export class AddEventComponent implements OnInit, OnDestroy {
+  private static readonly BACKEND_BASE_URL = 'http://localhost:8089';
   map: any;
   marker: any;
   L: any;
@@ -26,6 +32,12 @@ export class AddEventComponent implements OnInit, OnDestroy {
   selectedLocationName = '';
   imagePreviewUrl: string | null = null;
   private localPreviewObjectUrl: string | null = null;
+  private recommendationSub?: Subscription;
+  private recommendationFormWatcherSub?: Subscription;
+
+  recommendationLoading = false;
+  recommendationError = '';
+  recommendationResult: EventRecommendationResponse | null = null;
 
   eventTypes = Object.values(EventType);
   existingTitles: string[] = [];
@@ -70,9 +82,20 @@ export class AddEventComponent implements OnInit, OnDestroy {
     if (isPlatformBrowser(this.platformId)) {
       setTimeout(() => this.loadMap(), 0);
     }
+
+    this.recommendationFormWatcherSub = merge(
+      this.addForm.controls.startDate.valueChanges,
+      this.addForm.controls.type.valueChanges
+    )
+      .pipe(debounceTime(350))
+      .subscribe(() => {
+        this.fetchRecommendations();
+      });
   }
 
   ngOnDestroy(): void {
+    this.recommendationSub?.unsubscribe();
+    this.recommendationFormWatcherSub?.unsubscribe();
     this.releasePreviewUrl();
   }
 
@@ -124,8 +147,8 @@ export class AddEventComponent implements OnInit, OnDestroy {
         this.isLoading = false;
         setTimeout(() => this.router.navigate(['/events']), 800);
       },
-      error: () => {
-        this.errorMessage = 'Erreur lors de la creation de l evenement.';
+      error: (err: HttpErrorResponse) => {
+        this.errorMessage = this.extractCreateEventError(err);
         this.isLoading = false;
       }
     });
@@ -137,6 +160,110 @@ export class AddEventComponent implements OnInit, OnDestroy {
 
   updateCharCount(event: Event): void {
     this.descriptionLength = (event.target as HTMLTextAreaElement).value.length;
+  }
+
+  applyRecommendedSlot(slot: RecommendedSlot): void {
+    const newStart = new Date(`${slot.date}T${slot.time}`);
+    const currentStartRaw = this.addForm.controls.startDate.value;
+    const currentEndRaw = this.addForm.controls.endDate.value;
+
+    let durationMs = 2 * 60 * 60 * 1000;
+    if (currentStartRaw && currentEndRaw) {
+      const currentStart = new Date(currentStartRaw);
+      const currentEnd = new Date(currentEndRaw);
+      if (!Number.isNaN(currentStart.getTime()) && !Number.isNaN(currentEnd.getTime()) && currentEnd > currentStart) {
+        durationMs = currentEnd.getTime() - currentStart.getTime();
+      }
+    }
+
+    const patch: { startDate: string; endDate?: string } = {
+      startDate: this.toDateTimeLocalInput(newStart)
+    };
+
+    if (currentEndRaw) {
+      patch.endDate = this.toDateTimeLocalInput(new Date(newStart.getTime() + durationMs));
+    }
+
+    this.addForm.patchValue(patch);
+  }
+
+  private fetchRecommendations(): void {
+    const startDateValue = this.addForm.controls.startDate.value;
+    const type = this.addForm.controls.type.value;
+
+    if (!startDateValue || !type) {
+      this.recommendationResult = null;
+      this.recommendationError = '';
+      this.recommendationLoading = false;
+      return;
+    }
+
+    const [date, timeRaw] = startDateValue.split('T');
+    if (!date || !timeRaw) {
+      this.recommendationResult = null;
+      this.recommendationError = '';
+      this.recommendationLoading = false;
+      return;
+    }
+
+    const selectedDateTime = new Date(startDateValue);
+    if (Number.isNaN(selectedDateTime.getTime()) || selectedDateTime <= new Date()) {
+      this.recommendationResult = null;
+      this.recommendationLoading = false;
+      this.recommendationError = 'Choose a future start date/time to get AI suggestions.';
+      return;
+    }
+
+    this.recommendationSub?.unsubscribe();
+    this.recommendationLoading = true;
+    this.recommendationError = '';
+
+    this.recommendationSub = this.eventService.getEventRecommendations({
+      date,
+      time: timeRaw.slice(0, 5),
+      type
+    }).subscribe({
+      next: (res) => {
+        this.recommendationResult = res;
+        this.recommendationLoading = false;
+      },
+      error: (err: HttpErrorResponse) => {
+        this.recommendationLoading = false;
+        this.recommendationResult = null;
+        this.recommendationError = this.extractRecommendationError(err);
+      }
+    });
+  }
+
+  private extractCreateEventError(err: HttpErrorResponse): string {
+    if (err?.status === 403) {
+      return 'Acces refuse (403). Connectez-vous avec un compte autorise, puis reessayez.';
+    }
+
+    const backendMessage = err?.error?.message || err?.error?.error || err?.message;
+    if (typeof backendMessage === 'string' && backendMessage.trim().length > 0) {
+      return `Erreur lors de la creation de l evenement: ${backendMessage}`;
+    }
+
+    return 'Erreur lors de la creation de l evenement.';
+  }
+
+  private extractRecommendationError(err: HttpErrorResponse): string {
+    if (err?.status === 403) {
+      return 'AI recommendations refusees (403). Reconnectez-vous puis reessayez.';
+    }
+
+    const backendMessage = err?.error?.message || err?.error?.error || err?.message;
+    if (typeof backendMessage === 'string' && backendMessage.trim().length > 0) {
+      return `Unable to load AI recommendations: ${backendMessage}`;
+    }
+
+    return 'Unable to load AI recommendations for the selected slot.';
+  }
+
+  private toDateTimeLocalInput(date: Date): string {
+    const shifted = new Date(date.getTime() - (date.getTimezoneOffset() * 60000));
+    return shifted.toISOString().slice(0, 16);
   }
 
   async loadMap(): Promise<void> {
@@ -266,8 +393,14 @@ export class AddEventComponent implements OnInit, OnDestroy {
           this.applyGeneratedContent(response, previousDescription);
         },
         error: (error) => {
+          if (error?.status === 0) {
+            this.errorMessage = 'Impossible de contacter le backend (status 0). Verifiez que Spring Boot tourne sur http://localhost:8089 et que CORS autorise votre frontend.';
+            this.addForm.patchValue({ image: '' });
+            return;
+          }
+
           if (error?.status === 403) {
-            this.errorMessage = 'Acces refuse (403) pendant upload IA. Verifiez CORS/backend puis reconnectez-vous.';
+            this.errorMessage = 'Acces refuse (403) pendant upload IA. Verifiez que vous etes connecte en ADMIN et que CORS autorise votre domaine frontend.';
             this.addForm.patchValue({ image: '' });
             return;
           }
@@ -288,18 +421,19 @@ export class AddEventComponent implements OnInit, OnDestroy {
       return;
     }
 
+    const normalizedImageUrl = this.toAbsoluteImageUrl(response.imageUrl);
     const cleanedDescription = this.cleanAiDescription(response.aiDescription);
     const description = cleanedDescription || previousDescription;
 
     this.addForm.patchValue({
-      image: response.imageUrl,
+      image: normalizedImageUrl,
       description
     });
 
     this.addForm.get('image')?.markAsDirty();
     this.addForm.get('description')?.markAsDirty();
     this.descriptionLength = description.length;
-    this.imagePreviewUrl = response.imageUrl;
+    this.trySwitchPreviewToRemote(normalizedImageUrl);
   }
 
   private cleanAiDescription(description: string | null | undefined): string {
@@ -317,6 +451,62 @@ export class AddEventComponent implements OnInit, OnDestroy {
     this.releasePreviewUrl();
     this.localPreviewObjectUrl = URL.createObjectURL(file);
     this.imagePreviewUrl = this.localPreviewObjectUrl;
+  }
+
+  private trySwitchPreviewToRemote(remoteUrl: string): void {
+    const preloader = new Image();
+    preloader.onload = () => {
+      // Remote image is reachable: release temporary blob and keep final URL.
+      this.releasePreviewUrl();
+      this.imagePreviewUrl = remoteUrl;
+    };
+    preloader.onerror = () => {
+      // Keep local preview so the image stays visible even if remote URL is temporarily unavailable.
+      this.imagePreviewUrl = this.localPreviewObjectUrl || remoteUrl;
+    };
+    preloader.src = this.withCacheBuster(remoteUrl);
+  }
+
+  private toAbsoluteImageUrl(imageUrl: string): string {
+    const trimmed = imageUrl.trim();
+    if (!trimmed) {
+      return '';
+    }
+
+    const slashNormalized = trimmed.replace(/\\/g, '/');
+    const lower = slashNormalized.toLowerCase();
+    const uploadsIdx = lower.indexOf('/uploads/');
+
+    if (uploadsIdx >= 0) {
+      return `${AddEventComponent.BACKEND_BASE_URL}${slashNormalized.substring(uploadsIdx)}`;
+    }
+
+    if (slashNormalized.startsWith('http://') || slashNormalized.startsWith('https://')) {
+      return slashNormalized;
+    }
+
+    if (slashNormalized.startsWith('//localhost') || slashNormalized.startsWith('//127.0.0.1')) {
+      return `http:${slashNormalized}`;
+    }
+
+    if (lower.startsWith('//uploads/')) {
+      return `${AddEventComponent.BACKEND_BASE_URL}${slashNormalized.substring(1)}`;
+    }
+
+    if (lower.startsWith('uploads/')) {
+      return `${AddEventComponent.BACKEND_BASE_URL}/${slashNormalized}`;
+    }
+
+    if (slashNormalized.startsWith('/')) {
+      return `${AddEventComponent.BACKEND_BASE_URL}${slashNormalized}`;
+    }
+
+    return `${AddEventComponent.BACKEND_BASE_URL}/${slashNormalized}`;
+  }
+
+  private withCacheBuster(url: string): string {
+    const separator = url.includes('?') ? '&' : '?';
+    return `${url}${separator}t=${Date.now()}`;
   }
 
   private releasePreviewUrl(): void {

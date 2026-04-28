@@ -18,7 +18,8 @@ export class SignUpComponent {
     nom: new FormControl('', Validators.required),
     prenom: new FormControl('', Validators.required),
     email: new FormControl('', [Validators.required, Validators.email]),
-    password: new FormControl('', [Validators.required, Validators.minLength(6)])
+    password: new FormControl('', [Validators.required, Validators.minLength(6)]),
+    role: new FormControl<'ADMIN' | 'CLIENT'>('CLIENT', Validators.required)
   });
 
   get f() {
@@ -40,11 +41,16 @@ export class SignUpComponent {
       nom: this.signUpForm.value.nom!,
       prenom: this.signUpForm.value.prenom!,
       email: this.signUpForm.value.email!,
-      password: this.signUpForm.value.password!
+      password: this.signUpForm.value.password!,
+      role: this.signUpForm.value.role ?? 'CLIENT'
     }).subscribe({
-      next: () => {
+      next: (response) => {
         this.isLoading = false;
-        this.router.navigate(['/accommodations/explore']);
+        if (response.role === 'ADMIN') {
+          this.router.navigate(['/events']);
+          return;
+        }
+        this.router.navigate(['/events/user/events']);
       },
       error: (err) => {
         this.errorMessage = err.error || 'Registration failed. Please try again.';

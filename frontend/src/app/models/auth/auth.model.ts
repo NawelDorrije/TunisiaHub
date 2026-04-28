@@ -8,6 +8,7 @@ export interface RegisterRequest {
   prenom: string;
   email: string;
   password: string;
+  role: 'ADMIN' | 'CLIENT';
 }
 
 export interface AuthResponse {
@@ -16,4 +17,10 @@ export interface AuthResponse {
   email: string;
   nom: string;
   prenom: string;
+  id?: number;
+  user?: {
+    id: number;
+    email: string;
+    role: string;
+  };
 }

@@ -4,6 +4,7 @@ import { EventService } from '../../services/event.service';
 import { Event, EventType } from '../../../../models/events/event.model';
 import { FormGroup, FormControl, Validators } from '@angular/forms';
 import { isPlatformBrowser } from '@angular/common';
+import { HttpErrorResponse } from '@angular/common/http';
 
 @Component({
   selector: 'app-edit-event',
@@ -198,8 +199,11 @@ async searchLocation(query: string) {
         this.successMessage = 'Event updated successfully!';
         setTimeout(() => this.router.navigate(['/events']), 1500);
       },
-      error: () => {
-        this.errorMessage = 'Error updating event';
+      error: (err: HttpErrorResponse) => {
+        const backendMessage = err?.error?.message || err?.error?.error || err?.message;
+        this.errorMessage = typeof backendMessage === 'string' && backendMessage.trim().length > 0
+          ? `Error updating event: ${backendMessage}`
+          : 'Error updating event';
       }
     });
   }

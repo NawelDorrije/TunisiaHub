@@ -8,6 +8,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.FieldDefaults;
 import org.example.backend_tunisiahub.Entities.Reservation;
+import org.example.backend_tunisiahub.Entities.User.User;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -45,6 +46,12 @@ public class Event {
     @Column(columnDefinition = "LONGTEXT")
     String image;
 
+    @Column(length = 2500)
+    String marketingDescription;
+
+    @Column(length = 1200)
+    String posterImageUrl;
+
     @Enumerated(EnumType.STRING)
     EventType type;
 
@@ -55,6 +62,11 @@ public class Event {
     @OneToMany(mappedBy = "event", cascade = CascadeType.ALL)
     @JsonIgnore
     List<Reservation> reservations = new ArrayList<>();
+
+    @ManyToOne
+    @JoinColumn(name = "created_by_user_id")
+    @JsonIgnore
+    User createdBy;
 
 
 

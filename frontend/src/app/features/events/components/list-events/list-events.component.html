@@ -94,7 +94,15 @@
 
     <div class="cards-grid" *ngIf="viewMode === 'cards' && filteredEvents.length > 0">
       <div class="event-card" *ngFor="let event of filteredEvents">
-        <div class="card-image" [style.background-image]="event.image ? 'url(' + event.image + ')' : ''">
+        <div class="card-image">
+          <img
+            class="card-image-el"
+            [src]="getCardImageSrc(event.image)"
+            alt="Event image"
+            loading="lazy"
+            decoding="async"
+            (error)="onCardImageError($event)"
+          />
           <div class="card-overlay"></div>
 
           <div class="card-top">

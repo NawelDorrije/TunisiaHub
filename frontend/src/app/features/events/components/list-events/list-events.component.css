@@ -355,6 +355,16 @@
     linear-gradient(135deg, rgba(16, 35, 63, 0.88) 0%, rgba(47, 91, 234, 0.74) 100%);
   background-size: cover;
   background-position: center;
+  overflow: hidden;
+}
+
+.card-image-el {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
 }
 
 .card-overlay {

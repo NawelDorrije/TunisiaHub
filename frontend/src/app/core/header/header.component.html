@@ -34,7 +34,7 @@
           >Services </a>
           <ul class="dropdown-menu" aria-labelledby="servicesDropdown">
             <li><a class="dropdown-item" routerLink="/campings">Campings</a></li>
-            <li><a class="dropdown-item" routerLink="/events">Events</a></li>
+            <li><a class="dropdown-item" [routerLink]="eventsLink">Events</a></li>
             <li><a class="dropdown-item" routerLink="/shoppings">Shoppings</a></li>
             <li><a class="dropdown-item" routerLink="/carpooling">Carpooling</a></li>
             <li><a class="dropdown-item" routerLink="/accommodations/explore">Accommodations</a></li>
@@ -47,7 +47,7 @@
 
         <!-- Admin link -->
         <li class="nav-item" *ngIf="authService.isAdmin()">
-          <a class="nav-link" routerLink="/accommodations/admin">Dashboard</a>
+          <a class="nav-link" routerLink="/events">Events Admin</a>
         </li>
 
         <!-- NOT logged in -->

@@ -7,6 +7,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.FieldDefaults;
+import org.example.backend_tunisiahub.Entities.Event.Event;
 //import org.example.backend_tunisiahub.Entities.Event.Rating;
 import org.example.backend_tunisiahub.Entities.Reservation;
 
@@ -37,6 +38,10 @@ public class User {
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
     @JsonIgnore
     List<Reservation> reservations;
+
+    @OneToMany(mappedBy = "createdBy", cascade = CascadeType.ALL)
+    @JsonIgnore
+    List<Event> createdEvents;
 
     //@OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
     //List<Rating> ratings;

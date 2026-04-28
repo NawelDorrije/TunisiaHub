@@ -152,20 +152,6 @@ export class ListEventsUserComponent implements OnInit, OnDestroy {
     this.notificationService.disconnect();
   }
 
-  getSentimentEmoji(comment: string): string {
-    if (!comment) return ':)';
-
-    const lower = comment.toLowerCase();
-
-    const positive = ['excellent', 'amazing', 'love', 'great', 'perfect', 'awesome'];
-    const negative = ['bad', 'terrible', 'worst', 'hate', 'awful', 'shit', 'fuck'];
-
-    if (positive.some((word) => lower.includes(word))) return '<3';
-    if (negative.some((word) => lower.includes(word))) return ':(';
-
-    return ':)';
-  }
-
   showToast(message: string): void {
     this.notifications.push(message);
 
@@ -283,6 +269,14 @@ export class ListEventsUserComponent implements OnInit, OnDestroy {
 
   trackByEventId(_: number, event: Event): number | string {
     return event.id ?? event.title;
+  }
+
+  getEventCardBackgroundImage(image?: string): string {
+    const candidate = (image ?? '').trim();
+    if (!candidate) {
+      return '';
+    }
+    return `url('${encodeURI(candidate).replace(/'/g, '%27')}')`;
   }
 
   getChatEventDescription(description: string | undefined, maxLength = 115): string {

@@ -128,6 +128,13 @@
             <span>Type</span>
             <strong>{{ event?.type }}</strong>
           </div>
+          <button *ngIf="isAdminUser" type="button" class="share-whatsapp-btn" (click)="shareOnWhatsApp()">
+            Share on WhatsApp
+          </button>
+          <button *ngIf="isAdminUser" type="button" class="share-facebook-btn" (click)="shareOnFacebook()">
+            Share on Facebook
+          </button>
+          <p class="share-feedback" *ngIf="isAdminUser && shareFeedback">{{ shareFeedback }}</p>
         </section>
       </aside>
     </div>

@@ -40,9 +40,9 @@ export class SignInComponent {
       next: (response) => {
         this.isLoading = false;
         if (response.role === 'ADMIN') {
-          this.router.navigate(['/accommodations/admin']);
+          this.router.navigate(['/events']);
         } else {
-          this.router.navigate(['/accommodations/explore']);
+          this.router.navigate(['/events/user/events']);
         }
       },
       error: () => {

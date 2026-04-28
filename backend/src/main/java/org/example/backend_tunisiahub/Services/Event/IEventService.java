@@ -1,6 +1,7 @@
 package org.example.backend_tunisiahub.Services.Event;
 
 import org.example.backend_tunisiahub.Entities.Event.Event;
+import org.example.backend_tunisiahub.Entities.Event.EventType;
 
 import java.util.List;
 
@@ -17,4 +18,8 @@ public interface IEventService {
     Event modifyEvent(Event event);
 
     List<Event> searchByTitle(String title);
+
+    List<Event> searchByKeyword(String keyword);
+
+    List<Event> filterByType(EventType type);
 }

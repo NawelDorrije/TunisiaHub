@@ -150,6 +150,15 @@
               </small>
             </div>
 
+            <div class="full-span">
+              <app-ai-recommendations
+                [result]="recommendationResult"
+                [loading]="recommendationLoading"
+                [error]="recommendationError"
+                (useSlot)="applyRecommendedSlot($event)">
+              </app-ai-recommendations>
+            </div>
+
             <div class="field description-field">
               <div class="field-head">
                 <label class="form-label">Description</label>

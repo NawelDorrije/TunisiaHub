@@ -15,6 +15,7 @@ import { ListEventsUserComponent } from './components/list-events-user/list-even
 import { ReservationEventComponent } from './components/reservation-event/reservation-event.component';
 import { StripePaymentComponent } from './components/stripe-payment/stripe-payment.component';
 import { FullCalendarModule } from '@fullcalendar/angular';
+import { AiRecommendationsComponent } from './components/ai-recommendations/ai-recommendations.component';
 //import { CalendarEventsComponent } from './components/calendar-events/calendar-events.component';
 
 
@@ -27,6 +28,7 @@ import { FullCalendarModule } from '@fullcalendar/angular';
     ListEventsUserComponent,
     ReservationEventComponent,
     StripePaymentComponent,
+    AiRecommendationsComponent,
     
     //CalendarEventsComponent,
     

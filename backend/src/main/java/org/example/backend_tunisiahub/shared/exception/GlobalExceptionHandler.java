@@ -6,6 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -40,6 +41,17 @@ public class GlobalExceptionHandler {
                                                                       HttpServletRequest request) {
         log.warn("Constraint violation on {}: {}", request.getRequestURI(), ex.getMessage());
         return buildError(HttpStatus.BAD_REQUEST, ex.getMessage(), request.getRequestURI(), null);
+    }
+
+    @ExceptionHandler(ResponseStatusException.class)
+    public ResponseEntity<ApiErrorResponse> handleResponseStatusException(ResponseStatusException ex,
+                                                                          HttpServletRequest request) {
+        HttpStatus status = HttpStatus.resolve(ex.getStatusCode().value());
+        HttpStatus effectiveStatus = status == null ? HttpStatus.INTERNAL_SERVER_ERROR : status;
+        String message = ex.getReason() == null || ex.getReason().isBlank() ? ex.getMessage() : ex.getReason();
+        log.warn("ResponseStatusException on {}: status={}, message={}",
+                request.getRequestURI(), effectiveStatus.value(), message);
+        return buildError(effectiveStatus, message, request.getRequestURI(), null);
     }
 
     @ExceptionHandler(Exception.class)

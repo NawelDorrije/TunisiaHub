@@ -6,8 +6,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.FieldDefaults;
-import org.example.backend_tunisiahub.Entities.Event.Event;
-import org.example.backend_tunisiahub.Entities.User.User;
 
 import java.util.Date;
 
@@ -33,14 +31,4 @@ public class Review {
     @OneToOne
     @JoinColumn(name = "reservation_id")
     Reservation reservation;
-
-    @ManyToOne
-    @JoinColumn(name = "event_id")
-    Event event;
-
-    @ManyToOne
-    @JoinColumn(name = "user_id")
-    User user;
-    // Nouveau champ pour l'emoji global
-    String sentimentEmoji;
 }

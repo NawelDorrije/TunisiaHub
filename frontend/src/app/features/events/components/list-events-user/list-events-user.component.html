@@ -181,7 +181,7 @@
          *ngFor="let event of filteredEvents; trackBy: trackByEventId"
          [class.completed]="isCompleted(event)">
       <div class="ec-img"
-           [style.background-image]="event.image ? 'url(' + event.image + ')' : ''">
+           [style.background-image]="getEventCardBackgroundImage(event.image)">
         <div class="ec-overlay"></div>
         <div class="ec-badges">
           <span class="b-type">{{ event.type }}</span>
@@ -360,8 +360,7 @@
             </button>
 
             <div class="cdp-det-img"
-                 [style.background-image]="selectedEventDetail.image
-                   ? 'url(' + selectedEventDetail.image + ')' : ''">
+                 [style.background-image]="getEventCardBackgroundImage(selectedEventDetail.image)">
               <div class="cdp-det-overlay"></div>
               <div class="cdp-det-badges">
                 <span class="b-type">{{ selectedEventDetail.type }}</span>

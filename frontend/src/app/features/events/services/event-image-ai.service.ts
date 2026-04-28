@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { HttpClient } from '@angular/common/http';
 import { map, Observable } from 'rxjs';
 
 export interface EventImageUploadResponse {
@@ -18,8 +18,7 @@ export class EventImageAiService {
   uploadImageAndGenerateDescription(file: File): Observable<EventImageUploadResponse> {
     const formData = new FormData();
     formData.append('image', file);
-    const headers = new HttpHeaders({ 'X-Skip-Auth': 'true' });
-    return this.http.post<unknown>(`${this.eventsApiUrl}/upload-image`, formData, { headers }).pipe(
+    return this.http.post<unknown>(`${this.eventsApiUrl}/upload-image`, formData).pipe(
       map((response) => this.normalizeUploadResponse(response))
     );
   }
