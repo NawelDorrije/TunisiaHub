@@ -88,13 +88,10 @@ public interface CampingRepository extends JpaRepository<Camping, Long> {
     List<Camping> searchByKeyword(@Param("keyword") String keyword);
 
     @Query("""
-    SELECT c FROM Camping c 
-    WHERE c.status = 'ACTIVE' 
+    SELECT c FROM Camping c
+    WHERE c.status = 'ACTIVE'
     AND c.startDate IS NOT NULL AND c.endDate IS NOT NULL
-    AND c.startDate <= :endDate 
-    AND c.endDate >= :startDate
+    AND c.endDate >= :today
 """)
-    List<Camping> findAvailableCampingsForDates(
-            @Param("startDate") LocalDate startDate,
-            @Param("endDate") LocalDate endDate);
+    List<Camping> findAvailableCampingsForDates(@Param("today") LocalDate today);
 }

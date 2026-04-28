@@ -75,7 +75,7 @@ public class CampingServiceImpl implements ICampingService {
     @Override
     public List<CampingDTO> getAllCampings() {
         LocalDate today = LocalDate.now();
-        return campingRepository.findAvailableCampingsForDates(today, today)
+        return campingRepository.findAvailableCampingsForDates(today)
                 .stream()
                 .map(campingMapper::toDTO)
                 .collect(Collectors.toList());
