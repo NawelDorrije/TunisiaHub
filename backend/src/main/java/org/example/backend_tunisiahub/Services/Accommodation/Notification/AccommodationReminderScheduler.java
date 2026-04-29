@@ -63,7 +63,7 @@ public class AccommodationReminderScheduler {
                 );
 
                 reservationEmailService.sendAccommodationStartReminder(
-                        reservation.getUser(),
+                        reservation.getReservedBy(),
                         reservation.getAccommodation(),
                         reservation,
                         forecast

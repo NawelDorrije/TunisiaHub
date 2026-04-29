@@ -52,7 +52,7 @@ public class AccommodationReservationService implements IAccommodationReservatio
 
         // Set reservation fields
         reservation.setAccommodation(accommodation);
-        reservation.setUser(user);
+        reservation.setReservedBy(user);
         reservation.setTotalPrice(totalPrice);
         reservation.setStatus("CONFIRMED");
         reservation.setType(ReservationType.accommodationReservation);
