@@ -1,88 +1,244 @@
 import { Injectable } from '@angular/core';
 
-@Injectable({ providedIn: 'root' })
+export interface ShopData {
+  id?: number;
+  name?: string;
+  rating?: number;
+  city?: string;
+  category?: string;
+  photoUrl?: string;
+  products?: any[];
+}
+
+@Injectable({
+  providedIn: 'root'
+})
 export class PromoCardOverlayService {
 
-  async compositeAndDownload(
+  /**
+   * Creates a beautiful promotional overlay on the AI-generated image
+   * and returns a blob URL for preview
+   */
+  async createCompositedImage(
     imageUrl: string,
-    targetName: string,
-    targetId: number,
-    targetType: 'shop' | 'product',
-    rating?: number
-  ): Promise<void> {
-    try {
-      const img = await this.loadImage(imageUrl);
+    shopData: ShopData,
+    tagline: string = 'Discover the magic of authentic Tunisian craftsmanship',
+    ctaText?: string
+  ): Promise<string> {
+    return new Promise((resolve, reject) => {
       const canvas = document.createElement('canvas');
-      const W = img.naturalWidth  || 1024;
-      const H = img.naturalHeight || 1024;
-      canvas.width  = W;
-      canvas.height = H;
-      const ctx = canvas.getContext('2d')!;
+      const ctx = canvas.getContext('2d', { alpha: true });
 
-      ctx.drawImage(img, 0, 0, W, H);
-
-      const grad = ctx.createLinearGradient(0, H * 0.6, 0, H);
-      grad.addColorStop(0, 'rgba(0,0,0,0)');
-      grad.addColorStop(1, 'rgba(0,0,0,0.82)');
-      ctx.fillStyle = grad;
-      ctx.fillRect(0, 0, W, H);
-
-      ctx.fillStyle = '#FFFFFF';
-      ctx.font = `bold ${Math.floor(W * 0.045)}px 'Segoe UI', Arial, sans-serif`;
-      ctx.shadowColor = 'rgba(0,0,0,0.6)';
-      ctx.shadowBlur  = 8;
-      this.fillTextMultiline(ctx, targetName, 40, H - (rating ? 90 : 55), W - 160, Math.floor(W * 0.048));
-      ctx.shadowBlur = 0;
-
-      if (rating != null && rating > 0) {
-        const stars   = Math.round(Math.min(Math.max(rating, 0), 5));
-        const starStr = '★'.repeat(stars) + '☆'.repeat(5 - stars);
-        ctx.fillStyle = '#FDBB2D';
-        ctx.font      = `${Math.floor(W * 0.032)}px Arial`;
-        ctx.fillText(starStr, 40, H - 48);
-        ctx.fillStyle = 'rgba(255,255,255,0.6)';
-        ctx.font      = `${Math.floor(W * 0.022)}px Arial`;
-        ctx.fillText(`${rating.toFixed(1)} / 5`, 40 + Math.floor(W * 0.032) * 6.2, H - 48);
+      if (!ctx) {
+        reject(new Error('Could not get canvas 2D context'));
+        return;
       }
 
-      const shopUrl = `${window.location.origin}/${targetType === 'shop' ? 'shops' : 'products/shop'}/${targetId}`;
-      try {
-        const qrImg  = await this.loadImage(
-          `https://chart.googleapis.com/chart?chs=90x90&cht=qr&choe=UTF-8&chl=${encodeURIComponent(shopUrl)}`
-        );
-        const qrSize = Math.floor(W * 0.1);
-        const pad    = 18;
-        ctx.fillStyle = '#FFFFFF';
-        ctx.fillRect(W - qrSize - pad - 6, H - qrSize - pad - 6, qrSize + 12, qrSize + 12);
-        ctx.drawImage(qrImg, W - qrSize - pad, H - qrSize - pad, qrSize, qrSize);
-      } catch { /* QR blocked by CORS — skip silently */ }
-
-      canvas.toBlob(blob => {
-        if (!blob) { window.open(imageUrl, '_blank'); return; }
-        const url  = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.download = `${targetName.replace(/\s+/g, '_')}_promo.png`;
-        link.href = url;
-        link.click();
-        setTimeout(() => URL.revokeObjectURL(url), 1500);
-      }, 'image/png');
-
-    } catch {
-      window.open(imageUrl, '_blank');
-    }
-  }
-
-  private loadImage(src: string): Promise<HTMLImageElement> {
-    return new Promise((resolve, reject) => {
       const img = new Image();
       img.crossOrigin = 'anonymous';
-      img.onload  = () => resolve(img);
-      img.onerror = () => reject(new Error(`Image load failed: ${src}`));
-      img.src = src;
+
+      img.onload = () => {
+        canvas.width = img.width;
+        canvas.height = img.height;
+        const W = canvas.width;
+        const H = canvas.height;
+
+        // 1. Draw the base AI image
+        ctx.drawImage(img, 0, 0, W, H);
+
+        // 2. Top "EXCLUSIVE OFFER" badge
+        this.drawExclusiveBadge(ctx, W, H);
+
+        // 3. Main Shop Name
+        this.drawHeadline(ctx, shopData.name || 'TunisiaHub Shop', W, H);
+
+        // 4. Tagline
+        this.drawTagline(ctx, tagline, W, H);
+
+        // 5. Bottom dark overlay + info
+        this.drawBottomOverlay(ctx, shopData, ctaText || 'Explore Collection • Shop Now', W, H);
+
+        // 6. QR Code (placeholder to avoid CORS issues)
+        this.drawQRPlaceholder(ctx, W, H);
+
+        // Convert canvas to blob URL
+        canvas.toBlob((blob) => {
+          if (blob) {
+            resolve(URL.createObjectURL(blob));
+          } else {
+            reject(new Error('Failed to create image blob'));
+          }
+        }, 'image/png', 0.95);
+      };
+
+      img.onerror = () => reject(new Error(`Failed to load image: ${imageUrl}`));
+      img.src = imageUrl;
     });
   }
 
-  private fillTextMultiline(
+  /** Download the composited image */
+  downloadImage(imageUrl: string, filename: string = 'promotion.png'): void {
+    const link = document.createElement('a');
+    link.href = imageUrl;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  }
+
+  // ==================== PRIVATE HELPERS ====================
+
+  private drawExclusiveBadge(ctx: CanvasRenderingContext2D, W: number, H: number): void {
+    const badgeHeight = H * 0.085;
+    const badgeY = H * 0.035;
+    const badgeWidth = W * 0.58;
+    const badgeX = (W - badgeWidth) / 2;
+
+    // Gradient background
+    const grad = ctx.createLinearGradient(0, badgeY, 0, badgeY + badgeHeight);
+    grad.addColorStop(0, 'rgba(232, 67, 147, 0.95)');
+    grad.addColorStop(1, 'rgba(253, 203, 110, 0.95)');
+
+    this.roundRect(ctx, badgeX, badgeY, badgeWidth, badgeHeight, badgeHeight / 2);
+    ctx.fillStyle = grad;
+    ctx.fill();
+
+    // Text
+    ctx.fillStyle = '#ffffff';
+    ctx.font = `bold ${H * 0.033}px Arial`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.shadowColor = 'rgba(0,0,0,0.4)';
+    ctx.shadowBlur = 6;
+    ctx.fillText('✨ EXCLUSIVE OFFER ✨', W / 2, badgeY + badgeHeight / 2);
+    ctx.shadowBlur = 0;
+  }
+
+  private drawHeadline(ctx: CanvasRenderingContext2D, shopName: string, W: number, H: number): void {
+    const y = H * 0.22;
+    ctx.fillStyle = '#ffffff';
+    ctx.font = `bold ${H * 0.058}px Arial`;
+    ctx.textAlign = 'center';
+    ctx.shadowColor = 'rgba(0,0,0,0.7)';
+    ctx.shadowBlur = 10;
+    this.wrapText(ctx, shopName.toUpperCase(), W / 2, y, W * 0.88, H * 0.072);
+    ctx.shadowBlur = 0;
+  }
+
+  private drawTagline(ctx: CanvasRenderingContext2D, tagline: string, W: number, H: number): void {
+    const y = H * 0.33;
+    ctx.fillStyle = 'rgba(255,255,255,0.95)';
+    ctx.font = `${H * 0.033}px Arial`;
+    ctx.textAlign = 'center';
+    this.wrapText(ctx, tagline, W / 2, y, W * 0.82, H * 0.045);
+  }
+
+  private drawBottomOverlay(
+    ctx: CanvasRenderingContext2D,
+    shopData: ShopData,
+    ctaText: string,
+    W: number,
+    H: number
+  ): void {
+    const overlayHeight = H * 0.34;
+    const overlayY = H - overlayHeight;
+
+    const grad = ctx.createLinearGradient(0, overlayY, 0, H);
+    grad.addColorStop(0, 'rgba(0,0,0,0)');
+    grad.addColorStop(0.25, 'rgba(0,0,0,0.75)');
+    grad.addColorStop(1, 'rgba(0,0,0,0.94)');
+
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, overlayY, W, overlayHeight);
+
+    // Location & Category
+    const infoY = overlayY + overlayHeight * 0.24;
+    ctx.fillStyle = '#fdcb6e';
+    ctx.font = `bold ${H * 0.029}px Arial`;
+    const cityText = shopData.city ? `📍 ${shopData.city}, Tunisia` : '🇹🇳 Authentic Tunisian Craft';
+    const catText = shopData.category ? ` • ${this.capitalize(shopData.category)}` : '';
+    ctx.textAlign = 'center';
+    ctx.fillText(cityText + catText, W / 2, infoY);
+
+    // Rating
+    if (shopData.rating && shopData.rating > 0) {
+      const ratingY = infoY + H * 0.06;
+      ctx.fillStyle = '#f1c40f';
+      ctx.font = `${H * 0.034}px Arial`;
+      const stars = '★'.repeat(Math.round(shopData.rating)) + '☆'.repeat(5 - Math.round(shopData.rating));
+      ctx.fillText(`${stars} ${shopData.rating.toFixed(1)}/5`, W / 2, ratingY);
+    }
+
+    // CTA Button
+    const btnWidth = W * 0.58;
+    const btnHeight = H * 0.068;
+    const btnX = (W - btnWidth) / 2;
+    const btnY = H - H * 0.095;
+
+    const btnGrad = ctx.createLinearGradient(btnX, btnY, btnX, btnY + btnHeight);
+    btnGrad.addColorStop(0, '#e84393');
+    btnGrad.addColorStop(1, '#d63031');
+
+    this.roundRect(ctx, btnX, btnY, btnWidth, btnHeight, btnHeight / 3);
+    ctx.fillStyle = btnGrad;
+    ctx.fill();
+
+    ctx.strokeStyle = 'rgba(255,255,255,0.4)';
+    ctx.lineWidth = 2.5;
+    ctx.stroke();
+
+    ctx.fillStyle = '#ffffff';
+    ctx.font = `bold ${H * 0.032}px Arial`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(ctaText, W / 2, btnY + btnHeight / 2);
+  }
+
+  private drawQRPlaceholder(ctx: CanvasRenderingContext2D, W: number, H: number): void {
+    const size = 68;
+    const x = W - size - 35;
+    const y = H - size - 35;
+
+    // White background
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(x - 4, y - 4, size + 8, size + 8);
+
+    // Fake QR pattern
+    ctx.fillStyle = '#111111';
+    const block = size / 10;
+    for (let i = 0; i < 10; i++) {
+      for (let j = 0; j < 10; j++) {
+        if ((i + j) % 2 === 0 || Math.random() > 0.4) {
+          ctx.fillRect(x + i * block, y + j * block, block - 1, block - 1);
+        }
+      }
+    }
+  }
+
+  // ==================== CANVAS HELPERS ====================
+
+  private roundRect(
+    ctx: CanvasRenderingContext2D,
+    x: number,
+    y: number,
+    w: number,
+    h: number,
+    r: number
+  ): void {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.lineTo(x + w - r, y);
+    ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+    ctx.lineTo(x + w, y + h - r);
+    ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+    ctx.lineTo(x + r, y + h);
+    ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+    ctx.lineTo(x, y + r);
+    ctx.quadraticCurveTo(x, y, x + r, y);
+    ctx.closePath();
+  }
+
+  private wrapText(
     ctx: CanvasRenderingContext2D,
     text: string,
     x: number,
@@ -91,17 +247,24 @@ export class PromoCardOverlayService {
     lineHeight: number
   ): void {
     const words = text.split(' ');
-    let line    = '';
-    for (const word of words) {
-      const test = line ? `${line} ${word}` : word;
-      if (ctx.measureText(test).width > maxWidth && line) {
-        ctx.fillText(line, x, y);
-        line = word;
-        y   += lineHeight;
+    let line = '';
+    let currentY = y;
+
+    for (let n = 0; n < words.length; n++) {
+      const testLine = line + words[n] + ' ';
+      const metrics = ctx.measureText(testLine);
+      if (metrics.width > maxWidth && n > 0) {
+        ctx.fillText(line.trim(), x, currentY);
+        line = words[n] + ' ';
+        currentY += lineHeight;
       } else {
-        line = test;
+        line = testLine;
       }
     }
-    if (line) ctx.fillText(line, x, y);
+    ctx.fillText(line.trim(), x, currentY);
+  }
+
+  private capitalize(s?: string): string {
+    return s ? s.charAt(0).toUpperCase() + s.slice(1).toLowerCase() : '';
   }
 }

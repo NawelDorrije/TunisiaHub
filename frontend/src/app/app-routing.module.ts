@@ -6,7 +6,7 @@ import { CartComponent } from './features/souvenirs-shops/cart/cart.component';
 import { AuthGuard } from './features/auth/auth.guard';
 import { OwnerGuard } from './features/auth/owner.guard';
 
-const routes: Routes = [
+export const routes: Routes = [
   { path: 'home', component: HomeComponent },
   { path: '', redirectTo: 'home', pathMatch: 'full' },
 

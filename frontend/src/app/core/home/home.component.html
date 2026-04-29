@@ -1,16 +1,126 @@
-<div class="home-container container py-5">
-  <h1 class="text-center mb-5">Discover Tunisia Services</h1>
+<!-- home.component.html -->
+<div class="home-root">
 
-  <div class="row g-4">
-    <div class="col-md-4" *ngFor="let service of services">
-      <div class="card h-100 service-card shadow-sm">
-        <div class="card-body text-center">
-          <i class="{{service.icon}} service-icon mb-3"></i>
-          <h5 class="card-title">{{service.title}}</h5>
-          <p class="card-text">{{service.description}}</p>
-          <a [routerLink]="service.link" class="btn btn-primary">Explore</a>
+  <!-- ── Hero ── -->
+  <section class="hero">
+    <div class="hero-bg">
+      <div class="hero-shape s1"></div>
+      <div class="hero-shape s2"></div>
+      <div class="hero-shape s3"></div>
+    </div>
+    <div class="hero-content">
+      <span class="hero-eyebrow">Welcome to TunisiaHub</span>
+      <h1 class="hero-title">Explore the best<br>of <em>Tunisia</em></h1>
+      <p class="hero-sub">Your one-stop platform for travel, shopping, dining,<br>events and experiences across Tunisia.</p>
+      <div class="hero-cta-row">
+        <a routerLink="/shops" class="btn-hero-primary">Start exploring</a>
+        <a routerLink="/events" class="btn-hero-ghost">Upcoming events</a>
+      </div>
+      <div class="hero-stats">
+        <div class="hero-stat"><span class="hs-n">7</span><span class="hs-l">Services</span></div>
+        <div class="hero-stat-div"></div>
+        <div class="hero-stat"><span class="hs-n">24+</span><span class="hs-l">Cities</span></div>
+        <div class="hero-stat-div"></div>
+        <div class="hero-stat"><span class="hs-n">1k+</span><span class="hs-l">Listings</span></div>
+      </div>
+    </div>
+    <div class="hero-visual">
+      <div class="hero-card-float hc1">
+        <i class="bi bi-compass"></i>
+        <span>Tours</span>
+      </div>
+      <div class="hero-card-float hc2">
+        <i class="bi bi-cart4"></i>
+        <span>Shopping</span>
+      </div>
+      <div class="hero-card-float hc3">
+        <i class="bi bi-egg-fried"></i>
+        <span>Dining</span>
+      </div>
+      <div class="hero-map-circle">
+        <svg viewBox="0 0 160 160" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="80" cy="80" r="70" stroke="rgba(255,255,255,0.12)" stroke-width="1"/>
+          <circle cx="80" cy="80" r="50" stroke="rgba(255,255,255,0.08)" stroke-width="1"/>
+          <circle cx="80" cy="80" r="28" fill="rgba(255,255,255,0.07)" stroke="rgba(255,255,255,0.15)" stroke-width="1"/>
+          <!-- Tunisia shape simplified -->
+          <path d="M78 38 L85 42 L90 50 L88 60 L94 65 L96 75 L90 85 L85 95 L80 105 L75 95 L70 85 L68 72 L72 60 L70 50 L74 42 Z"
+                fill="rgba(255,255,255,0.15)" stroke="rgba(255,255,255,0.3)" stroke-width="1"/>
+          <!-- dots -->
+          <circle cx="80" cy="65" r="3" fill="#fff" opacity="0.9"/>
+          <circle cx="85" cy="78" r="2" fill="#fff" opacity="0.6"/>
+          <circle cx="74" cy="72" r="2" fill="#fff" opacity="0.6"/>
+          <circle cx="82" cy="88" r="2" fill="#fff" opacity="0.5"/>
+        </svg>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Services ── -->
+  <section class="services-section">
+    <div class="services-header">
+      <p class="services-eyebrow">What we offer</p>
+      <h2 class="services-title">Everything you need,<br>all in one place</h2>
+    </div>
+    <div class="services-grid">
+      <a *ngFor="let s of services; let i = index"
+         [routerLink]="s.link"
+         class="svc-card"
+         [attr.data-index]="i">
+        <div class="svc-icon-wrap">
+          <i [class]="s.icon"></i>
+        </div>
+        <div class="svc-body">
+          <h3 class="svc-title">{{ s.title }}</h3>
+          <p class="svc-desc">{{ s.description }}</p>
+        </div>
+        <div class="svc-arrow">
+          <i class="bi bi-arrow-right"></i>
+        </div>
+      </a>
+    </div>
+  </section>
+
+  <!-- ── Why TunisiaHub ── -->
+  <section class="why-section">
+    <div class="why-inner">
+      <div class="why-text">
+        <p class="services-eyebrow">Why TunisiaHub</p>
+        <h2 class="services-title" style="margin-bottom:1.25rem">Built for<br>real explorers</h2>
+        <p class="why-body">From the medinas of Tunis to the beaches of Djerba — TunisiaHub connects you to authentic local experiences, trusted vendors and unforgettable moments.</p>
+        <div class="why-pills">
+          <span class="why-pill"><i class="bi bi-shield-check"></i> Verified listings</span>
+          <span class="why-pill"><i class="bi bi-translate"></i> Arabic · French · English</span>
+          <span class="why-pill"><i class="bi bi-geo-alt"></i> All 24 governorates</span>
+        </div>
+      </div>
+      <div class="why-cards">
+        <div class="why-card wc-accent">
+          <div class="why-card-n">24/7</div>
+          <div class="why-card-l">Platform access</div>
+        </div>
+        <div class="why-card">
+          <div class="why-card-n">4.8★</div>
+          <div class="why-card-l">Average rating</div>
+        </div>
+        <div class="why-card">
+          <div class="why-card-n">Free</div>
+          <div class="why-card-l">No booking fees</div>
+        </div>
+        <div class="why-card wc-dark">
+          <div class="why-card-n">AI</div>
+          <div class="why-card-l">Powered promotions</div>
         </div>
       </div>
     </div>
-  </div>
+  </section>
+
+  <!-- ── CTA Banner ── -->
+  <section class="cta-section">
+    <div class="cta-inner">
+      <h2 class="cta-title">Ready to discover Tunisia?</h2>
+      <p class="cta-sub">Join thousands of locals and tourists who use TunisiaHub every day.</p>
+      <a routerLink="/shops" class="btn-hero-primary">Get started for free</a>
+    </div>
+  </section>
+
 </div>

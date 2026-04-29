@@ -1,4 +1,4 @@
-﻿import { Component } from '@angular/core';
+import { Component } from '@angular/core';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { AuthService } from '../services/auth.service';
@@ -53,7 +53,7 @@ export class SignInComponent {
         if (response.role === 'ADMIN') {
           this.router.navigate(['/accommodations/dashboard']);
         } else {
-          this.router.navigate(['/accommodations/explore']);
+          this.router.navigate(['/home']);
         }
       },
       error: () => {

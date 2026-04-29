@@ -1,4 +1,4 @@
-﻿import { Component } from '@angular/core';
+import { Component } from '@angular/core';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { AuthService } from '../services/auth.service';
@@ -58,7 +58,7 @@ export class SignUpComponent {
           this.router.navigateByUrl(this.returnUrl);
           return;
         }
-        this.router.navigate(['/accommodations/explore']);
+        this.router.navigate(['/home']);
       },
       error: (err) => {
         this.errorMessage = err.error || 'Registration failed. Please try again.';

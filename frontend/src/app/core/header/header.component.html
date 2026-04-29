@@ -1,11 +1,11 @@
-<nav class="navbar navbar-expand-lg navbar-light luxury-navbar">
-  <div class="container header-container">
+<nav class="navbar navbar-expand-lg navbar-light luxury-navbar sticky-top transition-all" [class.scrolled]="isScrolled">
+  <div class="container header-container" *ngIf="vm$ | async as vm">
     <a class="navbar-brand" routerLink="/">
       <span class="logo">TunisiaHub</span>
     </a>
 
     <button
-      class="navbar-toggler"
+      class="navbar-toggler border-0 shadow-none"
       type="button"
       data-bs-toggle="collapse"
       data-bs-target="#navbarNav"
@@ -20,7 +20,7 @@
       <ul class="navbar-nav ms-auto align-items-lg-center nav-links-wrap">
 
         <li class="nav-item">
-          <a class="nav-link nav-link-lux" routerLink="/">Home</a>
+          <a class="nav-link nav-link-lux" routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}">Home</a>
         </li>
 
         <li class="nav-item dropdown">
@@ -32,7 +32,7 @@
             data-bs-toggle="dropdown"
             aria-expanded="false"
           >Services </a>
-          <ul class="dropdown-menu" aria-labelledby="servicesDropdown">
+          <ul class="dropdown-menu border-0 shadow-lg dropdown-menu-lux" aria-labelledby="servicesDropdown">
             <li><a class="dropdown-item" routerLink="/campings">Campings</a></li>
             <li><a class="dropdown-item" routerLink="/events">Events</a></li>
             <li><a class="dropdown-item" routerLink="/shops">Shoppings</a></li>
@@ -41,72 +41,68 @@
           </ul>
         </li>
 
-        <li class="nav-item" *ngIf="authService.isClient() || authService.isAdmin() || !authService.isLoggedIn()">
-          <a class="nav-link" routerLink="/cart">
+        <li class="nav-item" *ngIf="!vm.user || vm.user.role === 'CLIENT' || vm.user.role === 'ADMIN'">
+          <a class="nav-link nav-link-lux position-relative" routerLink="/cart" routerLinkActive="active">
             Cart
-            <ng-container *ngIf="cartCount$ | async as count">
-              <span *ngIf="count > 0" class="badge bg-primary ms-1">{{ count }}</span>
-            </ng-container>
+            <span *ngIf="vm.cartCount > 0" class="badge bg-primary ms-1 rounded-pill cart-badge-mini">{{ vm.cartCount }}</span>
           </a>
         </li>
-        <li class="nav-item" *ngIf="authService.isLoggedIn()">
-          <a class="nav-link" routerLink="/orders">Orders</a>
+        <li class="nav-item" *ngIf="vm.user">
+          <a class="nav-link nav-link-lux" routerLink="/orders" routerLinkActive="active">Orders</a>
         </li>
-        <li class="nav-item">
-          <a class="nav-link nav-link-lux" routerLink="/contact">Contact Us</a>
+        <li class="nav-item" *ngIf="vm.user?.role === 'CLIENT'">
+          <a class="nav-link nav-link-lux" routerLink="/my-reservations" routerLinkActive="active">Reservations</a>
         </li>
 
         <!-- Admin link -->
-        <li class="nav-item" *ngIf="authService.isAdmin()">
-          <a class="nav-link" routerLink="/admin-dashboard">Dashboard</a>
+        <li class="nav-item" *ngIf="vm.user?.role === 'ADMIN'">
+          <a class="nav-link nav-link-lux" routerLink="/accommodations/dashboard" routerLinkActive="active">Dashboard</a>
         </li>
 
-        <!-- Owner link -->
-        <li class="nav-item" *ngIf="authService.isOwner()">
-          <a class="nav-link" routerLink="/owner-dashboard">SHOP Dashboard </a>
-          <a class="nav-link nav-link-lux" routerLink="/accommodations/dashboard">Dashboard</a>
+        <li class="nav-item" *ngIf="vm.user?.role === 'OWNER'">
+          <a class="nav-link nav-link-lux" routerLink="/owner-dashboard" routerLinkActive="active"> Dashboard </a>
+          <!-- <a class="nav-link nav-link-lux" routerLink="/accommodations/dashboard" routerLinkActive="active">Dashboard</a> -->
         </li>
 
         <!-- NOT logged in -->
-        <ng-container *ngIf="!authService.isLoggedIn()">
-          <li class="nav-item">
-            <a class="btn btn-outline-primary ms-lg-3 header-btn" routerLink="/auth/sign-in">Login</a>
+        <ng-container *ngIf="!vm.user">
+          <li class="nav-item ms-lg-2">
+            <a class="btn btn-outline-primary header-btn" routerLink="/auth/sign-in">Login</a>
           </li>
-          <li class="nav-item">
-            <a class="btn btn-primary ms-2 text-white header-btn header-btn-primary" routerLink="/auth/sign-up">Sign Up</a>
+          <li class="nav-item ms-2">
+            <a class="btn btn-primary text-white header-btn header-btn-primary shadow-sm" routerLink="/auth/sign-up">Sign Up</a>
           </li>
         </ng-container>
 
         <!-- Logged in -->
-        <ng-container *ngIf="authService.isLoggedIn()">
+        <ng-container *ngIf="vm.user">
           <li class="nav-item dropdown ms-lg-3">
             <a 
-              class="nav-link nav-link-lux dropdown-toggle fw-semibold"
+              class="nav-link nav-link-lux dropdown-toggle fw-semibold user-nav-link d-flex align-items-center gap-2"
               href="#"
               role="button"
               data-bs-toggle="dropdown"
               aria-expanded="false"
             >
-              👤 {{ authService.getNom() }} {{ authService.getPrenom() }}
+              <div class="user-avatar-mini shadow-sm">👤</div> 
+              <span class="user-name-text">{{ vm.user.nom }} {{ vm.user.prenom }}</span>
             </a>
-            <ul class="dropdown-menu dropdown-menu-end">
+            <ul class="dropdown-menu dropdown-menu-end border-0 shadow-lg dropdown-menu-lux">
               <li>
-                <span class="dropdown-item-text text-muted small">
-                  {{ authService.getRole() }}
-                </span>
+                <div class="px-3 py-2">
+                  <p class="mb-0 fw-bold small">{{ vm.user.nom }} {{ vm.user.prenom }}</p>
+                  <p class="text-muted mb-0" style="font-size: 0.75rem;">{{ vm.user.email }}</p>
+                  <span class="badge bg-light text-dark border mt-2" style="font-size: 0.65rem;">{{ vm.user.role }}</span>
+                </div>
               </li>
-              <li><hr class="dropdown-divider"></li>
-               <li *ngIf="authService.getRole()=='CLIENT'">
-                 <a class="dropdown-item" routerLink="/my-reservations">
-                    📋 My Reservations
-                  </a>
-                </li>
+              <li><hr class="dropdown-divider mx-2"></li>
+
               <li>
                 <button
-                  class="dropdown-item text-danger"
+                  class="dropdown-item text-danger d-flex align-items-center gap-2"
                   (click)="logout()"
                 >
-                  Logout
+                  <i class="bi bi-box-arrow-right"></i> Logout
                 </button>
               </li>
             </ul>

@@ -56,6 +56,13 @@ export class AdminDashboardComponent {
       icon: 'bi bi-stars',
       route: '/trendy-places',
       cta: 'Open Trendy Places'
+    },
+    {
+      title: 'Shops',
+      description: 'Manage souvenir shops, orders, and promotional content.',
+      icon: 'bi bi-shop',
+      route: '/admin-dashboard',
+      cta: 'Open Shop Management'
     }
   ];
 }

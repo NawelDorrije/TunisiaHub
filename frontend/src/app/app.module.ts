@@ -32,6 +32,7 @@ import { ChatWidgetComponent } from './shared/components/chat-widget/chat-widget
     HomeComponent,
     NotFoundComponent,
     CartComponent,
+    ChatWidgetComponent,
   ],
   imports: [
     // Core Angular Modules
@@ -53,9 +54,6 @@ import { ChatWidgetComponent } from './shared/components/chat-widget/chat-widget
       useClass: AuthInterceptor,
       multi: true,
     },
-
-    // Chat Widget as a provider (if it's used globally)
-    ChatWidgetComponent,
   ],
   bootstrap: [AppComponent],
 })

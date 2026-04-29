@@ -52,6 +52,7 @@ export class ChatWidgetComponent {
 
     this.messageInput.setValue('');
     this.isLoading = true;
+    this.messageInput.disable();
 
     this.http.post<any>(this.apiUrl, {
       message: message,
@@ -64,6 +65,7 @@ export class ChatWidgetComponent {
           timestamp: new Date()
         });
         this.isLoading = false;
+        this.messageInput.enable();
         this.scrollToBottom();
       },
       error: () => {
@@ -73,6 +75,7 @@ export class ChatWidgetComponent {
           timestamp: new Date()
         });
         this.isLoading = false;
+        this.messageInput.enable();
       }
     });
   }

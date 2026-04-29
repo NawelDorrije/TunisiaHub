@@ -1,26 +1,47 @@
-import { Component } from '@angular/core';
-import { map, Observable } from 'rxjs';
+import { Component, ChangeDetectionStrategy, HostListener, OnInit } from '@angular/core';
+import { map, Observable, combineLatest } from 'rxjs';
 import { CartService } from '../../services/souvenirs-shops/cart.service';
 import { Router } from '@angular/router';
-import { AuthService } from '../../features/auth/services/auth.service';
+import { AuthService, UserState } from '../../features/auth/services/auth.service';
+
+interface HeaderState {
+  user: UserState | null;
+  cartCount: number;
+}
 
 @Component({
   selector: 'app-header',
   templateUrl: './header.component.html',
-  styleUrls: ['./header.component.css'] 
+  styleUrls: ['./header.component.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class HeaderComponent {
+export class HeaderComponent implements OnInit {
 
-  cartCount$: Observable<number>;
+  vm$: Observable<HeaderState>;
+  isScrolled = false;
 
   constructor(
     private cartService: CartService,
-    public authService: AuthService,
+    private authService: AuthService,
     private router: Router
   ) {
-    this.cartCount$ = this.cartService.items$.pipe(
+    const cartCount$ = this.cartService.items$.pipe(
       map((items) => items.reduce((total, item) => total + item.quantity, 0))
     );
+
+    this.vm$ = combineLatest([
+      this.authService.user$,
+      cartCount$
+    ]).pipe(
+      map(([user, cartCount]) => ({ user, cartCount }))
+    );
+  }
+
+  ngOnInit(): void {}
+
+  @HostListener('window:scroll', [])
+  onWindowScroll() {
+    this.isScrolled = window.scrollY > 20;
   }
 
   logout(): void {

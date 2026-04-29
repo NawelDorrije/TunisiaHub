@@ -44,7 +44,8 @@ public class Reservation {
     Double totalPrice;
 
     @Enumerated(EnumType.STRING)
-    ReservationType type;
+    @Column(name = "type", length = 50, columnDefinition = "VARCHAR(50)")  // ← Add this
+    private ReservationType type;
 
     @ManyToOne
     @JoinColumn(name = "trip_id")
