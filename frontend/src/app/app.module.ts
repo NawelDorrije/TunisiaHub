@@ -1,6 +1,6 @@
 import { NgModule } from '@angular/core';
 import { BrowserModule, provideClientHydration } from '@angular/platform-browser';
-import { HttpClientModule, HTTP_INTERCEPTORS } from '@angular/common/http';
+import { provideHttpClient, withFetch, withInterceptorsFromDi, HTTP_INTERCEPTORS } from '@angular/common/http';
 import { ReactiveFormsModule } from '@angular/forms';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 
@@ -23,6 +23,7 @@ import { AuthInterceptor } from './features/auth/auth.interceptor';
 
 // Shared Components
 import { ChatWidgetComponent } from './shared/components/chat-widget/chat-widget.component';
+import { TourOverlayComponent } from './core/components/tour-overlay/tour-overlay.component';
 
 @NgModule({
   declarations: [
@@ -37,16 +38,20 @@ import { ChatWidgetComponent } from './shared/components/chat-widget/chat-widget
   imports: [
     // Core Angular Modules
     BrowserModule,
-    HttpClientModule,
     ReactiveFormsModule,
     NoopAnimationsModule,
 
     // Routing & Feature Modules
     AppRoutingModule,
     SouvenirsShopsModule,
+    TourOverlayComponent,
   ],
   providers: [
     provideClientHydration(),
+    provideHttpClient(
+      withFetch(),
+      withInterceptorsFromDi()
+    ),
 
     // HTTP Interceptor
     {

@@ -2,6 +2,7 @@ import { Component } from '@angular/core';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { AuthService } from '../services/auth.service';
+import { OnboardingTourService } from '../../../core/services/onboarding-tour.service';
 
 @Component({
   selector: 'app-sign-in',
@@ -26,7 +27,8 @@ export class SignInComponent {
   constructor(
     private authService: AuthService,
     private router: Router,
-    private route: ActivatedRoute
+    private route: ActivatedRoute,
+    private tourService: OnboardingTourService
   ) {
     this.returnUrl = this.route.snapshot.queryParamMap.get('returnUrl');
   }
@@ -52,6 +54,9 @@ export class SignInComponent {
         }
         if (response.role === 'ADMIN') {
           this.router.navigate(['/accommodations/dashboard']);
+        } else if (response.role === 'OWNER') {
+          this.tourService.startIfNeeded();
+          this.router.navigate(['/owner-dashboard']);
         } else {
           this.router.navigate(['/home']);
         }

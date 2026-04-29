@@ -72,7 +72,7 @@
       <p>Loading review insights...</p>
     </div>
 
-    <div *ngIf="reviewInsights" class="insights-section">
+    <div *ngIf="reviewInsights" class="insights-section" data-tour="ai-insights">
       <h2 class="section-title">Review Insights</h2>
       
       <div class="info-box" style="margin-bottom: 2rem;">
@@ -175,7 +175,7 @@
           <span class="btn-icon">→</span>
           <span class="btn-text">Manage Products</span>
         </button>
-        <button class="action-btn action-btn-accent" (click)="navigateToPromotions()">
+        <button class="action-btn action-btn-accent" (click)="navigateToPromotions()" data-tour="promote-btn">
           <span class="btn-icon">✨</span>
           <span class="btn-text">AI Promotions</span>
         </button>
@@ -203,7 +203,7 @@
 
     <!-- Recent Orders Section -->
     <div class="recent-orders-section" *ngIf="recentOrders.length > 0">
-      <h2 class="section-title">Recent Orders</h2>
+      <h2 class="section-title" data-tour="orders">Recent Orders</h2>
       <div class="orders-table">
         <div class="table-header">
           <div class="col col-customer">Customer</div>
