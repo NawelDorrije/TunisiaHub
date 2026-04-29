@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
-import { inject } from '@angular/core';
-import { FormBuilder, Validators } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
+import { Router } from '@angular/router';
 import { CarpoolingDataService } from '../services/carpooling-data.service';
 
 @Component({
@@ -10,21 +10,23 @@ import { CarpoolingDataService } from '../services/carpooling-data.service';
   styleUrls: ['./report-complaint.component.css'],
 })
 export class ReportComplaintComponent implements OnInit {
-  private readonly fb = inject(FormBuilder);
-
   success = '';
   error = '';
+  tripId = 0;
+  bookingId?: number;
 
-  readonly complaintForm = this.fb.nonNullable.group({
-    tripId: [0, [Validators.required, Validators.min(1)]],
-    bookingId: [0],
-    description: ['', [Validators.required, Validators.minLength(10)]],
-  });
+  complaintForm!: FormGroup;
 
   constructor(
+    private fb: FormBuilder,
     private readonly route: ActivatedRoute,
+    private readonly router: Router,
     private readonly dataService: CarpoolingDataService,
-  ) {}
+  ) {
+    this.complaintForm = this.fb.group({
+      description: ['', [Validators.required, Validators.minLength(10)]],
+    });
+  }
 
   ngOnInit(): void {
     const tripId = Number(this.route.snapshot.queryParamMap.get('tripId') ?? 0);
@@ -32,26 +34,42 @@ export class ReportComplaintComponent implements OnInit {
       this.route.snapshot.queryParamMap.get('bookingId') ?? 0,
     );
 
-    this.complaintForm.patchValue({
-      tripId: Number.isFinite(tripId) ? tripId : 0,
-      bookingId: Number.isFinite(bookingId) ? bookingId : 0,
-    });
+    this.tripId = Number.isFinite(tripId) ? tripId : 0;
+    this.bookingId =
+      Number.isFinite(bookingId) && bookingId > 0 ? bookingId : undefined;
+
+    if (this.tripId <= 0) {
+      this.error = 'Missing or invalid trip reference in URL.';
+    }
   }
 
   submit(): void {
     this.success = '';
     this.error = '';
 
+    if (this.tripId <= 0) {
+      this.error = 'Missing or invalid trip reference in URL.';
+      return;
+    }
+
     if (this.complaintForm.invalid) {
       this.complaintForm.markAllAsTouched();
+      const descriptionControl = this.complaintForm.get('description');
+      if (descriptionControl?.hasError('required')) {
+        this.error = 'Please describe the issue before submitting.';
+      } else if (descriptionControl?.hasError('minlength')) {
+        this.error = 'Description must contain at least 10 characters.';
+      } else {
+        this.error = 'Complaint form is invalid.';
+      }
       return;
     }
 
     const form = this.complaintForm.getRawValue();
     this.dataService
       .submitComplaint({
-        tripId: form.tripId,
-        bookingId: form.bookingId > 0 ? form.bookingId : undefined,
+        tripId: this.tripId,
+        bookingId: this.bookingId,
         description: form.description,
       })
       .subscribe({
@@ -63,5 +81,9 @@ export class ReportComplaintComponent implements OnInit {
           this.error = 'Unable to submit complaint from backend endpoint.';
         },
       });
+  }
+
+  goBack(): void {
+    this.router.navigate(['/carpooling/my-bookings']);
   }
 }

@@ -14,7 +14,7 @@ import java.util.List;
 public interface AccommodationReservationRepository extends JpaRepository<Reservation, Long> {
 
     List<Reservation> findByAccommodationId(Long accommodationId);
-    List<Reservation> findByUserAndType(User user, ReservationType type);
+    List<Reservation> findByReservedByAndType(User reservedBy, ReservationType type);
     @Query("SELECT COUNT(r) > 0 FROM Reservation r WHERE r.accommodation.id = :accommodationId " +
             "AND r.status = 'CONFIRMED' " +
             "AND r.startDate <= :endDate " +

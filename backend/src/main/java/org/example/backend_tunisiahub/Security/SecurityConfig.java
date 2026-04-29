@@ -33,6 +33,11 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         // Public routes
                         .requestMatchers("/api/auth/**").permitAll()
+                        .requestMatchers("/api/carpooling/trips/**").permitAll()
+                        .requestMatchers("/api/driver/trips/**").permitAll()
+                        .requestMatchers("/api/reservations/**").permitAll()
+                        .requestMatchers("/api/complaints/**").permitAll()
+                        .requestMatchers("/api/carpooling-reviews/**").permitAll()
                         .requestMatchers("/api/accommodations/getAll").permitAll()
                         .requestMatchers("/api/accommodations/filter").permitAll()
                         .requestMatchers("/api/accommodations/get/**").permitAll()
@@ -49,6 +54,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/accommodations/add").hasRole("ADMIN")
                         .requestMatchers("/api/accommodations/update/**").hasRole("ADMIN")
                         .requestMatchers("/api/accommodations/delete/**").hasRole("ADMIN")
+                        .requestMatchers("/api/admin/carpooling/**").hasRole("ADMIN")
                         .requestMatchers("/api/users/**").hasRole("ADMIN")
                         .requestMatchers("/api/accommodation-reservations/statistics").hasRole("ADMIN")
                         // Authenticated users

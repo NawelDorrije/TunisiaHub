@@ -18,4 +18,8 @@ export class HeaderComponent {
     this.authService.logout();
     this.router.navigate(['/auth/sign-in']);
   }
+
+  isCarpoolingPage(): boolean {
+    return this.router.url.startsWith('/carpooling');
+  }
 }

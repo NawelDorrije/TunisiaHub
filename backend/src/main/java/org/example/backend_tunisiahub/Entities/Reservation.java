@@ -1,13 +1,14 @@
 package org.example.backend_tunisiahub.Entities;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
-import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.FieldDefaults;
 import org.example.backend_tunisiahub.Entities.Accommodation.Accommodation;
-import org.example.backend_tunisiahub.carpooling.entity.Trip;
+import org.example.backend_tunisiahub.Entities.Carpooling.Trip;
+
 import org.example.backend_tunisiahub.Entities.User.User;
 
 import org.example.backend_tunisiahub.Entities.Camping.Spot;
@@ -17,21 +18,22 @@ import java.util.List;
 @Entity
 @Getter
 @Setter
-@FieldDefaults(level = AccessLevel.PRIVATE)
 @NoArgsConstructor
 public class Reservation {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    Long id;
+    private Long id;
 
-    String status;
-
-    @Temporal(TemporalType.DATE)
-    Date startDate;
+    private String status;
 
     @Temporal(TemporalType.DATE)
-    Date endDate;
+    @Column(nullable = true)
+    private Date startDate;
+
+    @Temporal(TemporalType.DATE)
+    @Column(nullable = true)
+    private Date endDate;
 
     @Temporal(TemporalType.TIMESTAMP)
     Date reminderSentAt;
@@ -41,31 +43,38 @@ public class Reservation {
     @Column(length = 500)
     String reminderError;
 
-    Double totalPrice;
+    private Double totalPrice;
+
+    @Column(name = "number_of_people", nullable = true)
+    private Integer numberOfPeople;
 
     @Enumerated(EnumType.STRING)
-    ReservationType type;
+    private ReservationType type;
 
     @ManyToOne
     @JoinColumn(name = "trip_id")
-    Trip trip;
+    private Trip trip;
 
     @ManyToOne
     @JoinColumn(name = "spot_id")
-    Spot spot;
+    private Spot spot;
 
     @ManyToOne
     @JoinColumn(name = "user_id")
-    User user;
+    private User reservedBy;
 
     @OneToMany(mappedBy = "reservation")
-    List<Complaint> complaints;
+    @JsonIgnore
+    private List<Complaint> complaints;
 
     @OneToOne(mappedBy = "reservation")
-    Review review;
+    @JsonIgnore
+    private Review review;
 
     @ManyToOne
     @JoinColumn(name = "accommodation_id")
     Accommodation accommodation;
+
+    
 
 }

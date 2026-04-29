@@ -1,75 +1,143 @@
-<div class="container py-4">
-  <div class="d-flex justify-content-between align-items-center mb-3">
-    <h2 class="m-0">My Trips</h2>
-    <a class="btn btn-primary" routerLink="/carpooling/publish"
-      >Publish new trip</a
-    >
-  </div>
-
-  <div class="alert alert-danger" *ngIf="error">{{ error }}</div>
-
-  <div class="card shadow-sm" *ngIf="trips.length > 0; else emptyState">
-    <div class="table-responsive">
-      <table class="table table-hover align-middle mb-0">
-        <thead>
-          <tr>
-            <th>Route</th>
-            <th>Date/time</th>
-            <th>Price</th>
-            <th>Seats available</th>
-            <th>Status</th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr *ngFor="let trip of trips">
-            <td>{{ trip.departure }} -> {{ trip.destination }}</td>
-            <td>{{ trip.departureDateTime | date: "medium" }}</td>
-            <td>{{ trip.pricePerSeat }} TND</td>
-            <td>{{ trip.seatsAvailable }}/{{ trip.seatsTotal }}</td>
-            <td>{{ trip.status }}</td>
-            <td>
-              <div class="d-flex flex-wrap gap-2 justify-content-end">
-                <button
-                  class="btn btn-sm btn-outline-primary"
-                  (click)="openDetails(trip.id)"
-                >
-                  View details
-                </button>
-                <button
-                  class="btn btn-sm btn-outline-secondary"
-                  (click)="editTrip(trip.id)"
-                >
-                  Edit
-                </button>
-                <button
-                  class="btn btn-sm btn-outline-danger"
-                  (click)="cancelTrip(trip.id)"
-                >
-                  Cancel
-                </button>
-                <button
-                  class="btn btn-sm btn-outline-dark"
-                  (click)="viewPassengers(trip.id)"
-                >
-                  View passengers
-                </button>
-              </div>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+<div class="my-trips-page">
+  <div class="my-trips-container">
+    <div class="my-trips-header">
+      <h2 class="my-trips-title">Your trips</h2>
+      <a
+        class="btn btn-primary my-trips-publish-btn"
+        routerLink="/carpooling/publish"
+      >
+        Publish new trip
+      </a>
     </div>
-  </div>
 
-  <ng-template #emptyState>
-    <div class="card shadow-sm">
-      <div class="card-body text-center py-4">
-        <p class="mb-3">You have not published any trip yet.</p>
-        <a class="btn btn-success" routerLink="/carpooling/publish"
-          >Publish your first trip</a
-        >
+    <div class="alert alert-danger" *ngIf="error">{{ error }}</div>
+
+    <div *ngIf="trips.length > 0; else emptyState">
+      <div
+        class="trip-card"
+        *ngFor="let trip of displayedTrips"
+        (click)="openDetails(trip.id)"
+      >
+        <div class="trip-card-main">
+          <h3 class="trip-card-day">
+            {{ formatTripLabel(trip.departureDateTime) }}
+          </h3>
+
+          <div class="trip-card-timeline">
+            <div class="trip-stop trip-stop-left">
+              <span class="trip-time">{{
+                formatTripTime(trip.departureDateTime)
+              }}</span>
+              <strong class="trip-place">{{
+                formatMainPlace(trip.departure)
+              }}</strong>
+              <small
+                class="trip-place-detail"
+                *ngIf="formatPlaceDetails(trip.departure)"
+              >
+                {{ formatPlaceDetails(trip.departure) }}
+              </small>
+            </div>
+
+            <div class="trip-line-wrap">
+              <span class="trip-dot"></span>
+              <span class="trip-line"></span>
+              <span class="trip-duration">{{ formatDurationLabel(trip) }}</span>
+              <span class="trip-line"></span>
+              <span class="trip-dot"></span>
+            </div>
+
+            <div class="trip-stop trip-stop-right">
+              <span class="trip-time">{{ formatArrivalTime(trip) }}</span>
+              <small class="next-day-label" *ngIf="isArrivalNextDay(trip)">
+                (+1 day)
+              </small>
+              <strong class="trip-place">{{
+                formatMainPlace(trip.destination)
+              }}</strong>
+              <small
+                class="trip-place-detail"
+                *ngIf="formatPlaceDetails(trip.destination)"
+              >
+                {{ formatPlaceDetails(trip.destination) }}
+              </small>
+            </div>
+          </div>
+
+          <div class="trip-card-meta">
+            <span>{{ trip.pricePerSeat }} TND</span>
+            <span>{{ trip.seatsAvailable }}/{{ trip.seatsTotal }} seats</span>
+            <span>{{ trip.status }}</span>
+          </div>
+
+          <div class="trip-card-actions" (click)="$event.stopPropagation()">
+            <button
+              type="button"
+              class="btn btn-outline-primary btn-sm"
+              (click)="viewPassengers(trip.id)"
+            >
+              Passengers
+            </button>
+            <button
+              type="button"
+              class="btn btn-outline-secondary btn-sm"
+              (click)="editTrip(trip.id)"
+              [disabled]="trip.status !== 'ACTIVE'"
+            >
+              Edit
+            </button>
+            <button
+              type="button"
+              class="btn btn-outline-success btn-sm"
+              (click)="completeTrip(trip.id)"
+              [disabled]="!canCompleteTrip(trip)"
+            >
+              Mark completed
+            </button>
+            <button
+              type="button"
+              class="btn btn-outline-danger btn-sm"
+              (click)="cancelTrip(trip.id)"
+              [disabled]="trip.status === 'CANCELED' || trip.status === 'COMPLETED'"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="trips-pagination" *ngIf="trips.length > pageSize">
+        <div class="trips-pagination-label">
+          Showing {{ getPaginationLabel() }}
+        </div>
+        <div class="trips-pagination-controls">
+          <button
+            type="button"
+            class="pagination-button"
+            (click)="previousPage()"
+            [disabled]="!hasPreviousPage()"
+          >
+            Previous
+          </button>
+          <button
+            type="button"
+            class="pagination-button primary"
+            (click)="nextPage()"
+            [disabled]="!hasNextPage()"
+          >
+            Next
+          </button>
+        </div>
       </div>
     </div>
-  </ng-template>
+
+    <ng-template #emptyState>
+      <div class="trip-empty-card">
+        <p class="mb-3">You have not published any trip yet.</p>
+        <a class="btn btn-primary" routerLink="/carpooling/publish">
+          Publish your first trip
+        </a>
+      </div>
+    </ng-template>
+  </div>
 </div>

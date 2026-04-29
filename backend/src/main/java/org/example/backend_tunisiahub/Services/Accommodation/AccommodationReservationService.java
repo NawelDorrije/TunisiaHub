@@ -102,7 +102,7 @@ public class AccommodationReservationService implements IAccommodationReservatio
     @Override
     public List<Reservation> getReservationsByUser(String email) {
         User user = userRepository.findByEmail(email);
-        return reservationRepository.findByUserAndType(user, ReservationType.accommodationReservation);
+        return reservationRepository.findByReservedByAndType(user, ReservationType.accommodationReservation);
     }
     @Override
     public Reservation editReservation(Long reservationId, Reservation updated, String email) {

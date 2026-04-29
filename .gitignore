@@ -1,7 +1,14 @@
 docs/CARPOOLING_TRIPS_API.md
+<<<<<<< HEAD
 
 # Environment files
 .env
 **/.env
 .env.local
 **/.env.local
+=======
+backend/logs.txt
+frontend/logs1.txt
+test/
+test2/
+>>>>>>> feature/carpooling

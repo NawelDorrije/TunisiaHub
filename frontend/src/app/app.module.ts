@@ -16,6 +16,8 @@ import { ChatWidgetComponent } from './shared/components/chat-widget/chat-widget
 import { ReactiveFormsModule } from '@angular/forms';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 
+import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
+
 @NgModule({
   declarations: [
     AppComponent,
@@ -33,13 +35,14 @@ import { NoopAnimationsModule } from '@angular/platform-browser/animations';
     NoopAnimationsModule
     
     ],
-  providers: [provideClientHydration(),
+  providers: [provideClientHydration(),provideAnimationsAsync(),
         {
       provide: HTTP_INTERCEPTORS,
       useClass: AuthInterceptor,
       multi: true
     }
   ],
+
   bootstrap: [AppComponent],
 })
 export class AppModule {}
