@@ -22,6 +22,7 @@ public class Lieu {
     private String description;
     private String type;
     private String ville;
+    @Column(length = 1000)
     private String image;
     private Double latitude;
     private Double longitude;
