@@ -7,3 +7,71 @@
   margin-top: 0.15rem;
   line-height: 1;
 }
+
+.trip-demand-card {
+  margin-top: 1.2rem;
+  padding: 1rem 1.1rem;
+  border-radius: 1.1rem;
+  background: #f5f8ff;
+  border: 1px solid #d8e4ff;
+}
+
+.trip-demand-header {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  color: #05204a;
+}
+
+.trip-demand-badge {
+  border-radius: 999px;
+  padding: 0.3rem 0.75rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.trip-demand-badge.high {
+  background: #ffe4e1;
+  color: #b42318;
+}
+
+.trip-demand-badge.medium {
+  background: #fff2d8;
+  color: #a16207;
+}
+
+.trip-demand-badge.low {
+  background: #e7f7eb;
+  color: #217346;
+}
+
+.trip-demand-text {
+  margin: 0;
+  color: #33415c;
+  line-height: 1.45;
+}
+
+.calendar-navigation {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.6rem;
+  margin: 0 0 1rem;
+}
+
+.calendar-nav-button {
+  width: 2.5rem;
+  height: 2.5rem;
+  border: 0;
+  border-radius: 999px;
+  background: #05204a;
+  color: #fff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.calendar-nav-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.35;
+}

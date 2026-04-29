@@ -1,6 +1,7 @@
 package org.example.backend_tunisiahub.Services.Carpooling;
 
 import lombok.AllArgsConstructor;
+import org.example.backend_tunisiahub.Entities.Carpooling.HolidayCalendar;
 import org.example.backend_tunisiahub.Entities.Carpooling.Trip;
 import org.example.backend_tunisiahub.Entities.Reservation;
 import org.example.backend_tunisiahub.Entities.User.User;
@@ -12,9 +13,12 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Locale;
 
 @Service
 @AllArgsConstructor
@@ -26,10 +30,17 @@ public class TripServiceImp implements ITripService {
     private static final Logger logger = LoggerFactory.getLogger(TripServiceImp.class);
     private static final String STATUS_SCHEDULED = "scheduled";
     private static final String STATUS_CANCELED = "canceled";
+    private static final String STATUS_COMPLETED = "completed";
     private static final String BOOKING_MODE_INSTANT = "instant";
     private static final String BOOKING_MODE_MANUAL = "manual";
     private static final int MAX_SEATS_TOTAL = 8;
     private static final BigDecimal MAX_PRICE = new BigDecimal("500");
+    private static final BigDecimal HOLIDAY_PRICE_MULTIPLIER = new BigDecimal("2");
+    private static final int DURATION_MIN_TOLERANCE = 10;
+    private static final double DURATION_TOLERANCE_RATE = 0.15d;
+    private static final int HOLIDAY_PRICE_WINDOW_DAYS = 2;
+
+    private final IHolidayCalendarService holidayCalendarService;
 
     @Override
     public List<Trip> retrieveAllTrips(String departurePoint,
@@ -95,6 +106,116 @@ public class TripServiceImp implements ITripService {
     @Override
     public Integer retrieveTripSeatsAvailable(Long tripId) {
         return tripRepository.findSeatsAvailableByTripId(tripId);
+    }
+
+    @Override
+    public TripPriceSuggestion retrievePriceSuggestion(String departure,
+                                                       String destination,
+                                                       LocalDate departureDate,
+                                                       Integer durationMinutes) {
+        if (departure == null || departure.isBlank()
+                || destination == null || destination.isBlank()
+                || departureDate == null
+                || durationMinutes == null || durationMinutes < 1) {
+            return null;
+        }
+
+        String normalizedDeparture = normalizeMainLocation(departure);
+        String normalizedDestination = normalizeMainLocation(destination);
+        if (normalizedDeparture.isBlank() || normalizedDestination.isBlank()) {
+            logger.info("Price suggestion skipped because normalized route is blank departure={} destination={}",
+                    departure, destination);
+            return null;
+        }
+
+        List<Trip> historicalTrips = tripRepository
+                .findByDepartureDateTimeBeforeOrderByDepartureDateTimeAsc(departureDate.atStartOfDay())
+                .stream()
+                .filter(this::isTripPriceHistoryUsable)
+                .toList();
+        if (historicalTrips.isEmpty()) {
+            logger.info("Price suggestion skipped because no historical trips were found route={} -> {} date={} duration={}",
+                    normalizedDeparture, normalizedDestination, departureDate, durationMinutes);
+            return null;
+        }
+
+        List<Trip> sameRouteTrips = historicalTrips.stream()
+                .filter(trip -> normalizeMainLocation(trip.getDeparture()).equals(normalizedDeparture)
+                        && normalizeMainLocation(trip.getDestination()).equals(normalizedDestination))
+                .toList();
+        List<Trip> candidatePool = !sameRouteTrips.isEmpty() ? sameRouteTrips : historicalTrips;
+        List<Trip> similarTrips = findSimilarDurationTrips(candidatePool, durationMinutes);
+        if (similarTrips.isEmpty()) {
+            logger.info("Price suggestion skipped because no similar trips matched route={} -> {} date={} duration={} candidatePoolSize={}",
+                    normalizedDeparture, normalizedDestination, departureDate, durationMinutes, candidatePool.size());
+            return null;
+        }
+
+        logger.info(
+                "Price suggestion request route={} -> {} date={} duration={} historicalTrips={} sameRouteTrips={} candidatePoolType={} candidatePoolSize={} similarTrips={}",
+                normalizedDeparture,
+                normalizedDestination,
+                departureDate,
+                durationMinutes,
+                historicalTrips.size(),
+                sameRouteTrips.size(),
+                !sameRouteTrips.isEmpty() ? "same_route" : "all_history",
+                candidatePool.size(),
+                similarTrips.size()
+        );
+        for (Trip trip : similarTrips) {
+            logger.info(
+                    "Price comparison tripId={} route={} -> {} tripDateTime={} duration={} price={} durationDifference={}",
+                    trip.getId(),
+                    normalizeMainLocation(trip.getDeparture()),
+                    normalizeMainLocation(trip.getDestination()),
+                    trip.getDepartureDateTime(),
+                    trip.getDurationMinutes(),
+                    trip.getPrice(),
+                    Math.abs(trip.getDurationMinutes() - durationMinutes)
+            );
+        }
+
+        BigDecimal basePrice = calculateAveragePrice(similarTrips);
+        HolidayCalendar holiday = findCriticalHolidayForDate(departureDate);
+        BigDecimal suggestedPrice = holiday != null
+                ? basePrice.multiply(HOLIDAY_PRICE_MULTIPLIER)
+                : basePrice;
+
+        BigDecimal minHistoricalPrice = similarTrips.stream()
+                .map(Trip::getPrice)
+                .min(Comparator.naturalOrder())
+                .orElse(basePrice);
+        BigDecimal maxHistoricalPrice = similarTrips.stream()
+                .map(Trip::getPrice)
+                .max(Comparator.naturalOrder())
+                .orElse(basePrice);
+
+        logger.info(
+                "Price suggestion result route={} -> {} date={} duration={} averagePrice={} minHistoricalPrice={} maxHistoricalPrice={} holiday={} holidayMultiplier={} suggestedPriceBeforeRound={} suggestedPriceRounded={}",
+                normalizedDeparture,
+                normalizedDestination,
+                departureDate,
+                durationMinutes,
+                basePrice,
+                minHistoricalPrice,
+                maxHistoricalPrice,
+                holiday != null ? holiday.getHolidayName() : "none",
+                holiday != null ? HOLIDAY_PRICE_MULTIPLIER : BigDecimal.ONE,
+                suggestedPrice,
+                roundSuggestedPrice(suggestedPrice)
+        );
+
+        return new TripPriceSuggestion(
+                suggestedPrice,
+                basePrice,
+                minHistoricalPrice,
+                maxHistoricalPrice,
+                similarTrips.size(),
+                holiday != null,
+                holiday != null ? holiday.getHolidayName() : null,
+                buildPriceSuggestionMessage(similarTrips.size(), holiday)
+        );
     }
 
     @Override
@@ -168,6 +289,7 @@ public class TripServiceImp implements ITripService {
             return null;
         }
         trip.setStatus(STATUS_CANCELED);
+        cancelTripReservations(tripId);
         logger.debug("Saving canceled trip id={} userId={}", tripId, currentUserId);
         return tripRepository.save(trip);
     }
@@ -184,12 +306,139 @@ public class TripServiceImp implements ITripService {
             return null;
         }
         trip.setStatus(STATUS_SCHEDULED);
+        confirmTripReservations(tripId);
         logger.debug("Saving restored trip id={} userId={}", tripId, currentUserId);
+        return tripRepository.save(trip);
+    }
+
+    @Override
+    public Trip completeTrip(Long tripId, Long currentUserId) {
+        Trip trip = tripRepository.findById(tripId).orElse(null);
+        if (trip == null) {
+            logger.warn("Trip complete failed because trip not found id={}", tripId);
+            return null;
+        }
+        if (!isOwner(trip, currentUserId)) {
+            logger.warn("Trip complete rejected because userId={} is not owner of tripId={}", currentUserId, tripId);
+            return null;
+        }
+        if (STATUS_CANCELED.equalsIgnoreCase(trip.getStatus())) {
+            logger.warn("Trip complete rejected because trip is canceled id={}", tripId);
+            return null;
+        }
+
+        trip.setStatus(STATUS_COMPLETED);
+        logger.debug("Saving completed trip id={} userId={}", tripId, currentUserId);
         return tripRepository.save(trip);
     }
 
     private boolean isOwner(Trip trip, Long currentUserId) {
         return trip.getDriver() != null && currentUserId.equals(trip.getDriver().getId());
+    }
+
+    private boolean isTripPriceHistoryUsable(Trip trip) {
+        if (trip == null) {
+            return false;
+        }
+        if (trip.getDepartureDateTime() == null) {
+            return false;
+        }
+        if (trip.getDurationMinutes() == null || trip.getDurationMinutes() < 1) {
+            return false;
+        }
+        if (trip.getPrice() == null || trip.getPrice().compareTo(BigDecimal.ZERO) <= 0) {
+            return false;
+        }
+        return trip.getStatus() == null || !STATUS_CANCELED.equalsIgnoreCase(trip.getStatus());
+    }
+
+    private List<Trip> findSimilarDurationTrips(List<Trip> trips, Integer requestedDurationMinutes) {
+        int tolerance = Math.max(DURATION_MIN_TOLERANCE, (int) Math.round(requestedDurationMinutes * DURATION_TOLERANCE_RATE));
+        List<Trip> matchedTrips = trips.stream()
+                .filter(trip -> Math.abs(trip.getDurationMinutes() - requestedDurationMinutes) <= tolerance)
+                .sorted(Comparator.comparingInt(trip -> Math.abs(trip.getDurationMinutes() - requestedDurationMinutes)))
+                .limit(8)
+                .toList();
+
+        if (matchedTrips.size() >= 3) {
+            return matchedTrips;
+        }
+
+        return trips.stream()
+                .sorted(Comparator.comparingInt(trip -> Math.abs(trip.getDurationMinutes() - requestedDurationMinutes)))
+                .filter(trip -> Math.abs(trip.getDurationMinutes() - requestedDurationMinutes) <= DURATION_MIN_TOLERANCE * 2)
+                .limit(5)
+                .toList();
+    }
+
+    private BigDecimal calculateAveragePrice(List<Trip> trips) {
+        if (trips == null || trips.isEmpty()) {
+            return BigDecimal.ONE;
+        }
+
+        BigDecimal totalPrice = trips.stream()
+                .map(Trip::getPrice)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        return totalPrice.divide(
+                BigDecimal.valueOf(trips.size()),
+                10,
+                RoundingMode.HALF_UP
+        );
+    }
+
+    private HolidayCalendar findCriticalHolidayForDate(LocalDate departureDate) {
+        return holidayCalendarService.retrieveHolidaysByYear(departureDate.getYear()).stream()
+                .filter(holiday -> Boolean.TRUE.equals(holiday.getCriticalForCarpooling()))
+                .filter(holiday -> {
+                    long daysDifference = Math.abs(java.time.temporal.ChronoUnit.DAYS.between(
+                            holiday.getHolidayDate(),
+                            departureDate
+                    ));
+                    return daysDifference <= HOLIDAY_PRICE_WINDOW_DAYS;
+                })
+                .min(Comparator.comparingLong(holiday -> Math.abs(java.time.temporal.ChronoUnit.DAYS.between(
+                        holiday.getHolidayDate(),
+                        departureDate
+                ))))
+                .orElse(null);
+    }
+
+    private BigDecimal roundSuggestedPrice(BigDecimal value) {
+        BigDecimal rounded = value.setScale(0, RoundingMode.HALF_UP);
+        if (rounded.compareTo(BigDecimal.ONE) < 0) {
+            return BigDecimal.ONE;
+        }
+        if (rounded.compareTo(MAX_PRICE) > 0) {
+            return MAX_PRICE;
+        }
+        return rounded;
+    }
+
+    private String buildPriceSuggestionMessage(int similarTripsCount, HolidayCalendar holiday) {
+        if (holiday != null) {
+            return "Suggested from " + similarTripsCount
+                    + " previous trips with similar duration. "
+                    + holiday.getHolidayName()
+                    + " is within 2 days of this trip date, so a slightly higher price is suggested.";
+        }
+
+        return "Suggested from " + similarTripsCount
+                + " previous trips with similar duration.";
+    }
+
+    private String normalizeMainLocation(String value) {
+        if (value == null) {
+            return "";
+        }
+
+        String cleaned = value.trim();
+        int commaIndex = cleaned.indexOf(',');
+        if (commaIndex >= 0) {
+            cleaned = cleaned.substring(0, commaIndex);
+        }
+
+        return cleaned.trim().toLowerCase(Locale.ROOT);
     }
 
     private boolean validateTrip(Trip request, int reservedSeats) {
@@ -246,6 +495,26 @@ public class TripServiceImp implements ITripService {
         return !status.equalsIgnoreCase("canceled") && !status.equalsIgnoreCase("cancelled");
     }
 
+    private void cancelTripReservations(Long tripId) {
+        List<Reservation> reservations = reservationRepository.findByTripId(tripId);
+        for (Reservation reservation : reservations) {
+            if (isActiveTripReservation(reservation)) {
+                reservation.setStatus("CANCELED");
+            }
+        }
+        reservationRepository.saveAll(reservations);
+    }
+
+    private void confirmTripReservations(Long tripId) {
+        List<Reservation> reservations = reservationRepository.findByTripId(tripId);
+        for (Reservation reservation : reservations) {
+            if (!isActiveTripReservation(reservation)) {
+                reservation.setStatus("CONFIRMED");
+            }
+        }
+        reservationRepository.saveAll(reservations);
+    }
+
     private int getReservedPeopleCount(Reservation reservation) {
         Integer numberOfPeople = reservation.getNumberOfPeople();
         if (numberOfPeople == null || numberOfPeople < 1) {
@@ -298,7 +567,7 @@ public class TripServiceImp implements ITripService {
         }
 
         String normalized = value.trim().toLowerCase();
-        if (STATUS_SCHEDULED.equals(normalized) || STATUS_CANCELED.equals(normalized)) {
+        if (STATUS_SCHEDULED.equals(normalized) || STATUS_CANCELED.equals(normalized) || STATUS_COMPLETED.equals(normalized)) {
             return normalized;
         }
 

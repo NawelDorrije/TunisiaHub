@@ -108,6 +108,7 @@
           type="date"
           class="form-control field-input"
           formControlName="date"
+          [min]="todayDate"
         />
       </div>
     </div>
@@ -121,6 +122,7 @@
           type="date"
           class="form-control field-input"
           formControlName="returnDate"
+          [min]="searchForm.value.date || todayDate"
         />
       </div>
     </div>

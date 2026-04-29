@@ -36,6 +36,33 @@
     ></app-carpooling-search-bar>
   </div>
 
+  <div
+    class="demand-alert-card mb-5"
+    *ngIf="
+      demandAlertError ||
+      shouldShowDemandAlert()
+    "
+  >
+    <p class="demand-alert-text" *ngIf="demandAlertError">
+      {{ demandAlertError }}
+    </p>
+
+    <div
+      class="demand-alert-header"
+      *ngIf="shouldShowDemandAlert()"
+    >
+      <span
+        class="demand-badge"
+        [class.high]="demandAlert && (demandAlert.demandLevel === 'high' || demandAlert.holidayCriticalWarning)"
+      >
+        {{ getDemandLevelLabel() }}
+      </span>
+      <p class="demand-alert-text">
+        {{ demandAlert?.passengerAlert }}
+      </p>
+    </div>
+  </div>
+
   <div class="publish-banner text-center mb-5">
     <h2>Earn 90 TND per trip</h2>
     <p>
@@ -122,30 +149,5 @@
         <strong>A happy traveler</strong>
       </div>
     </div>
-  </div>
-
-  <div class="row g-3">
-    <div class="col-md-3">
-      <a
-        class="btn btn-outline-primary w-100"
-        routerLink="/carpooling/my-trips"
-      >
-        My Trips
-      </a>
-    </div>
-    <div class="col-md-3">
-      <a
-        class="btn btn-outline-primary w-100"
-        routerLink="/carpooling/my-bookings"
-      >
-        My Bookings
-      </a>
-    </div>
-
-    <!-- <div class="col-md-3">
-      <a class="btn btn-outline-secondary w-100" routerLink="/carpooling/admin">
-        Admin area
-      </a>
-    </div> -->
   </div>
 </div>

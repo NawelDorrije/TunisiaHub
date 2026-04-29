@@ -139,6 +139,13 @@
   font-weight: 600;
 }
 
+.trip-card-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 14px;
+}
+
 .trip-empty-card {
   padding: 40px 22px;
   border-radius: 20px;

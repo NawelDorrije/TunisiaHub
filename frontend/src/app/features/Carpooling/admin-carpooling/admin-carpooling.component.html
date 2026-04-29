@@ -1,0 +1,351 @@
+<div class="container py-4">
+
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Carpooling Backoffice</h2>
+    <a class="btn btn-outline-secondary" routerLink="/carpooling">Back</a>
+  </div>
+
+  <div class="alert alert-danger" *ngIf="errorMessage">{{ errorMessage }}</div>
+  <div class="alert alert-success" *ngIf="successMessage">{{ successMessage }}</div>
+
+  <ul class="nav nav-tabs mb-4">
+    <li class="nav-item">
+      <button class="nav-link" [class.active]="activeTab === 'trips'" (click)="activeTab = 'trips'">
+        Trips Management
+      </button>
+    </li>
+    <li class="nav-item">
+      <button class="nav-link" [class.active]="activeTab === 'bookings'" (click)="activeTab = 'bookings'">
+        Reservations Management
+      </button>
+    </li>
+    <li class="nav-item">
+      <button class="nav-link" [class.active]="activeTab === 'drivers'" (click)="activeTab = 'drivers'">
+        Drivers Management
+      </button>
+    </li>
+    <li class="nav-item">
+      <button class="nav-link" [class.active]="activeTab === 'reports'" (click)="activeTab = 'reports'">
+        Reviews & Reports
+      </button>
+    </li>
+  </ul>
+
+  <div *ngIf="activeTab === 'trips'">
+    <div class="card shadow-sm mb-4">
+      <div class="card-body">
+        <div class="row g-3">
+          <div class="col-md-2">
+            <label class="form-label">Status</label>
+            <select class="form-select" [(ngModel)]="filters.status">
+              <option value="">All</option>
+              <option value="scheduled">Scheduled</option>
+              <option value="canceled">Canceled</option>
+              <option value="completed">Completed</option>
+            </select>
+          </div>
+          <div class="col-md-2">
+            <label class="form-label">Date from</label>
+            <input type="date" class="form-control" [(ngModel)]="filters.dateFrom">
+          </div>
+          <div class="col-md-2">
+            <label class="form-label">Date to</label>
+            <input type="date" class="form-control" [(ngModel)]="filters.dateTo">
+          </div>
+          <div class="col-md-2">
+            <label class="form-label">Departure</label>
+            <input type="text" class="form-control" [(ngModel)]="filters.departure">
+          </div>
+          <div class="col-md-2">
+            <label class="form-label">Destination</label>
+            <input type="text" class="form-control" [(ngModel)]="filters.destination">
+          </div>
+          <div class="col-md-2">
+            <label class="form-label">Driver id</label>
+            <input type="number" class="form-control" [(ngModel)]="filters.driverId">
+          </div>
+          <div class="col-md-2 d-flex align-items-end gap-2">
+            <button class="btn btn-primary w-100" (click)="searchTrips()">Search</button>
+            <button class="btn btn-outline-secondary" (click)="resetFilters()">Reset</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="text-center py-4" *ngIf="isLoading">
+      <div class="spinner-border text-primary" role="status"></div>
+    </div>
+
+    <div class="alert alert-info" *ngIf="!isLoading && trips.length === 0">
+      No trips found.
+    </div>
+
+    <div class="card shadow-sm" *ngIf="!isLoading && trips.length > 0">
+      <div class="card-body p-0">
+        <table class="table table-hover table-striped mb-0">
+          <thead class="admin-table-head">
+            <tr>
+              <th>#</th>
+              <th>Route</th>
+              <th>Date</th>
+              <th>Driver</th>
+              <th>Seats</th>
+              <th>Price</th>
+              <th>Status</th>
+              <th class="text-center">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let trip of trips">
+              <td>{{ trip.id }}</td>
+              <td>{{ trip.departure }} - {{ trip.destination }}</td>
+              <td>{{ trip.departureDateTime | date:'medium' }}</td>
+              <td>{{ getDriverName(trip) }}</td>
+              <td>{{ trip.seatsAvailable }}/{{ trip.seatsTotal }}</td>
+              <td>{{ trip.pricePerSeat }} TND</td>
+              <td><span class="badge" [ngClass]="getStatusClass(trip.status)">{{ trip.status }}</span></td>
+              <td class="text-center">
+                <div class="d-flex gap-2 justify-content-center">
+                  <button class="btn btn-outline-info btn-sm" (click)="showBookings(trip)">Bookings</button>
+                  <button class="btn btn-outline-warning btn-sm" (click)="cancelTrip(trip)" [disabled]="trip.status === 'CANCELED'">Cancel</button>
+                  <button
+                    class="btn btn-outline-success btn-sm"
+                    (click)="reactivateTrip(trip)"
+                    *ngIf="trip.status === 'CANCELED'"
+                  >
+                    Reactivate
+                  </button>
+                  <button class="btn btn-outline-danger btn-sm" (click)="removeTrip(trip)">Remove</button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div *ngIf="activeTab === 'bookings'">
+    <div class="card shadow-sm mb-4">
+      <div class="card-body">
+        <div class="row g-3">
+          <div class="col-md-3">
+            <label class="form-label">Trip id</label>
+            <input type="number" class="form-control" [(ngModel)]="bookingTripId">
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">Status</label>
+            <select class="form-select" [(ngModel)]="bookingStatus">
+              <option value="">All</option>
+              <option value="CONFIRMED">Confirmed</option>
+              <option value="PENDING">Pending</option>
+              <option value="CANCELED">Canceled</option>
+            </select>
+          </div>
+          <div class="col-md-3 d-flex align-items-end gap-2">
+            <button class="btn btn-primary" (click)="loadBookings()">Search</button>
+            <button class="btn btn-outline-secondary" (click)="resetBookingFilters()">Reset</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="alert alert-info" *ngIf="bookings.length === 0">
+      No reservations found.
+    </div>
+
+    <div class="card shadow-sm" *ngIf="bookings.length > 0">
+      <div class="card-body p-0">
+        <table class="table table-hover table-striped mb-0">
+          <thead class="admin-table-head">
+            <tr>
+              <th>#</th>
+              <th>Trip</th>
+              <th>Passenger</th>
+              <th>Seats</th>
+              <th>Total</th>
+              <th>Status</th>
+              <th>Cancellation history</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let item of bookings">
+              <td>{{ item.booking.id }}</td>
+              <td>
+                #{{ item.booking.tripId }}
+                <span *ngIf="item.trip"> - {{ item.trip.departure }} to {{ item.trip.destination }}</span>
+              </td>
+              <td>{{ item.passenger?.fullName || ('User ' + item.booking.passengerUserId) }}</td>
+              <td>{{ item.booking.seatsBooked }}</td>
+              <td>{{ item.booking.totalPrice }} TND</td>
+              <td><span class="badge" [ngClass]="getStatusClass(item.booking.status)">{{ item.booking.status }}</span></td>
+              <td>{{ item.booking.status === 'CANCELED' ? 'Reservation canceled' : 'No cancellation' }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div *ngIf="activeTab === 'drivers'">
+    <div class="alert alert-info" *ngIf="drivers.length === 0">
+      No drivers found.
+    </div>
+
+    <div class="card shadow-sm" *ngIf="drivers.length > 0">
+      <div class="card-body p-0">
+        <table class="table table-hover table-striped mb-0">
+          <thead class="admin-table-head">
+            <tr>
+              <th>Driver</th>
+              <th>Email</th>
+              <th>Trips</th>
+              <th>Reviews</th>
+              <th>Cancellation rate</th>
+              <th>Reported issues</th>
+              <th class="text-center">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let driver of drivers">
+              <td>{{ driver.driver.fullName }}</td>
+              <td>{{ driver.driver.email }}</td>
+              <td>{{ driver.trips.length }}</td>
+              <td>{{ driver.averageRating | number:'1.1-1' }}/5 ({{ driver.reviewsCount }})</td>
+              <td>{{ driver.cancellationRate | number:'1.0-0' }}%</td>
+              <td>{{ driver.reportedIssues }}</td>
+              <td class="text-center">
+                <button class="btn btn-outline-primary btn-sm" (click)="showDriverTrips(driver)">
+                  See trips
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div *ngIf="activeTab === 'reports'">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h4>Passenger Complaints and Unsafe Behavior Reports</h4>
+      <button class="btn btn-outline-primary btn-sm" (click)="loadReports()">Refresh</button>
+    </div>
+
+    <div class="alert alert-info" *ngIf="complaints.length === 0">
+      No reports found.
+    </div>
+
+    <div class="card shadow-sm mb-4" *ngIf="complaints.length > 0">
+      <div class="card-body p-0">
+        <table class="table table-hover table-striped mb-0">
+          <thead class="admin-table-head">
+            <tr>
+              <th>#</th>
+              <th class="report-column">Report</th>
+              <th>Trip</th>
+              <th>Status</th>
+              <th>AI decision</th>
+              <th>Main problem</th>
+              <th>Admin action</th>
+              <th class="text-center">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let report of complaints">
+              <td>{{ report.id }}</td>
+              <td class="description-cell report-column">{{ report.description }}</td>
+              <td>
+                <button
+                  *ngIf="report.tripId"
+                  type="button"
+                  class="btn btn-link p-0 trip-reference-link"
+                  (click)="showTripFromReport(report)"
+                >
+                  Trip #{{ report.tripId }}
+                </button>
+                <span *ngIf="!report.tripId">No trip</span>
+              </td>
+              <td><span class="badge bg-secondary">{{ report.status || 'OPEN' }}</span></td>
+              <td>
+                <span *ngIf="isAnalyzingReport(report.id)">Analyzing...</span>
+                <span
+                  *ngIf="!isAnalyzingReport(report.id)"
+                  class="decision-badge"
+                  [ngClass]="getDecisionClass(report)"
+                >
+                  {{ getReportDecision(report) }}
+                </span>
+              </td>
+              <td>
+                <span *ngIf="isAnalyzingReport(report.id)">...</span>
+                <ul *ngIf="!isAnalyzingReport(report.id)" class="ai-list">
+                  <li *ngFor="let problem of getMainProblemList(report)">{{ problem }}</li>
+                </ul>
+              </td>
+              <td>
+                <span *ngIf="isAnalyzingReport(report.id)">...</span>
+                <ul *ngIf="!isAnalyzingReport(report.id)" class="ai-list">
+                  <li *ngFor="let action of getAdminActionList(report)">{{ action }}</li>
+                </ul>
+              </td>
+              <td class="text-center">
+                <button
+                  class="btn btn-outline-primary btn-sm"
+                  (click)="analyzeComplaint(report)"
+                  [disabled]="isAnalyzingReport(report.id)"
+                >
+                  {{ report.aiSummary ? 'Analyze again' : 'Retry' }}
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <h4 class="mb-3">Bad Reviews</h4>
+
+    <div class="alert alert-info" *ngIf="badReviews.length === 0">
+      No bad reviews found.
+    </div>
+
+    <div class="card shadow-sm" *ngIf="badReviews.length > 0">
+      <div class="card-body p-0">
+        <table class="table table-hover table-striped mb-0">
+          <thead class="admin-table-head">
+            <tr>
+              <th>#</th>
+              <th>Rating</th>
+              <th>Comment</th>
+              <th>Trip</th>
+              <th>Driver</th>
+              <th>Date</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let review of badReviews">
+              <td>{{ review.id }}</td>
+              <td><span class="badge bg-danger">{{ review.rating }}/5</span></td>
+              <td class="description-cell">{{ review.comment }}</td>
+              <td>
+                <button
+                  *ngIf="review.tripId"
+                  type="button"
+                  class="btn btn-link p-0 trip-reference-link"
+                  (click)="showTripFromReview(review)"
+                >
+                  Trip #{{ review.tripId }}
+                </button>
+                <span *ngIf="!review.tripId">No trip</span>
+              </td>
+              <td>{{ review.driverName || ('User ' + review.driverId) }}</td>
+              <td>{{ review.date | date }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+</div>

@@ -22,6 +22,7 @@ export class CarpoolingSearchBarComponent {
   @Input() locationError = '';
   @Input() submitLabel = 'Search';
   @Input() disableSubmit = false;
+  readonly todayDate = this.getTodayDate();
 
   @Output() searchSubmitted = new EventEmitter<void>();
   @Output() swapLocations = new EventEmitter<void>();
@@ -73,5 +74,13 @@ export class CarpoolingSearchBarComponent {
       value.length > 0 &&
       suggestions.length === 0
     );
+  }
+
+  private getTodayDate(): string {
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = `${today.getMonth() + 1}`.padStart(2, '0');
+    const day = `${today.getDate()}`.padStart(2, '0');
+    return `${year}-${month}-${day}`;
   }
 }

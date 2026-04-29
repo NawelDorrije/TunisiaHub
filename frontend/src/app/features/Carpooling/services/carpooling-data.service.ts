@@ -1,8 +1,11 @@
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { Observable, forkJoin, of } from 'rxjs';
+import { Observable, forkJoin, of, throwError } from 'rxjs';
 import { catchError, map, shareReplay, switchMap } from 'rxjs/operators';
 import {
+  AdminBadReview,
+  AdminComplaintReport,
+  AdminDriver,
   AdminStats,
   Booking,
   BookingWithContext,
@@ -10,12 +13,14 @@ import {
   Complaint,
   ComplaintStatus,
   ComplaintWithContext,
+  DemandAlert,
   DriverReview,
   DriverReviewSummary,
   ReservationQuote,
   Trip,
   TripSearchFilters,
 } from '../../../models/Carpooling/carpooling';
+import { TripPriceSuggestion } from '../../../models/Carpooling/trip-price-suggestion';
 
 export interface CountryCityData {
   country: string;
@@ -43,7 +48,7 @@ interface ReservationApi {
   totalPrice: number;
   numberOfPeople?: number;
   type: string;
-  trip?: number | { id: number };
+  trip?: number | TripApi;
   reservedBy?: { id?: number; nom?: string; prenom?: string; email?: string };
 }
 
@@ -75,6 +80,74 @@ interface DriverReviewApi {
 interface DriverReviewSummaryApi {
   averageRating: number;
   reviewsCount: number;
+}
+
+interface DemandAlertApi {
+  departure: string;
+  destination: string;
+  weekLabel: string;
+  demandLevel: string;
+  predictedSeatsBooked: number;
+  referenceSeats: number;
+  predictedOccupancyRate: number;
+  trainingSamples: number;
+  modelName: string;
+  holidayCriticalWarning: boolean;
+  passengerAlert: string;
+  driverAlert: string;
+  suggestedDateFrom?: string;
+  suggestedDateTo?: string;
+  suggestedPredictedOccupancyRate?: number;
+}
+
+interface TripPriceSuggestionApi {
+  suggestedPrice: number;
+  basePrice: number;
+  minHistoricalPrice: number;
+  maxHistoricalPrice: number;
+  similarTripsCount: number;
+  holidayAdjusted: boolean;
+  holidayName?: string;
+  message: string;
+}
+
+interface AdminDriverApi {
+  driver: { id?: number; nom?: string; prenom?: string; email?: string };
+  trips: TripApi[];
+  reservationsCount: number;
+  canceledReservationsCount: number;
+  cancellationRate: number;
+  averageRating: number;
+  reviewsCount: number;
+  reportedIssues: number;
+}
+
+interface AdminComplaintReportApi {
+  id: number;
+  description: string;
+  date: string;
+  reportedByUserId: string;
+  reservationId?: number;
+  tripId?: number;
+  departure?: string;
+  destination?: string;
+  status?: string;
+  aiSummary?: string;
+  aiKeywords?: string;
+  aiSolutions?: string;
+}
+
+interface AdminBadReviewApi {
+  id: number;
+  comment: string;
+  rating: number;
+  date: string;
+  reservationId?: number;
+  tripId?: number;
+  departure?: string;
+  destination?: string;
+  driverId?: number;
+  driverName?: string;
 }
 
 @Injectable({
@@ -238,6 +311,90 @@ export class CarpoolingDataService {
         map((response) => (response ?? []).map((trip) => this.mapTrip(trip))),
         switchMap((trips) => this.setSeatsAvailableTrips(trips)),
         switchMap((trips) => this.setDriverReviewSummaryTrips(trips)),
+      );
+  }
+
+  getDemandAlert(
+    departure: string,
+    destination: string,
+    dateFrom?: string,
+    dateTo?: string,
+  ): Observable<DemandAlert | undefined> {
+    let params = new HttpParams()
+      .set('departure', departure)
+      .set('destination', destination);
+
+    if (dateFrom) {
+      params = params.set('dateFrom', dateFrom);
+    }
+
+    if (dateTo) {
+      params = params.set('dateTo', dateTo);
+    }
+
+    return this.http
+      .get<DemandAlertApi>(
+        `${this.baseUrl}/api/carpooling/trips/retrieve-demand-alert`,
+        { params },
+      )
+      .pipe(
+        map((alert) => ({
+          departure: alert.departure,
+          destination: alert.destination,
+          weekLabel: alert.weekLabel,
+          demandLevel: alert.demandLevel,
+          predictedSeatsBooked: Number(alert.predictedSeatsBooked ?? 0),
+          referenceSeats: Number(alert.referenceSeats ?? 0),
+          predictedOccupancyRate: Number(alert.predictedOccupancyRate ?? 0),
+          trainingSamples: Number(alert.trainingSamples ?? 0),
+          modelName: alert.modelName,
+          holidayCriticalWarning: Boolean(alert.holidayCriticalWarning),
+          passengerAlert: alert.passengerAlert,
+          driverAlert: alert.driverAlert,
+          suggestedDateFrom: alert.suggestedDateFrom,
+          suggestedDateTo: alert.suggestedDateTo,
+          suggestedPredictedOccupancyRate:
+            alert.suggestedPredictedOccupancyRate !== undefined &&
+            alert.suggestedPredictedOccupancyRate !== null
+              ? Number(alert.suggestedPredictedOccupancyRate)
+              : undefined,
+        })),
+        catchError(() => of(undefined)),
+      );
+  }
+
+  getTripPriceSuggestion(
+    departure: string,
+    destination: string,
+    departureDate: string,
+    durationMinutes: number,
+  ): Observable<TripPriceSuggestion | undefined> {
+    const params = new HttpParams()
+      .set('departure', departure)
+      .set('destination', destination)
+      .set('departureDate', departureDate)
+      .set('durationMinutes', durationMinutes);
+
+    return this.http
+      .get<TripPriceSuggestionApi>(
+        `${this.baseUrl}/api/driver/trips/price-suggestion`,
+        {
+          headers: this.userHeaders(),
+          params,
+        },
+      )
+      .pipe(
+        map((suggestion) => ({
+          suggestedPrice: Number(suggestion.suggestedPrice ?? 0),
+          basePrice: Number(suggestion.basePrice ?? 0),
+          minHistoricalPrice: Number(suggestion.minHistoricalPrice ?? 0),
+          maxHistoricalPrice: Number(suggestion.maxHistoricalPrice ?? 0),
+          similarTripsCount: Number(suggestion.similarTripsCount ?? 0),
+          holidayAdjusted: Boolean(suggestion.holidayAdjusted),
+          holidayName: suggestion.holidayName,
+          message: suggestion.message,
+        })),
+        catchError(() => of(undefined)),
       );
   }
 
@@ -479,6 +636,24 @@ export class CarpoolingDataService {
           of({
             ok: false,
             error: this.extractError(error, 'Unable to make trip available.'),
+          }),
+        ),
+      );
+  }
+
+  completeTrip(tripId: number): Observable<{ ok: boolean; error?: string }> {
+    return this.http
+      .put<TripApi>(
+        `${this.baseUrl}/api/driver/trips/${tripId}/complete`,
+        {},
+        { headers: this.userHeaders() },
+      )
+      .pipe(
+        map(() => ({ ok: true })),
+        catchError((error) =>
+          of({
+            ok: false,
+            error: this.extractError(error, 'Unable to complete trip.'),
           }),
         ),
       );
@@ -824,6 +999,247 @@ export class CarpoolingDataService {
     );
   }
 
+  getAdminTrips(filters: TripSearchFilters): Observable<Trip[]> {
+    let params = new HttpParams();
+    if (filters.status) {
+      params = params.set('status', filters.status);
+    }
+    if (filters.departure) {
+      params = params.set('departure', filters.departure);
+    }
+    if (filters.destination) {
+      params = params.set('destination', filters.destination);
+    }
+    if (filters.dateFrom) {
+      params = params.set('dateFrom', filters.dateFrom);
+    }
+    if (filters.dateTo) {
+      params = params.set('dateTo', filters.dateTo);
+    }
+    if (filters.driverId) {
+      params = params.set('driverId', filters.driverId);
+    }
+
+    return this.http
+      .get<TripApi[]>(`${this.baseUrl}/api/admin/carpooling/trips`, {
+        headers: this.userHeaders(),
+        params,
+      })
+      .pipe(
+        map((response) => (response ?? []).map((trip) => this.mapTrip(trip))),
+        switchMap((trips) => this.setSeatsAvailableTrips(trips)),
+        switchMap((trips) => this.setDriverReviewSummaryTrips(trips)),
+        catchError((error) => throwError(() => error)),
+      );
+  }
+
+  adminCancelTrip(tripId: number): Observable<{ ok: boolean; error?: string }> {
+    return this.http
+      .put<TripApi>(
+        `${this.baseUrl}/api/admin/carpooling/trips/${tripId}/cancel`,
+        {},
+        { headers: this.userHeaders() },
+      )
+      .pipe(
+        map(() => ({ ok: true })),
+        catchError((error) =>
+          of({
+            ok: false,
+            error: this.extractError(error, 'Unable to cancel trip.'),
+          }),
+        ),
+      );
+  }
+
+  adminReactivateTrip(tripId: number): Observable<{ ok: boolean; error?: string }> {
+    return this.http
+      .put<TripApi>(
+        `${this.baseUrl}/api/admin/carpooling/trips/${tripId}/reactivate`,
+        {},
+        { headers: this.userHeaders() },
+      )
+      .pipe(
+        map(() => ({ ok: true })),
+        catchError((error) =>
+          of({
+            ok: false,
+            error: this.extractError(error, 'Unable to reactivate trip.'),
+          }),
+        ),
+      );
+  }
+
+  adminRemoveTrip(tripId: number): Observable<{ ok: boolean; error?: string }> {
+    return this.http
+      .delete(`${this.baseUrl}/api/admin/carpooling/trips/${tripId}`, {
+        headers: this.userHeaders(),
+      })
+      .pipe(
+        map(() => ({ ok: true })),
+        catchError((error) =>
+          of({
+            ok: false,
+            error: this.extractError(error, 'Unable to remove trip.'),
+          }),
+        ),
+      );
+  }
+
+  getAdminBookingsWithContext(
+    tripId?: number,
+    status?: string,
+  ): Observable<BookingWithContext[]> {
+    let params = new HttpParams();
+    if (tripId) {
+      params = params.set('tripId', tripId);
+    }
+    if (status) {
+      params = params.set('status', status);
+    }
+
+    return this.http
+      .get<ReservationApi[]>(
+        `${this.baseUrl}/api/admin/carpooling/reservations`,
+        {
+          headers: this.userHeaders(),
+          params,
+        },
+      )
+      .pipe(
+        map((reservations) =>
+          (reservations ?? []).map((reservation) => {
+            const booking = this.mapReservationToBooking(reservation);
+            const trip = this.mapReservationTrip(reservation);
+            return {
+              booking,
+              trip,
+              passenger: this.mapReservationPassenger(reservation),
+              driver: trip
+                ? {
+                    id: trip.ownerUserId,
+                    fullName: trip.ownerFullName || `User ${trip.ownerUserId}`,
+                    email: `user${trip.ownerUserId}@example.com`,
+                  }
+                : undefined,
+            };
+          }),
+        ),
+        catchError((error) => throwError(() => error)),
+      );
+  }
+
+  getAdminDrivers(): Observable<AdminDriver[]> {
+    return this.http
+      .get<AdminDriverApi[]>(`${this.baseUrl}/api/admin/carpooling/drivers`, {
+        headers: this.userHeaders(),
+      })
+      .pipe(
+        map((drivers) =>
+          (drivers ?? []).map((item) => {
+            const userId = Number(item.driver?.id ?? 0);
+            return {
+              driver: {
+                id: userId,
+                fullName:
+                  this.buildFullName(item.driver?.nom, item.driver?.prenom) ||
+                  `User ${userId}`,
+                email: item.driver?.email || `user${userId}@example.com`,
+              },
+              trips: (item.trips ?? []).map((trip) => this.mapTrip(trip)),
+              reservationsCount: Number(item.reservationsCount ?? 0),
+              canceledReservationsCount: Number(
+                item.canceledReservationsCount ?? 0,
+              ),
+              cancellationRate: Number(item.cancellationRate ?? 0),
+              averageRating: Number(item.averageRating ?? 0),
+              reviewsCount: Number(item.reviewsCount ?? 0),
+              reportedIssues: Number(item.reportedIssues ?? 0),
+            };
+          }),
+        ),
+        catchError((error) => throwError(() => error)),
+      );
+  }
+
+  getAdminComplaintReports(): Observable<AdminComplaintReport[]> {
+    return this.http
+      .get<AdminComplaintReportApi[]>(
+        `${this.baseUrl}/api/admin/carpooling/complaints`,
+        { headers: this.userHeaders() },
+      )
+      .pipe(
+        map((reports) =>
+          (reports ?? []).map((report) => ({
+            id: report.id,
+            description: report.description,
+            date: report.date,
+            reportedByUserId: report.reportedByUserId,
+            reservationId: report.reservationId,
+            tripId: report.tripId,
+            departure: report.departure,
+            destination: report.destination,
+            status: report.status,
+            aiSummary: report.aiSummary,
+            aiKeywords: report.aiKeywords,
+            aiSolutions: report.aiSolutions,
+          })),
+        ),
+        catchError((error) => throwError(() => error)),
+      );
+  }
+
+  analyzeAdminComplaint(
+    complaintId: number,
+  ): Observable<AdminComplaintReport> {
+    return this.http
+      .put<AdminComplaintReportApi>(
+        `${this.baseUrl}/api/admin/carpooling/complaints/${complaintId}/analyze`,
+        {},
+        { headers: this.userHeaders() },
+      )
+      .pipe(
+        map((report) => ({
+          id: report.id,
+          description: report.description,
+          date: report.date,
+          reportedByUserId: report.reportedByUserId,
+          reservationId: report.reservationId,
+          tripId: report.tripId,
+          departure: report.departure,
+          destination: report.destination,
+          status: report.status,
+          aiSummary: report.aiSummary,
+          aiKeywords: report.aiKeywords,
+          aiSolutions: report.aiSolutions,
+        })),
+      );
+  }
+
+  getAdminBadReviews(): Observable<AdminBadReview[]> {
+    return this.http
+      .get<AdminBadReviewApi[]>(
+        `${this.baseUrl}/api/admin/carpooling/bad-reviews`,
+        { headers: this.userHeaders() },
+      )
+      .pipe(
+        map((reviews) =>
+          (reviews ?? []).map((review) => ({
+            id: review.id,
+            comment: review.comment,
+            rating: Number(review.rating ?? 0),
+            date: review.date,
+            reservationId: review.reservationId,
+            tripId: review.tripId,
+            departure: review.departure,
+            destination: review.destination,
+            driverId: review.driverId,
+            driverName: review.driverName,
+          })),
+        ),
+        catchError((error) => throwError(() => error)),
+      );
+  }
+
   getAllBookingsWithContext(): Observable<BookingWithContext[]> {
     return this.getMyBookingsWithContext();
   }
@@ -909,12 +1325,16 @@ export class CarpoolingDataService {
     let headers = new HttpHeaders();
     const userId = this.getStoredUserId();
     const role = this.getStoredRole();
+    const token = this.getStoredToken();
 
     if (userId) {
       headers = headers.set('X-USER-ID', userId);
     }
     if (role) {
       headers = headers.set('X-ROLE', role);
+    }
+    if (token) {
+      headers = headers.set('Authorization', `Bearer ${token}`);
     }
 
     return headers;
@@ -937,9 +1357,19 @@ export class CarpoolingDataService {
         apiTrip.driver?.prenom,
       ),
       bookingMode: apiTrip.bookingMode,
-      status:
-        apiTrip.status?.toUpperCase() === 'CANCELED' ? 'CANCELED' : 'ACTIVE',
+      status: this.mapTripStatus(apiTrip.status),
     };
+  }
+
+  private mapTripStatus(status?: string): Trip['status'] {
+    const normalized = (status || '').toUpperCase();
+    if (normalized === 'CANCELED') {
+      return 'CANCELED';
+    }
+    if (normalized === 'COMPLETED') {
+      return 'COMPLETED';
+    }
+    return 'ACTIVE';
   }
 
   private setSeatsAvailableTrip(trip: Trip): Observable<Trip> {
@@ -1117,6 +1547,18 @@ export class CarpoolingDataService {
     };
   }
 
+  private mapReservationTrip(reservation: ReservationApi): Trip | undefined {
+    if (!reservation.trip || typeof reservation.trip === 'number') {
+      return undefined;
+    }
+
+    if (!reservation.trip.departure || !reservation.trip.destination) {
+      return undefined;
+    }
+
+    return this.mapTrip(reservation.trip);
+  }
+
   private mapComplaint(complaint: ComplaintApi, tripId: number): Complaint {
     return {
       id: complaint.id,
@@ -1160,6 +1602,19 @@ export class CarpoolingDataService {
     }
 
     const value = localStorage.getItem('role');
+    if (value == null || value.trim() === '') {
+      return null;
+    }
+
+    return value;
+  }
+
+  private getStoredToken(): string | null {
+    if (typeof localStorage === 'undefined') {
+      return null;
+    }
+
+    const value = localStorage.getItem('token');
     if (value == null || value.trim() === '') {
       return null;
     }

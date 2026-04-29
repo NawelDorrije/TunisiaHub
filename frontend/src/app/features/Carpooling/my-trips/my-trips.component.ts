@@ -106,6 +106,31 @@ export class MyTripsComponent implements OnInit {
     });
   }
 
+  completeTrip(tripId: number): void {
+    this.error = '';
+    const confirmed = window.confirm('Mark this trip as completed?');
+    if (!confirmed) {
+      return;
+    }
+
+    this.dataService.completeTrip(tripId).subscribe({
+      next: (result) => {
+        if (!result.ok) {
+          this.error = result.error ?? 'Unable to complete trip.';
+          return;
+        }
+        this.loadTrips();
+      },
+      error: () => {
+        this.error = 'Unable to complete trip.';
+      },
+    });
+  }
+
+  canCompleteTrip(trip: Trip): boolean {
+    return trip.status !== 'CANCELED' && trip.status !== 'COMPLETED';
+  }
+
   formatTripLabel(dateTime: string): string {
     const tripDate = new Date(dateTime);
     const today = new Date();

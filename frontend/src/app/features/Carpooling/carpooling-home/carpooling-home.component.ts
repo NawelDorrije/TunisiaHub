@@ -1,6 +1,9 @@
-import { Component } from '@angular/core';
+import { Component, OnDestroy } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
+import { Subscription } from 'rxjs';
+import { DemandAlert } from '../../../models/Carpooling/carpooling';
+import { AuthService } from '../../auth/services/auth.service';
 import { CarpoolingDataService } from '../services/carpooling-data.service';
 
 interface LocationSuggestion {
@@ -14,7 +17,7 @@ interface LocationSuggestion {
   templateUrl: './carpooling-home.component.html',
   styleUrls: ['./carpooling-home.component.css'],
 })
-export class CarpoolingHomeComponent {
+export class CarpoolingHomeComponent implements OnDestroy {
   searchForm!: FormGroup;
   departureSuggestions: LocationSuggestion[] = [];
   destinationSuggestions: LocationSuggestion[] = [];
@@ -22,11 +25,17 @@ export class CarpoolingHomeComponent {
   showDestinationSuggestions = false;
   loadingLocations = false;
   locationError = '';
+  demandAlert?: DemandAlert;
+  demandAlertLoading = false;
+  demandAlertError = '';
   private searchTimeout: any = null;
+  private demandTimeout: any = null;
+  private formSubscription?: Subscription;
 
   constructor(
     private fb: FormBuilder,
     private router: Router,
+    public authService: AuthService,
     private dataService: CarpoolingDataService,
   ) {
     this.searchForm = this.fb.group({
@@ -36,10 +45,24 @@ export class CarpoolingHomeComponent {
       returnDate: [''],
       seatsNeeded: [1, [Validators.required, Validators.min(1), Validators.max(8)]],
     });
+
+    this.formSubscription = this.searchForm.valueChanges.subscribe(() => {
+      this.scheduleDemandAlert();
+    });
   }
 
   get f() {
     return this.searchForm.controls;
+  }
+
+  ngOnDestroy(): void {
+    if (this.searchTimeout) {
+      clearTimeout(this.searchTimeout);
+    }
+    if (this.demandTimeout) {
+      clearTimeout(this.demandTimeout);
+    }
+    this.formSubscription?.unsubscribe();
   }
 
   searchRide(): void {
@@ -140,6 +163,36 @@ export class CarpoolingHomeComponent {
     this.showDestinationSuggestions = false;
   }
 
+  getDemandLevelLabel(): string {
+    if (!this.demandAlert) {
+      return '';
+    }
+
+    if (this.demandAlert.holidayCriticalWarning) {
+      return 'Holiday alert';
+    }
+    if (this.demandAlert.demandLevel === 'high') {
+      return 'High demand';
+    }
+    if (this.demandAlert.demandLevel === 'medium') {
+      return 'Medium demand';
+    }
+    return 'Low demand';
+  }
+
+  getDemandOccupancyPercent(): number {
+    if (!this.demandAlert) {
+      return 0;
+    }
+
+    return Math.round((this.demandAlert.predictedOccupancyRate || 0) * 100);
+  }
+
+  shouldShowDemandAlert(): boolean {
+    return !!this.demandAlert
+      && (this.demandAlert.demandLevel === 'high' || this.demandAlert.holidayCriticalWarning);
+  }
+
   shouldShowNoResults(field: 'departure' | 'destination'): boolean {
     const value = `${this.searchForm.value[field] || ''}`.trim();
     const suggestions =
@@ -179,6 +232,49 @@ export class CarpoolingHomeComponent {
         } else {
           this.destinationSuggestions = [];
         }
+      },
+    });
+  }
+
+  private scheduleDemandAlert(): void {
+    if (this.demandTimeout) {
+      clearTimeout(this.demandTimeout);
+    }
+
+    const departure = `${this.searchForm.value.departure || ''}`.trim();
+    const destination = `${this.searchForm.value.destination || ''}`.trim();
+    if (!departure || !destination) {
+      this.demandAlert = undefined;
+      this.demandAlertError = '';
+      this.demandAlertLoading = false;
+      return;
+    }
+
+    this.demandTimeout = setTimeout(() => {
+      this.loadDemandAlert();
+    }, 300);
+  }
+
+  private loadDemandAlert(): void {
+    const departure = `${this.searchForm.value.departure || ''}`.trim();
+    const destination = `${this.searchForm.value.destination || ''}`.trim();
+    const dateFrom = `${this.searchForm.value.date || ''}`.trim() || undefined;
+    const dateTo = `${this.searchForm.value.returnDate || ''}`.trim() || undefined;
+    if (!departure || !destination) {
+      return;
+    }
+
+    this.demandAlertLoading = true;
+    this.demandAlertError = '';
+    this.dataService.getDemandAlert(departure, destination, dateFrom, dateTo).subscribe({
+      next: (alert) => {
+        this.demandAlertLoading = false;
+        this.demandAlert = alert;
+      },
+      error: () => {
+        this.demandAlertLoading = false;
+        this.demandAlert = undefined;
+        this.demandAlertError = 'Demand alert unavailable.';
       },
     });
   }

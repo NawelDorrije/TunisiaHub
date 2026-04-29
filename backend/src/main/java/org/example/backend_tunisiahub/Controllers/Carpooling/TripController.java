@@ -7,11 +7,14 @@ import lombok.AllArgsConstructor;
 import org.example.backend_tunisiahub.Entities.Carpooling.Trip;
 import org.example.backend_tunisiahub.Services.Carpooling.ITripService;
 import org.example.backend_tunisiahub.Services.Carpooling.RouteSuggestionService;
+import org.example.backend_tunisiahub.Services.Carpooling.TripPriceSuggestion;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -120,6 +123,26 @@ public class TripController {
         return ResponseEntity.ok(trip);
     }
 
+    @PutMapping("/{id}/complete")
+    @Operation(summary = "Mark trip as completed")
+    public ResponseEntity<Trip> completeTrip(@PathVariable Long id, HttpServletRequest request) {
+        Long currentUserId = getCurrentUserId(request);
+        logger.debug("PUT /api/driver/trips/{}/complete userId={}", id, currentUserId);
+        if (currentUserId == null) {
+            logger.warn("Trip complete rejected for id={} because X-USER-ID header is missing or invalid", id);
+            return ResponseEntity.badRequest().build();
+        }
+
+        Trip trip = tripService.completeTrip(id, currentUserId);
+        if (trip == null) {
+            logger.warn("Trip complete failed id={} userId={}", id, currentUserId);
+            return ResponseEntity.badRequest().build();
+        }
+
+        logger.info("Trip completed id={} userId={}", id, currentUserId);
+        return ResponseEntity.ok(trip);
+    }
+
     @PutMapping("/{id}")
     @Operation(summary = "Update trip")
     public ResponseEntity<Trip> modifyTrip(@PathVariable Long id,
@@ -151,6 +174,26 @@ public class TripController {
             @RequestParam double endLng
     ) {
         return routeSuggestionService.getRouteSuggestions(startLat, startLng, endLat, endLng);
+    }
+
+    @GetMapping("/price-suggestion")
+    @Operation(summary = "Get suggested trip price")
+    public ResponseEntity<TripPriceSuggestion> retrievePriceSuggestion(
+            @RequestParam String departure,
+            @RequestParam String destination,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate departureDate,
+            @RequestParam Integer durationMinutes
+    ) {
+        TripPriceSuggestion suggestion = tripService.retrievePriceSuggestion(
+                departure,
+                destination,
+                departureDate,
+                durationMinutes
+        );
+        if (suggestion == null) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(suggestion);
     }
 
     private Long getCurrentUserId(HttpServletRequest request) {

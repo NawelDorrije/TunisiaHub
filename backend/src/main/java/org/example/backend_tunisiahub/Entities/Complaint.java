@@ -30,6 +30,15 @@ public class Complaint {
 
     String status;
 
+    @Column(length = 1000)
+    String aiSummary;
+
+    @Column(length = 1000)
+    String aiKeywords;
+
+    @Column(length = 2000)
+    String aiSolutions;
+
     @ManyToOne
     @JoinColumn(name = "reservation_id")
     @JsonIgnore

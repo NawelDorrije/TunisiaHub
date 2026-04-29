@@ -387,6 +387,34 @@
                   {{ routeError }}
                 </div>
 
+                <div
+                  class="trip-demand-card"
+                  *ngIf="driverDemandError || shouldShowDriverDemandAlert()"
+                >
+                  <p class="trip-demand-text" *ngIf="driverDemandError">
+                    {{ driverDemandError }}
+                  </p>
+
+                  <div
+                    class="trip-demand-header"
+                    *ngIf="shouldShowDriverDemandAlert()"
+                  >
+                    <span
+                      class="trip-demand-badge"
+                      [class.high]="
+                        driverDemandAlert &&
+                        (driverDemandAlert.demandLevel === 'high' ||
+                          driverDemandAlert.holidayCriticalWarning)
+                      "
+                    >
+                      {{ getDriverDemandLevelLabel() }}
+                    </span>
+                    <p class="trip-demand-text">
+                      {{ driverDemandAlert?.driverAlert }}
+                    </p>
+                  </div>
+                </div>
+
                 <div class="route-actions">
                   <button
                     type="button"
@@ -418,16 +446,31 @@
             <div class="date-step-layout">
               <h2 class="question-title">When are you leaving?</h2>
 
+              <div class="calendar-navigation">
+                <button
+                  type="button"
+                  class="calendar-nav-button"
+                  [disabled]="!canGoToPreviousCalendarMonth()"
+                  (click)="previousCalendarMonth()"
+                >
+                  <i class="bi bi-arrow-left"></i>
+                </button>
+                <button
+                  type="button"
+                  class="calendar-nav-button"
+                  (click)="nextCalendarMonth()"
+                >
+                  <i class="bi bi-arrow-right"></i>
+                </button>
+              </div>
+
               <div class="calendar-months">
                 <div
                   class="calendar-month"
                   *ngFor="let month of calendarMonths; let i = index"
                 >
                   <div class="calendar-month-header">
-                    <h3>{{ month.monthLabel }}</h3>
-                    <span class="calendar-next" *ngIf="i === 1">
-                      <i class="bi bi-arrow-right"></i>
-                    </span>
+                    <h3>{{ month.monthLabel }} {{ month.year }}</h3>
                   </div>
 
                   <div class="calendar-weekdays">
@@ -459,6 +502,34 @@
                     {{ time }}
                   </option>
                 </select>
+              </div>
+
+              <div
+                class="trip-demand-card"
+                *ngIf="driverDemandError || shouldShowDriverDemandAlert()"
+              >
+                <p class="trip-demand-text" *ngIf="driverDemandError">
+                  {{ driverDemandError }}
+                </p>
+
+                <div
+                  class="trip-demand-header"
+                  *ngIf="shouldShowDriverDemandAlert()"
+                >
+                  <span
+                    class="trip-demand-badge"
+                    [class.high]="
+                      driverDemandAlert &&
+                      (driverDemandAlert.demandLevel === 'high' ||
+                        driverDemandAlert.holidayCriticalWarning)
+                    "
+                  >
+                    {{ getDriverDemandLevelLabel() }}
+                  </span>
+                  <p class="trip-demand-text">
+                    {{ driverDemandAlert?.driverAlert }}
+                  </p>
+                </div>
               </div>
 
               <div class="cta-row date-step-actions">
@@ -513,9 +584,33 @@
                 </button>
               </div>
 
-              <div class="price-tip">Suggested price: 10 TND - 25 TND</div>
+              <div class="price-tip" *ngIf="priceSuggestionLoading">
+                Calculating suggested price...
+              </div>
 
-              <p class="price-helper">
+              <div
+                class="price-tip"
+                *ngIf="!priceSuggestionLoading && priceSuggestion"
+              >
+                Suggested price: {{ priceSuggestion.suggestedPrice }} TND
+              </div>
+
+              <div
+                class="price-tip"
+                *ngIf="
+                  !priceSuggestionLoading &&
+                  !priceSuggestion &&
+                  priceSuggestionError
+                "
+              >
+                {{ priceSuggestionError }}
+              </div>
+
+              <p class="price-helper" *ngIf="priceSuggestion">
+                {{ priceSuggestion.message }}
+              </p>
+
+              <p class="price-helper" *ngIf="!priceSuggestion">
                 Think about sharing your trip costs fairly so passengers can
                 book quickly.
               </p>

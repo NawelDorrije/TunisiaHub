@@ -32,6 +32,7 @@ interface TimeSlotOption {
 })
 export class SearchRidesComponent implements OnInit {
   searchForm!: FormGroup;
+  readonly todayDate = this.getTodayDate();
 
   rides: Trip[] = [];
   filteredRides: Trip[] = [];
@@ -119,8 +120,8 @@ export class SearchRidesComponent implements OnInit {
     const params = this.route.snapshot.queryParamMap;
     const departure = params.get('departure') ?? '';
     const destination = params.get('destination') ?? '';
-    const date = params.get('date') ?? '';
-    const returnDate = params.get('returnDate') ?? '';
+    const date = this.normalizeFutureDate(params.get('date') ?? '');
+    const returnDate = this.normalizeFutureDate(params.get('returnDate') ?? '');
     const seatsNeeded = Number(params.get('seatsNeeded') ?? 1);
     const minDriverRatingParam = params.get('minDriverRating');
     const status = params.get('status') ?? '';
@@ -169,12 +170,19 @@ export class SearchRidesComponent implements OnInit {
 
   search(): void {
     const form = this.searchForm.getRawValue();
+    const date = this.normalizeFutureDate(form.date);
+    const returnDate = this.normalizeFutureDate(form.returnDate);
+
+    if (date && returnDate && returnDate < date) {
+      this.searchForm.patchValue({ returnDate: date }, { emitEvent: false });
+    }
+
     this.dataService
       .searchTrips({
         departure: form.departure,
         destination: form.destination,
-        dateFrom: form.date,
-        dateTo: form.returnDate,
+        dateFrom: date,
+        dateTo: returnDate && (!date || returnDate >= date) ? returnDate : date,
         seatsNeeded: form.seatsNeeded,
         minDriverRating: form.minDriverRating,
         status: form.status,
@@ -201,8 +209,11 @@ export class SearchRidesComponent implements OnInit {
       queryParams: {
         departure: form.departure || undefined,
         destination: form.destination || undefined,
-        date: form.date || undefined,
-        returnDate: form.returnDate || undefined,
+        date: date || undefined,
+        returnDate:
+          returnDate && (!date || returnDate >= date)
+            ? returnDate
+            : date || undefined,
         seatsNeeded: form.seatsNeeded || 1,
         minDriverRating:
           form.minDriverRating && Number(form.minDriverRating) >= 1
@@ -227,6 +238,23 @@ export class SearchRidesComponent implements OnInit {
       },
       queryParamsHandling: 'merge',
     });
+  }
+
+  private normalizeFutureDate(value: string): string {
+    const trimmedValue = `${value || ''}`.trim();
+    if (!trimmedValue) {
+      return '';
+    }
+
+    return trimmedValue >= this.todayDate ? trimmedValue : '';
+  }
+
+  private getTodayDate(): string {
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = `${today.getMonth() + 1}`.padStart(2, '0');
+    const day = `${today.getDate()}`.padStart(2, '0');
+    return `${year}-${month}-${day}`;
   }
 
   viewDetails(tripId: number): void {

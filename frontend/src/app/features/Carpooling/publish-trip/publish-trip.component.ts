@@ -1,7 +1,8 @@
 import { Component, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { CarpoolingDataService } from '../services/carpooling-data.service';
 import { ActivatedRoute, Router } from '@angular/router';
-import { Trip } from '../../../models/Carpooling/carpooling';
+import { DemandAlert, Trip } from '../../../models/Carpooling/carpooling';
+import { TripPriceSuggestion } from '../../../models/Carpooling/trip-price-suggestion';
 
 @Component({
   selector: 'app-publish-trip',
@@ -136,6 +137,7 @@ export class PublishTripComponent implements OnInit, OnDestroy {
     '23:00',
   ];
   calendarMonths: any[] = [];
+  calendarStartMonth: Date = new Date();
   loadingLocations = false;
   locationError = '';
   showDepartureSuggestions = false;
@@ -150,6 +152,13 @@ export class PublishTripComponent implements OnInit, OnDestroy {
   todayDate = '';
   publishError = '';
   publishingTrip = false;
+  driverDemandAlert?: DemandAlert;
+  driverDemandLoading = false;
+  driverDemandError = '';
+  priceSuggestion?: TripPriceSuggestion;
+  priceSuggestionLoading = false;
+  priceSuggestionError = '';
+  priceTouched = false;
   searchTimeout: any = null;
   pickupMap: any = null;
   pickupMarker: any = null;
@@ -348,6 +357,8 @@ export class PublishTripComponent implements OnInit, OnDestroy {
     this.pickupSearch = '';
     this.departureSuggestions = [];
     this.showDepartureSuggestions = false;
+    this.refreshDriverDemandAlert();
+    this.refreshPriceSuggestion();
     this.goToNextStep();
   }
 
@@ -363,6 +374,8 @@ export class PublishTripComponent implements OnInit, OnDestroy {
     this.dropoffSearch = '';
     this.destinationSuggestions = [];
     this.showDestinationSuggestions = false;
+    this.refreshDriverDemandAlert();
+    this.refreshPriceSuggestion();
     this.goToNextStep();
   }
 
@@ -457,6 +470,8 @@ export class PublishTripComponent implements OnInit, OnDestroy {
       date: this.departureDate,
       time: this.departureTime,
     });
+    this.refreshDriverDemandAlert();
+    this.refreshPriceSuggestion();
   }
 
   isSelectedDate(day: any): boolean {
@@ -466,6 +481,7 @@ export class PublishTripComponent implements OnInit, OnDestroy {
   decreasePrice(): void {
     if (this.pricePerSeat > 1) {
       this.pricePerSeat -= 1;
+      this.priceTouched = true;
       this.logWizardStep('Price updated', 'price', {
         price: this.pricePerSeat,
       });
@@ -474,6 +490,7 @@ export class PublishTripComponent implements OnInit, OnDestroy {
 
   increasePrice(): void {
     this.pricePerSeat += 1;
+    this.priceTouched = true;
     this.logWizardStep('Price updated', 'price', {
       price: this.pricePerSeat,
     });
@@ -975,8 +992,11 @@ export class PublishTripComponent implements OnInit, OnDestroy {
   }
 
   private buildCalendarMonths(): void {
-    const firstMonth = new Date();
-    firstMonth.setDate(1);
+    const firstMonth = new Date(
+      this.calendarStartMonth.getFullYear(),
+      this.calendarStartMonth.getMonth(),
+      1,
+    );
 
     const secondMonth = new Date(
       firstMonth.getFullYear(),
@@ -988,6 +1008,43 @@ export class PublishTripComponent implements OnInit, OnDestroy {
       this.createCalendarMonth(firstMonth),
       this.createCalendarMonth(secondMonth),
     ];
+  }
+
+  previousCalendarMonth(): void {
+    if (!this.canGoToPreviousCalendarMonth()) {
+      return;
+    }
+
+    this.calendarStartMonth = new Date(
+      this.calendarStartMonth.getFullYear(),
+      this.calendarStartMonth.getMonth() - 1,
+      1,
+    );
+    this.buildCalendarMonths();
+  }
+
+  nextCalendarMonth(): void {
+    this.calendarStartMonth = new Date(
+      this.calendarStartMonth.getFullYear(),
+      this.calendarStartMonth.getMonth() + 1,
+      1,
+    );
+    this.buildCalendarMonths();
+  }
+
+  canGoToPreviousCalendarMonth(): boolean {
+    const currentMonth = new Date();
+    currentMonth.setDate(1);
+    currentMonth.setHours(0, 0, 0, 0);
+
+    const visibleMonth = new Date(
+      this.calendarStartMonth.getFullYear(),
+      this.calendarStartMonth.getMonth(),
+      1,
+    );
+    visibleMonth.setHours(0, 0, 0, 0);
+
+    return visibleMonth > currentMonth;
   }
 
   private createCalendarMonth(date: any): any {
@@ -1368,6 +1425,8 @@ export class PublishTripComponent implements OnInit, OnDestroy {
         : '',
     });
     this.updateRouteMapStyles();
+    this.refreshDriverDemandAlert();
+    this.refreshPriceSuggestion();
   }
 
   private prepareRouteSuggestions(): void {
@@ -1402,11 +1461,13 @@ export class PublishTripComponent implements OnInit, OnDestroy {
               if (this.routeSuggestions.length === 0) {
                 this.routeError = 'No route available.';
                 this.logWizardStep('Route calculation empty', 'routeSelection');
+                this.refreshPriceSuggestion();
                 return;
               }
 
               this.selectedRouteIndex = 0;
               this.setupRouteMap();
+              this.refreshPriceSuggestion();
             },
             error: (error: any) => {
               this.routeLoading = false;
@@ -1671,6 +1732,38 @@ export class PublishTripComponent implements OnInit, OnDestroy {
     }
 
     return parts[0];
+  }
+
+  getDriverDemandLevelLabel(): string {
+    if (!this.driverDemandAlert) {
+      return '';
+    }
+
+    if (this.driverDemandAlert.holidayCriticalWarning) {
+      return 'Holiday alert';
+    }
+    if (this.driverDemandAlert.demandLevel === 'high') {
+      return 'High demand';
+    }
+    if (this.driverDemandAlert.demandLevel === 'medium') {
+      return 'Medium demand';
+    }
+    return 'Low demand';
+  }
+
+  getDriverDemandOccupancyPercent(): number {
+    if (!this.driverDemandAlert) {
+      return 0;
+    }
+
+    return Math.round((this.driverDemandAlert.predictedOccupancyRate || 0) * 100);
+  }
+
+  shouldShowDriverDemandAlert(): boolean {
+    return !!this.driverDemandAlert
+      && (this.driverDemandAlert.demandLevel === 'high'
+        || this.driverDemandAlert.holidayCriticalWarning
+        || !!this.driverDemandAlert.suggestedDateFrom);
   }
 
   private cleanBackendErrorMessage(message: string): string {
@@ -1994,6 +2087,7 @@ export class PublishTripComponent implements OnInit, OnDestroy {
     this.departureDate = this.formatDateValue(departureDate);
     this.departureTime = this.formatTimeFromDateValue(departureDate);
     this.pricePerSeat = trip.pricePerSeat;
+    this.priceTouched = true;
     this.seatsTotal = trip.seatsTotal;
     this.bookingMode = trip.bookingMode || 'manual';
     this.existingDurationMinutes = trip.durationMinutes;
@@ -2002,6 +2096,8 @@ export class PublishTripComponent implements OnInit, OnDestroy {
     this.selectedRouteIndex = 0;
     this.routeError = '';
     this.publishError = '';
+    this.refreshDriverDemandAlert();
+    this.refreshPriceSuggestion();
   }
 
   private splitStoredLocation(value: string): { main: string; detail: string } {
@@ -2028,5 +2124,94 @@ export class PublishTripComponent implements OnInit, OnDestroy {
     const minutes = `${date.getMinutes()}`.padStart(2, '0');
 
     return `${hours}:${minutes}`;
+  }
+
+  private refreshDriverDemandAlert(): void {
+    const departure = (this.departureValue || '').trim();
+    const destination = (this.destinationValue || '').trim();
+    const dateFrom = (this.departureDate || '').trim() || undefined;
+
+    if (!departure || !destination) {
+      this.driverDemandAlert = undefined;
+      this.driverDemandLoading = false;
+      this.driverDemandError = '';
+      return;
+    }
+
+    this.driverDemandLoading = true;
+    this.driverDemandError = '';
+    this.dataService.getDemandAlert(departure, destination, dateFrom).subscribe({
+      next: (alert) => {
+        this.driverDemandLoading = false;
+        this.driverDemandAlert = alert;
+      },
+      error: () => {
+        this.driverDemandLoading = false;
+        this.driverDemandAlert = undefined;
+        this.driverDemandError = 'Demand insight unavailable.';
+      },
+    });
+  }
+
+  private refreshPriceSuggestion(): void {
+    const departure = (this.departureValue || '').trim();
+    const destination = (this.destinationValue || '').trim();
+    const departureDate = (this.departureDate || '').trim();
+    const durationMinutes = this.getSelectedTripDurationMinutes();
+
+    if (!departure || !destination || !departureDate || !durationMinutes) {
+      this.priceSuggestion = undefined;
+      this.priceSuggestionLoading = false;
+      this.priceSuggestionError = '';
+      return;
+    }
+
+    const previousSuggestedPrice = this.priceSuggestion?.suggestedPrice;
+    this.priceSuggestionLoading = true;
+    this.priceSuggestionError = '';
+    this.dataService
+      .getTripPriceSuggestion(
+        departure,
+        destination,
+        departureDate,
+        durationMinutes,
+      )
+      .subscribe({
+        next: (suggestion) => {
+          this.priceSuggestionLoading = false;
+          this.priceSuggestion = suggestion;
+          if (
+            suggestion &&
+            !this.priceTouched &&
+            (!this.pricePerSeat ||
+              this.pricePerSeat <= 1 ||
+              this.pricePerSeat === previousSuggestedPrice)
+          ) {
+            this.pricePerSeat = suggestion.suggestedPrice;
+          }
+        },
+        error: () => {
+          this.priceSuggestionLoading = false;
+          this.priceSuggestion = undefined;
+          this.priceSuggestionError = 'Price suggestion unavailable.';
+        },
+      });
+  }
+
+  private getSelectedTripDurationMinutes(): number | undefined {
+    const selectedRoute =
+      this.routeSuggestions && this.routeSuggestions[this.selectedRouteIndex]
+        ? this.routeSuggestions[this.selectedRouteIndex]
+        : null;
+
+    if (selectedRoute && selectedRoute.durationMinutes) {
+      return Number(selectedRoute.durationMinutes);
+    }
+
+    if (this.existingDurationMinutes && this.existingDurationMinutes > 0) {
+      return Number(this.existingDurationMinutes);
+    }
+
+    return undefined;
   }
 }

@@ -49,6 +49,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/accommodations/add").hasRole("ADMIN")
                         .requestMatchers("/api/accommodations/update/**").hasRole("ADMIN")
                         .requestMatchers("/api/accommodations/delete/**").hasRole("ADMIN")
+                        .requestMatchers("/api/admin/carpooling/**").hasRole("ADMIN")
                         .requestMatchers("/api/users/**").hasRole("ADMIN")
                         // Authenticated users
                        // .requestMatchers("/api/reviews/add/**").hasAnyRole("CLIENT", "ADMIN")

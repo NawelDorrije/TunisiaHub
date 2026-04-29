@@ -4,7 +4,9 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.AllArgsConstructor;
 import org.example.backend_tunisiahub.Entities.Carpooling.Trip;
+import org.example.backend_tunisiahub.Services.Carpooling.ITripDemandService;
 import org.example.backend_tunisiahub.Services.Carpooling.ITripService;
+import org.example.backend_tunisiahub.Services.Carpooling.TripDemandAlert;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -24,6 +26,7 @@ import java.util.List;
 public class PublicTripController {
 
     ITripService tripService;
+    ITripDemandService tripDemandService;
 
     @GetMapping
     @Operation(summary = "Search public scheduled trips")
@@ -71,5 +74,20 @@ public class PublicTripController {
             return ResponseEntity.notFound().build();
         }
         return ResponseEntity.ok(seatsAvailable);
+    }
+
+    @GetMapping("/retrieve-demand-alert")
+    @Operation(summary = "Get demand prediction alert for a route")
+    public ResponseEntity<TripDemandAlert> retrieveDemandAlert(@RequestParam String departure,
+                                                               @RequestParam String destination,
+                                                               @RequestParam(required = false)
+                                                               @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateFrom,
+                                                               @RequestParam(required = false)
+                                                               @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateTo) {
+        TripDemandAlert alert = tripDemandService.retrieveDemandAlert(departure, destination, dateFrom, dateTo);
+        if (alert == null) {
+            return ResponseEntity.badRequest().build();
+        }
+        return ResponseEntity.ok(alert);
     }
 }

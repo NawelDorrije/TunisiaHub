@@ -46,8 +46,28 @@ public interface TripRepository extends JpaRepository<Trip, Long> {
     @Query("select t from Trip t where t.driver.id = :driverId order by t.departureDateTime desc")
     List<Trip> findByDriverIdOrderByDepartureDateTimeDesc(@Param("driverId") Long driverId);
 
+    @Query("select t from Trip t where " +
+            "(:status is null or lower(t.status) = lower(:status)) and " +
+            "(:departure is null or lower(t.departure) like lower(concat('%', :departure, '%'))) and " +
+            "(:destination is null or lower(t.destination) like lower(concat('%', :destination, '%'))) and " +
+            "(:driverId is null or t.driver.id = :driverId) and " +
+            "(:dateFrom is null or t.departureDateTime >= :dateFrom) and " +
+            "(:dateTo is null or t.departureDateTime < :dateTo) " +
+            "order by t.departureDateTime desc")
+    List<Trip> findAdminTrips(@Param("status") String status,
+                              @Param("departure") String departure,
+                              @Param("destination") String destination,
+                              @Param("driverId") Long driverId,
+                              @Param("dateFrom") LocalDateTime dateFrom,
+                              @Param("dateTo") LocalDateTime dateTo);
+
+    @Query("select distinct t.driver from Trip t where t.driver is not null")
+    List<org.example.backend_tunisiahub.Entities.User.User> findCarpoolingDrivers();
+
     @Query("select t from Trip t where t.id = :id and t.driver.id = :driverId")
     Trip findByIdAndDriverId(@Param("id") Long id, @Param("driverId") Long driverId);
+
+    List<Trip> findByDepartureDateTimeBeforeOrderByDepartureDateTimeAsc(LocalDateTime departureDateTime);
 
     @Query("select " +
             "(t.seatsTotal - coalesce((select sum(coalesce(r.numberOfPeople, 1)) " +

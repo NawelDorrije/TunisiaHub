@@ -27,6 +27,11 @@ public interface ITripService {
 
     Integer retrieveTripSeatsAvailable(Long tripId);
 
+    TripPriceSuggestion retrievePriceSuggestion(String departure,
+                                               String destination,
+                                               LocalDate departureDate,
+                                               Integer durationMinutes);
+
     Trip addTrip(Trip trip, Long driverId);
 
     Trip modifyTrip(Long tripId, Trip trip, Long currentUserId);
@@ -34,4 +39,6 @@ public interface ITripService {
     Trip cancelTrip(Long tripId, Long currentUserId);
 
     Trip makeTripAvailable(Long tripId, Long currentUserId);
+
+    Trip completeTrip(Long tripId, Long currentUserId);
 }

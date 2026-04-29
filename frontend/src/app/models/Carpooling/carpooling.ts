@@ -67,6 +67,24 @@ export interface DriverReviewSummary {
   reviewsCount: number;
 }
 
+export interface DemandAlert {
+  departure: string;
+  destination: string;
+  weekLabel: string;
+  demandLevel: string;
+  predictedSeatsBooked: number;
+  referenceSeats: number;
+  predictedOccupancyRate: number;
+  trainingSamples: number;
+  modelName: string;
+  holidayCriticalWarning: boolean;
+  passengerAlert: string;
+  driverAlert: string;
+  suggestedDateFrom?: string;
+  suggestedDateTo?: string;
+  suggestedPredictedOccupancyRate?: number;
+}
+
 export interface TripSearchFilters {
   departure?: string;
   destination?: string;
@@ -79,6 +97,7 @@ export interface TripSearchFilters {
   minPrice?: number;
   maxPrice?: number;
   durationMax?: number;
+  driverId?: number;
 }
 
 export interface AdminStats {
@@ -86,6 +105,45 @@ export interface AdminStats {
   totalBookings: number;
   totalComplaints: number;
   activeUsers: number;
+}
+
+export interface AdminDriver {
+  driver: CarpoolUser;
+  trips: Trip[];
+  reservationsCount: number;
+  canceledReservationsCount: number;
+  cancellationRate: number;
+  averageRating: number;
+  reviewsCount: number;
+  reportedIssues: number;
+}
+
+export interface AdminComplaintReport {
+  id: number;
+  description: string;
+  date: string;
+  reportedByUserId: string;
+  reservationId?: number;
+  tripId?: number;
+  departure?: string;
+  destination?: string;
+  status?: string;
+  aiSummary?: string;
+  aiKeywords?: string;
+  aiSolutions?: string;
+}
+
+export interface AdminBadReview {
+  id: number;
+  comment: string;
+  rating: number;
+  date: string;
+  reservationId?: number;
+  tripId?: number;
+  departure?: string;
+  destination?: string;
+  driverId?: number;
+  driverName?: string;
 }
 
 export interface BookingWithContext {

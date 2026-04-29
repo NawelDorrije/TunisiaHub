@@ -78,6 +78,24 @@
                   {{ authService.getRole() }}
                 </span>
               </li>
+              <ng-container *ngIf="isCarpoolingPage()">
+                <li><hr class="dropdown-divider"></li>
+                <li>
+                  <a class="dropdown-item" routerLink="/carpooling/my-trips">
+                    My Trips
+                  </a>
+                </li>
+                <li>
+                  <a class="dropdown-item" routerLink="/carpooling/my-bookings">
+                    My Bookings
+                  </a>
+                </li>
+                <li *ngIf="authService.isAdmin()">
+                  <a class="dropdown-item" routerLink="/carpooling/admin">
+                    Carpooling Backoffice
+                  </a>
+                </li>
+              </ng-container>
               <li><hr class="dropdown-divider"></li>
               <li>
                 <button

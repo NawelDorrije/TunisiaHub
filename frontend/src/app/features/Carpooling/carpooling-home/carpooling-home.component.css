@@ -53,6 +53,49 @@
   padding: 2.5rem 1.5rem;
 }
 
+.demand-alert-card {
+  padding: 1.35rem 1.5rem;
+  border-radius: 1.5rem;
+  background: linear-gradient(135deg, #f7faff 0%, #edf3ff 100%);
+  border: 1px solid #dce6ff;
+}
+
+.demand-alert-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  color: #10224c;
+}
+
+.demand-badge {
+  border-radius: 999px;
+  padding: 0.35rem 0.8rem;
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.demand-badge.high {
+  background: #ffe5e5;
+  color: #b42318;
+}
+
+.demand-badge.medium {
+  background: #fff2d9;
+  color: #a15c00;
+}
+
+.demand-badge.low {
+  background: #e9f7ee;
+  color: #237a43;
+}
+
+.demand-alert-text {
+  margin: 0;
+  color: #33415c;
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
 .publish-banner h2 {
   color: #ffffff;
   font-size: 3rem;
@@ -164,5 +207,9 @@
 
   .publish-banner {
     padding: 2rem 1rem;
+  }
+
+  .demand-alert-card {
+    padding: 1.1rem 1rem;
   }
 }

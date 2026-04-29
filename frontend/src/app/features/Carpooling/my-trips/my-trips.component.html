@@ -69,6 +69,40 @@
             <span>{{ trip.seatsAvailable }}/{{ trip.seatsTotal }} seats</span>
             <span>{{ trip.status }}</span>
           </div>
+
+          <div class="trip-card-actions" (click)="$event.stopPropagation()">
+            <button
+              type="button"
+              class="btn btn-outline-primary btn-sm"
+              (click)="viewPassengers(trip.id)"
+            >
+              Passengers
+            </button>
+            <button
+              type="button"
+              class="btn btn-outline-secondary btn-sm"
+              (click)="editTrip(trip.id)"
+              [disabled]="trip.status !== 'ACTIVE'"
+            >
+              Edit
+            </button>
+            <button
+              type="button"
+              class="btn btn-outline-success btn-sm"
+              (click)="completeTrip(trip.id)"
+              [disabled]="!canCompleteTrip(trip)"
+            >
+              Mark completed
+            </button>
+            <button
+              type="button"
+              class="btn btn-outline-danger btn-sm"
+              (click)="cancelTrip(trip.id)"
+              [disabled]="trip.status === 'CANCELED' || trip.status === 'COMPLETED'"
+            >
+              Cancel
+            </button>
+          </div>
         </div>
       </div>
 

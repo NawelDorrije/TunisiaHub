@@ -16,6 +16,9 @@ public interface CarpoolingReviewRepository extends JpaRepository<Review, Long> 
     @Query("select r from Review r where r.reservation.trip.driver.id = :driverId order by r.date desc")
     List<Review> findByDriverId(@Param("driverId") Long driverId);
 
+    @Query("select r from Review r where r.reservation.trip is not null and r.rating <= :maxRating order by r.date desc")
+    List<Review> findBadReviews(@Param("maxRating") Integer maxRating);
+
     @Query("select avg(r.rating) from Review r where r.reservation.trip.driver.id = :driverId")
     Double findAverageRatingByDriverId(@Param("driverId") Long driverId);
 
