@@ -13,6 +13,7 @@
       aria-expanded="false"
       aria-label="Toggle navigation"
     >
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
       <span class="navbar-toggler-icon"></span>
     </button>
 
@@ -22,6 +23,58 @@
         <li class="nav-item">
           <a class="nav-link nav-link-lux" routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}">Home</a>
         </li>
+
+        <li class="nav-item dropdown" *ngIf="authService.isLoggedIn()">
+          <a class="nav-link dropdown-toggle fw-bold text-primary" href="#" id="campingDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+            Camping
+          </a>
+          <ul class="dropdown-menu shadow border-0" aria-labelledby="campingDropdown">
+
+            <ng-container *ngIf="currentRole === 'ADMIN'">
+              <li><h6 class="dropdown-header">Administration</h6></li>
+              <li><a class="dropdown-item" routerLink="/camping/backoffice/admin">Dashboard Admin</a></li>
+            </ng-container>
+
+            <ng-container *ngIf="currentRole === 'OWNER'">
+              <li><h6 class="dropdown-header">Espace Propriétaire</h6></li>
+              <li><a class="dropdown-item" routerLink="/camping/backoffice/owner/">Dashboard Owner</a></li>
+              <li><a class="dropdown-item" routerLink="/camping/backoffice/owner/my-campings">Mes campings</a></li>
+              <li><a class="dropdown-item" routerLink="/camping/backoffice/owner/new">Ajouter un camping</a></li>
+              <li><a class="dropdown-item" routerLink="/camping/backoffice/owner/reservations">Gestion réservations</a></li>
+            </ng-container>
+
+            <ng-container *ngIf="currentRole === 'CLIENT'">
+              <li><h6 class="dropdown-header">Espace Client</h6></li>
+              <li><a class="dropdown-item" routerLink="/camping">Liste des campings</a></li>
+              <li><a class="dropdown-item" routerLink="/camping/my-reservations">Suivi mes réservations</a></li>
+            </ng-container>
+          </ul>
+        </li>
+
+        <!-- ===== TRENDY PLACES DROPDOWN ===== -->
+<li class="nav-item dropdown" *ngIf="authService.isLoggedIn()">
+  <a class="nav-link dropdown-toggle fw-bold text-success" href="#" 
+     id="trendyDropdown" role="button" 
+     data-bs-toggle="dropdown" aria-expanded="false">
+    Trendy Places
+  </a>
+  <ul class="dropdown-menu shadow border-0" aria-labelledby="trendyDropdown">
+
+    <ng-container *ngIf="currentRole === 'ADMIN'">
+      <li><h6 class="dropdown-header">Administration</h6></li>
+      <li><a class="dropdown-item" routerLink="/trendy-places/admin/lieux">Gestion Lieux</a></li>
+      <li><a class="dropdown-item" routerLink="/trendy-places/admin/activites">Gestion Activités</a></li>
+      <li><a class="dropdown-item" routerLink="/trendy-places/admin/reservations">Gestion Réservations</a></li>
+    </ng-container>
+
+    <ng-container *ngIf="currentRole === 'CLIENT' || currentRole === 'USER'">
+      <li><h6 class="dropdown-header">Explorer</h6></li>
+      <li><a class="dropdown-item" routerLink="/trendy-places">Tous les lieux</a></li>
+      <li><a class="dropdown-item" routerLink="/trendy-places/mes-reservations">Mes Réservations</a></li>
+    </ng-container>
+
+  </ul>
+</li>
 
         <li class="nav-item dropdown">
           <a 
@@ -34,10 +87,23 @@
           >Services </a>
           <ul class="dropdown-menu border-0 shadow-lg dropdown-menu-lux" aria-labelledby="servicesDropdown">
             <li><a class="dropdown-item" routerLink="/campings">Campings</a></li>
+          <a class="nav-link dropdown-toggle" href="#" id="servicesDropdown" role="button" data-bs-toggle="dropdown">
+            Services
+          </a>
+          <ul class="dropdown-menu shadow border-0" aria-labelledby="servicesDropdown">
+            <li><a class="dropdown-item" routerLink="/camping">Campings</a></li>
             <li><a class="dropdown-item" routerLink="/events">Events</a></li>
             <li><a class="dropdown-item" routerLink="/shops">Shoppings</a></li>
             <li><a class="dropdown-item" routerLink="/carpooling">Carpooling</a></li>
             <li><a class="dropdown-item" routerLink="/accommodations/explore">Accommodations</a></li>
+            <li>
+              <a class="dropdown-item" routerLink="/shoppings">Shoppings</a>
+            </li>
+            <li><a class="dropdown-item" routerLink="/trendy-places">Trendy Places</a></li>
+
+            <li>
+              <a class="dropdown-item" routerLink="/carpooling">Carpooling</a>
+            </li>
           </ul>
         </li>
 
@@ -68,6 +134,9 @@
         <ng-container *ngIf="!vm.user">
           <li class="nav-item ms-lg-2">
             <a class="btn btn-outline-primary header-btn" routerLink="/auth/sign-in">Login</a>
+        <ng-container *ngIf="!authService.isLoggedIn()">
+          <li class="nav-item">
+            <a class="btn btn-outline-primary ms-lg-3" routerLink="/auth/sign-in">Login</a>
           </li>
           <li class="nav-item ms-2">
             <a class="btn btn-primary text-white header-btn header-btn-primary shadow-sm" routerLink="/auth/sign-up">Sign Up</a>
@@ -105,6 +174,15 @@
                   <i class="bi bi-box-arrow-right"></i> Logout
                 </button>
               </li>
+        <ng-container *ngIf="authService.isLoggedIn()">
+          <li class="nav-item dropdown ms-lg-3">
+            <a class="nav-link dropdown-toggle fw-semibold user-profile" href="#" role="button" data-bs-toggle="dropdown">
+              👤 {{ authService.getNom() }} {{ authService.getPrenom() }}
+            </a>
+            <ul class="dropdown-menu dropdown-menu-end shadow border-0">
+              <li><span class="dropdown-item-text text-muted small">Rôle : {{ currentRole }}</span></li>
+              <li><hr class="dropdown-divider"></li>
+              <li><button class="dropdown-item text-danger" (click)="logout()">Logout</button></li>
             </ul>
           </li>
         </ng-container>

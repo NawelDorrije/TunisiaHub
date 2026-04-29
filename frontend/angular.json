@@ -42,13 +42,9 @@
   "src/styles.css"
 ],
     "scripts": [
-      "node_modules/bootstrap/dist/js/bootstrap.bundle.min.js"
-    ],
-    "server": "src/main.server.ts",
-    "prerender": true,
-    "ssr": {
-      "entry": "server.ts"
-    }
+      "node_modules/bootstrap/dist/js/bootstrap.bundle.min.js",
+      "node_modules/chart.js/dist/chart.umd.js"
+    ]
   },
   "configurations": {
     "production": {
@@ -75,7 +71,16 @@
   "defaultConfiguration": "production"
 },
         "serve": {
-          "builder": "@angular-devkit/build-angular:dev-server",
+          "builder": "@angular-devkit/build-angular:dev-server"
+          ,
+  "options": {
+    "host": "0.0.0.0",
+    "port": 4200,
+    "allowedHosts": [
+      "dictation-ahead-statistic.ngrok-free.dev",
+      "all"
+    ]
+  },
           "configurations": {
             "production": {
               "buildTarget": "frontend:build:production"

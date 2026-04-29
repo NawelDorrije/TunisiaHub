@@ -20,10 +20,6 @@ export class SignInComponent {
     password: new FormControl('', [Validators.required, Validators.minLength(6)])
   });
 
-  get f() {
-    return this.signInForm.controls;
-  }
-
   constructor(
     private authService: AuthService,
     private router: Router,
@@ -31,6 +27,10 @@ export class SignInComponent {
     private tourService: OnboardingTourService
   ) {
     this.returnUrl = this.route.snapshot.queryParamMap.get('returnUrl');
+  }
+
+  get f() {
+    return this.signInForm.controls;
   }
 
   onSubmit(): void {
@@ -48,16 +48,23 @@ export class SignInComponent {
     }).subscribe({
       next: (response) => {
         this.isLoading = false;
+
+        // 1️⃣ returnUrl has priority
         if (this.returnUrl && this.returnUrl.startsWith('/')) {
           this.router.navigateByUrl(this.returnUrl);
           return;
         }
+
+        // 2️⃣ role-based navigation
         if (response.role === 'ADMIN') {
-          this.router.navigate(['/accommodations/dashboard']);
-        } else if (response.role === 'OWNER') {
+          this.router.navigate(['/camping/backoffice/admin']);
+        }
+        else if (response.role === 'OWNER') {
           this.tourService.startIfNeeded();
-          this.router.navigate(['/owner-dashboard']);
-        } else {
+          this.router.navigate(['/camping/backoffice/owner']);
+        }
+        else {
+          // CLIENT → HOME (what you asked for)
           this.router.navigate(['/home']);
         }
       },
@@ -68,5 +75,3 @@ export class SignInComponent {
     });
   }
 }
-
-

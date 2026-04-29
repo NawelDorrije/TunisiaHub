@@ -1,0 +1,114 @@
+/* overview.component.css */
+
+.section-header {
+  font-size: 2.25rem;
+  line-height: 1.1;
+  font-weight: 700;
+  background: linear-gradient(90deg, var(--accent), var(--accent2));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* KPI Cards - Enhanced styling */
+.kpi-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 28px;
+  padding: 28px 24px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.kpi-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 30px rgba(29, 158, 117, 0.12);
+}
+
+.kpi-value {
+  font-size: 2.75rem;
+  font-weight: 700;
+  line-height: 1;
+  color: #1f2937;
+  margin-top: 12px;
+  margin-bottom: 8px;
+}
+
+.kpi-label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #6b7280;
+  letter-spacing: 0.02em;
+}
+
+/* Recent Reservations Section */
+.recent-reservations {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 28px;
+  padding: 32px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+}
+
+.reservation-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 0;
+  border-bottom: 1px solid var(--border);
+  transition: background-color 0.2s ease;
+}
+
+.reservation-item:last-child {
+  border-bottom: none;
+}
+
+.reservation-item:hover {
+  background-color: rgba(29, 158, 117, 0.03);
+  border-radius: 20px;
+  margin: 0 -12px;
+  padding: 20px 12px;
+}
+
+/* Icon container in reservation */
+.reservation-icon {
+  width: 52px;
+  height: 52px;
+  background-color: #fef3c7;
+  color: #d97706;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  flex-shrink: 0;
+}
+
+/* Status badge */
+.status-badge {
+  display: inline-block;
+  padding: 6px 16px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  background-color: #ecfdf5;
+  color: #10b981;
+  border-radius: 9999px;
+  letter-spacing: 0.02em;
+}
+
+/* Responsive adjustments */
+@media (max-width: 640px) {
+  .section-header {
+    font-size: 1.85rem;
+  }
+
+  .kpi-value {
+    font-size: 2.25rem;
+  }
+}
+
+@media (max-width: 1024px) {
+  .recent-reservations {
+    padding: 24px;
+  }
+}

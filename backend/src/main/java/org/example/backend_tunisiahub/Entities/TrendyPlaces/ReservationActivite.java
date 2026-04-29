@@ -1,0 +1,59 @@
+package org.example.backend_tunisiahub.Entities.TrendyPlaces;
+
+import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import org.example.backend_tunisiahub.Entities.User.User;
+
+import java.util.Date;
+
+@Entity
+@Getter
+@Setter
+@NoArgsConstructor
+public class ReservationActivite {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Temporal(TemporalType.DATE)
+    private Date dateReservation;
+
+    private Integer nombrePersonnes;
+    private Double prixTotal;
+    private String statut; // EN_ATTENTE, PAYEE, CONFIRMEE, ANNULEE
+
+    // ===== NOUVEAUX CHAMPS PAIEMENT =====
+    private String modePaiement;     // TOTAL ou TRANCHE
+    private Double montantPaye;      // montant déjà payé
+    private Double montantRestant;   // reste à payer
+    private Integer nombreTranches;  // 2 ou 3
+    private Integer trancheActuelle; // 1, 2, 3...
+    private Boolean paiementComplet; // true si tout est payé
+
+    @ManyToOne
+    @JoinColumn(name = "activite_id")
+    private ActiviteLieu activite;
+
+    @ManyToOne
+    @JoinColumn(name = "user_id")
+    private User user;
+
+    // Ajoute ces champs dans ReservationActivite.java
+
+    // ===== NOTIFICATION =====
+    private Boolean notificationActive;    // true si le user veut être notifié
+    private Integer notificationJoursAvant; // 1, 2, ou 3 jours avant
+    private Boolean notificationEnvoyee;   // true si l'email a déjà été envoyé
+
+
+    // Ajoute dans ReservationActivite.java
+
+    private String factureToken;      // UUID unique pour le QR code
+    private Boolean billetUtilise;    // true si scanné à l'entrée
+    private Date dateBilletUtilise;   // quand il a été scanné
+
+
+}

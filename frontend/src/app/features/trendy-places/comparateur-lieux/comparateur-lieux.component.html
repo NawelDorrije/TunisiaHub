@@ -1,0 +1,333 @@
+<div class="comparateur-page">
+
+  <!-- HEADER -->
+  <header class="comp-header">
+    <button class="back-btn" (click)="goBack()">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+        <path d="M10 3L5 8L10 13" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+      </svg>
+      Retour
+    </button>
+    <div class="comp-header-center">
+      <div class="header-eyebrow">DISCOVER TUNISIA</div>
+      <h1>Comparaison des lieux</h1>
+      <div class="header-sub">{{ lieux.length }} destination(s) analysée(s)</div>
+    </div>
+    <div class="header-right"></div>
+  </header>
+
+  <!-- LOADING -->
+  <div *ngIf="loading" class="loading-comp">
+    <div class="loading-ring"><div></div><div></div></div>
+    <p>Analyse en cours...</p>
+  </div>
+
+  <div *ngIf="!loading" class="comp-content">
+
+    <!-- ===== HERO CARDS ===== -->
+    <div class="hero-grid" [class.two]="lieux.length === 2" [class.three]="lieux.length === 3">
+      <div class="hero-card" *ngFor="let lieu of lieux; let i = index">
+        <div class="hero-img-wrap">
+          <img [src]="getImageUrl(lieu.image)" [alt]="lieu.nom"
+               onerror="this.src='/assets/images/lieux/default.jpg'" />
+          <div class="hero-img-overlay"></div>
+          <div class="hero-rank">{{ ['I','II','III'][i] }}</div>
+          <div class="hero-type-chip">{{ getTypeIcon(lieu.type) }} {{ lieu.type }}</div>
+        </div>
+        <div class="hero-body">
+          <h2 class="hero-name">{{ lieu.nom }}</h2>
+          <div class="hero-ville"><span class="dot-accent"></span>{{ lieu.ville }}</div>
+          <p class="hero-desc">{{ lieu.description }}</p>
+          <div class="hero-stats-mini">
+            <div class="stat-mini">
+              <span class="stat-mini-val">{{ getTotalActivites(lieu) }}</span>
+              <span class="stat-mini-label">Activités</span>
+            </div>
+            <div class="stat-mini-divider"></div>
+            <div class="stat-mini">
+              <span class="stat-mini-val">{{ getPlacesDisponibles(lieu) }}</span>
+              <span class="stat-mini-label">Places dispo</span>
+            </div>
+            <div class="stat-mini-divider"></div>
+            <div class="stat-mini">
+              <span class="stat-mini-val">{{ getPrixMin(lieu) > 0 ? getPrixMin(lieu) + ' TND' : 'Gratuit' }}</span>
+              <span class="stat-mini-label">Prix min</span>
+            </div>
+          </div>
+          <button class="hero-btn" (click)="goToLieu(lieu.id)">
+            Explorer ce lieu
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+              <path d="M3 7H11M11 7L7.5 3.5M11 7L7.5 10.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== TABLEAU ===== -->
+    <div class="comp-block">
+
+      <!-- PACK BADGES -->
+      <div class="pack-row">
+        <div class="pack-spacer"></div>
+        <div class="pack-cell" *ngFor="let lieu of lieux; let i = index">
+          <div class="pack-badge" [class]="'pack-' + i">
+            <span class="pack-icon">{{ ['🥇','🥈','🥉'][i] }}</span>
+            <span class="pack-name">{{ lieu.nom }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── SECTION INFOS GÉNÉRALES ── -->
+      <div class="section-banner banner-blue">
+        <span class="section-icon">📋</span>
+        <span>Informations générales</span>
+      </div>
+
+      <div class="comp-row row-alt">
+        <div class="row-label">
+          <span class="row-label-icon">🕐</span>
+          Horaires
+        </div>
+        <div class="row-cells">
+          <div class="row-cell" *ngFor="let lieu of lieux; let i = index"
+               [class]="'cell-col-' + i">
+            <span class="chip-mono">{{ lieu.horaires || '—' }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="comp-row">
+        <div class="row-label">
+          <span class="row-label-icon">🏷️</span>
+          Type de lieu
+        </div>
+        <div class="row-cells">
+          <div class="row-cell" *ngFor="let lieu of lieux; let i = index"
+               [class]="'cell-col-' + i">
+            <span class="chip-type">{{ getTypeIcon(lieu.type) }} {{ lieu.type }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── SECTION ACTIVITÉS ── -->
+      <div class="section-banner banner-purple">
+        <span class="section-icon">🎯</span>
+        <span>Activités</span>
+      </div>
+
+      <div class="comp-row row-alt comp-row-highlight">
+        <div class="row-label">
+          <span class="row-label-icon">📊</span>
+          Nombre d'activités
+        </div>
+        <div class="row-cells">
+          <div class="row-cell" *ngFor="let lieu of lieux; let i = index"
+               [class]="'cell-col-' + i"
+               [class.cell-winner]="getWinner('activites') === i">
+            <div class="big-stat">{{ getTotalActivites(lieu) }}</div>
+            <div class="medal gold" *ngIf="getWinner('activites') === i">
+              <span>🏆</span> MAXIMUM
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="comp-row">
+        <div class="row-label">
+          <span class="row-label-icon">✅</span>
+          Disponibles
+        </div>
+        <div class="row-cells">
+          <div class="row-cell" *ngFor="let lieu of lieux; let i = index"
+               [class]="'cell-col-' + i">
+            <div class="fraction">
+              <span class="frac-num green">{{ getActivitesDisponibles(lieu) }}</span>
+              <span class="frac-sep">/</span>
+              <span class="frac-den">{{ getTotalActivites(lieu) }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="comp-row row-alt">
+        <div class="row-label">
+          <span class="row-label-icon">⭐</span>
+          Meilleure activité
+        </div>
+        <div class="row-cells">
+          <div class="row-cell" *ngFor="let lieu of lieux; let i = index"
+               [class]="'cell-col-' + i">
+            <span class="best-label">{{ getBestActivite(lieu) }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="comp-row comp-row-list">
+        <div class="row-label row-label-top">
+          <span class="row-label-icon">🗂️</span>
+          Liste complète
+        </div>
+        <div class="row-cells-list">
+          <div class="row-cell-list" *ngFor="let lieu of lieux; let i = index"
+               [class]="'cell-col-' + i">
+            <div class="act-item" *ngFor="let act of lieu.activites"
+                 [class.act-item-off]="!act.disponible">
+              <div class="act-item-left">
+                <span class="act-dot" [class.green]="act.disponible" [class.red]="!act.disponible"></span>
+                <span class="act-item-name">{{ act.nomActivite }}</span>
+              </div>
+              <div class="act-item-right">
+                <span class="act-item-prix">{{ act.prix }} TND</span>
+                <span class="act-item-duree">{{ act.duree }}min</span>
+              </div>
+            </div>
+            <div class="no-act" *ngIf="!lieu.activites || lieu.activites.length === 0">
+              Aucune activité
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── SECTION TARIFS ── -->
+      <div class="section-banner banner-green">
+        <span class="section-icon">💰</span>
+        <span>Tarifs</span>
+      </div>
+
+      <div class="comp-row row-alt comp-row-highlight">
+        <div class="row-label">
+          <span class="row-label-icon">💸</span>
+          Prix minimum
+        </div>
+        <div class="row-cells">
+          <div class="row-cell" *ngFor="let lieu of lieux; let i = index"
+               [class]="'cell-col-' + i"
+               [class.cell-winner]="getWinner('prix') === i">
+            <div class="price-display">
+              <span class="price-amount">{{ getPrixMin(lieu) }}</span>
+              <span class="price-unit">TND</span>
+            </div>
+            <div class="medal green-medal" *ngIf="getWinner('prix') === i">
+              <span>💚</span> MOINS CHER
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="comp-row">
+        <div class="row-label">
+          <span class="row-label-icon">💎</span>
+          Prix maximum
+        </div>
+        <div class="row-cells">
+          <div class="row-cell" *ngFor="let lieu of lieux; let i = index"
+               [class]="'cell-col-' + i">
+            <span class="price-soft">{{ getPrixMax(lieu) }} TND</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── SECTION DISPONIBILITÉ ── -->
+      <div class="section-banner banner-orange">
+        <span class="section-icon">👥</span>
+        <span>Disponibilité des places</span>
+      </div>
+
+      <div class="comp-row row-alt comp-row-highlight">
+        <div class="row-label">
+          <span class="row-label-icon">🟢</span>
+          Places disponibles
+        </div>
+        <div class="row-cells">
+          <div class="row-cell" *ngFor="let lieu of lieux; let i = index"
+               [class]="'cell-col-' + i"
+               [class.cell-winner]="getWinner('places') === i">
+            <div class="big-stat"
+                 [class.stat-green]="getPlacesDisponibles(lieu) > 5"
+                 [class.stat-orange]="getPlacesDisponibles(lieu) > 0 && getPlacesDisponibles(lieu) <= 5"
+                 [class.stat-red]="getPlacesDisponibles(lieu) === 0">
+              {{ getPlacesDisponibles(lieu) }}
+            </div>
+            <div class="medal blue-medal" *ngIf="getWinner('places') === i">
+              <span>🏆</span> PLUS DISPO
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="comp-row">
+        <div class="row-label">
+          <span class="row-label-icon">📊</span>
+          Taux de remplissage
+        </div>
+        <div class="row-cells">
+          <div class="row-cell" *ngFor="let lieu of lieux; let i = index"
+               [class]="'cell-col-' + i">
+            <div class="gauge-wrap">
+              <div class="gauge-track">
+                <div class="gauge-fill"
+                     [style.width.%]="getTauxRemplissage(lieu)"
+                     [class.fill-green]="getTauxRemplissage(lieu) <= 50"
+                     [class.fill-orange]="getTauxRemplissage(lieu) > 50 && getTauxRemplissage(lieu) <= 80"
+                     [class.fill-red]="getTauxRemplissage(lieu) > 80">
+                </div>
+              </div>
+              <span class="gauge-pct">{{ getTauxRemplissage(lieu) }}%</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="comp-row comp-row-last">
+        <div class="row-label">
+          <span class="row-label-icon">🪑</span>
+          Total places
+        </div>
+        <div class="row-cells">
+          <div class="row-cell" *ngFor="let lieu of lieux; let i = index"
+               [class]="'cell-col-' + i">
+            <span class="neutral-val">{{ getTotalPlaces(lieu) }} places</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ===== CTA ===== -->
+    <div class="cta-section">
+      <div class="cta-eyebrow">PRÊT À PARTIR ?</div>
+      <h2 class="cta-title">Choisissez votre destination</h2>
+      <div class="cta-grid">
+        <div class="cta-card" *ngFor="let lieu of lieux; let i = index"
+             [class]="'cta-card-' + i"
+             (click)="goToLieu(lieu.id)">
+          <div class="cta-card-img">
+            <img [src]="getImageUrl(lieu.image)" [alt]="lieu.nom"
+                 onerror="this.src='/assets/images/lieux/default.jpg'" />
+            <div class="cta-img-overlay"></div>
+            <div class="cta-rank-overlay">{{ ['I','II','III'][i] }}</div>
+          </div>
+          <div class="cta-card-body">
+            <div class="cta-card-info">
+              <div class="cta-card-name">{{ lieu.nom }}</div>
+              <div class="cta-card-ville">📍 {{ lieu.ville }}</div>
+            </div>
+            <div class="cta-card-stats">
+              <span>{{ getTotalActivites(lieu) }} activités</span>
+              <span>·</span>
+              <span>{{ getPrixMin(lieu) > 0 ? 'dès ' + getPrixMin(lieu) + ' TND' : 'Gratuit' }}</span>
+            </div>
+            <button class="cta-reserve-btn">
+              Réserver maintenant
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                <path d="M3 7H11M11 7L7.5 3.5M11 7L7.5 10.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>

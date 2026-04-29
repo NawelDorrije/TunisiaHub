@@ -1,0 +1,182 @@
+<div class="mc-page" (click)="closeMenu()">
+
+  <!-- Toast Notifications -->
+  <div class="toast toast--success" [class.toast--visible]="successMsg" role="alert" aria-live="polite">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+      <path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/>
+    </svg>
+    {{ successMsg }}
+  </div>
+
+  <div class="toast toast--error" [class.toast--visible]="errorMsg" role="alert" aria-live="polite">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+      <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+    </svg>
+    {{ errorMsg }}
+  </div>
+
+  <!-- Page Header -->
+  <header class="mc-header">
+    <div class="mc-header__left">
+      <div class="mc-header__icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+          <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+          <polyline points="9,22 9,12 15,12 15,22"/>
+        </svg>
+      </div>
+      <div>
+        <h1 class="mc-header__title">My Campings</h1>
+        <p class="mc-header__sub">Manage your sites, spots, activities &amp; equipment</p>
+      </div>
+    </div>
+
+    <div class="mc-header__right">
+      <div class="summary-pills" *ngIf="!loading && campings.length > 0">
+        <span class="s-pill s-pill--total">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 10H3M21 6H3M21 14H3M21 18H3"/>
+          </svg>
+          {{ campings.length }} total
+        </span>
+        <span class="s-pill s-pill--active" *ngIf="totalActive > 0">
+          <span class="dot dot--green"></span>{{ totalActive }} active
+        </span>
+        <span class="s-pill s-pill--pending" *ngIf="totalPending > 0">
+          <span class="dot dot--amber"></span>{{ totalPending }} pending
+        </span>
+      </div>
+
+      <div class="view-toggle" *ngIf="campings.length > 0">
+        <button class="vt-btn" [class.vt-btn--active]="viewMode==='grid'" (click)="viewMode='grid'" title="Grid view">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
+            <rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/>
+          </svg>
+        </button>
+        <button class="vt-btn" [class.vt-btn--active]="viewMode==='list'" (click)="viewMode='list'" title="List view">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/>
+            <line x1="8" y1="18" x2="21" y2="18"/>
+            <line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/>
+            <line x1="3" y1="18" x2="3.01" y2="18"/>
+          </svg>
+        </button>
+      </div>
+
+      <a class="btn-new" routerLink="/camping/backoffice/owner/new">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3">
+          <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+        </svg>
+        New Camping
+      </a>
+    </div>
+  </header>
+
+  <!-- Loading Skeletons -->
+  <div class="skeleton-grid" *ngIf="loading">
+    <div class="skeleton-card" *ngFor="let i of [1,2,3,4,5,6]">
+      <div class="sk sk-img"></div>
+      <div class="sk-body">
+        <div class="sk sk-line w55"></div>
+        <div class="sk sk-line w80"></div>
+        <div class="sk sk-line w40"></div>
+        <div class="sk sk-chips"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Empty State -->
+  <div class="empty-state" *ngIf="!loading && campings.length === 0">
+    <div class="empty-state__art">
+      <!-- Your SVG art remains the same -->
+      <svg viewBox="0 0 120 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect x="10" y="60" width="100" height="30" rx="4" fill="#e8f3ec"/>
+        <path d="M60 10L100 60H20L60 10Z" fill="#c4deca"/>
+        <path d="M45 60L60 30L75 60Z" fill="#8cbfa0"/>
+        <rect x="52" y="60" width="16" height="30" rx="2" fill="#5a9e72"/>
+        <circle cx="95" cy="25" r="8" fill="#fde68a"/>
+        <line x1="95" y1="15" x2="95" y2="5" stroke="#fbbf24" stroke-width="2" stroke-linecap="round"/>
+        <line x1="95" y1="35" x2="95" y2="45" stroke="#fbbf24" stroke-width="2" stroke-linecap="round"/>
+        <line x1="85" y1="25" x2="75" y2="25" stroke="#fbbf24" stroke-width="2" stroke-linecap="round"/>
+        <line x1="105" y1="25" x2="115" y2="25" stroke="#fbbf24" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+    </div>
+    <h3 class="empty-state__title">No campings yet</h3>
+    <p class="empty-state__desc">Create your first camping to start accepting reservations.</p>
+    <a class="btn-new btn-new--lg" routerLink="new">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3">
+        <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+      </svg>
+      Create Your First Camping
+    </a>
+  </div>
+
+  <!-- Grid View -->
+  <div class="campings-grid" *ngIf="!loading && campings.length > 0 && viewMode === 'grid'">
+    <article class="c-card" *ngFor="let c of campings; let i = index" [style.animation-delay]="(i * 60) + 'ms'">
+      <div class="c-card__photo">
+        <img [src]="c.photos?.[0] || 'assets/images/camping-placeholder.jpg'" [alt]="c.name" loading="lazy" />
+        <div class="c-card__photo-overlay"></div>
+        <span class="c-card__status" [ngClass]="getStatusClass(c.status)">
+          <span class="dot"></span>{{ c.status }}
+        </span>
+        <button class="c-card__menu-btn" (click)="toggleMenu(c.id!, $event)" aria-label="Actions menu">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+            <circle cx="12" cy="5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="12" cy="19" r="1"/>
+          </svg>
+        </button>
+      </div>
+
+      <div class="c-card__body">
+        <div class="c-card__location">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/>
+          </svg>
+          {{ c.governorate }}
+        </div>
+        <h3 class="c-card__name">{{ c.name }}</h3>
+        <p class="c-card__desc" *ngIf="c.description">
+          {{ c.description | slice:0:85 }}{{ (c.description?.length ?? 0) > 85 ? '…' : '' }}
+        </p>
+
+        <div class="c-card__stats">
+       
+          <div class="c-stat">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/>
+              <path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/>
+            </svg>
+            <span>{{ c.maxCapacity }} guests</span>
+          </div>
+          <div class="c-stat" *ngIf="c.numberOfSpots">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polygon points="12,2 22,20 2,20"/>
+            </svg>
+            <span>{{ c.numberOfSpots }} spots</span>
+          </div>
+        </div>
+
+        <div class="c-card__actions">
+          <a class="ca-btn ca-btn--edit" [routerLink]="['/camping/backoffice/owner', c.id, 'edit']">Edit</a>
+          <a class="ca-btn ca-btn--sec" [routerLink]="['/camping/backoffice/owner', c.id, 'spots']">Spots</a>
+          <a class="ca-btn ca-btn--sec" [routerLink]="['/camping/backoffice/owner', c.id, 'activities']">Activities</a>
+          <a class="ca-btn ca-btn--sec" [routerLink]="['/camping/backoffice/owner', c.id, 'equipment']">Equipment</a>
+          <button class="ca-btn ca-btn--delete" (click)="confirmDelete(c)" title="Delete camping">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1">
+              <polyline points="3,6 5,6 21,6"/>
+              <path d="M19 6l-1 14H6L5 6"/>
+              <path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </article>
+  </div>
+
+  <!-- List View (kept as is) -->
+  <div class="list-wrap" *ngIf="!loading && campings.length > 0 && viewMode === 'list'">
+    <!-- ... your existing list table remains unchanged ... -->
+    <!-- Just make sure the delete button calls confirmDelete(c) -->
+  </div>
+
+</div>

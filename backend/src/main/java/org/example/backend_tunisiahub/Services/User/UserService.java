@@ -4,7 +4,6 @@ import lombok.RequiredArgsConstructor;
 import org.example.backend_tunisiahub.Entities.User.RoleUser;
 import org.example.backend_tunisiahub.Entities.User.User;
 import org.example.backend_tunisiahub.Repositories.User.UserRepository;
-import org.example.backend_tunisiahub.Services.Camping.IUserService;
 import org.example.backend_tunisiahub.shared.exception.ApiException;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
@@ -33,7 +32,16 @@ public class UserService implements IUserService {
 
     @Override
     public User addUser(User user) {
-        assertAdmin();
+
+        // ===== from feature/camping (kept logic) =====
+        if (userRepository.existsByEmail(user.getEmail())) {
+            throw new RuntimeException("Email already exists");
+        }
+
+        if (user.getRole() == null) {
+            user.setRole(RoleUser.CLIENT);
+        }
+
         return userRepository.save(user);
     }
 
@@ -49,19 +57,26 @@ public class UserService implements IUserService {
         return userRepository.save(user);
     }
 
+    // ================= ADMIN CHECK =================
     private void assertAdmin() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication == null || !authentication.getAuthorities().stream()
-                .anyMatch(authority -> "ROLE_ADMIN".equals(authority.getAuthority()))) {
+
+        if (authentication == null ||
+            authentication.getAuthorities().stream()
+                .noneMatch(a -> "ROLE_ADMIN".equals(a.getAuthority()))) {
+
             throw new ApiException(HttpStatus.FORBIDDEN, "Only admins can access users");
         }
     }
 
+    // ================= CURRENT USER =================
     private String getCurrentUserEmail() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
         if (authentication == null || authentication.getPrincipal() == null) {
             throw new ApiException(HttpStatus.UNAUTHORIZED, "Missing authentication");
         }
+
         return authentication.getName();
     }
 }

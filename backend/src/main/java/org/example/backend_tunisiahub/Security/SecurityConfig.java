@@ -1,19 +1,21 @@
 package org.example.backend_tunisiahub.Security;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpMethod;
+import org.example.backend_tunisiahub.Entities.User.User;
+import org.example.backend_tunisiahub.Repositories.User.UserRepository;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.web.cors.CorsConfiguration;
-import org.springframework.web.cors.CorsConfigurationSource;
-import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.springframework.web.cors.*;
 
 import java.util.List;
 
@@ -23,104 +25,142 @@ import java.util.List;
 public class SecurityConfig {
 
     private final JwtFilter jwtFilter;
+    private final UserRepository userRepository;
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+
         http
-                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-                .csrf(csrf -> csrf.disable())
-                .sessionManagement(session ->
-                        session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .authorizeHttpRequests(auth -> auth
-                        // Public routes
-                        .requestMatchers("/api/auth/**").permitAll()
-                        .requestMatchers("/api/accommodations/getAll").permitAll()
-                        .requestMatchers("/api/accommodations/filter").permitAll()
-                        .requestMatchers("/api/accommodations/get/**").permitAll()
-                        .requestMatchers("/api/reviews/getAll").permitAll()
-                        .requestMatchers("/api/reviews/get/**").permitAll()
-                        .requestMatchers("/api/reviews/accommodation/**").permitAll()
-                        .requestMatchers("/api/reviews/add/**").permitAll()
-                        .requestMatchers("/api/accommodation-reservations/check-availability/**").permitAll()
-                        .requestMatchers("/api/accommodation-reservations/reserved-dates/**").permitAll()
-                        .requestMatchers("/api/ai/**").permitAll()
+            .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+            .csrf(csrf -> csrf.disable())
+            .sessionManagement(session ->
+                    session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 
+            .authorizeHttpRequests(auth -> auth
 
-                        // Souvenir shops/products visibility
-                        .requestMatchers(HttpMethod.GET, "/api/souvenir-shops/reviews/owner-summary").hasAnyRole("OWNER", "ADMIN")
-                        .requestMatchers(HttpMethod.GET, "/api/souvenir-shops/souvenir-shops/reviews/owner-summary").hasAnyRole("OWNER", "ADMIN")
-                        .requestMatchers(HttpMethod.GET, "/api/souvenir-shops/reviews/**").hasAnyRole("CLIENT", "OWNER", "ADMIN")
-                        .requestMatchers(HttpMethod.POST, "/api/souvenir-shops/reviews/**").hasRole("CLIENT")
-                        .requestMatchers(HttpMethod.PUT, "/api/souvenir-shops/reviews/**").hasRole("CLIENT")
-                        .requestMatchers(HttpMethod.DELETE, "/api/souvenir-shops/reviews/**").hasAnyRole("CLIENT", "ADMIN")
-                        .requestMatchers(HttpMethod.GET, "/api/souvenir-shops/shops/*/orders").hasAnyRole("OWNER", "ADMIN")
-                        .requestMatchers(HttpMethod.GET, "/api/souvenir-shops/shops/**").hasAnyRole("CLIENT", "OWNER", "ADMIN")
-                        .requestMatchers(HttpMethod.GET, "/api/souvenir-shops/products/**").hasAnyRole("CLIENT", "OWNER", "ADMIN")
+                // ================= SWAGGER =================
+                .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html").permitAll()
 
-                        // Owner/Admin management
-                        .requestMatchers(HttpMethod.POST, "/api/souvenir-shops/shops/**").hasAnyRole("OWNER", "ADMIN")
-                        .requestMatchers(HttpMethod.PUT, "/api/souvenir-shops/shops/**").hasAnyRole("OWNER", "ADMIN")
-                        .requestMatchers(HttpMethod.DELETE, "/api/souvenir-shops/shops/**").hasAnyRole("OWNER", "ADMIN")
-                        .requestMatchers(HttpMethod.POST, "/api/souvenir-shops/products/**").hasAnyRole("OWNER", "ADMIN")
-                        .requestMatchers(HttpMethod.PUT, "/api/souvenir-shops/products/**").hasAnyRole("OWNER", "ADMIN")
-                        .requestMatchers(HttpMethod.DELETE, "/api/souvenir-shops/products/**").hasAnyRole("OWNER", "ADMIN")
-                        .requestMatchers(HttpMethod.POST, "/api/souvenir-shops/promotions/**").hasAnyRole("OWNER", "ADMIN")
+                // ================= AUTH =================
+                .requestMatchers("/api/auth/**").permitAll()
 
-                        // Orders and order items
-                        .requestMatchers(HttpMethod.GET, "/api/souvenir-shops/orders/issues").hasAnyRole("OWNER", "ADMIN")
-                        .requestMatchers(HttpMethod.GET, "/api/souvenir-shops/orders/**").hasAnyRole("CLIENT", "OWNER", "ADMIN")
-                        .requestMatchers(HttpMethod.POST, "/api/souvenir-shops/orders").hasRole("CLIENT")
-                        .requestMatchers(HttpMethod.PUT, "/api/souvenir-shops/orders/*/status").hasAnyRole("OWNER", "ADMIN")
-                        .requestMatchers(HttpMethod.DELETE, "/api/souvenir-shops/orders/**").hasRole("CLIENT")
+                // ================= PUBLIC GETS =================
+                .requestMatchers(HttpMethod.GET, "/api/accommodations/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/reviews/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/campings/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/spots/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/equipements/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/activities/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/lieux/**").permitAll()
 
-                        .requestMatchers(HttpMethod.GET, "/api/souvenir-shops/order-items/**").hasAnyRole("CLIENT", "OWNER", "ADMIN")
-                        .requestMatchers(HttpMethod.POST, "/api/souvenir-shops/order-items/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.PUT, "/api/souvenir-shops/order-items/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.DELETE, "/api/souvenir-shops/order-items/**").hasRole("ADMIN")
+                // ================= USERS =================
+                .requestMatchers("/api/users/**").hasRole("ADMIN")
 
-                        // Payments
-                        .requestMatchers(HttpMethod.GET, "/api/souvenir-shops/payments/**").hasAnyRole("CLIENT", "OWNER", "ADMIN")
-                        .requestMatchers(HttpMethod.POST, "/api/souvenir-shops/payments/**").hasRole("CLIENT")
-                        .requestMatchers(HttpMethod.PUT, "/api/souvenir-shops/payments/**").hasRole("CLIENT")
-                        .requestMatchers(HttpMethod.DELETE, "/api/souvenir-shops/payments/**").hasRole("ADMIN")
+                // ================= ACCOMMODATION RESERVATIONS =================
+                .requestMatchers("/api/accommodation-reservations/**")
+                    .hasAnyRole("CLIENT", "ADMIN")
+                .requestMatchers("/api/accommodation-reservations/statistics")
+                    .hasRole("ADMIN")
 
-                        // Admin only
-                        .requestMatchers("/api/accommodations/add").hasRole("ADMIN")
-                        .requestMatchers("/api/accommodations/update/**").hasRole("ADMIN")
-                        .requestMatchers("/api/accommodations/delete/**").hasRole("ADMIN")
-                        .requestMatchers("/api/users/**").hasRole("ADMIN")
-                        .requestMatchers("/api/accommodation-reservations/statistics").hasRole("ADMIN")
-                        // Authenticated users
-                       // .requestMatchers("/api/reviews/add/**").hasAnyRole("CLIENT", "ADMIN")
-                        .requestMatchers("/api/reviews/update/**").hasAnyRole("CLIENT", "ADMIN")
-                        .requestMatchers("/api/reviews/delete/**").hasAnyRole("CLIENT", "ADMIN")
-                        .requestMatchers("/api/accommodation-reservations/**").hasAnyRole("CLIENT", "ADMIN")
-                        .requestMatchers("/api/accommodation-reservations/my-reservations").hasAnyRole("CLIENT", "ADMIN")
-                        .requestMatchers("/api/history/**").hasAnyRole("CLIENT", "ADMIN")
-                        .requestMatchers("/api/feedback/accommodation/**").permitAll()
-                        .requestMatchers("/api/feedback/**").hasAnyRole("CLIENT", "ADMIN")
-                        .anyRequest().authenticated()
-                )
-                .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
+                // ================= REVIEWS / FEEDBACK =================
+                .requestMatchers("/api/reviews/update/**", "/api/reviews/delete/**")
+                    .hasAnyRole("CLIENT", "ADMIN")
+                .requestMatchers("/api/feedback/**")
+                    .hasAnyRole("CLIENT", "ADMIN")
+                .requestMatchers("/api/feedback/accommodation/**").permitAll()
+
+                // ================= CAMPINGS =================
+                .requestMatchers(HttpMethod.POST, "/api/campings/**").hasAnyRole("OWNER", "ADMIN")
+                .requestMatchers(HttpMethod.PUT, "/api/campings/**").hasAnyRole("OWNER", "ADMIN")
+                .requestMatchers(HttpMethod.DELETE, "/api/campings/**").hasAnyRole("OWNER", "ADMIN")
+
+                // ================= SPOTS =================
+                .requestMatchers(HttpMethod.GET, "/api/spots/**").permitAll()
+                .requestMatchers(HttpMethod.POST, "/api/spots/**").hasAnyRole("OWNER", "ADMIN")
+                .requestMatchers(HttpMethod.PUT, "/api/spots/**").hasAnyRole("OWNER", "ADMIN")
+                .requestMatchers(HttpMethod.DELETE, "/api/spots/**").hasAnyRole("OWNER", "ADMIN")
+
+                // ================= ACTIVITIES =================
+                .requestMatchers(HttpMethod.POST, "/api/activities/template").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.POST, "/api/activities/**").hasAnyRole("OWNER", "ADMIN")
+                .requestMatchers(HttpMethod.PUT, "/api/activities/**").hasAnyRole("OWNER", "ADMIN")
+                .requestMatchers(HttpMethod.DELETE, "/api/activities/**").hasAnyRole("OWNER", "ADMIN")
+
+                // ================= EQUIPMENTS =================
+                .requestMatchers(HttpMethod.POST, "/api/equipements/**").hasAnyRole("OWNER", "ADMIN")
+                .requestMatchers(HttpMethod.PUT, "/api/equipements/**").hasAnyRole("OWNER", "ADMIN")
+                .requestMatchers(HttpMethod.DELETE, "/api/equipements/**").hasAnyRole("OWNER", "ADMIN")
+
+                // ================= RESERVATIONS =================
+                .requestMatchers(HttpMethod.POST, "/api/reservations").hasAnyRole("CLIENT", "ADMIN")
+                .requestMatchers(HttpMethod.GET, "/api/reservations/**").hasAnyRole("CLIENT", "OWNER", "ADMIN")
+                .requestMatchers(HttpMethod.PATCH, "/api/reservations/*/status").hasAnyRole("OWNER", "ADMIN")
+                .requestMatchers(HttpMethod.DELETE, "/api/reservations/*/cancel").hasAnyRole("CLIENT", "ADMIN")
+
+                // ================= PAYMENTS =================
+                .requestMatchers("/api/payments/**").hasAnyRole("OWNER", "ADMIN")
+                .requestMatchers(HttpMethod.POST, "/api/payments/deposit/**").hasAnyRole("CLIENT", "ADMIN")
+                .requestMatchers(HttpMethod.POST, "/api/payments/*/refund").hasAnyRole("CLIENT", "ADMIN")
+                .requestMatchers(HttpMethod.POST, "/api/payments/*/resend").hasAnyRole("CLIENT", "ADMIN")
+
+                // ================= PRICING =================
+                .requestMatchers(HttpMethod.GET, "/api/pricing/**").hasAnyRole("CLIENT", "OWNER", "ADMIN")
+                .requestMatchers(HttpMethod.POST, "/api/pricing/run").hasRole("ADMIN")
+
+                // ================= STRIPE =================
+                .requestMatchers(HttpMethod.POST, "/api/payments/stripe/**").hasAnyRole("CLIENT", "ADMIN")
+
+                // ================= DEFAULT =================
+                .anyRequest().authenticated()
+            )
+
+            .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
 
+    // ================= USER DETAILS =================
+    @Bean
+    public UserDetailsService userDetailsService() {
+        return email -> {
+            User user = userRepository.findByEmail(email);
+            if (user == null)
+                throw new UsernameNotFoundException("User not found: " + email);
+
+            return org.springframework.security.core.userdetails.User
+                    .withUsername(user.getEmail())
+                    .password(user.getMotDePasse())
+                    .roles(user.getRole().name())
+                    .build();
+        };
+    }
+
+    // ================= PASSWORD ENCODER =================
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
 
+    // ================= CORS =================
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOrigins(List.of("http://localhost:4200"));
-        config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+
+        config.setAllowedOriginPatterns(List.of(
+                "http://localhost:4200",
+                "http://192.168.0.*:4200",
+                "https://*.ngrok-free.dev",
+                "https://*.ngrok-free.app",
+                "https://*.ngrok.io"
+        ));
+
+        config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
         config.setAllowedHeaders(List.of("*"));
         config.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", config);
+
         return source;
     }
 }

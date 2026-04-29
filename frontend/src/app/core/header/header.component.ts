@@ -44,6 +44,12 @@ export class HeaderComponent implements OnInit {
     this.isScrolled = window.scrollY > 20;
   }
 
+  // Helper pour simplifier le template
+// Dans le TS
+get currentRole(): string | null {
+  return this.authService.getRole();
+}
+
   logout(): void {
     this.authService.logout();
     this.router.navigate(['/auth/sign-in']);

@@ -20,7 +20,7 @@ export class AuthService {
 
   private baseUrl = 'http://localhost:8089/api/auth';
   private isBrowser: boolean;
-  
+
   private userSubject = new BehaviorSubject<UserState | null>(null);
   public user$ = this.userSubject.asObservable();
 
@@ -32,60 +32,64 @@ export class AuthService {
     this.initializeUserState();
   }
 
+  // ================= INIT =================
   private initializeUserState(): void {
-    if (this.isBrowser) {
-      const token = localStorage.getItem('token');
-      if (token) {
-        this.userSubject.next({
-          token,
-          role: localStorage.getItem('role') as UserRole,
-          email: localStorage.getItem('email'),
-          nom: localStorage.getItem('nom'),
-          prenom: localStorage.getItem('prenom'),
-          userId: localStorage.getItem('userId') ? parseInt(localStorage.getItem('userId')!, 10) : null
-        });
-      }
-    }
+    if (!this.isBrowser) return;
+
+    const token = localStorage.getItem('token');
+    if (!token) return;
+
+    this.userSubject.next({
+      token,
+      role: localStorage.getItem('role') as UserRole,
+      email: localStorage.getItem('email'),
+      nom: localStorage.getItem('nom'),
+      prenom: localStorage.getItem('prenom'),
+      userId: localStorage.getItem('userId')
+        ? parseInt(localStorage.getItem('userId')!, 10)
+        : null
+    });
   }
 
+  // ================= AUTH =================
   login(request: LoginRequest): Observable<AuthResponse> {
-    return this.http.post<AuthResponse>(`${this.baseUrl}/login`, request).pipe(
-      tap(response => this.storeUser(response))
-    );
+    return this.http.post<AuthResponse>(`${this.baseUrl}/login`, request)
+      .pipe(tap(res => this.storeUser(res)));
   }
 
   register(request: RegisterRequest): Observable<AuthResponse> {
-    return this.http.post<AuthResponse>(`${this.baseUrl}/register`, request).pipe(
-      tap(response => this.storeUser(response))
-    );
+    return this.http.post<AuthResponse>(`${this.baseUrl}/register`, request)
+      .pipe(tap(res => this.storeUser(res)));
   }
 
+  // ================= STORE =================
   private storeUser(response: AuthResponse): void {
-    if (this.isBrowser) {
-      localStorage.setItem('token', response.token);
-      localStorage.setItem('role', response.role);
-      localStorage.setItem('email', response.email);
-      localStorage.setItem('nom', response.nom);
-      localStorage.setItem('prenom', response.prenom);
-      if (response.userId) {
-        localStorage.setItem('userId', response.userId.toString());
-      }
-    }
+    if (!this.isBrowser) return;
+
+    localStorage.setItem('token', response.token);
+    localStorage.setItem('role', response.role);
+    localStorage.setItem('email', response.email);
+    localStorage.setItem('nom', response.nom);
+    localStorage.setItem('prenom', response.prenom);
+    localStorage.setItem('userId', response.id.toString());
+
     this.userSubject.next({
       token: response.token,
       role: response.role,
       email: response.email,
       nom: response.nom,
       prenom: response.prenom,
-      userId: response.userId || null
+      userId: response.id
     });
   }
 
+  // ================= LOGOUT =================
   logout(): void {
     if (this.isBrowser) localStorage.clear();
     this.userSubject.next(null);
   }
 
+  // ================= GETTERS =================
   getToken(): string | null {
     return this.userSubject.value?.token || null;
   }
@@ -110,6 +114,7 @@ export class AuthService {
     return this.userSubject.value?.userId || null;
   }
 
+  // ================= CHECKS =================
   isLoggedIn(): boolean {
     return !!this.userSubject.value?.token;
   }
@@ -125,4 +130,4 @@ export class AuthService {
   isClient(): boolean {
     return this.userSubject.value?.role === 'CLIENT';
   }
-}
+}

@@ -1,0 +1,105 @@
+<div class="trendy-container">
+
+  <!-- Hero Section -->
+  <div class="hero-section">
+    <div class="hero-content">
+      <h1 class="hero-title">🗺️ Trendy Places</h1>
+      <p class="hero-subtitle">Découvrez les lieux les plus tendance de Tunisie</p>
+      <div class="search-bar">
+        <input type="text" class="search-input" placeholder="Rechercher un lieu..."
+          [value]="searchTerm" (input)="onSearchChange($any($event.target).value)" />
+        <span class="search-icon">🔍</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <div class="filters-section">
+    <div class="filters-wrapper">
+      <select class="filter-select" (change)="onTypeChange($any($event.target).value)">
+        <option value="">Tous les types</option>
+        <option *ngFor="let type of types" [value]="type">{{ type }}</option>
+      </select>
+      <select class="filter-select" (change)="onVilleChange($any($event.target).value)">
+        <option value="">Toutes les villes</option>
+        <option *ngFor="let ville of villes" [value]="ville">{{ ville }}</option>
+      </select>
+      <a routerLink="/trendy-places/mes-reservations" class="mes-resa-btn">🎟️ Mes Réservations</a>
+      <span class="results-count">{{ filteredLieux.length }} lieu(x) trouvé(s)</span>
+    </div>
+  </div>
+
+  <!-- Loading -->
+  <div *ngIf="loading" class="loading-section">
+    <div class="spinner"></div>
+    <p>Chargement des lieux...</p>
+  </div>
+
+  <!-- Empty -->
+  <div *ngIf="!loading && filteredLieux.length === 0" class="empty-state">
+    <span class="empty-icon">📭</span>
+    <h3>Aucun lieu trouvé</h3>
+    <p>Essayez de modifier vos filtres de recherche</p>
+  </div>
+
+  <!-- Cards Grid -->
+  <div class="cards-grid" *ngIf="!loading && filteredLieux.length > 0">
+    <div class="lieu-card" *ngFor="let lieu of filteredLieux"
+         [class.selected-compare]="isSelectedForCompare(lieu)"
+         (click)="goToDetail(lieu.id)">
+
+      <div class="card-image">
+        <img [src]="getImageUrl(lieu.image)" [alt]="lieu.nom" (error)="onImageError($event)" />
+        <div class="card-badge">{{ getTypeIcon(lieu.type) }} {{ lieu.type }}</div>
+
+        <!-- Checkbox comparateur -->
+        <div class="compare-checkbox" (click)="toggleCompare($event, lieu)"
+             [class.checked]="isSelectedForCompare(lieu)">
+          <span *ngIf="!isSelectedForCompare(lieu)">⊕ Comparer</span>
+          <span *ngIf="isSelectedForCompare(lieu)">✓ Sélectionné</span>
+        </div>
+      </div>
+
+      <div class="card-content">
+        <h3 class="card-title">{{ lieu.nom }}</h3>
+        <div class="card-location"><span>📍</span><span>{{ lieu.ville }}</span></div>
+        <p class="card-description">{{ lieu.description }}</p>
+        <div class="card-footer">
+          <div class="card-hours"><span>🕐</span><span>{{ lieu.horaires }}</span></div>
+          <button class="explore-btn">Explorer →</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Barre de comparaison flottante -->
+  <div class="compare-bar" *ngIf="showCompareBar" [class.visible]="showCompareBar">
+    <div class="compare-bar-inner">
+      <div class="compare-bar-left">
+        <span class="compare-bar-title">⚖️ Comparaison</span>
+        <div class="compare-slots">
+          <div class="compare-slot" *ngFor="let l of selectedForCompare">
+            <img [src]="getImageUrl(l.image)" [alt]="l.nom" (error)="onImageError($event)" />
+            <span>{{ l.nom }}</span>
+            <button class="remove-slot" (click)="toggleCompare($event, l)">✕</button>
+          </div>
+          <div class="compare-slot empty" *ngIf="selectedForCompare.length < 2">
+            <span>+ Ajouter</span>
+          </div>
+          <div class="compare-slot empty" *ngIf="selectedForCompare.length < 3">
+            <span>+ Ajouter</span>
+          </div>
+        </div>
+      </div>
+      <div class="compare-bar-right">
+        <span class="compare-hint">{{ selectedForCompare.length }}/3 lieux</span>
+        <button class="btn-comparer" [disabled]="selectedForCompare.length < 2"
+                (click)="lancerComparaison()">
+          ⚖️ Comparer maintenant
+        </button>
+        <button class="btn-clear-compare" (click)="clearCompare()">✕ Annuler</button>
+      </div>
+    </div>
+  </div>
+
+</div>

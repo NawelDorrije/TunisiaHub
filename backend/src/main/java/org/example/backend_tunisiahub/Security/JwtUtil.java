@@ -1,8 +1,8 @@
 package org.example.backend_tunisiahub.Security;
 
 import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.JwtException;
+import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -23,16 +23,19 @@ public class JwtUtil {
         return Keys.hmacShaKeyFor(secret.getBytes());
     }
 
-    public String generateToken(String email, String role) {
+    // ── Generate token with userId embedded ──────────────────────────────
+    public String generateToken(String email, String role, Long userId) {
         return Jwts.builder()
                 .subject(email)
-                .claim("role", role)
+                .claim("role",   role)
+                .claim("userId", userId)   // ← id embedded in token
                 .issuedAt(new Date())
                 .expiration(new Date(System.currentTimeMillis() + expiration))
                 .signWith(getSigningKey())
                 .compact();
     }
 
+    // ── Extract fields ───────────────────────────────────────────────────
     public String extractEmail(String token) {
         return getClaims(token).getSubject();
     }
@@ -41,6 +44,14 @@ public class JwtUtil {
         return getClaims(token).get("role", String.class);
     }
 
+    public Long extractUserId(String token) {
+        Object id = getClaims(token).get("userId");
+        if (id instanceof Integer) return ((Integer) id).longValue();
+        if (id instanceof Long)    return (Long) id;
+        return null;
+    }
+
+    // ── Validation ───────────────────────────────────────────────────────
     public boolean isTokenValid(String token) {
         try {
             getClaims(token);
@@ -50,6 +61,7 @@ public class JwtUtil {
         }
     }
 
+    // ── Private helper ───────────────────────────────────────────────────
     private Claims getClaims(String token) {
         return Jwts.parser()
                 .verifyWith(getSigningKey())

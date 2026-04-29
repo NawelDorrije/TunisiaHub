@@ -21,10 +21,13 @@ public class AuthController {
     private final JwtUtil jwtUtil;
     private final PasswordEncoder passwordEncoder;
 
+    // ================= REGISTER =================
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody RegisterRequest request) {
-        if (userRepository.findByEmail(request.getEmail()) != null)
+
+        if (userRepository.findByEmail(request.getEmail()) != null) {
             return ResponseEntity.badRequest().body("Email already exists");
+        }
 
         RoleUser selectedRole = resolveRegistrationRole(request.getRole());
         if (selectedRole == null) {
@@ -38,30 +41,44 @@ public class AuthController {
         user.setMotDePasse(passwordEncoder.encode(request.getPassword()));
         user.setRole(selectedRole);
 
-        userRepository.save(user);
+        User savedUser = userRepository.save(user);
 
-        String token = jwtUtil.generateToken(user.getEmail(), user.getRole().name());
+        String token = jwtUtil.generateToken(
+                savedUser.getEmail(),
+                savedUser.getRole().name(),
+                savedUser.getId()
+        );
+
         return ResponseEntity.ok(new AuthResponse(
-                user.getId(),
+                savedUser.getId(),
                 token,
-                user.getRole().name(),
-                user.getEmail(),
-                user.getNom(),
-                user.getPrenom()
+                savedUser.getRole().name(),
+                savedUser.getEmail(),
+                savedUser.getNom(),
+                savedUser.getPrenom()
         ));
     }
 
+    // ================= LOGIN =================
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequest request) {
+
         User user = userRepository.findByEmail(request.getEmail());
 
-        if (user == null)
+        if (user == null) {
             return ResponseEntity.status(404).body("User not found");
+        }
 
-        if (!passwordEncoder.matches(request.getPassword(), user.getMotDePasse()))
+        if (!passwordEncoder.matches(request.getPassword(), user.getMotDePasse())) {
             return ResponseEntity.status(401).body("Invalid password");
+        }
 
-        String token = jwtUtil.generateToken(user.getEmail(), user.getRole().name());
+        String token = jwtUtil.generateToken(
+                user.getEmail(),
+                user.getRole().name(),
+                user.getId()
+        );
+
         return ResponseEntity.ok(new AuthResponse(
                 user.getId(),
                 token,
@@ -72,6 +89,7 @@ public class AuthController {
         ));
     }
 
+    // ================= ROLE HELPER =================
     private RoleUser resolveRegistrationRole(String roleValue) {
         if (roleValue == null || roleValue.isBlank()) {
             return RoleUser.CLIENT;
@@ -79,10 +97,13 @@ public class AuthController {
 
         try {
             RoleUser role = RoleUser.valueOf(roleValue.trim().toUpperCase());
+
             if (role == RoleUser.ADMIN) {
                 return null;
             }
+
             return role;
+
         } catch (IllegalArgumentException ex) {
             return null;
         }

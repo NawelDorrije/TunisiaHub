@@ -5,6 +5,8 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import org.example.backend_tunisiahub.Entities.User.User;
+import org.example.backend_tunisiahub.Repositories.User.UserRepository;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -19,6 +21,7 @@ import java.util.List;
 public class JwtFilter extends OncePerRequestFilter {
 
     private final JwtUtil jwtUtil;
+    private final UserRepository userRepository; // ← inject to get user id
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
@@ -33,16 +36,29 @@ public class JwtFilter extends OncePerRequestFilter {
 
             if (jwtUtil.isTokenValid(token)) {
                 String email = jwtUtil.extractEmail(token);
-                String role = jwtUtil.extractRole(token);
+                String role  = jwtUtil.extractRole(token);
 
-                UsernamePasswordAuthenticationToken authentication =
-                        new UsernamePasswordAuthenticationToken(
-                                email,
-                                null,
-                                List.of(new SimpleGrantedAuthority("ROLE_" + role))
-                        );
+                // ── Fetch user to get the real DB id ──────────────────────
+                User user = userRepository.findByEmail(email);
 
-                SecurityContextHolder.getContext().setAuthentication(authentication);
+                if (user != null) {
+                    // ── Wrap request to inject custom headers ──────────────
+                    MutableHttpServletRequest mutableRequest =
+                            new MutableHttpServletRequest(request);
+                    mutableRequest.putHeader("X-USER-ID", String.valueOf(user.getId()));
+                    mutableRequest.putHeader("X-ROLE", role);
+
+                    UsernamePasswordAuthenticationToken authentication =
+                            new UsernamePasswordAuthenticationToken(
+                                    email,
+                                    null,
+                                    List.of(new SimpleGrantedAuthority("ROLE_" + role))
+                            );
+                    SecurityContextHolder.getContext().setAuthentication(authentication);
+
+                    filterChain.doFilter(mutableRequest, response); // ← use mutable
+                    return;
+                }
             }
         }
 

@@ -1,0 +1,350 @@
+<div class="dashboard">
+
+  <!-- ── Top bar ──────────────────────────────────────────────────── -->
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="brand-row">
+        <span class="brand-dot"></span>
+        <span class="brand-label">Owner Portal</span>
+      </div>
+      <h1 class="page-title">My Camping Empire</h1>
+      <p class="page-sub">{{ today | date:'EEEE, MMMM d, y' }}</p>
+    </div>
+    <div class="topbar-right">
+      <button class="btn-primary"
+        (click)="navigate(['/camping/backoffice/owner/new'])">
+        + New Camping
+      </button>
+    </div>
+  </div>
+
+  <!-- ── Filter bar ───────────────────────────────────────────────── -->
+  <div class="filter-bar">
+    <svg class="filter-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <polygon points="22,3 2,3 10,12.46 10,19 14,21 14,12.46 22,3"/>
+    </svg>
+    <select [(ngModel)]="selectedCampingId" (change)="onFilterChange()" class="f-select">
+      <option [ngValue]="null">All campings</option>
+      <option *ngFor="let c of campings" [ngValue]="c.id">{{ c.name }}</option>
+    </select>
+    <div class="f-divider"></div>
+    <select [(ngModel)]="selectedStatus" (change)="onFilterChange()" class="f-select">
+      <option value="">All statuses</option>
+      <option value="PENDING">Pending</option>
+      <option value="CONFIRMED">Confirmed</option>
+      <option value="ACTIVE">Active</option>
+      <option value="COMPLETED">Completed</option>
+      <option value="CANCELLED">Cancelled</option>
+    </select>
+    <div class="f-divider"></div>
+    <input type="date" [(ngModel)]="dateFrom" (change)="onFilterChange()" class="f-select f-date" />
+    <div class="f-divider"></div>
+    <input type="date" [(ngModel)]="dateTo"   (change)="onFilterChange()" class="f-select f-date" />
+    <button class="btn-reset" (click)="resetFilters()">Reset</button>
+  </div>
+
+  <!-- ── Loading ──────────────────────────────────────────────────── -->
+  <div class="loading-wrap" *ngIf="loading">
+    <div class="spinner"></div>
+    <p>Loading dashboard…</p>
+  </div>
+
+  <ng-container *ngIf="!loading">
+
+    <!-- ── KPI grid ──────────────────────────────────────────────── -->
+    <div class="kpi-grid">
+      <div class="kpi-card" *ngFor="let k of kpis">
+        <div class="kpi-top">
+          <div class="kpi-icon" [style.background]="k.iconBg">
+            <ng-container [ngSwitch]="k.label">
+              <svg *ngSwitchCase="'My campings'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9,22 9,12 15,12 15,22"/></svg>
+              <svg *ngSwitchCase="'Total spots'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+              <svg *ngSwitchCase="'Reservations'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><path d="M8 14l3 3 5-5"/></svg>
+              <svg *ngSwitchCase="'Revenue (TND)'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+              <svg *ngSwitchCase="'Pending payments'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12,6 12,12 16,14"/></svg>
+              <svg *ngSwitchCase="'Occupancy rate'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
+              <svg *ngSwitchCase="'Activities'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polygon points="10,8 16,12 10,16 10,8"/></svg>
+              <svg *ngSwitchDefault viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+            </ng-container>
+          </div>
+          <span *ngIf="k.change" class="kpi-pill"
+                [class.pill-up]="k.changeUp === true"
+                [class.pill-dn]="k.changeUp === false">
+            {{ k.changeUp === true ? '▲' : k.changeUp === false ? '▼' : '' }} {{ k.change }}
+          </span>
+        </div>
+        <div class="kpi-val">{{ k.value }}</div>
+        <div class="kpi-label">{{ k.label }}</div>
+        <div class="kpi-sub">{{ k.sub }}</div>
+      </div>
+    </div>
+
+    <!-- ── Revenue line + Occupancy donut ────────────────────────── -->
+    <div class="row-wide">
+      <div class="panel">
+        <div class="panel-hdr">
+          <div>
+            <div class="panel-title">Revenue trend</div>
+            <div class="panel-sub">Last 7 days · TND</div>
+          </div>
+        </div>
+        <div class="chart-wrap" style="height:200px;">
+          <canvas id="revChart" role="img"
+            aria-label="Line chart of revenue over the last 7 days">
+            Revenue for the last 7 days.
+          </canvas>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-hdr">
+          <div class="panel-title">Occupancy</div>
+          <div class="panel-sub">tonight</div>
+        </div>
+        <div class="chart-wrap" style="height:148px;">
+          <canvas id="occChart" role="img"
+            aria-label="Doughnut chart of current spot occupancy">
+            {{ occupancyData[0] }} occupied, {{ occupancyData[1] }} free.
+          </canvas>
+        </div>
+        <div class="chart-legend">
+          <span><span class="legend-dot" style="background:#3B6D11;"></span>Occupied {{ occupancyData[0] }}</span>
+          <span><span class="legend-dot" style="background:#D3D1C7;"></span>Free {{ occupancyData[1] }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Reservations bar + Top spots ──────────────────────────── -->
+    <div class="row-half">
+      <div class="panel">
+        <div class="panel-hdr">
+          <div class="panel-title">Reservations / day</div>
+          <div class="panel-sub">last 7 days</div>
+        </div>
+        <div class="chart-wrap" style="height:168px;">
+          <canvas id="resChart" role="img"
+            aria-label="Bar chart of reservations per day">
+            Daily reservation counts.
+          </canvas>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-hdr">
+          <div class="panel-title">Top spots</div>
+          <div class="panel-sub">by reservations</div>
+        </div>
+        <div class="chart-wrap" [style.height.px]="topSpotChartHeight">
+          <canvas id="spotChart" role="img"
+            aria-label="Horizontal bar chart of top spots by reservation count">
+            Top spots reservation counts.
+          </canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Type breakdown + Quick actions ────────────────────────── -->
+    <div class="row-half">
+      <div class="panel">
+        <div class="panel-hdr"><div class="panel-title">Spot type breakdown</div></div>
+
+        <div *ngIf="spotsByType.length; else noSpots">
+          <div class="bar-row" *ngFor="let s of spotsByType">
+            <span class="bar-icon">{{ getSpotTypeIcon(s.type) }}</span>
+            <span class="bar-lbl">{{ s.type | titlecase }}</span>
+            <div class="bar-track">
+              <div class="bar-fill"
+                [style.width.%]="(s.count / (allSpots.length || 1)) * 100">
+              </div>
+            </div>
+            <span class="bar-ct">{{ s.count }}</span>
+          </div>
+        </div>
+        <ng-template #noSpots>
+          <div class="empty-state">No spots configured yet.</div>
+        </ng-template>
+
+        <div class="sig-row">
+          <div class="sig-chip">
+            <div class="sig-lbl">AI price boost</div>
+            <div class="sig-val" [class.sig-pos]="avgPriceBoost > 0">
+              {{ avgPriceBoost > 0 ? '+' : '' }}{{ avgPriceBoost }}%
+            </div>
+          </div>
+          <div class="sig-chip">
+            <div class="sig-lbl">Spots priced</div>
+            <div class="sig-val">{{ pricedSpotsLabel }}</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-hdr"><div class="panel-title">Quick actions</div></div>
+        <div class="qa-grid">
+          <button class="qa-card" (click)="navigate(['/camping/backoffice/owner/new'])">
+            <span class="qa-icon" style="background:#EAF3DE;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#3B6D11" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>
+            </span>
+            New camping
+          </button>
+          <button class="qa-card" (click)="navigateToSpots()">
+            <span class="qa-icon" style="background:#E6F1FB;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#0C447C" stroke-width="2"><path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+            </span>
+            Spots
+          </button>
+          <button class="qa-card" (click)="navigate(['/camping/backoffice/owner/activity-management'])">
+            <span class="qa-icon" style="background:#E1F5EE;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#0F6E56" stroke-width="2"><circle cx="12" cy="12" r="10"/><polygon points="10,8 16,12 10,16 10,8"/></svg>
+            </span>
+            Activities
+          </button>
+          <button class="qa-card" (click)="navigate(['/camping/backoffice/owner/equipment-management'])">
+            <span class="qa-icon" style="background:#FAEEDA;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#633806" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></svg>
+            </span>
+            Equipment
+          </button>
+          <button class="qa-card" (click)="navigate(['/camping/backoffice/owner/reservations'])">
+            <span class="qa-icon" style="background:#EEEDFE;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#534AB7" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            </span>
+            Reservations
+          </button>
+          <button class="qa-card" (click)="navigate(['/camping/backoffice/owner/payments'])">
+            <span class="qa-icon" style="background:#FCEBEB;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#791F1F" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+            </span>
+            Payments
+          </button>
+        </div>
+
+        <div class="panel-hdr" style="margin-top:1.35rem;">
+          <div class="panel-title">My campings</div>
+          <a class="view-link" (click)="navigate(['/camping/backoffice/owner/my-campings'])">Manage →</a>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>Name</th><th>Governorate</th><th>Status</th><th></th></tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let c of campings">
+                <td class="td-name">{{ c.name }}</td>
+                <td class="td-muted">{{ c.governorate }}</td>
+                <td>
+                  <span class="badge" [ngClass]="'b-' + c.status.toLowerCase()">
+                    {{ c.status }}
+                  </span>
+                </td>
+                <td>
+                  <button class="btn-sm" (click)="navigateToCampingSpots(c.id)">Spots</button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Spot performance ───────────────────────────────────────── -->
+    <div class="panel section-panel">
+      <div class="panel-hdr">
+        <div>
+          <div class="panel-title">Spot performance</div>
+          <div class="panel-sub">revenue · reservations · AI dynamic price</div>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table *ngIf="spotPerformance.length; else noPerf">
+          <thead>
+            <tr>
+              <th>Spot</th><th>Camping</th><th>Bookings</th>
+              <th>Revenue</th><th>Base price</th>
+              <th>Dynamic price</th><th>AI boost</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let s of spotPerformance">
+              <td class="td-name">{{ s.name }}</td>
+              <td class="td-muted">{{ s.campingName }}</td>
+              <td><strong>{{ s.reservations }}</strong></td>
+              <td><strong>{{ s.revenue | number }} TND</strong></td>
+              <td class="td-muted">{{ s.basePrice | number:'1.2-2' }}</td>
+              <td>
+                <span *ngIf="s.dynamicPrice">{{ s.dynamicPrice | number:'1.2-2' }}</span>
+                <span *ngIf="!s.dynamicPrice" class="td-muted">—</span>
+              </td>
+              <td>
+                <span *ngIf="s.multiplier" class="price-badge"
+                      [class.price-up]="s.multiplier > 1">
+                  {{ getPriceLevelIcon(s.multiplier) }}
+                  {{ s.multiplier > 1 ? '+' : '' }}{{ ((s.multiplier - 1) * 100) | number:'1.0-0' }}%
+                </span>
+                <span *ngIf="!s.multiplier" class="td-muted">—</span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        <ng-template #noPerf>
+          <div class="empty-state">No spot data yet.</div>
+        </ng-template>
+      </div>
+    </div>
+
+    <!-- ── Recent reservations ────────────────────────────────────── -->
+    <div class="panel section-panel">
+      <div class="panel-hdr">
+        <div class="panel-title">Recent reservations</div>
+        <a class="view-link" (click)="navigate(['/camping/backoffice/owner/reservations'])">View all →</a>
+      </div>
+      <div class="table-wrap">
+        <table *ngIf="recentReservations.length; else noRes">
+          <thead>
+            <tr>
+              <th>#</th><th>Guest</th><th>Spot</th><th>Camping</th>
+              <th>Check-in</th><th>Check-out</th><th>Guests</th>
+              <th>Total</th><th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let r of recentReservations">
+              <td class="td-muted">#{{ r.id }}</td>
+              <td class="td-name">{{ r.userName || r.userId }}</td>
+              <td>{{ r.spotName || '—' }}</td>
+              <td class="td-muted">{{ r.campingName || '—' }}</td>
+              <td>{{ r.checkIn | date:'dd/MM/yy' }}</td>
+              <td>{{ r.checkOut | date:'dd/MM/yy' }}</td>
+              <td>{{ r.numberOfGuests }}</td>
+              <td><strong>{{ r.totalPrice | number }} TND</strong></td>
+              <td>
+                <span class="badge" [ngClass]="getStatusClass(r.status || '')">
+                  {{ r.status }}
+                </span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        <ng-template #noRes>
+          <div class="empty-state">No reservations yet.</div>
+        </ng-template>
+      </div>
+    </div>
+
+    <!-- ── Top activities ─────────────────────────────────────────── -->
+    <div class="panel section-panel" *ngIf="topActivities.length">
+      <div class="panel-hdr"><div class="panel-title">Most booked activities</div></div>
+      <div class="bar-row" *ngFor="let a of topActivities">
+        <span class="bar-icon">🎯</span>
+        <span class="bar-lbl">{{ a.name }}</span>
+        <div class="bar-track">
+          <div class="bar-fill" style="background:#0F6E56;"
+            [style.width.%]="(a.count / (topActivities[0].count || 1)) * 100">
+          </div>
+        </div>
+        <span class="bar-ct">{{ a.count }}</span>
+      </div>
+    </div>
+
+  </ng-container>
+</div>

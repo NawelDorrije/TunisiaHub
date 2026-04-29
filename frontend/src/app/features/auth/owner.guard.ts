@@ -13,10 +13,20 @@ export class OwnerGuard implements CanActivate {
   ) {}
 
   canActivate(): boolean {
-    if (this.authService.isOwner()) {
+
+    // ===== OWNER or ADMIN allowed =====
+    if (this.authService.isOwner() || this.authService.isAdmin()) {
       return true;
     }
-    this.router.navigate(['/home']);
+
+    // ===== LOGGED IN but not owner/admin =====
+    if (this.authService.isLoggedIn()) {
+      this.router.navigate(['/home']); // CLIENT → frontoffice
+      return false;
+    }
+
+    // ===== NOT LOGGED IN =====
+    this.router.navigate(['/auth/sign-in']);
     return false;
   }
 }

@@ -24,16 +24,16 @@ export class SignUpComponent {
     role: new FormControl('CLIENT', Validators.required)
   });
 
-  get f() {
-    return this.signUpForm.controls;
-  }
-
   constructor(
     private authService: AuthService,
     private router: Router,
     private route: ActivatedRoute
   ) {
     this.returnUrl = this.route.snapshot.queryParamMap.get('returnUrl');
+  }
+
+  get f() {
+    return this.signUpForm.controls;
   }
 
   onSubmit(): void {
@@ -54,10 +54,14 @@ export class SignUpComponent {
     }).subscribe({
       next: () => {
         this.isLoading = false;
+
+        // 1️⃣ if redirected from protected page
         if (this.returnUrl && this.returnUrl.startsWith('/')) {
           this.router.navigateByUrl(this.returnUrl);
           return;
         }
+
+        // 2️⃣ default behavior after signup
         this.router.navigate(['/home']);
       },
       error: (err) => {
@@ -67,5 +71,3 @@ export class SignUpComponent {
     });
   }
 }
-
-
