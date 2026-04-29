@@ -7,7 +7,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
-
+//fix code
 @Configuration
 public class WebCorsConfig implements WebMvcConfigurer {
 
