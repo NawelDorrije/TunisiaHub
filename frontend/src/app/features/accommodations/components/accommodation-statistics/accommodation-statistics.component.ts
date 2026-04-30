@@ -1,6 +1,5 @@
 import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
 import { Router } from '@angular/router';
-import { ReservationService } from '../../services/reservation.service';
 import { AccommodationStats } from '../../../../models/accommodations/statistics.model';
 import {
   ApexChart,
@@ -14,6 +13,7 @@ import {
 } from 'ng-apexcharts';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
+import { ReservationService } from '../../../../services/reservation.service';
 @Component({
   selector: 'app-accommodation-statistics',
   templateUrl: './accommodation-statistics.component.html',

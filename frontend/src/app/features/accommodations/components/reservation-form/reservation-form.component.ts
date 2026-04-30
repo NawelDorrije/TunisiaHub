@@ -1,12 +1,15 @@
 import { Component, Input, OnInit, PLATFORM_ID, Inject } from '@angular/core';
-import { isPlatformBrowser } from '@angular/common';
-import { FormControl, FormGroup, Validators } from '@angular/forms';
-import { ReservationService } from '../../services/reservation.service';
+import { CommonModule, isPlatformBrowser } from '@angular/common';
+import { FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { AuthService } from '../../../auth/services/auth.service';
 import { ReservedDateRange } from '../../../../models/accommodations/reservation.model';
+import { ReservationService } from '../../../../services/reservation.service';
+import { FeedbackPopupComponent } from '../feedback-popup/feedback-popup.component';
 
 @Component({
   selector: 'app-reservation-form',
+  standalone: true,
+  imports: [CommonModule, ReactiveFormsModule, FormsModule, FeedbackPopupComponent], // ← added both
   templateUrl: './reservation-form.component.html',
   styleUrls: ['./reservation-form.component.css']
 })

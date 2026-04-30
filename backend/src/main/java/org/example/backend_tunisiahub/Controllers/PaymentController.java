@@ -32,7 +32,7 @@ import java.util.List;
  *   GET  /api/payments
  *   POST /api/payments/{id}/resend
  */
-@RestController
+@RestController("campingPaymentController")
 @RequestMapping("/api/payments")
 public class PaymentController {
 

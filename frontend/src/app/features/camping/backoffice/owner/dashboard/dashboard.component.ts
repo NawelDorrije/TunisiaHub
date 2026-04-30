@@ -99,7 +99,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
-     const id = this.authService.getId();
+     const id = this.authService.getUserId();
     if (!id) {
       this.router.navigate(['/auth/sign-in']);
       return;
@@ -170,7 +170,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
       : 0;
 
     const resBySpot: Record<number, number> = {};
-    filteredRes.forEach(r => { resBySpot[r.spotId] = (resBySpot[r.spotId] || 0) + 1; });
+    filteredRes.forEach(r => { resBySpot[r.spotId!] = (resBySpot[r.spotId!] || 0) + 1; });
     const topSpotId = Object.entries(resBySpot).sort((a, b) => b[1] - a[1])[0]?.[0];
     const topSpot   = spots.find(s => s.id === Number(topSpotId));
 
@@ -340,11 +340,11 @@ export class DashboardComponent implements OnInit, OnDestroy {
       const ids = new Set(
         this.allSpots.filter(s => s.campingId === this.selectedCampingId).map(s => s.id!)
       );
-      res = res.filter(r => ids.has(r.spotId));
+      res = res.filter(r => ids.has(r.spotId!));
     }
     if (this.selectedStatus) res = res.filter(r => r.status === this.selectedStatus);
-    if (this.dateFrom)       res = res.filter(r => r.checkIn >= this.dateFrom);
-    if (this.dateTo)         res = res.filter(r => r.checkIn <= this.dateTo);
+    if (this.dateFrom)       res = res.filter(r => r.checkIn! >= this.dateFrom);
+    if (this.dateTo)         res = res.filter(r => r.checkIn! <= this.dateTo);
     return res;
   }
 

@@ -1,9 +1,9 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { ReservationRequest, ReservationResponse, ReservedDateRange } from '../../../models/accommodations/reservation.model';
-import { FeedbackRequest, FeedbackResponse } from '../../../models/accommodations/feedback.model';
-import { AccommodationStats } from '../../../models/accommodations/statistics.model';
+import { ReservationRequest, ReservationResponse, ReservedDateRange } from '../models/accommodations/reservation.model';
+import { FeedbackRequest, FeedbackResponse } from '../models/accommodations/feedback.model';
+import { AccommodationStats } from '../models/accommodations/statistics.model';
 
 @Injectable({
   providedIn: 'root'

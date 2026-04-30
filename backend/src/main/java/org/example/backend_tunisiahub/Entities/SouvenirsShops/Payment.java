@@ -22,7 +22,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
 
-@Entity
+@Entity(name = "SouvenirShopPayment")
 @Table(name = "payments")
 @Getter
 @Setter

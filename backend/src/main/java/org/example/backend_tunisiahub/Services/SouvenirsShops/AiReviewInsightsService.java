@@ -154,6 +154,8 @@ public class AiReviewInsightsService {
                 parsed.path("mainProblem").asText(fallback.getMainProblem()),
                 parsed.path("mostFrequentProblem").asText(fallback.getMostFrequentProblem()),
                 bestFeatures,
+                fallback.getShopReviews(),
+                fallback.getProductReviews(),
                 true
         );
     }
@@ -339,6 +341,8 @@ public class AiReviewInsightsService {
                 mainProblem,
                 mostFrequentProblem,
                 strengthKeywords,
+                shopReviews,
+                productReviews,
                 false
         );
     }

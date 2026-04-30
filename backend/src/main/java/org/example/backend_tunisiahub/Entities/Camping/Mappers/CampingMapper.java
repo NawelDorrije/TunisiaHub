@@ -27,6 +27,7 @@ public class CampingMapper {
                 .averageRating(camping.getAverageRating())
                 .numberOfSpots(camping.getNumberOfSpots())
                 .maxCapacity(camping.getMaxCapacity())
+                .price(camping.getPrice())
                 .status(camping.getStatus())
                 .rules(camping.getRules())
                 .checkInTime(camping.getCheckInTime())
@@ -51,6 +52,7 @@ public class CampingMapper {
         camping.setLatitude(dto.getLatitude());
         camping.setLongitude(dto.getLongitude());
         camping.setMaxCapacity(dto.getMaxCapacity());
+        camping.setPrice(dto.getPrice() != null ? dto.getPrice() : java.math.BigDecimal.ZERO);
         camping.setStatus(dto.getStatus());
         camping.setRules(dto.getRules());
         camping.setCheckInTime(dto.getCheckInTime());
@@ -72,6 +74,7 @@ public class CampingMapper {
         camping.setLatitude(dto.getLatitude());
         camping.setLongitude(dto.getLongitude());
         camping.setMaxCapacity(dto.getMaxCapacity());
+        camping.setPrice(dto.getPrice() != null ? dto.getPrice() : java.math.BigDecimal.ZERO);
         camping.setStatus(dto.getStatus());
         camping.setRules(dto.getRules());
         camping.setCheckInTime(dto.getCheckInTime());

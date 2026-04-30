@@ -110,7 +110,7 @@ export class ReservationFormComponent implements OnInit, OnDestroy {
   // ── Lifecycle ────────────────────────────────────────────────────────────
 
   ngOnInit(): void {
-    const id = this.authService.getId();
+    const id = this.authService.getUserId();
     if (!id) { this.router.navigate(['/auth/sign-in']); return; }
     this.clientId = id;
     this.buildForms();

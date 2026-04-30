@@ -4,6 +4,7 @@ import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.example.backend_tunisiahub.Entities.SouvenirsShops.Review;
 
 @Data
 @NoArgsConstructor
@@ -20,5 +21,7 @@ public class OwnerReviewInsightsResponse {
     private String mainProblem;
     private String mostFrequentProblem;
     private List<String> bestFeatures;
+    private List<Review> shopReviews;
+    private List<Review> productReviews;
     private boolean generatedWithAi;
 }

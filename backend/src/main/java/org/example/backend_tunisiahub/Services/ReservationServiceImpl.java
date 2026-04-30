@@ -7,6 +7,7 @@ import org.example.backend_tunisiahub.Entities.Camping.Mappers.ReservationMapper
 import org.example.backend_tunisiahub.Entities.Camping.Spot;
 import org.example.backend_tunisiahub.Entities.Camping.Enums.SpotStatus;
 import org.example.backend_tunisiahub.Entities.Reservation;
+import org.example.backend_tunisiahub.Entities.ReservationType;
 import org.example.backend_tunisiahub.Entities.User.User;
 import org.example.backend_tunisiahub.Repositories.Camping.ActivityRepository;
 import org.example.backend_tunisiahub.Repositories.Camping.SpotRepository;
@@ -127,6 +128,7 @@ public class ReservationServiceImpl implements IReservationService {
                 .numberOfGuests(dto.getNumberOfGuests())
                 .totalPrice(totalPrice)
                 .status(ReservationStatus.PENDING)
+                .type(ReservationType.CampingReservation)
                 .notes(dto.getNotes())
                 .build();
 

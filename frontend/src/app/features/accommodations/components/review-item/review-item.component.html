@@ -9,7 +9,7 @@
         <p class="fw-bold mb-0">
           {{ review.user ? review.user.nom + ' ' + review.user.prenom : 'Anonymous' }}
         </p>
-        <small class="text-muted">{{ review.reviewDate }}</small>
+        <small class="text-muted">{{ review.createdAt | date:'medium' }}</small>
       </div>
 
       <!-- Actions — only for owner -->

@@ -7,7 +7,7 @@ import org.example.backend_tunisiahub.Entities.SouvenirsShops.PaymentStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
-@Repository
+@Repository("souvenirShopPaymentRepository")
 public interface PaymentRepository extends JpaRepository<Payment, Long> {
     List<Payment> findByOrderIdOrderByCreatedAtDesc(Long orderId);
 

@@ -98,17 +98,16 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.DELETE, "/api/reservations/*/cancel").hasAnyRole("CLIENT", "ADMIN")
 
                 // ================= PAYMENTS =================
-                .requestMatchers("/api/payments/**").hasAnyRole("OWNER", "ADMIN")
+                .requestMatchers(HttpMethod.POST, "/api/payments/stripe/**").hasAnyRole("CLIENT", "ADMIN")
+                .requestMatchers(HttpMethod.GET, "/api/payments/stripe/**").hasAnyRole("CLIENT", "ADMIN")
                 .requestMatchers(HttpMethod.POST, "/api/payments/deposit/**").hasAnyRole("CLIENT", "ADMIN")
                 .requestMatchers(HttpMethod.POST, "/api/payments/*/refund").hasAnyRole("CLIENT", "ADMIN")
                 .requestMatchers(HttpMethod.POST, "/api/payments/*/resend").hasAnyRole("CLIENT", "ADMIN")
+                .requestMatchers("/api/payments/**").hasAnyRole("OWNER", "ADMIN")
 
                 // ================= PRICING =================
                 .requestMatchers(HttpMethod.GET, "/api/pricing/**").hasAnyRole("CLIENT", "OWNER", "ADMIN")
                 .requestMatchers(HttpMethod.POST, "/api/pricing/run").hasRole("ADMIN")
-
-                // ================= STRIPE =================
-                .requestMatchers(HttpMethod.POST, "/api/payments/stripe/**").hasAnyRole("CLIENT", "ADMIN")
 
                 // ================= DEFAULT =================
                 .anyRequest().authenticated()

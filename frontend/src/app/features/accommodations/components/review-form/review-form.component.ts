@@ -1,6 +1,8 @@
 import { Component, EventEmitter, Input, OnChanges, Output, SimpleChanges } from '@angular/core';
-import { FormControl, FormGroup, Validators } from '@angular/forms';
-import { Review } from '../../../../models/accommodations/review.model';
+import { CommonModule } from '@angular/common';
+import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+
+import { Review } from '../../../admin-dashboard/services/admin-review.service';
 import { ReviewService } from '../../services/review.service';
 
 @Component({
@@ -55,7 +57,7 @@ export class ReviewFormComponent implements OnChanges {
     this.errorMessage = '';
     this.successMessage = '';
 
-    const review: Review = {
+    const review: Pick<Review, 'rating' | 'comment'> = {
       rating: this.reviewForm.value.rating!,
       comment: this.reviewForm.value.comment!
     };

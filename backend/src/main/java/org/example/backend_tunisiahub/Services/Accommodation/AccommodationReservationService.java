@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.example.backend_tunisiahub.Controllers.Accommodation.AccommodationStatsDTO;
 import org.example.backend_tunisiahub.Entities.Accommodation.Accommodation;
 import org.example.backend_tunisiahub.Entities.Accommodation.AccommodationReview;
+import org.example.backend_tunisiahub.Entities.Camping.Enums.ReservationStatus;
 import org.example.backend_tunisiahub.Entities.Reservation;
 import org.example.backend_tunisiahub.Entities.ReservationType;
 import org.example.backend_tunisiahub.Entities.User.User;
@@ -13,6 +14,7 @@ import org.example.backend_tunisiahub.Repositories.Accommodation.ReviewRepositor
 import org.example.backend_tunisiahub.Repositories.User.UserRepository;
 import org.example.backend_tunisiahub.Services.Accommodation.Notification.ReservationEmailService;
 import org.springframework.stereotype.Service;
+import java.math.BigDecimal;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -48,13 +50,14 @@ public class AccommodationReservationService implements IAccommodationReservatio
         // Calculate total price
         long diffInMillis = reservation.getEndDate().getTime() - reservation.getStartDate().getTime();
         long nights = TimeUnit.MILLISECONDS.toDays(diffInMillis);
-        double totalPrice = nights * accommodation.getPrice();
+        BigDecimal totalPrice = BigDecimal.valueOf(accommodation.getPrice())
+                .multiply(BigDecimal.valueOf(nights));
 
         // Set reservation fields
         reservation.setAccommodation(accommodation);
         reservation.setUser(user);
         reservation.setTotalPrice(totalPrice);
-        reservation.setStatus("CONFIRMED");
+        reservation.setStatus(ReservationStatus.CONFIRMED);
         reservation.setType(ReservationType.accommodationReservation);
         reservation.setReminderStatus("PENDING");
         reservation.setReminderSentAt(null);
@@ -80,7 +83,7 @@ public class AccommodationReservationService implements IAccommodationReservatio
     public Reservation cancelReservation(Long reservationId) {
         Reservation reservation = reservationRepository.findById(reservationId).orElse(null);
         if (reservation == null) return null;
-        reservation.setStatus("CANCELLED");
+        reservation.setStatus(ReservationStatus.CANCELLED);
                 reservation.setReminderStatus("CANCELLED");
                 reservation.setReminderError(null);
         return reservationRepository.save(reservation);
@@ -90,7 +93,7 @@ public class AccommodationReservationService implements IAccommodationReservatio
     public List<Map<String, Date>> getReservedDates(Long accommodationId) {
         return reservationRepository.findByAccommodationId(accommodationId)
                 .stream()
-                .filter(r -> r.getStatus().equals("CONFIRMED"))
+                .filter(r -> r.getStatus() == ReservationStatus.CONFIRMED)
                 .map(r -> {
                     Map<String, Date> range = new HashMap<>();
                     range.put("startDate", r.getStartDate());
@@ -124,7 +127,8 @@ public class AccommodationReservationService implements IAccommodationReservatio
         // Recalculate price
         long diffInMillis = updated.getEndDate().getTime() - updated.getStartDate().getTime();
         long nights = TimeUnit.MILLISECONDS.toDays(diffInMillis);
-        double totalPrice = nights * existing.getAccommodation().getPrice();
+        BigDecimal totalPrice = BigDecimal.valueOf(existing.getAccommodation().getPrice())
+                .multiply(BigDecimal.valueOf(nights));
 
         existing.setStartDate(updated.getStartDate());
         existing.setEndDate(updated.getEndDate());
@@ -152,8 +156,8 @@ public class AccommodationReservationService implements IAccommodationReservatio
         stats.setTotalReservations(allReservations.size());
 
         double totalRevenue = allReservations.stream()
-                .filter(r -> "CONFIRMED".equals(r.getStatus()))
-                .mapToDouble(r -> r.getTotalPrice() != null ? r.getTotalPrice() : 0)
+                .filter(r -> r.getStatus() == ReservationStatus.CONFIRMED)
+                .mapToDouble(r -> r.getTotalPrice() != null ? r.getTotalPrice().doubleValue() : 0.0)
                 .sum();
         stats.setTotalRevenue(totalRevenue);
 
@@ -176,9 +180,9 @@ public class AccommodationReservationService implements IAccommodationReservatio
 
         // Reservation status
         stats.setConfirmedReservations(allReservations.stream()
-                .filter(r -> "CONFIRMED".equals(r.getStatus())).count());
+                .filter(r -> r.getStatus() == ReservationStatus.CONFIRMED).count());
         stats.setCancelledReservations(allReservations.stream()
-                .filter(r -> "CANCELLED".equals(r.getStatus())).count());
+                .filter(r -> r.getStatus() == ReservationStatus.CANCELLED).count());
 
         // Price distribution
         stats.setUnder100(allAccommodations.stream()
@@ -202,12 +206,12 @@ public class AccommodationReservationService implements IAccommodationReservatio
 
         // Top 5 profitable accommodations
         Map<Long, Double> revenueByAccommodation = allReservations.stream()
-                .filter(r -> "CONFIRMED".equals(r.getStatus())
+                .filter(r -> r.getStatus() == ReservationStatus.CONFIRMED
                         && r.getAccommodation() != null
                         && r.getTotalPrice() != null)
                 .collect(Collectors.groupingBy(
                         r -> r.getAccommodation().getId(),
-                        Collectors.summingDouble(Reservation::getTotalPrice)
+                        Collectors.summingDouble(r -> r.getTotalPrice().doubleValue())
                 ));
 
         List<Map<String, Object>> topProfitable = revenueByAccommodation.entrySet()

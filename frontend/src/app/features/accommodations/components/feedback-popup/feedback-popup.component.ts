@@ -1,9 +1,12 @@
 import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
-import { FormControl, FormGroup, Validators } from '@angular/forms';
-import { ReservationService } from '../../services/reservation.service';
+import { CommonModule } from '@angular/common';
+import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { ReservationService } from '../../../../services/reservation.service';
 
 @Component({
   selector: 'app-feedback-popup',
+  standalone: true,
+  imports: [CommonModule, ReactiveFormsModule],
   templateUrl: './feedback-popup.component.html',
   styleUrls: ['./feedback-popup.component.css']
 })

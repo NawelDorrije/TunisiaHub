@@ -81,7 +81,7 @@ public class NotificationService {
             log.info("Payment confirmation email sent to {} for reservation {}",
                     recipientEmail, reservation.getId());
 
-        } catch (MessagingException e) {
+        } catch (Exception e) {
             // Non-fatal: log and continue — payment is already saved
             log.error("Failed to send payment confirmation email to {}: {}", recipientEmail, e.getMessage(), e);
         }

@@ -57,6 +57,9 @@ public class CampingDTO {
     @Positive(message = "Maximum capacity must be positive")
     Integer maxCapacity;
 
+    @DecimalMin(value = "0.0", inclusive = true, message = "Price must be greater than or equal to 0")
+    BigDecimal price;
+
     @NotNull(message = "Status is required")
     CampingStatus status;
 

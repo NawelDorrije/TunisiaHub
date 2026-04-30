@@ -34,7 +34,7 @@ export class MyCampingsComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
-     const id = this.authService.getId();
+     const id = this.authService.getUserId();
     if (!id) {
       this.router.navigate(['/auth/sign-in']);
       return;

@@ -109,7 +109,7 @@ export class CampingFormComponent implements OnInit, OnDestroy {
 
   // ── Lifecycle ─────────────────────────────────────────────────────────────
   ngOnInit(): void {
-        const id = this.authService.getId();
+        const id = this.authService.getUserId();
     if (!id) {
       this.router.navigate(['/auth/sign-in']);
       return;

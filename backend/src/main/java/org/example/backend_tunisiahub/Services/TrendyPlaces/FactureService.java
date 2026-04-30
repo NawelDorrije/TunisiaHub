@@ -7,13 +7,12 @@ import org.springframework.stereotype.Service;
 
 import java.util.UUID;
 
-@Service
+@Service("trendyPlacesFactureService")
 @RequiredArgsConstructor
 public class FactureService {
 
     private final ReservationActiviteRepository reservationRepo;
 
-    // Générer un token unique pour la réservation
     public String genererToken(ReservationActivite r) {
         if (r.getFactureToken() == null) {
             r.setFactureToken(UUID.randomUUID().toString());
@@ -23,24 +22,22 @@ public class FactureService {
         return r.getFactureToken();
     }
 
-    // Vérifier un billet via son token
     public VerificationResult verifierBillet(String token) {
         return reservationRepo.findByFactureToken(token)
                 .map(r -> {
                     if (!"CONFIRMEE".equals(r.getStatut())) {
                         return new VerificationResult(false, "INVALIDE",
-                                "Cette réservation n'est pas confirmée.", null);
+                                "Cette reservation n'est pas confirmee.", null);
                     }
                     if (Boolean.TRUE.equals(r.getBilletUtilise())) {
                         return new VerificationResult(false, "DEJA_UTILISE",
-                                "Ce billet a déjà été utilisé.", r);
+                                "Ce billet a deja ete utilise.", r);
                     }
-                    // Marquer comme utilisé
                     r.setBilletUtilise(true);
                     r.setDateBilletUtilise(new java.util.Date());
                     reservationRepo.save(r);
                     return new VerificationResult(true, "VALIDE",
-                            "Billet valide — Accès autorisé !", r);
+                            "Billet valide - acces autorise !", r);
                 })
                 .orElse(new VerificationResult(false, "INTROUVABLE",
                         "Ce billet est introuvable.", null));

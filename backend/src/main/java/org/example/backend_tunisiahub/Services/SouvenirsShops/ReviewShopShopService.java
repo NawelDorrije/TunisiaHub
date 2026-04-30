@@ -394,13 +394,16 @@ public class ReviewShopShopService implements IReviewShopService {
                 products.stream().map(Product::getId).toList()
         );
 
-        return aiReviewInsightsService.generateOwnerInsights(
+        OwnerReviewInsightsResponse response = aiReviewInsightsService.generateOwnerInsights(
                 currentUser,
                 shops,
                 products,
                 shopReviews,
                 productReviews
         );
+        response.setShopReviews(shopReviews);
+        response.setProductReviews(productReviews);
+        return response;
     }
 
     private boolean isClientUser() {

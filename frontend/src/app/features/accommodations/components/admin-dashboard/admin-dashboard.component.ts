@@ -26,7 +26,7 @@ export class AdminDashboardComponent {
       title: 'Campings',
       description: 'Manage camping spots, updates, and operational visibility.',
       icon: 'bi bi-tree-fill',
-      route: '/campings',
+      route: '/camping/backoffice/admin',
       cta: 'Open Campings'
     },
     {
@@ -54,7 +54,7 @@ export class AdminDashboardComponent {
       title: 'Trendy Places',
       description: 'Curate and highlight trending destinations across Tunisia.',
       icon: 'bi bi-stars',
-      route: '/trendy-places',
+      route: '/trendy-places/admin/lieux',
       cta: 'Open Trendy Places'
     },
     {

@@ -4,6 +4,7 @@ import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.example.backend_tunisiahub.carpooling.entity.Trip;
+import org.example.backend_tunisiahub.carpooling.entity.TripStatus;
 import org.example.backend_tunisiahub.carpooling.entity.Vehicle;
 import org.example.backend_tunisiahub.carpooling.repository.TripRepository;
 import org.example.backend_tunisiahub.carpooling.repository.VehicleRepository;
@@ -30,8 +31,8 @@ public class TripServiceImp implements ITripService {
 
     private final TripRepository tripRepository;
     private final VehicleRepository vehicleRepository;
-    private static final String STATUS_SCHEDULED = "SCHEDULED";
-    private static final String STATUS_CANCELED = "CANCELED";
+    private static final TripStatus STATUS_SCHEDULED = TripStatus.PLANNED;
+    private static final TripStatus STATUS_CANCELED = TripStatus.CANCELLED;
 
     @Transactional
     @Override
@@ -49,7 +50,7 @@ public class TripServiceImp implements ITripService {
 
         Trip trip = new Trip();
         trip.setCreatedBy(String.valueOf(driverId));
-        trip.setDriverId(String.valueOf(driverId));
+        trip.setDriverId(driverId);
         trip.setVehicle(vehicle);
         trip.setDeparturePoint(request.getDeparturePoint().trim());
         trip.setDestination(request.getDestination().trim());

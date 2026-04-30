@@ -21,6 +21,9 @@ public class Trip {
     private Long driverId;
 
     @Column(nullable = false)
+    private String createdBy;
+
+    @Column(nullable = false)
     private String departurePoint;
 
     @Column(nullable = false)
@@ -37,6 +40,10 @@ public class Trip {
 
     @Column(nullable = false)
     private int seatsAvailable;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "vehicle_id")
+    private Vehicle vehicle;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)

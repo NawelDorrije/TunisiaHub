@@ -52,6 +52,9 @@ public class Camping {
     @Column(nullable = false)
     Integer maxCapacity;
 
+    @Column(nullable = false, precision = 10, scale = 2, columnDefinition = "DECIMAL(10,2) DEFAULT 0.00")
+    BigDecimal price = BigDecimal.ZERO;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     CampingStatus status;

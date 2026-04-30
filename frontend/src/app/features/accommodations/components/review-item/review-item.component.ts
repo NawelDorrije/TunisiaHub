@@ -1,7 +1,7 @@
 import { Component, EventEmitter, Input, Output } from '@angular/core';
-import { Review } from '../../../../models/accommodations/review.model';
 import { ReviewService } from '../../services/review.service';
 import { AuthService } from '../../../auth/services/auth.service';
+import { Review } from '../../../admin-dashboard/services/admin-review.service';
 
 @Component({
   selector: 'app-review-item',

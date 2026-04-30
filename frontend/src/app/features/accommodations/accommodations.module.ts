@@ -25,29 +25,30 @@ import { AdminDashboardComponent } from './components/admin-dashboard/admin-dash
 
 @NgModule({
   declarations: [
-    AddAccommodationComponent,
-    EditAccommodationComponent,
-    DetailsAccommodationComponent,
-    AdminListAccommodationComponent,
-    UserListAccommodationComponent,
-    ReviewListComponent,
-    ReviewItemComponent,
-    ReviewFormComponent,
-    MapPickerComponent,
-    MapWeatherComponent,
-    ReservationFormComponent,
-    FeedbackPopupComponent,
-    AccommodationStatisticsComponent,
-    AdminDashboardComponent
-  ],
-  imports: [
-    CommonModule,
-    ReactiveFormsModule,
-    RouterModule,
-    FormsModule,
-    AccommodationsRoutingModule,
-    NgApexchartsModule
-  ],
+  AddAccommodationComponent,
+  EditAccommodationComponent,
+  DetailsAccommodationComponent,
+  AdminListAccommodationComponent,
+  UserListAccommodationComponent,
+  ReviewListComponent,
+  ReviewItemComponent,
+  ReviewFormComponent,   // ← moved here from imports
+  MapPickerComponent,
+  MapWeatherComponent,
+  AccommodationStatisticsComponent,
+  AdminDashboardComponent
+],
+
+imports: [
+  CommonModule,
+  ReactiveFormsModule,
+  ReservationFormComponent,   // stays here (standalone)
+  FeedbackPopupComponent,     // stays here (standalone)
+  RouterModule,
+  FormsModule,
+  AccommodationsRoutingModule,
+  NgApexchartsModule
+],
   providers:[
     provideHttpClient()
   ]

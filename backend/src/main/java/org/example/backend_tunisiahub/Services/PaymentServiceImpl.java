@@ -289,8 +289,14 @@ public class PaymentServiceImpl implements IPaymentService {
         paymentRepository.save(payment);
         reservationService.updateStatus(reservationId, ReservationStatus.CONFIRMED);
 
-        if (clientEmail != null && !clientEmail.isBlank())
-            notificationService.sendPaymentConfirmation(payment, clientEmail);
+        if (clientEmail != null && !clientEmail.isBlank()) {
+            try {
+                notificationService.sendPaymentConfirmation(payment, clientEmail);
+            } catch (Exception e) {
+                log.error("Payment confirmation email failed for reservation {} and email {}: {}",
+                        reservationId, clientEmail, e.getMessage(), e);
+            }
+        }
 
         log.info("Deposit processed for reservation {}. Deposit: {} / Remaining: {} / Token: {}",
                 reservationId, deposit, remaining, validationToken);

@@ -28,7 +28,7 @@ public class WeatherService {
             "https://api.open-meteo.com/v1/forecast" +
                     "?latitude=%s&longitude=%s" +
                     "&daily=precipitation_sum,windspeed_10m_max,temperature_2m_max" +
-                    "&forecast_days=7&timezone=Africa%%2FTunis";
+                    "&forecast_days=7&timezone=auto";
 
     private final RestTemplate restTemplate = new RestTemplate();
 

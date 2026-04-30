@@ -101,7 +101,7 @@ public class Reservation {
 
     // ===================== AUDIT =====================
     @Builder.Default
-    @Column(nullable = false)
+    @Column(updatable = false)
     LocalDateTime createdAt = LocalDateTime.now();
 
     LocalDateTime updatedAt;
@@ -109,4 +109,26 @@ public class Reservation {
     // ===================== PAYMENT =====================
     @OneToOne(mappedBy = "reservation", cascade = CascadeType.ALL)
     Payment payment;
+
+    @PrePersist
+    void onCreate() {
+        if (createdAt == null) {
+            createdAt = LocalDateTime.now();
+        }
+        if (type == null) {
+            if (spot != null) {
+                type = ReservationType.CampingReservation;
+            } else if (accommodation != null) {
+                type = ReservationType.accommodationReservation;
+            } else if (trip != null) {
+                type = ReservationType.TripReservation;
+            }
+        }
+        updatedAt = LocalDateTime.now();
+    }
+
+    @PreUpdate
+    void onUpdate() {
+        updatedAt = LocalDateTime.now();
+    }
 }

@@ -85,7 +85,7 @@
             </div>
             <div class="rc-info-item">
               <span class="rci-label">Duration</span>
-              <span class="rci-value">{{ getNights(r.checkIn, r.checkOut) }} nights</span>
+              <span class="rci-value">{{ getNights(r.checkIn!, r.checkOut!) }} nights</span>
             </div>
             <div class="rc-info-item">
               <span class="rci-label">Guests</span>
@@ -167,7 +167,7 @@
           </div>
           <div class="mg-item">
             <span class="mg-label">Duration</span>
-            <span class="mg-value">{{ getNights(selectedReservation.checkIn, selectedReservation.checkOut) }} nights</span>
+            <span class="mg-value">{{ getNights(selectedReservation.checkIn!, selectedReservation.checkOut!) }} nights</span>
           </div>
           <div class="mg-item">
             <span class="mg-label">Guests</span>

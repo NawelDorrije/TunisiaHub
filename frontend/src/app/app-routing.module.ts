@@ -98,9 +98,9 @@ export const routes: Routes = [
     canActivate: [AuthGuard],
   },
 
-  // ==================== TRENDY PLACES (FIXED) ====================
+  // ==================== TRENDY PLACES ====================
   {
-    path: 'trendy',
+    path: 'trendy-places',
     loadChildren: () =>
       import('./features/trendy-places/trendy-places.module')
         .then(m => m.TrendyPlacesModule),

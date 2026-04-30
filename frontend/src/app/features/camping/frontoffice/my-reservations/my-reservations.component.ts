@@ -33,7 +33,7 @@ export class MyReservationsComponent implements OnInit, OnDestroy {
   ) {}
 
 ngOnInit(): void {
-  const userId = this.authService.getId();
+  const userId = this.authService.getUserId();
 
   if (!userId) {
     this.router.navigate(['/auth/sign-in']);

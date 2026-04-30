@@ -56,15 +56,11 @@ export class SignInComponent {
         }
 
         // 2️⃣ role-based navigation
-        if (response.role === 'ADMIN') {
-          this.router.navigate(['/camping/backoffice/admin']);
-        }
-        else if (response.role === 'OWNER') {
-          this.tourService.startIfNeeded();
-          this.router.navigate(['/camping/backoffice/owner']);
-        }
-        else {
-          // CLIENT → HOME (what you asked for)
+      if (response.role === 'ADMIN') {
+          this.router.navigate(['/accommodations/dashboard']);
+        } else if (response.role === 'OWNER') {
+          this.router.navigate(['/home']);
+        } else {
           this.router.navigate(['/home']);
         }
       },

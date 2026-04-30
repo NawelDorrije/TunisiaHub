@@ -2,6 +2,7 @@ package org.example.backend_tunisiahub.Entities.Camping.Mappers;
 
 
 import org.example.backend_tunisiahub.Entities.Camping.DTO.ReservationDTO;
+import org.example.backend_tunisiahub.Entities.Camping.Spot;
 import org.example.backend_tunisiahub.Entities.Reservation;
 import org.springframework.stereotype.Component;
 
@@ -13,13 +14,19 @@ public class ReservationMapper {
     public ReservationDTO toDTO(Reservation r) {
         if (r == null) return null;
 
+        Spot spot = r.getSpot();
+        String campingName = null;
+        if (spot != null && spot.getCamping() != null) {
+            campingName = spot.getCamping().getName();
+        }
+
         return ReservationDTO.builder()
                 .id(r.getId())
                 .userId(r.getUser().getId())
                 .userName(r.getUser().getNom() + " " + r.getUser().getNom())
-                .spotId(r.getSpot().getId())
-                .spotName(r.getSpot().getName())
-                .campingName(r.getSpot().getCamping().getName())
+                .spotId(spot != null ? spot.getId() : null)
+                .spotName(spot != null ? spot.getName() : null)
+                .campingName(campingName)
                 .activityIds(r.getActivities().stream()
                         .map(a -> a.getId()).collect(Collectors.toList()))
                 .activityNames(r.getActivities().stream()

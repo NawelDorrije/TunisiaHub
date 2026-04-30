@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
-import { ReservationService } from '../../../accommodations/services/reservation.service';
+import { ReservationService } from '../../../../services/reservation.service';
 import { ReservationResponse } from '../../../../models/accommodations/reservation.model';
 
 @Component({
@@ -37,7 +37,7 @@ export class MyAccommodationReservationsComponent implements OnInit {
   loadReservations(): void {
     this.isLoading = true;
     this.reservationService.getMyReservations().subscribe({
-      next: (data) => {
+      next: (data: ReservationResponse[]) => {
         this.reservations = data;
         this.isLoading = false;
       },
@@ -108,7 +108,7 @@ export class MyAccommodationReservationsComponent implements OnInit {
       startDate: this.editStartDate,
       endDate: this.editEndDate
     }).subscribe({
-      next: (updated) => {
+      next: (updated: ReservationResponse) => {
         this.successMessage = 'Reservation updated successfully.';
         this.errorMessage = '';
         this.editError = '';

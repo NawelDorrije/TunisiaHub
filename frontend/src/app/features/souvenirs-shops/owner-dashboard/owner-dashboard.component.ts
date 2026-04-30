@@ -9,6 +9,7 @@ import { AuthService } from '../../auth/services/auth.service';
 import { Router } from '@angular/router';
 import { forkJoin } from 'rxjs';
 import { PromoteComponent } from '../promote/promote.component';
+import { OnboardingTourService } from '../../../core/services/onboarding-tour.service';
 
 export interface ShopData {
   id?: number;
@@ -65,7 +66,8 @@ export class OwnerDashboardComponent implements OnInit {
     private paymentService: PaymentService,
     private reviewService: AdminReviewService,
     private authService: AuthService,
-    private router: Router
+    private router: Router,
+    private tourService: OnboardingTourService
   ) {
     this.ownerName = `${authService.getPrenom()} ${authService.getNom()}`;
   }
@@ -73,6 +75,7 @@ export class OwnerDashboardComponent implements OnInit {
   ngOnInit(): void {
     this.loadDashboardData();
     this.loadReviewInsights();
+    this.tourService.startIfNeeded();
   }
 
   private loadReviewInsights(): void {
