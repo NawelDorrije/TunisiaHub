@@ -8,6 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import java.util.Date;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.HashMap;
 import java.util.Map;
@@ -29,18 +30,22 @@ public class AccommodationReservationController {
         if (accommodationId <= 0) return ResponseEntity.badRequest().body("Invalid accommodation ID");
         if (reservation.getStartDate() == null || reservation.getEndDate() == null)
             return ResponseEntity.badRequest().body("Start and end dates are required");
-        if (reservation.getStartDate().after(reservation.getEndDate()))
-            return ResponseEntity.badRequest().body("Start date must be before end date");
+        if (!reservation.getEndDate().after(reservation.getStartDate()))
+            return ResponseEntity.badRequest().body("End date must be after start date");
 
         Reservation saved = reservationService.addAccommodationReservation(accommodationId, reservation, email);
-        if (saved == null) return ResponseEntity.status(409).body("Accommodation is not available for the selected dates");
-        return ResponseEntity.status(201).body(saved);
+        return ResponseEntity.status(201).body(toReservationResponseEntity(saved));
     }
 
 
     @GetMapping("/accommodation/{accommodationId}")
-    public ResponseEntity<List<Reservation>> getReservationsByAccommodation(@PathVariable Long accommodationId) {
-        return ResponseEntity.ok(reservationService.getReservationsByAccommodation(accommodationId));
+    public ResponseEntity<List<Map<String, Object>>> getReservationsByAccommodation(@PathVariable Long accommodationId) {
+        return ResponseEntity.ok(
+                reservationService.getReservationsByAccommodation(accommodationId)
+                        .stream()
+                        .map(this::toReservationResponseEntity)
+                        .toList()
+        );
     }
 
     @GetMapping("/check-availability/{accommodationId}")
@@ -57,7 +62,7 @@ public class AccommodationReservationController {
     public ResponseEntity<?> cancelReservation(@PathVariable Long reservationId) {
         Reservation cancelled = reservationService.cancelReservation(reservationId);
         if (cancelled == null) return ResponseEntity.status(404).body("Reservation not found");
-        return ResponseEntity.ok(cancelled);
+        return ResponseEntity.ok(toReservationResponseEntity(cancelled));
     }
 
     @GetMapping("/reserved-dates/{accommodationId}")
@@ -82,22 +87,44 @@ public class AccommodationReservationController {
 
         if (updated.getStartDate() == null || updated.getEndDate() == null)
             return ResponseEntity.badRequest().body("Dates are required");
-        if (updated.getStartDate().after(updated.getEndDate()))
-            return ResponseEntity.badRequest().body("Start date must be before end date");
+        if (!updated.getEndDate().after(updated.getStartDate()))
+            return ResponseEntity.badRequest().body("End date must be after start date");
 
         Reservation result = reservationService.editReservation(reservationId, updated, email);
         if (result == null)
             return ResponseEntity.status(409).body("Dates not available or reservation not found");
-        return ResponseEntity.ok(result);
+        return ResponseEntity.ok(toReservationResponseEntity(result));
     }
     @GetMapping("/my-reservations")
-    public ResponseEntity<List<Reservation>> getMyReservations(
+    public ResponseEntity<List<Map<String, Object>>> getMyReservations(
             @AuthenticationPrincipal String email) {
         List<Reservation> reservations = reservationService.getReservationsByUser(email);
-        return ResponseEntity.ok(reservations);
+        return ResponseEntity.ok(
+                reservations.stream()
+                        .map(this::toReservationResponseEntity)
+                        .toList()
+        );
     }
     @GetMapping("/statistics")
     public ResponseEntity<AccommodationStatsDTO> getStatistics() {
         return ResponseEntity.ok(reservationService.getStatistics());
     }
+
+    private Map<String, Object> toReservationResponseEntity(Reservation reservation) {
+        Map<String, Object> response = new LinkedHashMap<>();
+        response.put("id", reservation.getId());
+        response.put("status", reservation.getStatus());
+        response.put("type", reservation.getType());
+        response.put("startDate", reservation.getStartDate());
+        response.put("endDate", reservation.getEndDate());
+        response.put("totalPrice", reservation.getTotalPrice());
+        response.put("notes", reservation.getNotes());
+        response.put("createdAt", reservation.getCreatedAt());
+        response.put("updatedAt", reservation.getUpdatedAt());
+        response.put("userId", reservation.getUser() != null ? reservation.getUser().getId() : null);
+        response.put("accommodationId", reservation.getAccommodation() != null ? reservation.getAccommodation().getId() : null);
+        response.put("accommodationTitle", reservation.getAccommodation() != null ? reservation.getAccommodation().getTitle() : null);
+        return response;
+    }
+
 }

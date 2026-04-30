@@ -13,6 +13,8 @@ import org.example.backend_tunisiahub.Repositories.Accommodation.AccommodationRe
 import org.example.backend_tunisiahub.Repositories.Accommodation.ReviewRepository;
 import org.example.backend_tunisiahub.Repositories.User.UserRepository;
 import org.example.backend_tunisiahub.Services.Accommodation.Notification.ReservationEmailService;
+import org.example.backend_tunisiahub.shared.exception.ApiException;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 import java.util.Date;
@@ -35,17 +37,29 @@ public class AccommodationReservationService implements IAccommodationReservatio
 
     @Override
     public Reservation addAccommodationReservation(Long accommodationId, Reservation reservation, String email) {
+        if (reservation == null || reservation.getStartDate() == null || reservation.getEndDate() == null) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "Start and end dates are required");
+        }
+        if (!reservation.getEndDate().after(reservation.getStartDate())) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "End date must be after start date");
+        }
+
         // Check availability
         if (!isAccommodationAvailable(accommodationId, reservation.getStartDate(), reservation.getEndDate())) {
-            return null; // dates already taken
+            throw new ApiException(HttpStatus.CONFLICT, "Accommodation is not available for the selected dates");
         }
 
         // Get accommodation
         Accommodation accommodation = accommodationService.retrieveAccommodation(accommodationId);
-        if (accommodation == null) return null;
+        if (accommodation == null) {
+            throw new ApiException(HttpStatus.NOT_FOUND, "Accommodation not found");
+        }
 
         // Get user
         User user = userRepository.findByEmail(email);
+        if (user == null) {
+            throw new ApiException(HttpStatus.UNAUTHORIZED, "Authenticated user not found");
+        }
 
         // Calculate total price
         long diffInMillis = reservation.getEndDate().getTime() - reservation.getStartDate().getTime();
@@ -63,10 +77,14 @@ public class AccommodationReservationService implements IAccommodationReservatio
         reservation.setReminderSentAt(null);
         reservation.setReminderError(null);
 
-                Reservation savedReservation = reservationRepository.save(reservation);
-                reservationEmailService.sendAccommodationBookingConfirmation(user, accommodation, savedReservation);
+        Reservation savedReservation = reservationRepository.save(reservation);
+        try {
+            reservationEmailService.sendAccommodationBookingConfirmation(user, accommodation, savedReservation);
+        } catch (Exception ex) {
+            // Reservation is already persisted; notification must not break booking.
+        }
 
-                return savedReservation;
+        return savedReservation;
     }
 
     @Override
