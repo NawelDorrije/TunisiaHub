@@ -28,12 +28,7 @@ export const routes: Routes = [
       import('./features/camping/camping.module').then(m => m.CampingModule),
   },
 
-  // ==================== CARPOOLING ====================
-  // {
-  //   path: 'trendy-places',
-  //   loadChildren: () =>
-  //     import('./features/Carpooling/carpooling.module').then(m => m.CarpoolingModule),
-  // },
+  
 
   // ==================== SOUVENIR SHOPS ====================
   {

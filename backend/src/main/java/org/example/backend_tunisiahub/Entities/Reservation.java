@@ -4,7 +4,6 @@ import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 import org.example.backend_tunisiahub.Entities.Accommodation.Accommodation;
-import org.example.backend_tunisiahub.carpooling.entity.Trip;
 import org.example.backend_tunisiahub.Entities.Camping.Activity;
 import org.example.backend_tunisiahub.Entities.Camping.Enums.ReservationStatus;
 import org.example.backend_tunisiahub.Entities.Camping.Spot;
@@ -85,10 +84,7 @@ public class Reservation {
 
     Double legacyTotalPrice;
 
-    // ===================== TRIP (CARPOOLING) =====================
-    @ManyToOne
-    @JoinColumn(name = "trip_id", nullable = true)
-    Trip trip;
+    
 
     // ===================== REMINDER SYSTEM =====================
     @Temporal(TemporalType.TIMESTAMP)

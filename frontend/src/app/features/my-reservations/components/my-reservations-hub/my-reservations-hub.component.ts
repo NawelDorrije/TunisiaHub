@@ -49,7 +49,7 @@ export class MyReservationsHubComponent {
       title: 'Carpooling',
       description: 'View and manage your carpooling trips.',
       icon: 'bi bi-car-front',
-      link: '/my-reservations/carpooling',
+      link: '/carpooling',
       color: 'info'
     }
   ];
