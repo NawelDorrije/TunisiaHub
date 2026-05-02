@@ -57,6 +57,7 @@ public class AuthController {
                 savedUser.getNom(),
                 savedUser.getPrenom()
         ));
+
     }
 
     // ================= LOGIN =================
@@ -107,5 +108,6 @@ public class AuthController {
         } catch (IllegalArgumentException ex) {
             return null;
         }
+
     }
 }

@@ -1,0 +1,94 @@
+<div class="complaint-page">
+  <div class="complaint-shell">
+    <div class="alert alert-danger mb-4" *ngIf="error">{{ error }}</div>
+    <div class="alert alert-success mb-4" *ngIf="success">{{ success }}</div>
+
+    <form
+      [formGroup]="complaintForm"
+      (ngSubmit)="submit()"
+      class="complaint-card"
+    >
+      <h1 class="complaint-title">Report an issue</h1>
+
+      <div class="complaint-notice">
+        <i class="bi bi-shield-exclamation"></i>
+        <span>
+          Describe what happened during this ride so the platform team can
+          review it.
+        </span>
+      </div>
+
+      <div class="complaint-section">
+        <h2 class="complaint-section-title">References</h2>
+
+        <div class="complaint-reference-grid">
+          <div class="complaint-reference-card">
+            <p class="complaint-label mb-1">Trip reference</p>
+            <strong>#{{ tripId }}</strong>
+          </div>
+
+          <div class="complaint-reference-card">
+            <p class="complaint-label mb-1">Booking reference</p>
+            <strong *ngIf="bookingId; else noBooking">#{{ bookingId }}</strong>
+            <ng-template #noBooking>
+              <small>No booking reference (trip-only complaint).</small>
+            </ng-template>
+          </div>
+        </div>
+      </div>
+
+      <div class="complaint-divider"></div>
+
+      <div class="complaint-section">
+        <h2 class="complaint-section-title">What happened?</h2>
+        <p class="complaint-helper">
+          Include the main problem, when it happened, and any useful detail that
+          can help review your request.
+        </p>
+
+        <textarea
+          id="description"
+          rows="6"
+          class="form-control complaint-textarea"
+          formControlName="description"
+          placeholder="Explain the issue with this trip or booking..."
+        ></textarea>
+
+        <small
+          class="text-danger"
+          *ngIf="
+            complaintForm.get('description')?.touched &&
+            complaintForm.get('description')?.hasError('required')
+          "
+        >
+          Description is required.
+        </small>
+
+        <small
+          class="text-danger"
+          *ngIf="
+            complaintForm.get('description')?.touched &&
+            complaintForm.get('description')?.hasError('minlength')
+          "
+        >
+          Description must contain at least 10 characters.
+        </small>
+      </div>
+
+      <div class="complaint-actions">
+        <button
+          type="button"
+          class="btn btn-outline-secondary"
+          (click)="goBack()"
+        >
+          Back
+        </button>
+
+        <button type="submit" class="btn complaint-submit-button">
+          <i class="bi bi-send"></i>
+          <span>Submit complaint</span>
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

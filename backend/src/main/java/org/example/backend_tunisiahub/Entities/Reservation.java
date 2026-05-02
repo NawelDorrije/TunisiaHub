@@ -1,5 +1,6 @@
 package org.example.backend_tunisiahub.Entities;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -7,6 +8,7 @@ import org.example.backend_tunisiahub.Entities.Accommodation.Accommodation;
 import org.example.backend_tunisiahub.Entities.Camping.Activity;
 import org.example.backend_tunisiahub.Entities.Camping.Enums.ReservationStatus;
 import org.example.backend_tunisiahub.Entities.Camping.Spot;
+import org.example.backend_tunisiahub.Entities.Carpooling.Trip;
 import org.example.backend_tunisiahub.Entities.User.User;
 
 import java.math.BigDecimal;
@@ -27,17 +29,17 @@ public class Reservation {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    Long id;
+    private Long id;
 
     // ===================== COMMON USER =====================
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
-    User user;
+    private User user;
 
     // ===================== CAMPING =====================
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "spot_id")
-    Spot spot;
+    private Spot spot;
 
     @ManyToMany
     @JoinTable(
@@ -46,65 +48,84 @@ public class Reservation {
             inverseJoinColumns = @JoinColumn(name = "activity_id")
     )
     @Builder.Default
-    List<Activity> activities = new ArrayList<>();
+    private List<Activity> activities = new ArrayList<>();
 
     @Column(nullable = true)
-    LocalDate checkIn;
+    private LocalDate checkIn;
 
     @Column(nullable = true)
-    LocalDate checkOut;
+    private LocalDate checkOut;
 
     @Column(nullable = true)
-    Integer numberOfGuests;
+    private Integer numberOfGuests;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = true)
-    ReservationStatus status;
+    private ReservationStatus status;
 
     @Column(nullable = true, precision = 10, scale = 2)
-    BigDecimal totalPrice;
+    private BigDecimal totalPrice;
 
     @Column(columnDefinition = "TEXT")
-    String notes;
+    private String notes;
 
     // ===================== ACCOMMODATION (OLD SYSTEM) =====================
     @ManyToOne
     @JoinColumn(name = "accommodation_id", nullable = true)
-    Accommodation accommodation;
+    private Accommodation accommodation;
 
     @Temporal(TemporalType.DATE)
-    Date startDate;
+    @Column(nullable = true)
+    private Date startDate;
 
     @Temporal(TemporalType.DATE)
-    Date endDate;
+    @Column(nullable = true)
+    private Date endDate;
 
     @Enumerated(EnumType.STRING)
     @Column(length = 50, nullable = true)
-    ReservationType type;
+    private ReservationType type;
 
-    Double legacyTotalPrice;
-
-    
+    private Double legacyTotalPrice;
 
     // ===================== REMINDER SYSTEM =====================
     @Temporal(TemporalType.TIMESTAMP)
-    Date reminderSentAt;
+    private Date reminderSentAt;
 
-    String reminderStatus;
+    private String reminderStatus;
 
     @Column(length = 500)
-    String reminderError;
+    private String reminderError;
+
+    @Column(name = "number_of_people", nullable = true)
+    private Integer numberOfPeople;
+
+    @ManyToOne
+    @JoinColumn(name = "trip_id")
+    private Trip trip;
+
+    @ManyToOne
+    @JoinColumn(name = "reserved_by_id")
+    private User reservedBy;
+
+    @OneToMany(mappedBy = "reservation")
+    @JsonIgnore
+    private List<Complaint> complaints;
+
+    @OneToOne(mappedBy = "reservation")
+    @JsonIgnore
+    private Review review;
 
     // ===================== AUDIT =====================
     @Builder.Default
     @Column(updatable = false)
-    LocalDateTime createdAt = LocalDateTime.now();
+    private LocalDateTime createdAt = LocalDateTime.now();
 
-    LocalDateTime updatedAt;
+    private LocalDateTime updatedAt;
 
     // ===================== PAYMENT =====================
     @OneToOne(mappedBy = "reservation", cascade = CascadeType.ALL)
-    Payment payment;
+    private Payment payment;
 
     @PrePersist
     void onCreate() {

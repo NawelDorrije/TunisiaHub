@@ -1,0 +1,215 @@
+.card {
+  border-radius: 0.8rem;
+}
+
+.text-danger {
+  font-size: 0.9rem;
+  margin-top: 0.25rem;
+}
+
+.carpooling-page {
+  padding-left: 2rem;
+  padding-right: 2rem;
+}
+
+.hero-section,
+.promo-section,
+.story-section {
+  margin-left: 0;
+  margin-right: 0;
+}
+
+.hero-copy,
+.promo-copy,
+.story-copy {
+  padding: 1rem;
+}
+
+.hero-title,
+.publish-banner h2,
+.promo-copy h2,
+.story-copy h2,
+.benefit-card h3 {
+  color: #10224c;
+  font-weight: 700;
+}
+
+.hero-title {
+  font-size: 4rem;
+  line-height: 1.08;
+  margin: 0;
+}
+
+.section-image {
+  width: 100%;
+  border-radius: 1.75rem;
+  display: block;
+}
+
+.publish-banner {
+  background: #10224c;
+  border-radius: 1.75rem;
+  color: #ffffff;
+  padding: 2.5rem 1.5rem;
+}
+
+.demand-alert-card {
+  padding: 1.35rem 1.5rem;
+  border-radius: 1.5rem;
+  background: linear-gradient(135deg, #f7faff 0%, #edf3ff 100%);
+  border: 1px solid #dce6ff;
+}
+
+.demand-alert-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  color: #10224c;
+}
+
+.demand-badge {
+  border-radius: 999px;
+  padding: 0.35rem 0.8rem;
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.demand-badge.high {
+  background: #ffe5e5;
+  color: #b42318;
+}
+
+.demand-badge.medium {
+  background: #fff2d9;
+  color: #a15c00;
+}
+
+.demand-badge.low {
+  background: #e9f7ee;
+  color: #237a43;
+}
+
+.demand-alert-text {
+  margin: 0;
+  color: #33415c;
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+.publish-banner h2 {
+  color: #ffffff;
+  font-size: 3rem;
+  margin-bottom: 1rem;
+}
+
+.publish-banner p {
+  font-size: 1.15rem;
+  margin-bottom: 1.5rem;
+}
+
+.publish-button,
+.primary-action {
+  border-radius: 999px;
+  font-weight: 700;
+  padding: 0.85rem 2rem;
+}
+
+.publish-button {
+  background: #ffffff;
+  color: #3d72e3;
+}
+
+.publish-button:hover,
+.publish-button:focus {
+  background: #edf2ff;
+  color: #2f62cf;
+}
+
+.benefit-card {
+  height: 100%;
+  padding: 1rem;
+}
+
+.benefit-icon {
+  width: 3.5rem;
+  height: 3.5rem;
+  border-radius: 50%;
+  background: #eef3ff;
+  color: #10224c;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+}
+
+.benefit-card h3 {
+  font-size: 2rem;
+  margin-bottom: 0.75rem;
+}
+
+.benefit-card p,
+.promo-copy p,
+.story-copy p {
+  color: #5d6781;
+  font-size: 1.15rem;
+  line-height: 1.45;
+}
+
+.promo-copy h2,
+.story-copy h2 {
+  font-size: 3.2rem;
+  margin-bottom: 1rem;
+}
+
+.primary-action {
+  background: #3d72e3;
+  color: #ffffff;
+}
+
+.primary-action:hover,
+.primary-action:focus {
+  background: #2f62cf;
+  color: #ffffff;
+}
+
+.story-copy strong {
+  color: #5d6781;
+  font-size: 1.1rem;
+}
+
+@media (max-width: 991.98px) {
+  .hero-title {
+    font-size: 2.8rem;
+  }
+
+  .publish-banner h2,
+  .promo-copy h2,
+  .story-copy h2 {
+    font-size: 2.3rem;
+  }
+
+  .benefit-card h3 {
+    font-size: 1.8rem;
+  }
+}
+
+@media (max-width: 767.98px) {
+  .carpooling-page {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+
+  .hero-title {
+    font-size: 2.2rem;
+  }
+
+  .publish-banner {
+    padding: 2rem 1rem;
+  }
+
+  .demand-alert-card {
+    padding: 1.1rem 1rem;
+  }
+}

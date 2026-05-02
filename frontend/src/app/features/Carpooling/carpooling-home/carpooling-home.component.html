@@ -1,0 +1,153 @@
+<div class="container-fluid carpooling-page py-4">
+  <div class="hero-section row align-items-center g-4 mb-4">
+    <div class="col-lg-6">
+      <div class="hero-copy">
+        <h1 class="hero-title">
+          With carpooling: TunisiaHub takes you wherever you want to go.
+        </h1>
+      </div>
+    </div>
+
+    <div class="col-lg-6">
+      <img
+        src="assets/carpooling/hero.jpg"
+        alt="Main carpooling image"
+        class="section-image"
+      />
+    </div>
+  </div>
+
+  <div class="mb-5">
+    <app-carpooling-search-bar
+      [searchForm]="searchForm"
+      [departureSuggestions]="departureSuggestions"
+      [destinationSuggestions]="destinationSuggestions"
+      [showDepartureSuggestions]="showDepartureSuggestions"
+      [showDestinationSuggestions]="showDestinationSuggestions"
+      [loadingLocations]="loadingLocations"
+      [locationError]="locationError"
+      [disableSubmit]="searchForm.invalid"
+      (searchSubmitted)="searchRide()"
+      (swapLocations)="swapLocations()"
+      (locationInput)="onLocationInput($event)"
+      (suggestionOpen)="openSuggestions($event)"
+      (suggestionClose)="closeSuggestions($event)"
+      (suggestionSelected)="selectSuggestion($event.field, $event.suggestion)"
+    ></app-carpooling-search-bar>
+  </div>
+
+  <div
+    class="demand-alert-card mb-5"
+    *ngIf="
+      demandAlertError ||
+      shouldShowDemandAlert()
+    "
+  >
+    <p class="demand-alert-text" *ngIf="demandAlertError">
+      {{ demandAlertError }}
+    </p>
+
+    <div
+      class="demand-alert-header"
+      *ngIf="shouldShowDemandAlert()"
+    >
+      <span
+        class="demand-badge"
+        [class.high]="demandAlert && (demandAlert.demandLevel === 'high' || demandAlert.holidayCriticalWarning)"
+      >
+        {{ getDemandLevelLabel() }}
+      </span>
+      <p class="demand-alert-text">
+        {{ demandAlert?.passengerAlert }}
+      </p>
+    </div>
+  </div>
+
+  <div class="publish-banner text-center mb-5">
+    <h2>Earn 90 TND per trip</h2>
+    <p>
+      Do you have a car? Put it to work for you. Publish your trips and share
+      your travel costs with passengers.
+    </p>
+    <button type="button" class="btn publish-button" (click)="publishRide()">
+      Publish your trips
+    </button>
+  </div>
+
+  <div class="row g-4 mb-5">
+    <div class="col-md-4">
+      <div class="benefit-card">
+        <span class="benefit-icon">1</span>
+        <h3>Where and when you want</h3>
+        <p>
+          Explore Tunisia your way and find the ideal trip based on your needs.
+        </p>
+      </div>
+    </div>
+
+    <div class="col-md-4">
+      <div class="benefit-card">
+        <span class="benefit-icon">2</span>
+        <h3>Your favorite trips at low prices</h3>
+        <p>
+          Compare available trips and choose the option that suits you best.
+        </p>
+      </div>
+    </div>
+
+    <div class="col-md-4">
+      <div class="benefit-card">
+        <span class="benefit-icon">3</span>
+        <h3>Travel with confidence</h3>
+        <p>
+          Check published trips, remaining seats, and useful details before you
+          book.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <div class="promo-section row align-items-center g-4 mb-5">
+    <div class="col-lg-6">
+      <div class="promo-copy">
+        <h2>Discover Tunisia one shared ride at a time</h2>
+        <p>
+          Get inspired by popular destinations and book your next carpooling
+          trip.
+        </p>
+        <a class="btn primary-action" routerLink="/carpooling/search-rides">
+          Book your trip
+        </a>
+      </div>
+    </div>
+
+    <div class="col-lg-6">
+      <img
+        src="assets/carpooling/city-highlight.jpg"
+        alt="Destination mise en avant"
+        class="section-image"
+      />
+    </div>
+  </div>
+
+  <div class="story-section row align-items-center g-4 mb-5">
+    <div class="col-lg-6">
+      <img
+        src="assets/carpooling/travel-story.jpg"
+        alt="Passenger story"
+        class="section-image"
+      />
+    </div>
+
+    <div class="col-lg-6">
+      <div class="story-copy">
+        <h2>This only happens on TunisiaHub...</h2>
+        <p>
+          A shared trip, a great meeting, and an experience that is easy to
+          organize: that is also what carpooling is about.
+        </p>
+        <strong>A happy traveler</strong>
+      </div>
+    </div>
+  </div>
+</div>

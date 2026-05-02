@@ -1,8 +1,16 @@
-import { Component, ChangeDetectionStrategy, HostListener, OnInit } from '@angular/core';
+import {
+  Component,
+  ChangeDetectionStrategy,
+  HostListener,
+  OnInit,
+} from '@angular/core';
 import { map, Observable, combineLatest } from 'rxjs';
 import { CartService } from '../../services/souvenirs-shops/cart.service';
 import { Router } from '@angular/router';
-import { AuthService, UserState } from '../../features/auth/services/auth.service';
+import {
+  AuthService,
+  UserState,
+} from '../../features/auth/services/auth.service';
 
 interface HeaderState {
   user: UserState | null;
@@ -13,27 +21,23 @@ interface HeaderState {
   selector: 'app-header',
   templateUrl: './header.component.html',
   styleUrls: ['./header.component.css'],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class HeaderComponent implements OnInit {
-
   vm$: Observable<HeaderState>;
   isScrolled = false;
 
   constructor(
     private cartService: CartService,
-    private authService: AuthService,
-    private router: Router
+    public authService: AuthService,
+    private router: Router,
   ) {
     const cartCount$ = this.cartService.items$.pipe(
-      map((items) => items.reduce((total, item) => total + item.quantity, 0))
+      map((items) => items.reduce((total, item) => total + item.quantity, 0)),
     );
 
-    this.vm$ = combineLatest([
-      this.authService.user$,
-      cartCount$
-    ]).pipe(
-      map(([user, cartCount]) => ({ user, cartCount }))
+    this.vm$ = combineLatest([this.authService.user$, cartCount$]).pipe(
+      map(([user, cartCount]) => ({ user, cartCount })),
     );
   }
 
@@ -45,13 +49,17 @@ export class HeaderComponent implements OnInit {
   }
 
   // Helper pour simplifier le template
-// Dans le TS
-get currentRole(): string | null {
-  return this.authService.getRole();
-}
+  // Dans le TS
+  get currentRole(): string | null {
+    return this.authService.getRole();
+  }
 
   logout(): void {
     this.authService.logout();
     this.router.navigate(['/auth/sign-in']);
+  }
+
+  isCarpoolingPage(): boolean {
+    return this.router.url.startsWith('/carpooling');
   }
 }

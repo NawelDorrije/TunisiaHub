@@ -20,5 +20,6 @@ import { ReactiveFormsModule } from '@angular/forms';
   providers:[
    
   ]
+
 })
 export class AuthModule { }

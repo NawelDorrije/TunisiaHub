@@ -134,7 +134,7 @@ public class AccommodationReservationService implements IAccommodationReservatio
         List<Reservation> overlapping = reservationRepository
                 .findByAccommodationId(existing.getAccommodation().getId())
                 .stream()
-                .filter(r -> r.getStatus().equals("CONFIRMED"))
+                .filter(r -> r.getStatus() == ReservationStatus.CONFIRMED)
                 .filter(r -> !r.getId().equals(reservationId)) // exclude current
                 .filter(r -> r.getStartDate().before(updated.getEndDate())
                         && r.getEndDate().after(updated.getStartDate()))

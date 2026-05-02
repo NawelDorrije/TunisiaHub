@@ -1,0 +1,72 @@
+<div class="passenger-list-page">
+  <div class="passenger-list-container">
+    <div class="passenger-list-header">
+      <h2 class="passenger-list-title">Passenger list</h2>
+      <p class="passenger-list-subtitle" *ngIf="tripId > 0">
+        Trip #{{ tripId }}
+      </p>
+    </div>
+
+    <div class="alert alert-success" *ngIf="success">{{ success }}</div>
+    <div class="alert alert-danger" *ngIf="error">{{ error }}</div>
+
+    <div *ngIf="passengers.length > 0; else emptyState">
+      <div class="passenger-card" *ngFor="let item of passengers">
+        <div class="passenger-card-main">
+          <div class="passenger-card-top">
+            <div class="passenger-avatar">
+              {{ getPassengerInitials(item) }}
+            </div>
+
+            <div class="passenger-identity">
+              <h3 class="passenger-name">
+                {{ item.passenger?.fullName || 'Passenger' }}
+              </h3>
+              <p class="passenger-email">
+                {{ item.passenger?.email || 'No email available' }}
+              </p>
+            </div>
+
+            <span
+              class="passenger-status"
+              [class.pending]="item.booking.status === 'PENDING'"
+              [class.canceled]="item.booking.status === 'CANCELED'"
+            >
+              {{ getBookingStatusLabel(item) }}
+            </span>
+          </div>
+
+          <div class="passenger-card-meta">
+            <span>{{ getSeatsLabel(item) }}</span>
+            <span>{{ formatBookingDate(item.booking.bookingDate) }}</span>
+          </div>
+
+          <div class="passenger-card-actions" *ngIf="isPendingBooking(item)">
+            <button
+              type="button"
+              class="btn btn-primary"
+              (click)="approveBooking(item)"
+              [disabled]="isProcessing(item)"
+            >
+              Approve
+            </button>
+            <button
+              type="button"
+              class="btn btn-outline-danger"
+              (click)="rejectBooking(item)"
+              [disabled]="isProcessing(item)"
+            >
+              Reject
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <ng-template #emptyState>
+      <div class="passenger-empty-card">
+        <p class="mb-0">No passenger data available for this trip.</p>
+      </div>
+    </ng-template>
+  </div>
+</div>

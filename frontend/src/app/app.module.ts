@@ -1,8 +1,17 @@
 import { NgModule } from '@angular/core';
-import { BrowserModule } from '@angular/platform-browser';
+import {
+  BrowserModule,
+  provideClientHydration,
+} from '@angular/platform-browser';
 import { ReactiveFormsModule } from '@angular/forms';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
-import { HTTP_INTERCEPTORS, provideHttpClient, withFetch, withInterceptorsFromDi } from '@angular/common/http';
+import {
+  HTTP_INTERCEPTORS,
+  HttpClientModule,
+  provideHttpClient,
+  withFetch,
+  withInterceptorsFromDi,
+} from '@angular/common/http';
 
 // Core
 import { AppComponent } from './app.component';
@@ -23,6 +32,7 @@ import { ChatWidgetComponent } from './shared/components/chat-widget/chat-widget
 import { TourOverlayComponent } from './core/components/tour-overlay/tour-overlay.component';
 
 // Interceptor
+import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
 import { AuthInterceptor } from './features/auth/auth.interceptor';
 
 @NgModule({
@@ -33,7 +43,7 @@ import { AuthInterceptor } from './features/auth/auth.interceptor';
     HomeComponent,
     NotFoundComponent,
     CartComponent,
-    ChatWidgetComponent
+    ChatWidgetComponent,
   ],
 
   imports: [
@@ -42,22 +52,22 @@ import { AuthInterceptor } from './features/auth/auth.interceptor';
     NoopAnimationsModule,
     AppRoutingModule,
     SouvenirsShopsModule,
-    TourOverlayComponent
+    TourOverlayComponent,
+    HttpClientModule,
   ],
 
   providers: [
-    provideHttpClient(
-      withFetch(),
-      withInterceptorsFromDi()
-    ),
+    provideClientHydration(),
+    provideAnimationsAsync(),
+    provideHttpClient(withFetch(), withInterceptorsFromDi()),
 
     {
       provide: HTTP_INTERCEPTORS,
       useClass: AuthInterceptor,
-      multi: true
-    }
+      multi: true,
+    },
   ],
 
-  bootstrap: [AppComponent]
+  bootstrap: [AppComponent],
 })
 export class AppModule {}

@@ -1,0 +1,97 @@
+<div class="review-page">
+  <div class="review-shell">
+    <div class="alert alert-danger mb-4" *ngIf="error">{{ error }}</div>
+    <div class="alert alert-success mb-4" *ngIf="success">{{ success }}</div>
+
+    <form [formGroup]="reviewForm" (ngSubmit)="submit()" class="review-card">
+      <h1 class="review-title">Review the driver</h1>
+
+      <div class="review-notice">
+        <i class="bi bi-star"></i>
+        <span>
+          Share your experience so future passengers can choose with more
+          confidence.
+        </span>
+      </div>
+
+      <div class="review-section">
+        <h2 class="review-section-title">References</h2>
+
+        <div class="review-reference-grid">
+          <div class="review-reference-card">
+            <p class="review-label mb-1">Trip reference</p>
+            <strong>#{{ tripId }}</strong>
+          </div>
+
+          <div class="review-reference-card">
+            <p class="review-label mb-1">Booking reference</p>
+            <strong>#{{ bookingId }}</strong>
+          </div>
+        </div>
+      </div>
+
+      <div class="review-divider"></div>
+
+      <div class="review-section">
+        <h2 class="review-section-title">Your rating</h2>
+
+        <select
+          id="rating"
+          class="form-select review-input"
+          formControlName="rating"
+        >
+          <option [ngValue]="5">5 - Excellent</option>
+          <option [ngValue]="4">4 - Very good</option>
+          <option [ngValue]="3">3 - Good</option>
+          <option [ngValue]="2">2 - Poor</option>
+          <option [ngValue]="1">1 - Very poor</option>
+        </select>
+      </div>
+
+      <div class="review-divider"></div>
+
+      <div class="review-section">
+        <h2 class="review-section-title">Your comment</h2>
+
+        <textarea
+          id="comment"
+          rows="6"
+          class="form-control review-textarea"
+          formControlName="comment"
+          placeholder="Explain how the driver handled the trip..."
+        ></textarea>
+
+        <small
+          class="text-danger"
+          *ngIf="
+            reviewForm.get('comment')?.touched &&
+            reviewForm.get('comment')?.hasError('required')
+          "
+        >
+          Comment is required.
+        </small>
+
+        <small
+          class="text-danger"
+          *ngIf="
+            reviewForm.get('comment')?.touched &&
+            reviewForm.get('comment')?.hasError('minlength')
+          "
+        >
+          Comment must contain at least 5 characters.
+        </small>
+      </div>
+
+      <div class="review-actions">
+        <button type="button" class="btn btn-outline-secondary" (click)="goBack()">
+          Back
+        </button>
+
+        <button type="submit" class="btn review-submit-button">
+          <i class="bi bi-send"></i>
+          <span>{{ existingReview ? 'Update review' : 'Submit review' }}</span>
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

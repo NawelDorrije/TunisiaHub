@@ -1,0 +1,89 @@
+.nav-link {
+  color: #234;
+}
+
+.nav-link.active {
+  font-weight: 600;
+}
+
+.table td,
+.table th {
+  vertical-align: middle;
+}
+
+.admin-table-head th {
+  background-color: #f1f4f8;
+  color: #243447;
+  border-bottom: 1px solid #d7dee8;
+  font-weight: 600;
+}
+
+.card {
+  border-radius: 6px;
+}
+
+.description-cell {
+  max-width: 260px;
+  white-space: normal;
+}
+
+.report-column {
+  min-width: 360px;
+  max-width: 430px;
+}
+
+.trip-reference-link {
+  color: #000000;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.trip-reference-link:hover {
+  text-decoration: underline;
+}
+
+.decision-badge {
+  display: inline-block;
+  min-width: 112px;
+  padding: 8px 12px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  line-height: 1.2;
+  text-align: center;
+  white-space: normal;
+}
+
+.decision-danger {
+  background-color: #fde2e4;
+  border-color: #f7b7bd;
+  color: #8c272f;
+}
+
+.decision-warning {
+  background-color: #fff0c2;
+  border-color: #f3d57b;
+  color: #6b5207;
+}
+
+.decision-info {
+  background-color: #dff3f6;
+  border-color: #a9dce4;
+  color: #155767;
+}
+
+.decision-secondary {
+  background-color: #edf0f3;
+  border-color: #d5dbe1;
+  color: #3d4752;
+}
+
+.ai-list {
+  margin: 0;
+  padding-left: 18px;
+}
+
+.ai-list li {
+  margin-bottom: 6px;
+}

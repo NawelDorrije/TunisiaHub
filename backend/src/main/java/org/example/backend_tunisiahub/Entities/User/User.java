@@ -16,13 +16,15 @@ import org.example.backend_tunisiahub.Entities.SouvenirsShops.Review;
 import java.util.ArrayList;
 import java.util.List;
 
+
 @Entity
 @Table(name = "users")
 @Getter
 @Setter
-@NoArgsConstructor
+
 @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 @FieldDefaults(level = AccessLevel.PRIVATE)
+@NoArgsConstructor
 public class User {
 
     @Id
@@ -35,6 +37,7 @@ public class User {
     @Column(unique = true)
     String email;
 
+    @JsonIgnore
     String motDePasse;
 
     @Enumerated(EnumType.STRING)
@@ -60,3 +63,4 @@ public class User {
     @JsonIgnore
     List<Camping> campings = new ArrayList<>();
 }
+

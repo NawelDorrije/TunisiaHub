@@ -2,7 +2,12 @@ import { Injectable, PLATFORM_ID, Inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject, Observable, tap } from 'rxjs';
 import { isPlatformBrowser } from '@angular/common';
-import { AuthResponse, LoginRequest, RegisterRequest, UserRole } from '../../../models/auth/auth.model';
+import {
+  AuthResponse,
+  LoginRequest,
+  RegisterRequest,
+  UserRole,
+} from '../../../models/auth/auth.model';
 
 export interface UserState {
   token: string | null;
@@ -14,10 +19,9 @@ export interface UserState {
 }
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class AuthService {
-
   private baseUrl = 'http://localhost:8089/api/auth';
   private isBrowser: boolean;
 
@@ -26,7 +30,7 @@ export class AuthService {
 
   constructor(
     private http: HttpClient,
-    @Inject(PLATFORM_ID) private platformId: Object
+    @Inject(PLATFORM_ID) private platformId: Object,
   ) {
     this.isBrowser = isPlatformBrowser(this.platformId);
     this.initializeUserState();
@@ -47,19 +51,21 @@ export class AuthService {
       prenom: localStorage.getItem('prenom'),
       userId: localStorage.getItem('userId')
         ? parseInt(localStorage.getItem('userId')!, 10)
-        : null
+        : null,
     });
   }
 
   // ================= AUTH =================
   login(request: LoginRequest): Observable<AuthResponse> {
-    return this.http.post<AuthResponse>(`${this.baseUrl}/login`, request)
-      .pipe(tap(res => this.storeUser(res)));
+    return this.http
+      .post<AuthResponse>(`${this.baseUrl}/login`, request)
+      .pipe(tap((res) => this.storeUser(res)));
   }
 
   register(request: RegisterRequest): Observable<AuthResponse> {
-    return this.http.post<AuthResponse>(`${this.baseUrl}/register`, request)
-      .pipe(tap(res => this.storeUser(res)));
+    return this.http
+      .post<AuthResponse>(`${this.baseUrl}/register`, request)
+      .pipe(tap((res) => this.storeUser(res)));
   }
 
   // ================= STORE =================
@@ -79,7 +85,7 @@ export class AuthService {
       email: response.email,
       nom: response.nom,
       prenom: response.prenom,
-      userId: response.id
+      userId: response.id,
     });
   }
 
@@ -102,16 +108,26 @@ export class AuthService {
     return this.userSubject.value?.email || null;
   }
 
+  getUserId(): number | null {
+    if (!this.isBrowser) {
+      return null;
+    }
+
+    const value = localStorage.getItem('userId');
+    if (!value) {
+      return null;
+    }
+
+    const userId = Number(value);
+    return Number.isFinite(userId) ? userId : null;
+  }
+
   getNom(): string | null {
     return this.userSubject.value?.nom || null;
   }
 
   getPrenom(): string | null {
     return this.userSubject.value?.prenom || null;
-  }
-
-  getUserId(): number | null {
-    return this.userSubject.value?.userId || null;
   }
 
   // ================= CHECKS =================
