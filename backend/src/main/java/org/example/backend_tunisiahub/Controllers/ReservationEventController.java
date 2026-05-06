@@ -2,7 +2,7 @@ package org.example.backend_tunisiahub.Controllers;
 
 import lombok.RequiredArgsConstructor;
 import org.example.backend_tunisiahub.Entities.Reservation;
-import org.example.backend_tunisiahub.Services.IReservationService;
+import org.example.backend_tunisiahub.Services.IReservationEventService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -14,9 +14,9 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/reservations")
 @RequiredArgsConstructor
-public class ReservationController {
+public class ReservationEventController {
 
-    private final IReservationService reservationService;
+    private final IReservationEventService reservationService;
 
     @GetMapping
     public List<Reservation> getAllReservations() {
@@ -84,9 +84,7 @@ public class ReservationController {
         }
 
 
-        //if (res == null) {
-         //   throw new RuntimeException("Reservation not found");
-       // }
+
 
         return ResponseEntity.ok(res);
     }

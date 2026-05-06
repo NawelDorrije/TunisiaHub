@@ -4,7 +4,7 @@ import org.example.backend_tunisiahub.Entities.Reservation;
 
 import java.util.List;
 
-public interface IReservationService {
+public interface IReservationEventService {
 
     List<Reservation> retrieveAllReservations();
 

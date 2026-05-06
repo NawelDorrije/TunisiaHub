@@ -1,7 +1,7 @@
 package org.example.backend_tunisiahub.Controllers;
 
 import org.example.backend_tunisiahub.Entities.Reservation;
-import org.example.backend_tunisiahub.Repositories.ReservationRepository;
+import org.example.backend_tunisiahub.Repositories.ReservationEventRepository;
 import org.example.backend_tunisiahub.Services.EmailService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -15,7 +15,7 @@ public class EmailController {
     private EmailService emailService;
 
     @Autowired
-    private ReservationRepository reservationRepository;
+    private ReservationEventRepository reservationRepository;
 
     @GetMapping("/send")
     public String sendEmail(@RequestParam Long reservationId) {

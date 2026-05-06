@@ -5,7 +5,7 @@ import org.example.backend_tunisiahub.Entities.Event.Payment;
 import org.example.backend_tunisiahub.Entities.Event.PaymentMethod;
 import org.example.backend_tunisiahub.Entities.Reservation;
 import org.example.backend_tunisiahub.Repositories.Event.PaymentRepository;
-import org.example.backend_tunisiahub.Repositories.ReservationRepository;
+import org.example.backend_tunisiahub.Repositories.ReservationEventRepository;
 import org.example.backend_tunisiahub.Services.Event.IPaymentService;
 import org.springframework.stereotype.Service;
 
@@ -17,7 +17,7 @@ import java.util.List;
 public class PaymentService implements IPaymentService {
 
     private final PaymentRepository paymentRepository;
-    private final ReservationRepository reservationRepository;
+    private final ReservationEventRepository reservationRepository;
 
 
     @Override
