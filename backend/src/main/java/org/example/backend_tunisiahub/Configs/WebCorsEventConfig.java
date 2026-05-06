@@ -8,7 +8,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import java.util.Arrays;
 
 @Configuration
-public class WebCorsConfig implements WebMvcConfigurer {
+public class WebCorsEventConfig implements WebMvcConfigurer {
 
     @Value("${app.cors.allowed-origin-patterns:http://localhost:*,http://127.0.0.1:*}")
     private String allowedOriginPatternsProperty;
