@@ -1,5 +1,6 @@
 package org.example.backend_tunisiahub.Entities;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -8,8 +9,9 @@ import lombok.Setter;
 import lombok.experimental.FieldDefaults;
 
 import java.util.Date;
+@Entity(name = "ReservationReview")
+@Table(name = "reservation_reviews")
 
-@Entity
 @Getter
 @Setter
 @FieldDefaults(level = AccessLevel.PRIVATE)
@@ -30,5 +32,6 @@ public class Review {
 
     @OneToOne
     @JoinColumn(name = "reservation_id")
+    @JsonIgnore
     Reservation reservation;
 }

@@ -1,0 +1,153 @@
+<div class="search-wrapper shadow-sm">
+  <form [formGroup]="searchForm" (ngSubmit)="submit()" class="search-form">
+    <div class="search-field search-location-field">
+      <i class="bi bi-geo-alt search-field-icon"></i>
+      <div
+        class="field-body floating-field"
+        [class.has-value]="searchForm.value.departure"
+      >
+        <input
+          id="departure"
+          type="text"
+          class="form-control field-input"
+          formControlName="departure"
+          placeholder=" "
+          autocomplete="off"
+          (input)="onLocationInput('departure')"
+          (focus)="openSuggestions('departure')"
+          (blur)="closeSuggestions('departure')"
+        />
+        <label for="departure" class="floating-label">Departure</label>
+
+        <div class="location-dropdown" *ngIf="showDepartureSuggestions">
+          <button
+            type="button"
+            class="location-option"
+            *ngFor="let suggestion of departureSuggestions"
+            (mousedown)="selectSuggestion('departure', suggestion)"
+          >
+            <span>{{ suggestion.label }}</span>
+            <small>{{ suggestion.type }}</small>
+          </button>
+
+          <div class="location-state" *ngIf="loadingLocations">
+            Loading cities...
+          </div>
+
+          <div class="location-state error" *ngIf="locationError">
+            {{ locationError }}
+          </div>
+
+          <div class="location-state" *ngIf="shouldShowNoResults('departure')">
+            No city found.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <button
+      type="button"
+      class="swap-button"
+      aria-label="Swap departure and destination"
+      (click)="swap()"
+    >
+      <i class="bi bi-arrow-left-right"></i>
+    </button>
+
+    <div class="search-field search-location-field">
+      <i class="bi bi-geo-alt search-field-icon"></i>
+      <div
+        class="field-body floating-field"
+        [class.has-value]="searchForm.value.destination"
+      >
+        <input
+          id="destination"
+          type="text"
+          class="form-control field-input"
+          formControlName="destination"
+          placeholder=" "
+          autocomplete="off"
+          (input)="onLocationInput('destination')"
+          (focus)="openSuggestions('destination')"
+          (blur)="closeSuggestions('destination')"
+        />
+        <label for="destination" class="floating-label">Destination</label>
+
+        <div class="location-dropdown" *ngIf="showDestinationSuggestions">
+          <button
+            type="button"
+            class="location-option"
+            *ngFor="let suggestion of destinationSuggestions"
+            (mousedown)="selectSuggestion('destination', suggestion)"
+          >
+            <span>{{ suggestion.label }}</span>
+            <small>{{ suggestion.type }}</small>
+          </button>
+
+          <div class="location-state" *ngIf="loadingLocations">
+            Loading cities...
+          </div>
+
+          <div class="location-state error" *ngIf="locationError">
+            {{ locationError }}
+          </div>
+
+          <div class="location-state" *ngIf="shouldShowNoResults('destination')">
+            No city found.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="search-field compact-field">
+      <i class="bi bi-calendar3 search-field-icon"></i>
+      <div class="field-body">
+        <label for="date" class="field-label">From</label>
+        <input
+          id="date"
+          type="date"
+          class="form-control field-input"
+          formControlName="date"
+          [min]="todayDate"
+        />
+      </div>
+    </div>
+
+    <div class="search-field compact-field">
+      <i class="bi bi-calendar3 search-field-icon"></i>
+      <div class="field-body">
+        <label for="returnDate" class="field-label">To</label>
+        <input
+          id="returnDate"
+          type="date"
+          class="form-control field-input"
+          formControlName="returnDate"
+          [min]="searchForm.value.date || todayDate"
+        />
+      </div>
+    </div>
+
+    <div class="search-field compact-field passenger-field">
+      <i class="bi bi-person search-field-icon"></i>
+      <div class="field-body">
+        <label for="seatsNeeded" class="field-label">Passengers</label>
+        <input
+          id="seatsNeeded"
+          type="number"
+          min="1"
+          max="8"
+          class="form-control field-input"
+          formControlName="seatsNeeded"
+        />
+      </div>
+    </div>
+
+    <button
+      type="submit"
+      class="btn search-button"
+      [disabled]="disableSubmit"
+    >
+      {{ submitLabel }}
+    </button>
+  </form>
+</div>

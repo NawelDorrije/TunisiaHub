@@ -3,16 +3,32 @@
 <head>
   <meta charset="utf-8">
   <title>Frontend</title>
+
   <base href="/">
+
   <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- ================= APP BASE URL (share links events) ================= -->
   <script>
-    // Public frontend base URL used to generate share links to /events/details/{id}
-    // Example: https://app.example.com
-    window.APP_FRONTEND_BASE_URL = window.APP_FRONTEND_BASE_URL || window.location.origin;
+    window.APP_FRONTEND_BASE_URL =
+      window.APP_FRONTEND_BASE_URL || window.location.origin;
   </script>
+
+  <!-- ================= FAVICON ================= -->
   <link rel="icon" type="image/x-icon" href="favicon.ico">
+
+  <!-- ================= GOOGLE FONTS (Material UI support) ================= -->
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+
 </head>
-<body>
+
+<body class="mat-typography">
+
   <app-root></app-root>
+
+  <!-- ================= CHART.JS (analytics / dashboards) ================= -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+
 </body>
 </html>

@@ -1,0 +1,208 @@
+<div class="myres-page">
+
+  <!-- ── Header ── -->
+  <div class="myres-header">
+    <div class="myres-header-inner">
+      <div>
+        <h1>My Reservations</h1>
+        <p>Track and manage all your camping bookings</p>
+      </div>
+      <a routerLink="/camping" class="browse-link">+ Browse Campings</a>
+    </div>
+  </div>
+
+  <div class="myres-container">
+
+    <!-- Alerts -->
+    <div class="alert alert-success" *ngIf="successMsg" role="alert">
+      <span>✅</span> {{ successMsg }}
+      <button (click)="successMsg=''" class="alert-close">✕</button>
+    </div>
+    <div class="alert alert-error" *ngIf="error && !loading" role="alert">
+      <span>⚠️</span> {{ error }}
+      <button (click)="error=''" class="alert-close">✕</button>
+    </div>
+
+    <!-- ── Status Filter Tabs ── -->
+    <div class="status-tabs" *ngIf="!loading && !error">
+      <button
+        *ngFor="let s of statuses"
+        class="tab-btn"
+        [class.active]="statusFilter === s"
+        (click)="setFilter(s)">
+        {{ s === 'ALL' ? 'All' : s | titlecase }}
+        <span class="tab-count" *ngIf="getFilterCount(s) > 0">{{ getFilterCount(s) }}</span>
+      </button>
+    </div>
+
+    <!-- ── Loading ── -->
+    <div class="myres-loading" *ngIf="loading">
+      <div class="loader-dots"><span></span><span></span><span></span></div>
+      <p>Loading your reservations…</p>
+    </div>
+
+    <!-- ── Empty ── -->
+    <div class="myres-empty" *ngIf="!loading && !error && filteredReservations.length === 0">
+      <div class="empty-art">🏕️</div>
+      <h3 *ngIf="statusFilter === 'ALL'">No reservations yet</h3>
+      <h3 *ngIf="statusFilter !== 'ALL'">No {{ statusFilter | lowercase }} reservations</h3>
+      <p *ngIf="statusFilter === 'ALL'">You haven't made any camping reservations yet. Start exploring!</p>
+      <p *ngIf="statusFilter !== 'ALL'">Try selecting a different status filter.</p>
+      <div class="empty-actions">
+        <button class="btn-primary" routerLink="/camping" *ngIf="statusFilter === 'ALL'">Browse Campings</button>
+        <button class="btn-outline" (click)="setFilter('ALL')" *ngIf="statusFilter !== 'ALL'">Show All</button>
+      </div>
+    </div>
+
+    <!-- ── Reservations Cards ── -->
+    <div class="res-cards" *ngIf="!loading && !error && filteredReservations.length > 0">
+      <div class="res-card" *ngFor="let r of filteredReservations">
+
+        <!-- Card Header -->
+        <div class="rc-header">
+          <div class="rc-title-row">
+            <div>
+              <div class="rc-camping">{{ r.campingName || 'Camping Reservation' }}</div>
+              <div class="rc-spot" *ngIf="r.spotName">Spot: {{ r.spotName }}</div>
+            </div>
+            <span class="rc-status" [ngClass]="getStatusClass(r.status)">
+              {{ getStatusIcon(r.status) }} {{ r.status }}
+            </span>
+          </div>
+          <div class="rc-id">Booking #{{ r.id }}</div>
+        </div>
+
+        <!-- Card Body: dates / guests / price -->
+        <div class="rc-body">
+          <div class="rc-info-grid">
+            <div class="rc-info-item">
+              <span class="rci-label">Check-in</span>
+              <span class="rci-value">{{ r.checkIn | date:'EEE, d MMM yyyy' }}</span>
+            </div>
+            <div class="rc-info-item">
+              <span class="rci-label">Check-out</span>
+              <span class="rci-value">{{ r.checkOut | date:'EEE, d MMM yyyy' }}</span>
+            </div>
+            <div class="rc-info-item">
+              <span class="rci-label">Duration</span>
+              <span class="rci-value">{{ getNights(r.checkIn!, r.checkOut!) }} nights</span>
+            </div>
+            <div class="rc-info-item">
+              <span class="rci-label">Guests</span>
+              <span class="rci-value">{{ r.numberOfGuests }}</span>
+            </div>
+          </div>
+
+          <!-- Activities -->
+          <div class="rc-activities" *ngIf="r.activityNames && r.activityNames.length > 0">
+            <span class="rca-label">Activities:</span>
+            <span class="rca-tag" *ngFor="let act of r.activityNames">{{ act }}</span>
+          </div>
+
+          <!-- Notes -->
+          <div class="rc-notes" *ngIf="r.notes">
+            <span>📝 {{ r.notes }}</span>
+          </div>
+        </div>
+
+        <!-- Card Footer -->
+        <div class="rc-footer">
+          <div class="rc-price" *ngIf="r.totalPrice">
+            <span class="rcp-label">Total</span>
+            <span class="rcp-value">{{ r.totalPrice | number }} TND</span>
+          </div>
+          <div class="rc-date" *ngIf="r.createdAt">
+            Booked {{ r.createdAt | date:'d MMM yyyy' }}
+          </div>
+          <div class="rc-actions">
+            <button class="btn-view-detail" (click)="viewDetail(r)">
+              View Details
+            </button>
+            <button
+              class="btn-cancel-res"
+              *ngIf="canCancel(r.status)"
+              (click)="cancelReservation(r)"
+              [disabled]="cancellingId === r.id">
+              <span *ngIf="cancellingId !== r.id">Cancel</span>
+              <span *ngIf="cancellingId === r.id" class="btn-loading">
+                <span class="spinner-sm"></span> Cancelling…
+              </span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /container -->
+
+  <!-- ── Detail Modal ── -->
+  <div class="modal-overlay" *ngIf="selectedReservation" (click)="closeDetail()">
+    <div class="modal-box" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3>Reservation #{{ selectedReservation.id }}</h3>
+        <button class="modal-close" (click)="closeDetail()">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="modal-status">
+          <span class="rc-status" [ngClass]="getStatusClass(selectedReservation.status)">
+            {{ getStatusIcon(selectedReservation.status) }} {{ selectedReservation.status }}
+          </span>
+        </div>
+        <div class="modal-grid">
+          <div class="mg-item">
+            <span class="mg-label">Camping</span>
+            <span class="mg-value">{{ selectedReservation.campingName || '—' }}</span>
+          </div>
+          <div class="mg-item">
+            <span class="mg-label">Spot</span>
+            <span class="mg-value">{{ selectedReservation.spotName || '—' }}</span>
+          </div>
+          <div class="mg-item">
+            <span class="mg-label">Check-in</span>
+            <span class="mg-value">{{ selectedReservation.checkIn | date:'EEEE, d MMMM yyyy' }}</span>
+          </div>
+          <div class="mg-item">
+            <span class="mg-label">Check-out</span>
+            <span class="mg-value">{{ selectedReservation.checkOut | date:'EEEE, d MMMM yyyy' }}</span>
+          </div>
+          <div class="mg-item">
+            <span class="mg-label">Duration</span>
+            <span class="mg-value">{{ getNights(selectedReservation.checkIn!, selectedReservation.checkOut!) }} nights</span>
+          </div>
+          <div class="mg-item">
+            <span class="mg-label">Guests</span>
+            <span class="mg-value">{{ selectedReservation.numberOfGuests }}</span>
+          </div>
+          <div class="mg-item" *ngIf="selectedReservation.totalPrice">
+            <span class="mg-label">Total Price</span>
+            <span class="mg-value mg-price">{{ selectedReservation.totalPrice | number }} TND</span>
+          </div>
+          <div class="mg-item" *ngIf="selectedReservation.createdAt">
+            <span class="mg-label">Booked On</span>
+            <span class="mg-value">{{ selectedReservation.createdAt | date:'d MMM yyyy, HH:mm' }}</span>
+          </div>
+        </div>
+        <div class="mg-activities" *ngIf="selectedReservation.activityNames?.length">
+          <span class="mg-label">Activities</span>
+          <div class="mg-act-tags">
+            <span class="rca-tag" *ngFor="let act of selectedReservation.activityNames">{{ act }}</span>
+          </div>
+        </div>
+        <div class="mg-notes" *ngIf="selectedReservation.notes">
+          <span class="mg-label">Notes</span>
+          <p>{{ selectedReservation.notes }}</p>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-outline" (click)="closeDetail()">Close</button>
+        <button
+          class="btn-cancel-res"
+          *ngIf="canCancel(selectedReservation.status)"
+          (click)="cancelReservation(selectedReservation); closeDetail()">
+          Cancel Reservation
+        </button>
+      </div>
+    </div>
+  </div>
+
+</div>

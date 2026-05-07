@@ -1,298 +1,586 @@
 package org.example.backend_tunisiahub.Services.Carpooling;
 
-import jakarta.persistence.criteria.Predicate;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import lombok.AllArgsConstructor;
+import org.example.backend_tunisiahub.Entities.Camping.Enums.ReservationStatus;
+import org.example.backend_tunisiahub.Entities.Carpooling.HolidayCalendar;
 import org.example.backend_tunisiahub.Entities.Carpooling.Trip;
-import org.example.backend_tunisiahub.Entities.Carpooling.Vehicle;
+import org.example.backend_tunisiahub.Entities.Reservation;
+import org.example.backend_tunisiahub.Entities.User.User;
+import org.example.backend_tunisiahub.Repositories.ReservationRepository;
 import org.example.backend_tunisiahub.Repositories.Carpooling.TripRepository;
-import org.example.backend_tunisiahub.Repositories.Carpooling.VehicleRepository;
-import org.example.backend_tunisiahub.shared.exception.ApiException;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.domain.Specification;
-import org.springframework.http.HttpStatus;
+import org.example.backend_tunisiahub.Repositories.User.UserRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
-import java.math.BigDecimal;
+import java.util.Locale;
 
 @Service
-@RequiredArgsConstructor
-@Slf4j
-public class TripServiceImp implements org.example.backend_tunisiahub.Services.Carpooling.ITripService {
+@AllArgsConstructor
+public class TripServiceImp implements ITripService {
 
-    private final TripRepository tripRepository;
-    private final VehicleRepository vehicleRepository;
-    private static final String STATUS_SCHEDULED = "SCHEDULED";
-    private static final String STATUS_CANCELED = "CANCELED";
+  private TripRepository tripRepository;
+  private ReservationRepository reservationRepository;
+  private UserRepository userRepository;
+  private static final Logger logger = LoggerFactory.getLogger(TripServiceImp.class);
+  private static final String STATUS_SCHEDULED = "scheduled";
+  private static final String STATUS_CANCELED = "canceled";
+  private static final String STATUS_COMPLETED = "completed";
+  private static final String BOOKING_MODE_INSTANT = "instant";
+  private static final String BOOKING_MODE_MANUAL = "manual";
+  private static final int MAX_SEATS_TOTAL = 8;
+  private static final BigDecimal MAX_PRICE = new BigDecimal("500");
+  private static final BigDecimal HOLIDAY_PRICE_MULTIPLIER = new BigDecimal("2");
+  private static final int DURATION_MIN_TOLERANCE = 10;
+  private static final double DURATION_TOLERANCE_RATE = 0.15d;
+  private static final int HOLIDAY_PRICE_WINDOW_DAYS = 2;
 
-    @Transactional
-    @Override
-    public Trip createTrip(Trip request, Long driverId) {
-        if (request == null) {
-            throw new ApiException(HttpStatus.BAD_REQUEST, "Trip payload is required");
-        }
-        log.debug("Creating trip in service for driverId={} with seatsTotal={} and price={}",
-            driverId,
-            request.getSeatsTotal(),
-            request.getPrice());
-        validateTripPayload(request);
-        validateFutureDate(request.getDepartureDateTime());
-        Vehicle vehicle = resolveDriverVehicle(resolveVehicleId(request), driverId);
+  private final IHolidayCalendarService holidayCalendarService;
 
-        Trip trip = new Trip();
-        trip.setCreatedBy(String.valueOf(driverId));
-        trip.setDriverId(String.valueOf(driverId));
-        trip.setVehicle(vehicle);
-        trip.setDeparturePoint(request.getDeparturePoint().trim());
-        trip.setDestination(request.getDestination().trim());
-        trip.setDepartureDateTime(request.getDepartureDateTime());
-        trip.setPrice(request.getPrice());
-        trip.setSeatsTotal(request.getSeatsTotal());
-        trip.setSeatsAvailable(request.getSeatsTotal());
-        trip.setStatus(STATUS_SCHEDULED);
-
-        Trip saved = tripRepository.save(trip);
-        log.debug("Trip persisted with id={} for driverId={}", saved.getId(), driverId);
-        return saved;
+  @Override
+  public List<Trip> retrieveAllTrips(String departurePoint,
+                                     String destination,
+                                     LocalDate dateFrom,
+                                     LocalDate dateTo,
+                                     Integer seatsRequired,
+                                     String status,
+                                     String bookingMode,
+                                     BigDecimal minPrice,
+                                     BigDecimal maxPrice,
+                                     Integer durationMax) {
+    LocalDate effectiveDateFrom = dateFrom;
+    LocalDate effectiveDateTo = dateTo;
+    if (effectiveDateFrom != null && effectiveDateTo != null && effectiveDateFrom.isAfter(effectiveDateTo)) {
+      LocalDate temporaryDate = effectiveDateFrom;
+      effectiveDateFrom = effectiveDateTo;
+      effectiveDateTo = temporaryDate;
     }
 
-    @Transactional(readOnly = true)
-    @Override
-    public List<Trip> searchTrips(String departurePoint, String destination, LocalDate date) {
-        Specification<Trip> specification = (root, query, cb) -> {
-            List<Predicate> predicates = new ArrayList<>();
+    LocalDateTime dateFromValue = effectiveDateFrom != null ? effectiveDateFrom.atStartOfDay() : null;
+    LocalDateTime dateToValue = effectiveDateTo != null ? effectiveDateTo.plusDays(1).atStartOfDay() : null;
+    Integer normalizedSeatsRequired = seatsRequired != null && seatsRequired > 0 ? seatsRequired : null;
+    String normalizedStatus = normalizeStatusFilter(status);
+    BigDecimal normalizedMinPrice = minPrice != null && minPrice.compareTo(BigDecimal.ZERO) >= 0 ? minPrice : null;
+    BigDecimal normalizedMaxPrice = maxPrice != null && maxPrice.compareTo(BigDecimal.ZERO) > 0 ? maxPrice : null;
+    Integer normalizedDurationMax = durationMax != null && durationMax > 0 ? durationMax : null;
+    String effectiveStatus = normalizedStatus != null ? normalizedStatus : STATUS_SCHEDULED;
+    String normalizedBookingMode = normalizeBookingModeFilter(bookingMode);
 
-            if (departurePoint != null && !departurePoint.isBlank()) {
-                predicates.add(cb.like(
-                        cb.lower(root.get("departurePoint")),
-                        "%" + departurePoint.trim().toLowerCase() + "%"
-                ));
-            }
+    return tripRepository.searchTripsAdvanced(
+      effectiveStatus,
+      normalizeSearchText(departurePoint),
+      normalizeSearchText(destination),
+      dateFromValue,
+      dateToValue,
+      normalizedSeatsRequired,
+      normalizedBookingMode,
+      normalizedMinPrice,
+      normalizedMaxPrice,
+      normalizedDurationMax
+    );
+  }
 
-            if (destination != null && !destination.isBlank()) {
-                predicates.add(cb.like(
-                        cb.lower(root.get("destination")),
-                        "%" + destination.trim().toLowerCase() + "%"
-                ));
-            }
+  @Override
+  public Trip retrieveTrip(Long id) {
+    logger.debug("Retrieve public trip id={}", id);
+    return tripRepository.findById(id).orElse(null);
+  }
 
-            if (date != null) {
-                LocalDateTime start = date.atStartOfDay();
-                LocalDateTime end = date.plusDays(1).atStartOfDay();
-                predicates.add(cb.greaterThanOrEqualTo(root.get("departureDateTime"), start));
-                predicates.add(cb.lessThan(root.get("departureDateTime"), end));
-            }
+  @Override
+  public Trip retrieveMyTrip(Long id, Long driverId) {
+    logger.debug("Retrieve driver trip id={} driverId={}", id, driverId);
+    return tripRepository.findByIdAndDriverId(id, driverId);
+  }
 
-            predicates.add(cb.equal(root.get("status"), STATUS_SCHEDULED));
+  @Override
+  public List<Trip> retrieveMyTrips(Long driverId) {
+    logger.debug("Retrieve trips for driverId={}", driverId);
+    return tripRepository.findByDriverIdOrderByDepartureDateTimeDesc(driverId);
+  }
 
-            return cb.and(predicates.toArray(new Predicate[0]));
-        };
+  @Override
+  public Integer retrieveTripSeatsAvailable(Long tripId) {
+    return tripRepository.findSeatsAvailableByTripId(tripId);
+  }
 
-        return tripRepository.findAll(specification).stream()
-            .sorted(Comparator.comparing(Trip::getDepartureDateTime))
-                .toList();
+  @Override
+  public TripPriceSuggestion retrievePriceSuggestion(String departure,
+                                                     String destination,
+                                                     LocalDate departureDate,
+                                                     Integer durationMinutes) {
+    if (departure == null || departure.isBlank()
+      || destination == null || destination.isBlank()
+      || departureDate == null
+      || durationMinutes == null || durationMinutes < 1) {
+      return null;
     }
 
-    @Transactional(readOnly = true)
-    @Override
-    public Page<Trip> searchPublicTrips(String departurePoint,
-                                        String destination,
-                                        LocalDate date,
-                                        Integer seatsRequired,
-                                        Pageable pageable) {
-        Specification<Trip> specification = (root, query, cb) -> {
-            List<Predicate> predicates = new ArrayList<>();
-
-            if (departurePoint != null && !departurePoint.isBlank()) {
-                predicates.add(cb.like(
-                        cb.lower(root.get("departurePoint")),
-                        "%" + departurePoint.trim().toLowerCase() + "%"
-                ));
-            }
-
-            if (destination != null && !destination.isBlank()) {
-                predicates.add(cb.like(
-                        cb.lower(root.get("destination")),
-                        "%" + destination.trim().toLowerCase() + "%"
-                ));
-            }
-
-            if (date != null) {
-                LocalDateTime start = date.atStartOfDay();
-                LocalDateTime end = date.plusDays(1).atStartOfDay();
-                predicates.add(cb.greaterThanOrEqualTo(root.get("departureDateTime"), start));
-                predicates.add(cb.lessThan(root.get("departureDateTime"), end));
-            }
-
-            if (seatsRequired != null && seatsRequired > 0) {
-                predicates.add(cb.greaterThanOrEqualTo(root.get("seatsAvailable"), seatsRequired));
-            }
-
-            predicates.add(cb.equal(root.get("status"), STATUS_SCHEDULED));
-            return cb.and(predicates.toArray(new Predicate[0]));
-        };
-
-        return tripRepository.findAll(specification, pageable);
+    String normalizedDeparture = normalizeMainLocation(departure);
+    String normalizedDestination = normalizeMainLocation(destination);
+    if (normalizedDeparture.isBlank() || normalizedDestination.isBlank()) {
+      logger.info("Price suggestion skipped because normalized route is blank departure={} destination={}",
+        departure, destination);
+      return null;
     }
 
-    @Transactional(readOnly = true)
-    @Override
-    public Trip getTripById(Long id) {
-        return tripRepository.findById(id)
-                .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Trip not found"));
+    List<Trip> historicalTrips = tripRepository
+      .findByDepartureDateTimeBeforeOrderByDepartureDateTimeAsc(departureDate.atStartOfDay())
+      .stream()
+      .filter(this::isTripPriceHistoryUsable)
+      .toList();
+    if (historicalTrips.isEmpty()) {
+      logger.info("Price suggestion skipped because no historical trips were found route={} -> {} date={} duration={}",
+        normalizedDeparture, normalizedDestination, departureDate, durationMinutes);
+      return null;
     }
 
-    @Transactional(readOnly = true)
-    @Override
-    public Trip getPublicTripById(Long id) {
-        Trip trip = tripRepository.findById(id)
-                .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Trip not found"));
-
-        if (!STATUS_SCHEDULED.equals(trip.getStatus())) {
-            throw new ApiException(HttpStatus.NOT_FOUND, "Trip not found");
-        }
-
-        return trip;
+    List<Trip> sameRouteTrips = historicalTrips.stream()
+      .filter(trip -> normalizeMainLocation(trip.getDeparture()).equals(normalizedDeparture)
+        && normalizeMainLocation(trip.getDestination()).equals(normalizedDestination))
+      .toList();
+    List<Trip> candidatePool = !sameRouteTrips.isEmpty() ? sameRouteTrips : historicalTrips;
+    List<Trip> similarTrips = findSimilarDurationTrips(candidatePool, durationMinutes);
+    if (similarTrips.isEmpty()) {
+      logger.info("Price suggestion skipped because no similar trips matched route={} -> {} date={} duration={} candidatePoolSize={}",
+        normalizedDeparture, normalizedDestination, departureDate, durationMinutes, candidatePool.size());
+      return null;
     }
 
-    @Transactional(readOnly = true)
-    @Override
-    public Page<Trip> getMyTrips(Long driverId, Pageable pageable) {
-        return tripRepository.findByCreatedByOrderByDepartureDateTimeDesc(String.valueOf(driverId), pageable);
+    logger.info(
+      "Price suggestion request route={} -> {} date={} duration={} historicalTrips={} sameRouteTrips={} candidatePoolType={} candidatePoolSize={} similarTrips={}",
+      normalizedDeparture,
+      normalizedDestination,
+      departureDate,
+      durationMinutes,
+      historicalTrips.size(),
+      sameRouteTrips.size(),
+      !sameRouteTrips.isEmpty() ? "same_route" : "all_history",
+      candidatePool.size(),
+      similarTrips.size()
+    );
+    for (Trip trip : similarTrips) {
+      logger.info(
+        "Price comparison tripId={} route={} -> {} tripDateTime={} duration={} price={} durationDifference={}",
+        trip.getId(),
+        normalizeMainLocation(trip.getDeparture()),
+        normalizeMainLocation(trip.getDestination()),
+        trip.getDepartureDateTime(),
+        trip.getDurationMinutes(),
+        trip.getPrice(),
+        Math.abs(trip.getDurationMinutes() - durationMinutes)
+      );
     }
 
-    @Transactional(readOnly = true)
-    @Override
-    public Trip getMyTripById(Long tripId, Long driverId) {
-        return tripRepository.findByIdAndCreatedBy(tripId, String.valueOf(driverId))
-                .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Trip not found"));
+    BigDecimal basePrice = calculateAveragePrice(similarTrips);
+    HolidayCalendar holiday = findCriticalHolidayForDate(departureDate);
+    BigDecimal suggestedPrice = holiday != null
+      ? basePrice.multiply(HOLIDAY_PRICE_MULTIPLIER)
+      : basePrice;
+
+    BigDecimal minHistoricalPrice = similarTrips.stream()
+      .map(Trip::getPrice)
+      .min(Comparator.naturalOrder())
+      .orElse(basePrice);
+    BigDecimal maxHistoricalPrice = similarTrips.stream()
+      .map(Trip::getPrice)
+      .max(Comparator.naturalOrder())
+      .orElse(basePrice);
+
+    logger.info(
+      "Price suggestion result route={} -> {} date={} duration={} averagePrice={} minHistoricalPrice={} maxHistoricalPrice={} holiday={} holidayMultiplier={} suggestedPriceBeforeRound={} suggestedPriceRounded={}",
+      normalizedDeparture,
+      normalizedDestination,
+      departureDate,
+      durationMinutes,
+      basePrice,
+      minHistoricalPrice,
+      maxHistoricalPrice,
+      holiday != null ? holiday.getHolidayName() : "none",
+      holiday != null ? HOLIDAY_PRICE_MULTIPLIER : BigDecimal.ONE,
+      suggestedPrice,
+      roundSuggestedPrice(suggestedPrice)
+    );
+
+    return new TripPriceSuggestion(
+      suggestedPrice,
+      basePrice,
+      minHistoricalPrice,
+      maxHistoricalPrice,
+      similarTrips.size(),
+      holiday != null,
+      holiday != null ? holiday.getHolidayName() : null,
+      buildPriceSuggestionMessage(similarTrips.size(), holiday)
+    );
+  }
+
+  @Override
+  public Trip addTrip(Trip request, Long driverId) {
+    if (!validateTrip(request, 0)) {
+      logger.warn("Trip validation failed on create for driverId={}", driverId);
+      return null;
     }
 
-    @Transactional(readOnly = true)
-    @Override
-    public List<Trip> getMyTripsForLegacyClient(Long driverId) {
-        return tripRepository.findByCreatedByOrderByDepartureDateTimeDesc(String.valueOf(driverId));
+    User driver = userRepository.findById(driverId).orElse(null);
+    if (driver == null) {
+      logger.warn("Trip creation failed because driver not found driverId={}", driverId);
+      return null;
     }
 
-    @Transactional
-    @Override
-    public Trip cancelTrip(Long tripId, Long currentUserId) {
-        Trip trip = tripRepository.findById(tripId)
-                .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Trip not found"));
+    Trip trip = new Trip();
+    trip.setDeparture(request.getDeparture().trim());
+    trip.setDeparturePoint(request.getDeparture().trim());
+    trip.setDestination(request.getDestination().trim());
+    trip.setDepartureDateTime(request.getDepartureDateTime());
+    if (request.getDepartureDateTime() != null) {
+      trip.setDepartureTime(request.getDepartureDateTime().toLocalTime().toString());
+    }
+    trip.setDurationMinutes(request.getDurationMinutes());
+    trip.setPrice(request.getPrice());
+    trip.setSeatsTotal(request.getSeatsTotal());
+    // initialize seatsAvailable to seatsTotal on creation
+    trip.setSeatsAvailable(request.getSeatsTotal());
+    trip.setStatus(STATUS_SCHEDULED);
+    trip.setBookingMode(normalizeBookingMode(request.getBookingMode()));
+    trip.setDriver(driver);
+    trip.setCreatedBy(driver.getEmail());
+    logger.debug("Saving new trip for driverId={} departure={} destination={}",
+      driverId, trip.getDeparture(), trip.getDestination());
+    return tripRepository.save(trip);
+  }
 
-        if (!String.valueOf(currentUserId).equals(trip.getCreatedBy())) {
-            throw new ApiException(HttpStatus.FORBIDDEN, "You can only cancel your own trip");
-        }
-
-        if (!STATUS_CANCELED.equals(trip.getStatus())) {
-            trip.setStatus(STATUS_CANCELED);
-            trip = tripRepository.save(trip);
-        }
-
-        return trip;
+  @Override
+  public Trip modifyTrip(Long tripId, Trip request, Long currentUserId) {
+    Trip trip = tripRepository.findById(tripId).orElse(null);
+    if (trip == null) {
+      logger.warn("Trip update failed because trip not found id={}", tripId);
+      return null;
+    }
+    if (!isOwner(trip, currentUserId)) {
+      logger.warn("Trip update rejected because userId={} is not owner of tripId={}", currentUserId, tripId);
+      return null;
+    }
+    int reservedSeats = getReservedSeats(tripId);
+    if (!validateTrip(request, reservedSeats)) {
+      logger.warn("Trip validation failed on update id={} userId={} reservedSeats={}",
+        tripId, currentUserId, reservedSeats);
+      return null;
     }
 
-    @Transactional
-    @Override
-    public Trip updateTrip(Long tripId, Long currentUserId, Trip request) {
-        if (request == null) {
-            throw new ApiException(HttpStatus.BAD_REQUEST, "Trip payload is required");
-        }
-        Trip trip = tripRepository.findById(tripId)
-                .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Trip not found"));
+    trip.setDeparture(request.getDeparture().trim());
+    trip.setDestination(request.getDestination().trim());
+    trip.setDepartureDateTime(request.getDepartureDateTime());
+    trip.setDurationMinutes(request.getDurationMinutes());
+    trip.setPrice(request.getPrice());
+    trip.setSeatsTotal(request.getSeatsTotal());
+    // adjust seatsAvailable when seatsTotal changes, keeping reserved seats accounted for
+    int available = trip.getSeatsTotal() - reservedSeats;
+    trip.setSeatsAvailable(Math.max(0, available));
+    if (request.getBookingMode() != null && !request.getBookingMode().isBlank()) {
+      trip.setBookingMode(normalizeBookingMode(request.getBookingMode()));
+    }
+    logger.debug("Saving updated trip id={} userId={}", tripId, currentUserId);
+    return tripRepository.save(trip);
+  }
 
-        if (!String.valueOf(currentUserId).equals(trip.getCreatedBy())) {
-            throw new ApiException(HttpStatus.FORBIDDEN, "You can only edit your own trip");
-        }
+  @Override
+  public Trip cancelTrip(Long tripId, Long currentUserId) {
+    Trip trip = tripRepository.findById(tripId).orElse(null);
+    if (trip == null) {
+      logger.warn("Trip cancel failed because trip not found id={}", tripId);
+      return null;
+    }
+    if (!isOwner(trip, currentUserId)) {
+      logger.warn("Trip cancel rejected because userId={} is not owner of tripId={}", currentUserId, tripId);
+      return null;
+    }
+    trip.setStatus(STATUS_CANCELED);
+    cancelTripReservations(tripId);
+    logger.debug("Saving canceled trip id={} userId={}", tripId, currentUserId);
+    return tripRepository.save(trip);
+  }
 
-        if (STATUS_CANCELED.equals(trip.getStatus())) {
-            throw new ApiException(HttpStatus.BAD_REQUEST, "Cancelled trips cannot be edited");
-        }
+  @Override
+  public Trip makeTripAvailable(Long tripId, Long currentUserId) {
+    Trip trip = tripRepository.findById(tripId).orElse(null);
+    if (trip == null) {
+      logger.warn("Trip restore failed because trip not found id={}", tripId);
+      return null;
+    }
+    if (!isOwner(trip, currentUserId)) {
+      logger.warn("Trip restore rejected because userId={} is not owner of tripId={}", currentUserId, tripId);
+      return null;
+    }
+    trip.setStatus(STATUS_SCHEDULED);
+    confirmTripReservations(tripId);
+    logger.debug("Saving restored trip id={} userId={}", tripId, currentUserId);
+    return tripRepository.save(trip);
+  }
 
-        validateTripPayload(request);
-        validateFutureDate(request.getDepartureDateTime());
-        Long requestVehicleId = resolveVehicleId(request);
-        Vehicle vehicle = requestVehicleId == null
-            ? trip.getVehicle()
-            : resolveDriverVehicle(requestVehicleId, currentUserId);
-
-        if (request.getSeatsTotal() < 1) {
-            throw new ApiException(HttpStatus.BAD_REQUEST, "seatsTotal must be greater than 0");
-        }
-
-        if (trip.getSeatsAvailable() != trip.getSeatsTotal()) {
-            throw new ApiException(HttpStatus.BAD_REQUEST, "seatsTotal cannot be changed after bookings start");
-        }
-
-        trip.setDeparturePoint(request.getDeparturePoint().trim());
-        trip.setDestination(request.getDestination().trim());
-        trip.setDepartureDateTime(request.getDepartureDateTime());
-        trip.setPrice(request.getPrice());
-        trip.setSeatsTotal(request.getSeatsTotal());
-        trip.setSeatsAvailable(request.getSeatsTotal());
-        trip.setVehicle(vehicle);
-
-        return tripRepository.save(trip);
+  @Override
+  public Trip completeTrip(Long tripId, Long currentUserId) {
+    Trip trip = tripRepository.findById(tripId).orElse(null);
+    if (trip == null) {
+      logger.warn("Trip complete failed because trip not found id={}", tripId);
+      return null;
+    }
+    if (!isOwner(trip, currentUserId)) {
+      logger.warn("Trip complete rejected because userId={} is not owner of tripId={}", currentUserId, tripId);
+      return null;
+    }
+    if (STATUS_CANCELED.equalsIgnoreCase(trip.getStatus())) {
+      logger.warn("Trip complete rejected because trip is canceled id={}", tripId);
+      return null;
     }
 
-    private void validateFutureDate(LocalDateTime departureDateTime) {
-        if (departureDateTime == null || !departureDateTime.isAfter(LocalDateTime.now())) {
-            throw new ApiException(HttpStatus.BAD_REQUEST, "departureTime must be in the future");
-        }
+    trip.setStatus(STATUS_COMPLETED);
+    logger.debug("Saving completed trip id={} userId={}", tripId, currentUserId);
+    return tripRepository.save(trip);
+  }
+
+  private boolean isOwner(Trip trip, Long currentUserId) {
+    return trip.getDriver() != null && currentUserId.equals(trip.getDriver().getId());
+  }
+
+  private boolean isTripPriceHistoryUsable(Trip trip) {
+    if (trip == null) {
+      return false;
+    }
+    if (trip.getDepartureDateTime() == null) {
+      return false;
+    }
+    if (trip.getDurationMinutes() == null || trip.getDurationMinutes() < 1) {
+      return false;
+    }
+    if (trip.getPrice() == null || trip.getPrice().compareTo(BigDecimal.ZERO) <= 0) {
+      return false;
+    }
+    return trip.getStatus() == null || !STATUS_CANCELED.equalsIgnoreCase(trip.getStatus());
+  }
+
+  private List<Trip> findSimilarDurationTrips(List<Trip> trips, Integer requestedDurationMinutes) {
+    int tolerance = Math.max(DURATION_MIN_TOLERANCE, (int) Math.round(requestedDurationMinutes * DURATION_TOLERANCE_RATE));
+    List<Trip> matchedTrips = trips.stream()
+      .filter(trip -> Math.abs(trip.getDurationMinutes() - requestedDurationMinutes) <= tolerance)
+      .sorted(Comparator.comparingInt(trip -> Math.abs(trip.getDurationMinutes() - requestedDurationMinutes)))
+      .limit(8)
+      .toList();
+
+    if (matchedTrips.size() >= 3) {
+      return matchedTrips;
     }
 
-    private Vehicle resolveDriverVehicle(Long vehicleId, Long driverId) {
-        if (vehicleId == null) {
-            Page<Vehicle> existingVehicles = vehicleRepository.findByOwnerIdOrderByIdDesc(
-                    String.valueOf(driverId),
-                    PageRequest.of(0, 1)
-            );
-            if (!existingVehicles.isEmpty()) {
-                return existingVehicles.getContent().get(0);
-            }
+    return trips.stream()
+      .sorted(Comparator.comparingInt(trip -> Math.abs(trip.getDurationMinutes() - requestedDurationMinutes)))
+      .filter(trip -> Math.abs(trip.getDurationMinutes() - requestedDurationMinutes) <= DURATION_MIN_TOLERANCE * 2)
+      .limit(5)
+      .toList();
+  }
 
-            Vehicle defaultVehicle = new Vehicle();
-            defaultVehicle.setOwnerId(String.valueOf(driverId));
-            defaultVehicle.setModel("Default vehicle");
-            defaultVehicle.setColor("Gray");
-            defaultVehicle.setPlateNumber("AUTO-" + driverId + "-" + System.currentTimeMillis());
-            return vehicleRepository.save(defaultVehicle);
-        }
-        return vehicleRepository.findByIdAndOwnerId(vehicleId, String.valueOf(driverId))
-                .orElseThrow(() -> new ApiException(HttpStatus.BAD_REQUEST, "Selected vehicle must belong to the driver"));
+  private BigDecimal calculateAveragePrice(List<Trip> trips) {
+    if (trips == null || trips.isEmpty()) {
+      return BigDecimal.ONE;
     }
 
-    private Long resolveVehicleId(Trip request) {
-        if (request.getVehicle() == null || request.getVehicle().getId() == null) {
-            return null;
-        }
-        return request.getVehicle().getId();
+    BigDecimal totalPrice = trips.stream()
+      .map(Trip::getPrice)
+      .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+    return totalPrice.divide(
+      BigDecimal.valueOf(trips.size()),
+      10,
+      RoundingMode.HALF_UP
+    );
+  }
+
+  private HolidayCalendar findCriticalHolidayForDate(LocalDate departureDate) {
+    return holidayCalendarService.retrieveHolidaysByYear(departureDate.getYear()).stream()
+      .filter(holiday -> Boolean.TRUE.equals(holiday.getCriticalForCarpooling()))
+      .filter(holiday -> {
+        long daysDifference = Math.abs(java.time.temporal.ChronoUnit.DAYS.between(
+          holiday.getHolidayDate(),
+          departureDate
+        ));
+        return daysDifference <= HOLIDAY_PRICE_WINDOW_DAYS;
+      })
+      .min(Comparator.comparingLong(holiday -> Math.abs(java.time.temporal.ChronoUnit.DAYS.between(
+        holiday.getHolidayDate(),
+        departureDate
+      ))))
+      .orElse(null);
+  }
+
+  private BigDecimal roundSuggestedPrice(BigDecimal value) {
+    BigDecimal rounded = value.setScale(0, RoundingMode.HALF_UP);
+    if (rounded.compareTo(BigDecimal.ONE) < 0) {
+      return BigDecimal.ONE;
+    }
+    if (rounded.compareTo(MAX_PRICE) > 0) {
+      return MAX_PRICE;
+    }
+    return rounded;
+  }
+
+  private String buildPriceSuggestionMessage(int similarTripsCount, HolidayCalendar holiday) {
+    if (holiday != null) {
+      return "Suggested from " + similarTripsCount
+        + " previous trips with similar duration. "
+        + holiday.getHolidayName()
+        + " is within 2 days of this trip date, so a slightly higher price is suggested.";
     }
 
-    private void validateTripPayload(Trip request) {
-        if (request.getDeparturePoint() == null || request.getDeparturePoint().isBlank()) {
-            throw new ApiException(HttpStatus.BAD_REQUEST, "departurePoint is required");
-        }
-        if (request.getDestination() == null || request.getDestination().isBlank()) {
-            throw new ApiException(HttpStatus.BAD_REQUEST, "destination is required");
-        }
-        if (request.getDepartureDateTime() == null) {
-            throw new ApiException(HttpStatus.BAD_REQUEST, "departureDateTime is required");
-        }
-        BigDecimal price = request.getPrice();
-        if (price == null || price.compareTo(BigDecimal.ZERO) < 0) {
-            throw new ApiException(HttpStatus.BAD_REQUEST, "price must be greater than or equal to 0");
-        }
-        if (request.getSeatsTotal() < 1) {
-            throw new ApiException(HttpStatus.BAD_REQUEST, "seatsTotal must be greater than 0");
-        }
+    return "Suggested from " + similarTripsCount
+      + " previous trips with similar duration.";
+  }
+
+  private String normalizeMainLocation(String value) {
+    if (value == null) {
+      return "";
     }
+
+    String cleaned = value.trim();
+    int commaIndex = cleaned.indexOf(',');
+    if (commaIndex >= 0) {
+      cleaned = cleaned.substring(0, commaIndex);
+    }
+
+    return cleaned.trim().toLowerCase(Locale.ROOT);
+  }
+
+  private boolean validateTrip(Trip request, int reservedSeats) {
+    if (request == null) {
+      return false;
+    }
+    if (request.getDeparture() == null || request.getDeparture().isBlank()) {
+      return false;
+    }
+    if (request.getDestination() == null || request.getDestination().isBlank()) {
+      return false;
+    }
+    if (normalizeLocation(request.getDeparture()).equals(normalizeLocation(request.getDestination()))) {
+      return false;
+    }
+    if (request.getDepartureDateTime() == null || !request.getDepartureDateTime().isAfter(LocalDateTime.now())) {
+      return false;
+    }
+    if (request.getDurationMinutes() == null || request.getDurationMinutes() < 1) {
+      return false;
+    }
+    BigDecimal price = request.getPrice();
+    if (price == null || price.compareTo(BigDecimal.ZERO) < 0) {
+      return false;
+    }
+    if (price.compareTo(MAX_PRICE) > 0) {
+      return false;
+    }
+    if (request.getSeatsTotal() < 1) {
+      return false;
+    }
+    if (request.getSeatsTotal() > MAX_SEATS_TOTAL) {
+      return false;
+    }
+    if (request.getSeatsTotal() < reservedSeats) {
+      return false;
+    }
+    return true;
+  }
+
+  private int getReservedSeats(Long tripId) {
+    return reservationRepository.findByTripId(tripId).stream()
+      .filter(this::isActiveTripReservation)
+      .mapToInt(this::getReservedPeopleCount)
+      .sum();
+  }
+
+  private boolean isActiveTripReservation(Reservation reservation) {
+    if (reservation == null) {
+      return false;
+    }
+
+    return reservation.getStatus() != ReservationStatus.CANCELLED;
+  }
+
+  private void cancelTripReservations(Long tripId) {
+    List<Reservation> reservations = reservationRepository.findByTripId(tripId);
+    for (Reservation reservation : reservations) {
+      if (isActiveTripReservation(reservation)) {
+        reservation.setStatus(ReservationStatus.CANCELLED);
+      }
+    }
+    reservationRepository.saveAll(reservations);
+  }
+
+  private void confirmTripReservations(Long tripId) {
+    List<Reservation> reservations = reservationRepository.findByTripId(tripId);
+    for (Reservation reservation : reservations) {
+      if (!isActiveTripReservation(reservation)) {
+        reservation.setStatus(ReservationStatus.CONFIRMED);
+      }
+    }
+    reservationRepository.saveAll(reservations);
+  }
+
+  private int getReservedPeopleCount(Reservation reservation) {
+    Integer numberOfPeople = reservation.getNumberOfPeople();
+    if (numberOfPeople == null || numberOfPeople < 1) {
+      return 1;
+    }
+    return numberOfPeople;
+  }
+
+  private String normalizeLocation(String value) {
+    return value.trim().toLowerCase();
+  }
+
+  private String normalizeSearchText(String value) {
+    if (value == null || value.isBlank()) {
+      return null;
+    }
+
+    return value.trim();
+  }
+
+  private String normalizeBookingMode(String value) {
+    if (value == null || value.isBlank()) {
+      return BOOKING_MODE_MANUAL;
+    }
+
+    String normalized = value.trim().toLowerCase();
+    if (BOOKING_MODE_INSTANT.equals(normalized)) {
+      return BOOKING_MODE_INSTANT;
+    }
+
+    return BOOKING_MODE_MANUAL;
+  }
+
+  private String normalizeBookingModeFilter(String value) {
+    if (value == null || value.isBlank()) {
+      return null;
+    }
+
+    String normalized = value.trim().toLowerCase();
+    if (BOOKING_MODE_INSTANT.equals(normalized) || BOOKING_MODE_MANUAL.equals(normalized)) {
+      return normalized;
+    }
+
+    return null;
+  }
+
+  private String normalizeStatusFilter(String value) {
+    if (value == null || value.isBlank()) {
+      return null;
+    }
+
+    String normalized = value.trim().toLowerCase();
+    if (STATUS_SCHEDULED.equals(normalized) || STATUS_CANCELED.equals(normalized) || STATUS_COMPLETED.equals(normalized)) {
+      return normalized;
+    }
+
+    return null;
+  }
 }

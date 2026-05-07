@@ -1,85 +1,80 @@
 package org.example.backend_tunisiahub.Entities.Carpooling;
 
-import jakarta.persistence.*;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 import org.example.backend_tunisiahub.Entities.Reservation;
+import org.example.backend_tunisiahub.Entities.User.User;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
 @Entity
-@Table(name = "trips")
 @Getter
 @Setter
+@Table(name = "trips")
+@NoArgsConstructor
 public class Trip {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+  @Id
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
+  private Long id;
 
-    @Column(nullable = false)
-    private String departurePoint;
+  @Column(name = "departure")
+  private String departure;
 
-    @Column(nullable = false)
-    private String destination;
+  @Column(name = "departure_point")
+  private String departurePoint;
 
-    @Column(nullable = false)
-    private LocalDateTime departureDateTime;
+  private String destination;
 
-    @Column(name = "departure_time", nullable = false)
-    private LocalDateTime departureTime;
+  private LocalDateTime departureDateTime;
+  @Column(name = "departure_time")
+  private String departureTime;
 
-    @Column(precision = 10, scale = 2)
-    private BigDecimal price;
+  private Integer durationMinutes;
 
-    @Column(nullable = false)
-    private int seatsTotal;
+  private BigDecimal price;
 
-    @Column(nullable = false)
-    private int seatsAvailable;
+  private int seatsTotal;
+  @Column(name = "seats_available")
+  private Integer seatsAvailable;
 
-    @Column(nullable = false)
-    private String status;
+  private String status;
 
-    @Column(nullable = false, updatable = false)
-    private LocalDateTime createdAt;
+  @Column(name = "booking_mode")
+  private String bookingMode;
 
-    @Column(name = "updated_at", nullable = false)
-    private LocalDateTime updatedAt;
+  @ManyToOne
+  @JoinColumn(name = "driver_id", nullable = false)
+  private User driver;
 
-    @Column(nullable = false)
-    private String createdBy;
+  @CreationTimestamp
+  @Column(name = "created_at", nullable = false, updatable = false)
+  private LocalDateTime createdAt;
 
-    @Column(name = "driver_id", nullable = false)
-    private String driverId;
+  @Column(name = "created_by")
+  private String createdBy;
 
-    @ManyToOne(optional = true)
-    @JoinColumn(name = "vehicle_id")
-    private org.example.backend_tunisiahub.Entities.Carpooling.Vehicle vehicle;
+  @JsonIgnore
+  @UpdateTimestamp
+  @Column(name = "updated_at", nullable = false)
+  private LocalDateTime updatedAt;
 
-    @OneToMany(mappedBy = "trip")
-    private List<Reservation> reservations;
-
-    @PrePersist
-    void prePersist() {
-        if (this.departureTime == null) {
-            this.departureTime = this.departureDateTime;
-        }
-        this.createdAt = LocalDateTime.now();
-        this.updatedAt = this.createdAt;
-        if (this.seatsAvailable <= 0) {
-            this.seatsAvailable = this.seatsTotal;
-        }
-        if (this.status == null) {
-            this.status = "SCHEDULED";
-        }
-    }
-
-    @PreUpdate
-    void preUpdate() {
-        this.departureTime = this.departureDateTime;
-        this.updatedAt = LocalDateTime.now();
-    }
+  @OneToMany(mappedBy = "trip")
+  @JsonIgnore
+  private List<Reservation> reservations;
 }

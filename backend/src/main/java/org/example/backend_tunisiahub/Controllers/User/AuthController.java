@@ -19,55 +19,92 @@ import java.util.Locale;
 @RequiredArgsConstructor
 public class AuthController {
 
-    private final UserRepository userRepository;
-    private final JwtUtil jwtUtil;
-    private final PasswordEncoder passwordEncoder;
+  private final UserRepository userRepository;
+  private final JwtUtil jwtUtil;
+  private final PasswordEncoder passwordEncoder;
 
-    @PostMapping("/register")
-    public ResponseEntity<?> register(@RequestBody RegisterRequest request) {
-        if (userRepository.findByEmail(request.getEmail()) != null)
-            return ResponseEntity.badRequest().body("Email already exists");
+  // ================= REGISTER =================
+  @PostMapping("/register")
+  public ResponseEntity<?> register(@RequestBody RegisterRequest request) {
 
-        User user = new User();
-        user.setNom(request.getNom());
-        user.setPrenom(request.getPrenom());
-        user.setEmail(request.getEmail());
-        user.setMotDePasse(passwordEncoder.encode(request.getPassword()));
-        user.setRole(resolveRole(request.getRole()));
-
-        userRepository.save(user);
-
-        String token = jwtUtil.generateToken(user.getEmail(), user.getRole().name(),user.getId());
-        return ResponseEntity.ok(new AuthResponse(token, user.getRole().name(), user.getEmail(), user.getNom(), user.getPrenom(), user.getId()));
+    if (userRepository.findByEmail(request.getEmail()) != null) {
+      return ResponseEntity.badRequest().body("Email already exists");
     }
 
-    @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody LoginRequest request) {
-        User user = userRepository.findByEmail(request.getEmail());
+    RoleUser role = resolveRegistrationRole(request.getRole());
 
-        if (user == null)
-            return ResponseEntity.status(404).body("User not found");
+    User user = new User();
+    user.setNom(request.getNom());
+    user.setPrenom(request.getPrenom());
+    user.setEmail(request.getEmail());
+    user.setMotDePasse(passwordEncoder.encode(request.getPassword()));
+    user.setRole(role);
 
-        if (!passwordEncoder.matches(request.getPassword(), user.getMotDePasse()))
-            return ResponseEntity.status(401).body("Invalid password");
+    User savedUser = userRepository.save(user);
 
-        String token = jwtUtil.generateToken(user.getEmail(), user.getRole().name(), user.getId());
-        return ResponseEntity.ok(new AuthResponse(token, user.getRole().name(), user.getEmail(), user.getNom(), user.getPrenom(), user.getId()));
+    String token = jwtUtil.generateToken(
+      savedUser.getEmail(),
+      savedUser.getRole().name(),
+      savedUser.getId()
+    );
+
+    return ResponseEntity.ok(new AuthResponse(
+      token,
+      savedUser.getRole().name(),
+      savedUser.getEmail(),
+      savedUser.getNom(),
+      savedUser.getPrenom(),
+      savedUser.getId()
+    ));
+  }
+
+  // ================= LOGIN =================
+  @PostMapping("/login")
+  public ResponseEntity<?> login(@RequestBody LoginRequest request) {
+
+    User user = userRepository.findByEmail(request.getEmail());
+
+    if (user == null) {
+      return ResponseEntity.status(404).body("User not found");
     }
 
-    private RoleUser resolveRole(String roleValue) {
-        if (roleValue == null || roleValue.isBlank()) {
-            return RoleUser.CLIENT;
-        }
-
-        String normalized = roleValue.trim().toUpperCase(Locale.ROOT);
-        if ("ADMIN".equals(normalized)) {
-            return RoleUser.ADMIN;
-        }
-        if ("USER".equals(normalized) || "CLIENT".equals(normalized)) {
-            return RoleUser.CLIENT;
-        }
-
-        return RoleUser.CLIENT;
+    if (!passwordEncoder.matches(request.getPassword(), user.getMotDePasse())) {
+      return ResponseEntity.status(401).body("Invalid password");
     }
+
+    String token = jwtUtil.generateToken(
+      user.getEmail(),
+      user.getRole().name(),
+      user.getId()
+    );
+
+    return ResponseEntity.ok(new AuthResponse(
+      token,
+      user.getRole().name(),
+      user.getEmail(),
+      user.getNom(),
+      user.getPrenom(),
+      user.getId()
+    ));
+  }
+
+  // ================= ROLE HELPER =================
+  private RoleUser resolveRegistrationRole(String roleValue) {
+
+    if (roleValue == null || roleValue.isBlank()) {
+      return RoleUser.CLIENT;
+    }
+
+    String normalized = roleValue.trim().toUpperCase(Locale.ROOT);
+
+    if ("ADMIN".equals(normalized)) {
+      return RoleUser.ADMIN;
+    }
+
+    if ("USER".equals(normalized) || "CLIENT".equals(normalized)) {
+      return RoleUser.CLIENT;
+    }
+
+    return RoleUser.CLIENT;
+  }
 }

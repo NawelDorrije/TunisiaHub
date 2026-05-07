@@ -29,7 +29,7 @@ public class Payment {
     @Enumerated(EnumType.STRING)
     PaymentMethod method;
 
-    @ManyToOne
+    @OneToOne
     @JoinColumn(name = "reservation_id")
     Reservation reservation;
 

@@ -2,71 +2,131 @@ package org.example.backend_tunisiahub.Entities;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 import lombok.experimental.FieldDefaults;
+import org.example.backend_tunisiahub.Entities.Accommodation.Accommodation;
+import org.example.backend_tunisiahub.Entities.Camping.Activity;
+import org.example.backend_tunisiahub.Entities.Camping.Enums.ReservationStatus;
+import org.example.backend_tunisiahub.Entities.Camping.Spot;
+import org.example.backend_tunisiahub.Entities.Carpooling.Trip;
 import org.example.backend_tunisiahub.Entities.Event.Event;
 import org.example.backend_tunisiahub.Entities.Event.Payment;
-import org.example.backend_tunisiahub.Entities.Carpooling.Trip;
 import org.example.backend_tunisiahub.Entities.User.User;
 
-import org.example.backend_tunisiahub.Entities.Camping.Spot;
-import java.util.Date;
-import java.util.List;
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.*;
 
 @Entity
 @Getter
 @Setter
-@FieldDefaults(level = AccessLevel.PRIVATE)
 @NoArgsConstructor
+@AllArgsConstructor
+@Builder
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class Reservation {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    Long id;
+  @Id
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
+  Long id;
 
-    String status;
+  // ================= USER =================
+  @ManyToOne
+  @JoinColumn(name = "user_id")
+  User user;
 
-    @Temporal(TemporalType.DATE)
-    Date startDate;
+  @ManyToOne
+  @JoinColumn(name = "reserved_by_id")
+  User reservedBy;
 
-    @Temporal(TemporalType.DATE)
-    Date endDate;
+  // ================= STATUS =================
+  @Enumerated(EnumType.STRING)
+  ReservationStatus status;
 
-    Double totalPrice;
+  // ================= TYPE =================
+  @Enumerated(EnumType.STRING)
+  ReservationType type;
 
-    @Enumerated(EnumType.STRING)
-    ReservationType type;
+  // ================= TRIP =================
+  @ManyToOne
+  @JoinColumn(name = "trip_id")
+  Trip trip;
 
-    @ManyToOne
-    @JoinColumn(name = "trip_id")
-    @JsonIgnore
-    Trip trip;
+  Integer numberOfPeople;
 
-    @ManyToOne
-    @JoinColumn(name = "spot_id")
-    @JsonIgnore
-    Spot spot;
+  // ================= CAMPING =================
+  @ManyToOne
+  @JoinColumn(name = "spot_id")
+  Spot spot;
 
-    @ManyToOne
-    @JoinColumn(name = "user_id")
-    //@JsonIgnore
-    User user;
+  @ManyToMany
+  @JoinTable(
+    name = "reservation_activities",
+    joinColumns = @JoinColumn(name = "reservation_id"),
+    inverseJoinColumns = @JoinColumn(name = "activity_id")
+  )
+  List<Activity> activities = new ArrayList<>();
 
-    @OneToMany(mappedBy = "reservation")
-    List<Complaint> complaints;
+  LocalDate checkIn;
+  LocalDate checkOut;
+  Integer numberOfGuests;
 
-    @OneToOne(mappedBy = "reservation", cascade = CascadeType.ALL)
-    Review review;
+  // ================= EVENT =================
+  @ManyToOne
+  @JoinColumn(name = "event_id")
+  Event event;
 
-    @ManyToOne
-    @JoinColumn(name = "event_id")
-    //@JsonIgnore
-    Event event;
+  // ================= ACCOMMODATION =================
+  @ManyToOne
+  @JoinColumn(name = "accommodation_id")
+  Accommodation accommodation;
 
-    @OneToMany(mappedBy = "reservation", cascade = CascadeType.ALL)
-    List<Payment> payments;
+  @Temporal(TemporalType.DATE)
+  Date startDate;
 
+  @Temporal(TemporalType.DATE)
+  Date endDate;
+
+  // ================= PAYMENT =================
+  @OneToOne(mappedBy = "reservation", cascade = CascadeType.ALL)
+  Payment payment;
+
+  // ================= COMMON =================
+  BigDecimal totalPrice;
+
+  String notes;
+
+  // ================= REMINDER =================
+  @Temporal(TemporalType.TIMESTAMP)
+  Date reminderSentAt;
+
+  @Column
+  String reminderStatus;
+
+  @Column
+  String reminderError;
+
+  // ================= AUDIT =================
+  @Column(updatable = false)
+  LocalDateTime createdAt = LocalDateTime.now();
+
+  LocalDateTime updatedAt;
+
+  @PrePersist
+  void onCreate() {
+    updatedAt = LocalDateTime.now();
+
+    if (type == null) {
+      if (trip != null) type = ReservationType.TripReservation;
+      else if (event != null) type = ReservationType.EventReservation;
+      else if (spot != null) type = ReservationType.CampingReservation;
+      else if (accommodation != null) type = ReservationType.accommodationReservation;
+    }
+  }
+
+  @PreUpdate
+  void onUpdate() {
+    updatedAt = LocalDateTime.now();
+  }
 }

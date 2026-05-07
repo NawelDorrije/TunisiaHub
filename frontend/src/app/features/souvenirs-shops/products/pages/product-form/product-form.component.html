@@ -1,0 +1,130 @@
+<div class="container py-4">
+  <div class="card shadow-sm p-4">
+    <h2 class="mb-4">{{ isEditMode ? 'Edit Product' : 'Create Product' }}</h2>
+
+    <div *ngIf="errorMessage" class="alert alert-danger">
+      {{ errorMessage }}
+    </div>
+
+    <form #productForm="ngForm" (ngSubmit)="save(productForm)">
+      <div class="mb-3">
+        <label for="name" class="form-label">Product name</label>
+        <input
+          id="name"
+          name="name"
+          [(ngModel)]="product.name"
+          required
+          class="form-control"
+          placeholder="Enter product name"
+        />
+      </div>
+
+      <div class="mb-3">
+        <label for="description" class="form-label">Description</label>
+        <textarea
+          id="description"
+          name="description"
+          [(ngModel)]="product.description"
+          required
+          rows="4"
+          class="form-control"
+          placeholder="Enter product description"
+        ></textarea>
+        <small *ngIf="isGeneratingDescription" class="form-text text-info d-block mt-1">
+          <i class="bi bi-hourglass-split"></i> Generating description from image...
+        </small>
+      </div>
+
+      <div *ngIf="photoUrl" class="mb-3 text-center">
+        <label class="form-label d-block">Current image</label>
+        <img [src]="photoUrl" class="img-fluid rounded" width="180" alt="Product image preview" />
+      </div>
+
+      <div class="mb-3">
+        <label for="productImage" class="form-label">Product image</label>
+        <input
+          id="productImage"
+          type="file"
+          accept="image/*"
+          (change)="onFileSelected($event)"
+          class="form-control"
+        />
+        <button
+          type="button"
+          class="btn btn-outline-primary mt-2"
+          (click)="uploadProductImage()"
+          [disabled]="!selectedFile || isUploadingImage || isGeneratingDescription"
+        >
+          <span *ngIf="!isUploadingImage && !isGeneratingDescription">Upload image</span>
+          <span *ngIf="isGeneratingDescription"><i class="bi bi-hourglass-split"></i> Generating description...</span>
+          <span *ngIf="isUploadingImage && !isGeneratingDescription">Uploading...</span>
+        </button>
+        <div *ngIf="uploadError" class="form-text text-danger">{{ uploadError }}</div>
+      </div>
+
+      <div class="mb-3">
+        <label for="photoUrl" class="form-label">Photo URL</label>
+        <input
+          id="photoUrl"
+          name="photoUrl"
+          [(ngModel)]="product.photoUrl"
+          readonly
+          class="form-control"
+          placeholder="Uploaded image URL"
+        />
+      </div>
+
+      <div class="row g-3 mb-3">
+        <div class="col-md-6">
+          <label for="price" class="form-label">Price</label>
+          <input
+            id="price"
+            name="price"
+            type="number"
+            step="0.01"
+            [(ngModel)]="product.price"
+            required
+            class="form-control"
+            placeholder="0.00"
+          />
+        </div>
+        <div class="col-md-6">
+          <label for="stockQuantity" class="form-label">Stock quantity</label>
+          <input
+            id="stockQuantity"
+            name="stockQuantity"
+            type="number"
+            [(ngModel)]="product.stockQuantity"
+            required
+            class="form-control"
+            placeholder="0"
+          />
+        </div>
+      </div>
+
+      <div class="mb-3">
+        <label for="shopId" class="form-label">Shop ID</label>
+        <input
+          id="shopId"
+          name="shopId"
+          type="number"
+          [(ngModel)]="shopId"
+          [readonly]="shopId !== null && !isEditMode"
+          required
+          class="form-control"
+          placeholder="Enter shop id"
+        />
+        <div *ngIf="shopId !== null && !isEditMode" class="form-text">
+          This product will be linked to shop #{{ shopId }}.
+        </div>
+      </div>
+
+      <div class="d-flex gap-2">
+        <button type="submit" class="btn btn-primary" [disabled]="productForm.invalid">
+          {{ isEditMode ? 'Save changes' : 'Create product' }}
+        </button>
+        <button type="button" class="btn btn-outline-secondary" (click)="cancel()">Cancel</button>
+      </div>
+    </form>
+  </div>
+</div>

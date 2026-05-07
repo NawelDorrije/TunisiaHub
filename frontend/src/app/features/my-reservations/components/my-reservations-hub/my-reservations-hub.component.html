@@ -1,0 +1,57 @@
+<!-- my-reservations-hub.component.html -->
+<div class="res-root">
+
+  <!-- ── Header ── -->
+  <div class="res-header">
+    <div class="res-header-bg">
+      <div class="res-blob rb1"></div>
+      <div class="res-blob rb2"></div>
+    </div>
+    <div class="res-header-content">
+      <span class="res-eyebrow">My Account</span>
+      <h1 class="res-title">My <em>Reservations</em></h1>
+      <p class="res-sub">All your bookings across every service — tracked and managed in one place.</p>
+      <div class="res-stat-row">
+        <div class="res-stat">
+          <span class="res-sn">{{ categories.length }}</span>
+          <span class="res-sl">Services</span>
+        </div>
+        <div class="res-sdiv"></div>
+        <div class="res-stat">
+          <span class="res-sn">Live</span>
+          <span class="res-sl">Status</span>
+        </div>
+        <div class="res-sdiv"></div>
+        <div class="res-stat">
+          <span class="res-sn">All</span>
+          <span class="res-sl">In one place</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Grid ── -->
+  <div class="res-section">
+    <div class="res-section-label">Your booking categories</div>
+    <div class="res-grid">
+      <div class="res-card"
+           *ngFor="let cat of categories; let i = index"
+           (click)="navigate(cat.link)"
+           [attr.data-i]="i">
+        <div class="res-card-top">
+          <div class="res-icon-wrap">
+            <i [class]="cat.icon"></i>
+          </div>
+          <div class="res-live-dot"></div>
+        </div>
+        <h3 class="res-card-title">{{ cat.title }}</h3>
+        <p class="res-card-desc">{{ cat.description }}</p>
+        <div class="res-card-footer">
+          <span class="res-cta-text">View reservations</span>
+          <div class="res-arrow"><i class="bi bi-arrow-right"></i></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>

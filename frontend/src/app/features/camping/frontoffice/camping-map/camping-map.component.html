@@ -1,0 +1,80 @@
+<div class="map-page">
+
+  <!-- Sidebar -->
+  <aside class="map-sidebar">
+    <div class="sidebar-header">
+      <a routerLink="/camping" class="back-link">← Back</a>
+      <h2>Camping Map</h2>
+      <p class="sidebar-sub">{{ filteredCampings.length }} locations</p>
+    </div>
+
+    <div class="map-search">
+      <span>🔍</span>
+      <input
+        [(ngModel)]="searchKeyword"
+        (ngModelChange)="filterCampings()"
+        placeholder="Filter campings…"
+        type="search"/>
+    </div>
+
+    <div class="sidebar-loading" *ngIf="loading">
+      <div class="loader-dots"><span></span><span></span><span></span></div>
+      <p>Loading campings…</p>
+    </div>
+
+    <div class="sidebar-error" *ngIf="error && !loading">
+      ⚠️ {{ error }}
+    </div>
+
+    <div class="camping-list-sidebar" *ngIf="!loading && !error">
+      <div
+        *ngFor="let c of filteredCampings"
+        class="sidebar-item"
+        [class.selected]="selectedCamping?.id === c.id"
+        (click)="focusCamping(c)">
+        <div class="si-img">
+          <img [src]="c.photos?.[0] || 'assets/images/camping-default.jpg'" [alt]="c.name"/>
+        </div>
+        <div class="si-info">
+          <div class="si-gov">📍 {{ c.governorate }}</div>
+          <div class="si-name">{{ c.name }}</div>
+        </div>
+      </div>
+      <div *ngIf="filteredCampings.length === 0" class="sidebar-empty">
+        No campings match your search.
+      </div>
+    </div>
+  </aside>
+
+  <!-- Map -->
+  <div class="map-area">
+    <div id="camping-map" class="leaflet-map"></div>
+
+    <!-- Detail Panel -->
+    <div class="detail-panel" [class.visible]="selectedCamping" *ngIf="selectedCamping">
+      <button class="panel-close" (click)="closePanel()" aria-label="Close">✕</button>
+      <div class="dp-img">
+        <img [src]="selectedCamping.photos?.[0] || 'assets/images/camping-default.jpg'"
+             [alt]="selectedCamping.name"/>
+      </div>
+      <div class="dp-body">
+        <span class="dp-gov">📍 {{ selectedCamping.governorate }}</span>
+        <h3 class="dp-name">{{ selectedCamping.name }}</h3>
+        <p class="dp-desc" *ngIf="selectedCamping.description">
+          {{ selectedCamping.description | slice:0:110 }}…
+        </p>
+        <div class="dp-meta">
+       
+          <div class="dp-meta-item">
+            <span class="dml">Capacity</span>
+            <span class="dmv">{{ selectedCamping.maxCapacity }} guests</span>
+          </div>
+        </div>
+        <div class="dp-actions">
+          <button class="btn-dp-secondary" (click)="goToDetail()">Details</button>
+          <button class="btn-dp-primary" (click)="goToReserve()">Book Now</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,3 +1,384 @@
-input[readonly] {
-  background-color: #f8f9fa;
+.booking-page {
+  background: #ffffff;
+  min-height: calc(100vh - 110px);
+  padding: 1.1rem 0.8rem 2rem;
+}
+
+.booking-shell {
+  max-width: 660px;
+  margin: 0 auto;
+}
+
+.booking-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.booking-title {
+  color: #11254c;
+  font-size: 2.35rem;
+  font-weight: 800;
+  line-height: 1.1;
+  margin: 0 0 0.85rem;
+  text-align: center;
+}
+
+.booking-notice {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  color: #68738f;
+  font-size: 0.88rem;
+  font-weight: 600;
+  margin-bottom: 0.8rem;
+}
+
+.booking-notice i {
+  font-size: 0.95rem;
+}
+
+.booking-section {
+  padding: 0.15rem 0;
+}
+
+.booking-date,
+.booking-section h3 {
+  color: #15264c;
+  font-size: 1rem;
+  font-weight: 800;
+  margin: 0 0 0.65rem;
+}
+
+.booking-divider {
+  height: 5px;
+  border-radius: 999px;
+  background: #ececec;
+  margin: 0.8rem 0;
+}
+
+.booking-timeline {
+  display: grid;
+  grid-template-columns: 56px 22px 1fr;
+  gap: 0.6rem;
+  align-items: start;
+}
+
+.timeline-time-col,
+.timeline-stop-col {
+  display: flex;
+  flex-direction: column;
+  gap: 1.45rem;
+}
+
+.timeline-time-col {
+  color: #17233d;
+  font-size: 0.88rem;
+  font-weight: 700;
+}
+
+.timeline-time-col .next-day-label {
+  display: block;
+  color: #6c7690;
+  font-size: 0.72em;
+  font-weight: 700;
+  margin-top: -18px;
+  line-height: 1;
+}
+
+.timeline-line-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 82px;
+  padding-top: 0.15rem;
+}
+
+.timeline-dot {
+  width: 0.72rem;
+  height: 0.72rem;
+  border-radius: 50%;
+  border: 2px solid #46506b;
+  background: #ffffff;
+}
+
+.timeline-line {
+  flex: 1;
+  width: 3px;
+  border-radius: 999px;
+  background: #46506b;
+}
+
+.timeline-stop-col {
+  color: #17233d;
+  font-size: 0.95rem;
+  font-weight: 700;
+  padding-top: 0.05rem;
+}
+
+.price-summary-card {
+  display: flex;
+  width: 100%;
+  border: 0;
+  border-radius: 1.6rem;
+  background: rgb(255, 255, 255);
+  padding: 0.9rem 1rem;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.8rem;
+  text-align: left;
+  transition: background 0.2s ease, transform 0.2s ease;
+}
+
+.price-summary-card:hover,
+.price-summary-card:focus {
+  background: #f2f5fa;
+  transform: translateY(-1px);
+  outline: none;
+}
+
+.price-summary-card strong {
+  display: block;
+  color: #17233d;
+  font-size: 0.95rem;
+  font-weight: 800;
+  margin-bottom: 0.15rem;
+}
+
+.price-summary-card small {
+  color: #6c7690;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.price-summary-side {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  color: #11254c;
+  flex-shrink: 0;
+}
+
+.price-value {
+  color: #11254c;
+  font-size: 1.1rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.price-summary-side i {
+  color: #62708e;
+  font-size: 1rem;
+}
+
+.seat-field {
+  max-width: 165px;
+}
+
+.seat-field .form-label {
+  color: #17233d;
+  font-size: 0.82rem;
+  font-weight: 700;
+  margin-bottom: 0.28rem;
+}
+
+.seat-field .form-control,
+.booking-message {
+  border: 0;
+  border-radius: 1.4rem;
+  background: #eef1f7;
+  color: #1d2844;
+  box-shadow: none;
+}
+
+.seat-field .form-control {
+  height: 40px;
+  padding: 0.55rem 0.8rem;
+  font-size: 0.88rem;
+  font-weight: 600;
+}
+
+.booking-message {
+  min-height: 108px;
+  padding: 0.75rem 0.9rem;
+  font-size: 0.88rem;
+  line-height: 1.5;
+  resize: vertical;
+}
+
+.booking-message:focus,
+.seat-field .form-control:focus {
+  box-shadow: none;
+  background: #e8edf7;
+}
+
+.booking-actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  margin-top: 1.1rem;
+}
+
+.continue-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  border: 0;
+  border-radius: 999px;
+  background: #3a6fe4;
+  color: #ffffff;
+  font-size: 0.9rem;
+  font-weight: 700;
+  padding: 0.7rem 1.35rem;
+}
+
+.continue-button:hover,
+.continue-button:focus {
+  background: #2d61d7;
+  color: #ffffff;
+}
+
+.price-details-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1050;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 1rem;
+  background: rgba(17, 37, 76, 0.32);
+  overflow-y: auto;
+}
+
+.price-details-panel {
+  width: min(100%, 700px);
+  margin: 1.2rem auto;
+  border-radius: 1.9rem;
+  background: #ffffff;
+  padding: 1.4rem 1.25rem 1.35rem;
+  box-shadow: 0 26px 80px rgba(17, 37, 76, 0.22);
+}
+
+.price-details-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.1rem;
+}
+
+.price-details-header h2 {
+  color: #11254c;
+  font-size: 2rem;
+  font-weight: 800;
+  line-height: 1.05;
+  margin: 0;
+}
+
+.price-details-close {
+  width: 2.2rem;
+  height: 2.2rem;
+  border: 0;
+  border-radius: 50%;
+  background: #eef1f7;
+  color: #53627f;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.price-details-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.6rem 0;
+}
+
+.price-details-row strong {
+  display: block;
+  color: #17233d;
+  font-size: 0.95rem;
+  font-weight: 800;
+  margin-bottom: 0.14rem;
+}
+
+.price-details-row small {
+  display: block;
+  color: #67748f;
+  font-size: 0.82rem;
+  line-height: 1.45;
+  max-width: 29rem;
+}
+
+.price-details-row span {
+  color: #11254c;
+  font-size: 1.1rem;
+  font-weight: 800;
+  line-height: 1.1;
+  white-space: nowrap;
+}
+
+.price-details-row.total {
+  padding-top: 0.75rem;
+}
+
+.price-details-separator {
+  height: 1px;
+  background: #e5e9f2;
+  margin: 0.3rem 0;
+}
+
+
+@media (max-width: 767.98px) {
+  .booking-page {
+    padding: 0.95rem 0.7rem 1.8rem;
+  }
+
+  .booking-title {
+    font-size: 1.75rem;
+  }
+
+  .booking-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .price-summary-side {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .seat-field {
+    max-width: none;
+  }
+
+  .price-details-overlay {
+    padding: 0.6rem;
+  }
+
+  .price-details-panel {
+    border-radius: 1.5rem;
+    padding: 1rem 0.95rem 1.1rem;
+  }
+
+  .price-details-header h2 {
+    font-size: 1.6rem;
+  }
+
+  .price-details-row {
+    flex-direction: column;
+  }
+
+  .price-details-row span {
+    white-space: normal;
+  }
+
+  .booking-actions .btn {
+    width: 100%;
+    justify-content: center;
+  }
 }

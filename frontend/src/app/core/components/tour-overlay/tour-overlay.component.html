@@ -1,0 +1,32 @@
+<div class="tour-container" *ngIf="currentStep !== -1" [class.active]="currentStep !== -1">
+  <!-- Dark backdrop with cutout -->
+  <div class="tour-backdrop" [style.box-shadow]="backdropShadow"></div>
+
+  <!-- Animated spotlight border -->
+  <div class="tour-spotlight" 
+       [style.top.px]="targetRect.top" 
+       [style.left.px]="targetRect.left"
+       [style.width.px]="targetRect.width" 
+       [style.height.px]="targetRect.height">
+  </div>
+
+  <!-- Tooltip -->
+  <div class="tour-tooltip" 
+       [ngClass]="'pos-' + step?.position"
+       [style.top.px]="tooltipPos.top" 
+       [style.left.px]="tooltipPos.left">
+    
+    <div class="tooltip-content">
+      <h3 class="tooltip-title">{{ step?.title }}</h3>
+      <p class="tooltip-text">{{ step?.text }}</p>
+      
+      <div class="tooltip-actions">
+        <button class="btn-skip" (click)="skip()">Skip</button>
+        <button class="btn-next" (click)="next()">
+          {{ isLastStep ? 'Done' : 'Next' }}
+        </button>
+      </div>
+    </div>
+    <div class="tooltip-arrow"></div>
+  </div>
+</div>

@@ -12,7 +12,7 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api/reservations")
+@RequestMapping("/api/event-reservations")
 @RequiredArgsConstructor
 public class ReservationEventController {
 
@@ -23,7 +23,7 @@ public class ReservationEventController {
         return reservationService.retrieveAllReservations();
     }
 
-    @GetMapping("/{id}")
+    @GetMapping("/event/{id}")
     public Reservation getReservationById(@PathVariable Long id) {
         return reservationService.retrieveReservation(id);
     }

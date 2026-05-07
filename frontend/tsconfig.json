@@ -3,10 +3,12 @@
 {
   "compileOnSave": false,
   "compilerOptions": {
+
     "baseUrl": "src",
     "paths": {
       "@env/*": ["environments/*"]
     },
+
     "outDir": "./dist/out-tsc",
     "strict": true,
     "noImplicitOverride": true,
@@ -34,4 +36,6 @@
     "strictInputAccessModifiers": true,
     "strictTemplates": true
   }
+
 }
+

@@ -3,20 +3,30 @@ package org.example.backend_tunisiahub.Security;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+
 import lombok.NoArgsConstructor;
+
+
 import lombok.Setter;
 
 @Getter
 @Setter
 @AllArgsConstructor
+
 @NoArgsConstructor
 public class AuthResponse {
+
+
+
+    private Long id;
+
     private String token;
     private String role;
     private String email;
     private String nom;
     private String prenom;
-    private Long id;
+
+    //private Long id;
     private AuthUser user;
 
     public AuthResponse(String token, String role, String email, String nom, String prenom, Long id) {
@@ -38,4 +48,5 @@ public class AuthResponse {
         private String email;
         private String role;
     }
+
 }

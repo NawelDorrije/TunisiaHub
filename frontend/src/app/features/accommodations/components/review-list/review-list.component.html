@@ -21,15 +21,33 @@
   </div>
 
   <!-- Review form -->
-  <div id="review-form-section">
-    <app-review-form
-      [accommodationId]="accommodationId"
-      [reviewToEdit]="reviewToEdit"
-      (reviewAdded)="onReviewAdded($event)"
-      (reviewUpdated)="onReviewUpdated($event)"
-      (cancelled)="onCancelled()"
-    ></app-review-form>
+<div id="review-form-section">
+  <!-- Already reviewed message -->
+  <div
+    class="alert alert-info mb-3"
+    *ngIf="hasUserReviewed && !reviewToEdit"
+  >
+    ✅ You have already reviewed this accommodation.
   </div>
+
+  <!-- Show form only if not reviewed yet and logged in -->
+  <app-review-form
+    *ngIf="authService.isLoggedIn() && (!hasUserReviewed || reviewToEdit)"
+    [accommodationId]="accommodationId"
+    [reviewToEdit]="reviewToEdit"
+    (reviewAdded)="onReviewAdded($event)"
+    (reviewUpdated)="onReviewUpdated($event)"
+    (cancelled)="onCancelled()"
+  ></app-review-form>
+
+  <!-- Not logged in message -->
+  <div
+    class="alert alert-warning mb-3"
+    *ngIf="!authService.isLoggedIn()"
+  >
+    🔒 Please <a routerLink="/sign-in">sign in</a> to leave a review.
+  </div>
+</div>
 
   <!-- Loading -->
   <div class="text-center py-4" *ngIf="isLoading">

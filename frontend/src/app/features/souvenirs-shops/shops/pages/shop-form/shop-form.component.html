@@ -1,0 +1,116 @@
+<div class="shop-form-page container py-5">
+  <div *ngIf="isLoading" class="text-center py-5">
+    <div class="spinner-border text-primary" role="status"></div>
+    <p class="mt-3 mb-0">Loading shop...</p>
+  </div>
+
+  <div *ngIf="!isLoading" class="shop-form-card p-4 rounded-4 shadow-sm bg-white">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-start gap-3 mb-4">
+      <div>
+        <h2 class="mb-2">{{ isEditMode ? 'Edit Shop' : 'Create New Shop' }}</h2>
+        <p class="text-muted mb-0">Build a beautiful Tunisian storefront with warm colors, strong details and a memorable brand.</p>
+      </div>
+      <button type="button" class="btn btn-outline-secondary" (click)="cancel()">Cancel</button>
+    </div>
+
+    <div *ngIf="errorMessage" class="alert alert-danger">
+      {{ errorMessage }}
+    </div>
+
+    <form #shopForm="ngForm" (ngSubmit)="save(shopForm)">
+      <div class="row g-4">
+        <div class="col-lg-7">
+          <div class="form-section p-4 rounded-4 mb-4">
+            <h4 class="mb-3">Shop details</h4>
+            <div class="mb-3">
+              <label for="name" class="form-label">Shop name</label>
+              <input id="name" name="name" [(ngModel)]="shop.name" required class="form-control" placeholder="Enter shop name" />
+            </div>
+            <div class="mb-3">
+              <label for="description" class="form-label">Description</label>
+              <textarea id="description" name="description" [(ngModel)]="shop.description" required rows="5" class="form-control" placeholder="Describe the shop"></textarea>
+              <small *ngIf="isGeneratingDescription" class="form-text text-info d-block mt-1">
+                <i class="bi bi-hourglass-split"></i> Generating description from image...
+              </small>
+            </div>
+            <div class="row g-3 mb-3">
+              <div class="col-md-6">
+                <label for="category" class="form-label">Category</label>
+                <select id="category" name="category" [(ngModel)]="shop.category" required class="form-select category-select">
+                  <option [ngValue]="undefined">Choose category</option>
+                  <option value="SOUVENIRS">Souvenirs</option>
+                  <option value="CLOTHING">Clothing</option>
+                  <option value="JEWELRY">Jewelry</option>
+                  <option value="LEATHER">Leather</option>
+                  <option value="HOMELIVING">Home & Living</option>
+                  <option value="ART">Art</option>
+                </select>
+              </div>
+              <div class="col-md-6">
+                <label for="city" class="form-label">City</label>
+                <input id="city" name="city" [(ngModel)]="shop.city" required class="form-control" placeholder="City" />
+              </div>
+            </div>
+            <div class="mb-3">
+              <label for="address" class="form-label">Address</label>
+              <input id="address" name="address" [(ngModel)]="shop.address" required class="form-control" placeholder="Tunis Medina, Rue des Teinturiers" />
+            </div>
+          </div>
+
+          <div class="form-section p-4 rounded-4">
+            <h4 class="mb-3">Location</h4>
+            <p class="text-muted">Click on the map to select the shop coordinates.</p>
+            <div #mapContainer class="map-container mb-3"></div>
+            <div class="row g-3">
+              <div class="col-md-6">
+                <label for="latitude" class="form-label">Latitude</label>
+                <input id="latitude" name="latitude" type="number" step="any" [(ngModel)]="shop.latitude" required readonly class="form-control" placeholder="Latitude auto-filled from map" />
+              </div>
+              <div class="col-md-6">
+                <label for="longitude" class="form-label">Longitude</label>
+                <input id="longitude" name="longitude" type="number" step="any" [(ngModel)]="shop.longitude" required readonly class="form-control" placeholder="Longitude auto-filled from map" />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-lg-5">
+          <div class="form-panel p-4 rounded-4 shadow-sm mb-4">
+            <h4 class="mb-3">Shop image</h4>
+            <div class="upload-dropzone rounded-4 mb-3">
+              <div class="upload-content text-center">
+                <i class="bi bi-upload fs-1 mb-3"></i>
+                <p class="mb-1">Drag & drop your image or select a file</p>
+                <small class="text-muted">Recommended size 1280x720</small>
+              </div>
+              <input id="shopImage" type="file" accept="image/*" (change)="onFileSelected($event)" class="upload-input" />
+            </div>
+            <button type="button" class="btn btn-primary w-100 mb-3" (click)="uploadShopImage()" [disabled]="!selectedFile || isUploadingImage || isGeneratingDescription">
+              <span *ngIf="!isUploadingImage && !isGeneratingDescription">Upload image</span>
+              <span *ngIf="isGeneratingDescription"><i class="bi bi-hourglass-split"></i> Generating description...</span>
+              <span *ngIf="isUploadingImage && !isGeneratingDescription">Uploading...</span>
+            </button>
+            <div *ngIf="photoUrl" class="image-preview rounded-4 overflow-hidden">
+              <img [src]="photoUrl" class="img-fluid" alt="Shop image preview" />
+            </div>
+            <div *ngIf="uploadError" class="form-text text-danger mt-2">{{ uploadError }}</div>
+          </div>
+
+          <div class="form-panel p-4 rounded-4 shadow-sm">
+            <h4 class="mb-3">Owner</h4>
+            <div *ngIf="shop.owner">
+              <input type="text" class="form-control mb-2" [value]="shop.owner.prenom + ' ' + shop.owner.nom" readonly />
+              <input type="text" class="form-control" [value]="shop.owner.email" readonly />
+              <div class="form-text mt-2">Owner is set automatically from your signed-in account.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="d-flex flex-column flex-sm-row gap-3 mt-4">
+        <button type="submit" class="btn btn-primary btn-save" [disabled]="shopForm.invalid">{{ isEditMode ? 'Save changes' : 'Create shop' }}</button>
+        <button type="button" class="btn btn-outline-secondary flex-grow-1" (click)="cancel()">Cancel</button>
+      </div>
+    </form>
+  </div>
+</div>

@@ -28,7 +28,7 @@ public class EmailController {
 
         String email = reservation.getUser().getEmail();
         String name = reservation.getUser().getNom();
-        double amount = reservation.getTotalPrice();
+      double amount = reservation.getTotalPrice().doubleValue();
 
         emailService.sendPaymentEmail(email, name, amount);
 

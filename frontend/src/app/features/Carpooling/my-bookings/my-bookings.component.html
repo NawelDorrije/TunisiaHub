@@ -1,59 +1,128 @@
-<div class="container py-4">
-  <h2 class="mb-3">My bookings</h2>
-
-  <div class="alert alert-danger" *ngIf="error">{{ error }}</div>
-
-  <div class="card shadow-sm" *ngIf="bookings.length > 0; else emptyState">
-    <div class="table-responsive">
-      <table class="table table-striped align-middle mb-0">
-        <thead>
-          <tr>
-            <th>Route</th>
-            <th>Date/time</th>
-            <th>Driver</th>
-            <th>Seats</th>
-            <th>Total price</th>
-            <th>Status</th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr *ngFor="let item of bookings">
-            <td>{{ item.trip?.departure }} -> {{ item.trip?.destination }}</td>
-            <td>{{ item.trip?.departureDateTime | date: "medium" }}</td>
-            <td>{{ item.driver?.fullName || "-" }}</td>
-            <td>{{ item.booking.seatsBooked }}</td>
-            <td>{{ item.booking.totalPrice }} TND</td>
-            <td>{{ item.booking.status }}</td>
-            <td>
-              <div class="d-flex flex-wrap gap-2 justify-content-end">
-                <button
-                  class="btn btn-sm btn-outline-primary"
-                  (click)="viewTripDetails(item.trip?.id)"
-                >
-                  View trip details
-                </button>
-                <button
-                  class="btn btn-sm btn-outline-danger"
-                  (click)="cancelBooking(item.booking.id)"
-                >
-                  Cancel booking
-                </button>
-                <button
-                  class="btn btn-sm btn-outline-warning"
-                  (click)="reportIssue(item.trip?.id, item.booking.id)"
-                >
-                  Report issue
-                </button>
-              </div>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+<div class="my-bookings-page">
+  <div class="my-bookings-container">
+    <div class="my-bookings-header">
+      <h2 class="my-bookings-title">My bookings</h2>
     </div>
-  </div>
 
-  <ng-template #emptyState>
-    <div class="alert alert-info">You do not have any bookings yet.</div>
-  </ng-template>
+    <div class="alert alert-success" *ngIf="success">{{ success }}</div>
+    <div class="alert alert-danger" *ngIf="error">{{ error }}</div>
+
+    <div *ngIf="bookings.length > 0; else emptyState">
+      <div class="booking-card" *ngFor="let item of displayedBookings">
+        <div class="booking-card-main">
+          <h3 class="booking-card-day">
+            {{ formatTripLabel(item.trip?.departureDateTime) }}
+          </h3>
+
+          <div class="booking-card-timeline">
+            <div class="booking-stop booking-stop-left">
+              <span class="booking-time">
+                {{ formatTripTime(item.trip?.departureDateTime) }}
+              </span>
+              <strong class="booking-place">
+                {{ formatMainPlace(item.trip?.departure) }}
+              </strong>
+              <small
+                class="booking-place-detail"
+                *ngIf="formatPlaceDetails(item.trip?.departure)"
+              >
+                {{ formatPlaceDetails(item.trip?.departure) }}
+              </small>
+            </div>
+
+            <div class="booking-line-wrap">
+              <span class="booking-dot"></span>
+              <span class="booking-line"></span>
+              <span class="booking-duration">
+                {{ formatDurationLabel(item.trip) }}
+              </span>
+              <span class="booking-line"></span>
+              <span class="booking-dot"></span>
+            </div>
+
+            <div class="booking-stop booking-stop-right">
+              <span class="booking-time">{{
+                formatArrivalTime(item.trip)
+              }}</span>
+              <small class="next-day-label" *ngIf="isArrivalNextDay(item.trip)">
+                (+1 day)
+              </small>
+              <strong class="booking-place">
+                {{ formatMainPlace(item.trip?.destination) }}
+              </strong>
+              <small
+                class="booking-place-detail"
+                *ngIf="formatPlaceDetails(item.trip?.destination)"
+              >
+                {{ formatPlaceDetails(item.trip?.destination) }}
+              </small>
+            </div>
+          </div>
+
+          <div class="booking-card-meta">
+            <span>{{ formatPrice(item.booking.totalPrice) }} TND</span>
+            <span>{{ item.booking.seatsBooked }} seat(s)</span>
+            <span>Driver: {{ item.driver?.fullName || "-" }}</span>
+            <span>{{ item.booking.status }}</span>
+          </div>
+
+          <div class="booking-card-actions">
+            <button
+              *ngIf="!isCanceledBooking(item)"
+              class="btn btn-outline-danger"
+              (click)="cancelBooking(item.booking.id, $event)"
+            >
+              Cancel booking
+            </button>
+            <button
+              class="btn btn-outline-warning"
+              (click)="reportIssue(item.trip?.id, item.booking.id, $event)"
+            >
+              Report issue
+            </button>
+            <button
+              *ngIf="isConfirmedBooking(item)"
+              class="btn btn-outline-primary"
+              (click)="reviewDriver(item.trip?.id, item.booking.id, $event)"
+            >
+              Review driver
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="bookings-pagination" *ngIf="bookings.length > pageSize">
+        <div class="bookings-pagination-label">
+          Showing {{ getPaginationLabel() }}
+        </div>
+        <div class="bookings-pagination-controls">
+          <button
+            type="button"
+            class="pagination-button"
+            (click)="previousPage()"
+            [disabled]="!hasPreviousPage()"
+          >
+            Previous
+          </button>
+          <button
+            type="button"
+            class="pagination-button primary"
+            (click)="nextPage()"
+            [disabled]="!hasNextPage()"
+          >
+            Next
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <ng-template #emptyState>
+      <div class="booking-empty-card">
+        <p class="mb-3">You do not have any bookings yet.</p>
+        <a class="btn btn-primary" routerLink="/carpooling/search-rides">
+          Find a ride
+        </a>
+      </div>
+    </ng-template>
+  </div>
 </div>

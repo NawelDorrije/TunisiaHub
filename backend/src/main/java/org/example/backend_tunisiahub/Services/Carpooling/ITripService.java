@@ -1,35 +1,44 @@
 package org.example.backend_tunisiahub.Services.Carpooling;
 
 import org.example.backend_tunisiahub.Entities.Carpooling.Trip;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 
 public interface ITripService {
 
-    Trip createTrip(Trip request, Long driverId);
+  List<Trip> retrieveAllTrips(String departurePoint,
+                              String destination,
+                              LocalDate dateFrom,
+                              LocalDate dateTo,
+                              Integer seatsRequired,
+                              String status,
+                              String bookingMode,
+                              BigDecimal minPrice,
+                              BigDecimal maxPrice,
+                              Integer durationMax);
 
-    List<Trip> searchTrips(String departurePoint, String destination, LocalDate date);
+  Trip retrieveTrip(Long id);
 
-    Page<Trip> searchPublicTrips(String departurePoint,
-                                 String destination,
-                                 LocalDate date,
-                                 Integer seatsRequired,
-                                 Pageable pageable);
+  Trip retrieveMyTrip(Long id, Long driverId);
 
-    Trip getTripById(Long id);
+  List<Trip> retrieveMyTrips(Long driverId);
 
-    Trip getPublicTripById(Long id);
+  Integer retrieveTripSeatsAvailable(Long tripId);
 
-    Page<Trip> getMyTrips(Long driverId, Pageable pageable);
+  TripPriceSuggestion retrievePriceSuggestion(String departure,
+                                              String destination,
+                                              LocalDate departureDate,
+                                              Integer durationMinutes);
 
-    Trip getMyTripById(Long tripId, Long driverId);
+  Trip addTrip(Trip trip, Long driverId);
 
-    List<Trip> getMyTripsForLegacyClient(Long driverId);
+  Trip modifyTrip(Long tripId, Trip trip, Long currentUserId);
 
-    Trip cancelTrip(Long tripId, Long currentUserId);
+  Trip cancelTrip(Long tripId, Long currentUserId);
 
-    Trip updateTrip(Long tripId, Long currentUserId, Trip request);
+  Trip makeTripAvailable(Long tripId, Long currentUserId);
+
+  Trip completeTrip(Long tripId, Long currentUserId);
 }

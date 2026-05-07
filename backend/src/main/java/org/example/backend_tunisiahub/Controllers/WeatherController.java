@@ -3,7 +3,7 @@ package org.example.backend_tunisiahub.Controllers;
 
 
 import lombok.RequiredArgsConstructor;
-import org.example.backend_tunisiahub.Services.WeatherService;
+import org.example.backend_tunisiahub.Services.EventWeatherService;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 public class WeatherController {
 
-    private final WeatherService weatherService;
+    private final EventWeatherService weatherService;
 
     @GetMapping
     public Object getWeather(

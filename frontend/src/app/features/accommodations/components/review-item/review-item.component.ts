@@ -1,6 +1,7 @@
 import { Component, EventEmitter, Input, Output } from '@angular/core';
-import { Review } from '../../../../models/accommodations/review.model';
 import { ReviewService } from '../../services/review.service';
+import { AuthService } from '../../../auth/services/auth.service';
+import { Review } from '../../../admin-dashboard/services/admin-review.service';
 
 @Component({
   selector: 'app-review-item',
@@ -14,8 +15,12 @@ export class ReviewItemComponent {
   @Output() reviewEdit = new EventEmitter<Review>();
 
   errorMessage: string = '';
+  showDeleteConfirm = false;
 
-  constructor(private reviewService: ReviewService) {}
+  constructor(
+    private reviewService: ReviewService,
+    private authService: AuthService
+  ) {}
 
   get stars(): number[] {
     return Array(this.review.rating).fill(0);
@@ -25,20 +30,34 @@ export class ReviewItemComponent {
     return Array(5 - this.review.rating).fill(0);
   }
 
+  // ← check if logged in user owns this review
+  get isOwner(): boolean {
+    const email = this.authService.getEmail();
+    return !!email && !!this.review.user && this.review.user.email === email;
+  }
+
   onEdit(): void {
     this.reviewEdit.emit(this.review);
   }
 
- onDelete(): void {
-    if (confirm('Are you sure you want to delete this review?')) {
-      this.reviewService.deleteReview(this.review.id!).subscribe({
-        next: () => {
-          this.reviewDeleted.emit(this.review.id!);
-        },
-        error: () => {
-          this.errorMessage = 'Failed to delete review.';
-        }
-      });
-    }
+  onDelete(): void {
+    this.showDeleteConfirm = true;
+  }
+
+  confirmDelete(): void {
+    this.reviewService.deleteReview(this.review.id!).subscribe({
+      next: () => {
+        this.reviewDeleted.emit(this.review.id!);
+        this.closeDeleteModal();
+      },
+      error: () => {
+        this.errorMessage = 'Failed to delete review.';
+        this.closeDeleteModal();
+      }
+    });
+  }
+
+  closeDeleteModal(): void {
+    this.showDeleteConfirm = false;
   }
 }

@@ -1,0 +1,158 @@
+<div class="facture-page" *ngIf="!loading && reservation">
+
+  <!-- Bouton imprimer (hors impression) -->
+  <div class="actions-bar no-print">
+    <button class="btn-print" (click)="imprimer()">🖨️ Imprimer / Télécharger PDF</button>
+    <span class="facture-num">{{ getNumeroFacture() }}</span>
+  </div>
+
+  <!-- ===== FACTURE ===== -->
+  <div class="facture-wrapper">
+
+    <!-- HEADER -->
+    <div class="facture-header">
+      <div class="brand">
+        <div class="brand-logo">🗺️</div>
+        <div class="brand-info">
+          <h1>Discover Tunisia</h1>
+          <p>TunisiaHub Platform</p>
+        </div>
+      </div>
+      <div class="facture-meta">
+        <div class="facture-title">BILLET / FACTURE</div>
+        <div class="facture-details">
+          <div class="meta-row">
+            <span>N°</span>
+            <strong>{{ getNumeroFacture() }}</strong>
+          </div>
+          <div class="meta-row">
+            <span>Date</span>
+            <strong>{{ getDateFormatee() }}</strong>
+          </div>
+          <div class="meta-row">
+            <span>Statut</span>
+            <span class="badge-confirmee">✅ CONFIRMÉE</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- DIVIDER -->
+    <div class="perforation"></div>
+
+    <!-- CORPS -->
+    <div class="facture-body">
+
+      <!-- Infos client + QR -->
+      <div class="body-top">
+        <div class="client-section">
+          <div class="section-label">CLIENT</div>
+          <div class="client-name">
+            {{ reservation.user?.prenom }} {{ reservation.user?.nom }}
+          </div>
+          <div class="client-email">{{ reservation.user?.email }}</div>
+        </div>
+
+        <!-- QR CODE -->
+        <div class="qr-section">
+          <div class="qr-wrapper">
+            <img [src]="qrUrl" alt="QR Code" class="qr-img" />
+          </div>
+          <p class="qr-label">Scanner pour valider</p>
+          <p class="qr-token">{{ token.substring(0, 8) }}...</p>
+        </div>
+      </div>
+
+      <!-- Détails activité -->
+      <div class="activite-section">
+        <div class="section-label">ACTIVITÉ</div>
+        <div class="activite-main">
+          <div class="activite-icon">🎯</div>
+          <div>
+            <h2 class="activite-name">{{ reservation.activite?.nomActivite }}</h2>
+            <p class="activite-lieu">
+              📍 {{ reservation.activite?.lieu?.nom }}
+              <span *ngIf="reservation.activite?.lieu?.ville"> — {{ reservation.activite?.lieu?.ville }}</span>
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tableau détails -->
+      <div class="details-table">
+        <div class="table-row">
+          <div class="table-cell">
+            <span class="cell-label">📅 Date de l'événement</span>
+            <span class="cell-value highlight">{{ getDateEvenement() }}</span>
+          </div>
+          <div class="table-cell">
+            <span class="cell-label">⏱️ Durée</span>
+            <span class="cell-value">{{ reservation.activite?.duree }} minutes</span>
+          </div>
+        </div>
+        <div class="table-row">
+          <div class="table-cell">
+            <span class="cell-label">👥 Nombre de personnes</span>
+            <span class="cell-value">{{ reservation.nombrePersonnes }}</span>
+          </div>
+          <div class="table-cell">
+            <span class="cell-label">💳 Mode de paiement</span>
+            <span class="cell-value">
+              {{ reservation.modePaiement === 'TOTAL' ? 'Paiement intégral' : 'Paiement en ' + reservation.nombreTranches + ' tranches' }}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Total paiement -->
+      <div class="payment-block">
+        <div class="payment-row">
+          <span>Prix unitaire</span>
+          <span>{{ reservation.activite?.prix | number:'1.2-2' }} TND</span>
+        </div>
+        <div class="payment-row">
+          <span>Nombre de personnes</span>
+          <span>× {{ reservation.nombrePersonnes }}</span>
+        </div>
+        <div class="payment-row total-row">
+          <span>TOTAL PAYÉ</span>
+          <span class="total-amount">{{ reservation.prixTotal | number:'1.2-2' }} TND</span>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- DIVIDER BAS -->
+    <div class="perforation"></div>
+
+    <!-- FOOTER BILLET -->
+    <div class="facture-footer">
+      <div class="footer-left">
+        <p class="footer-mention">
+          🛡️ Ce billet est personnel et non transférable.<br>
+          Présentez le QR code à l'entrée pour valider votre accès.
+        </p>
+        <p class="footer-contact">
+        📧 support&#64;discover-tunisia.tn &nbsp;|&nbsp; 🌐 discover-tunisia.tn
+  
+        </p>
+      </div>
+      <div class="footer-right">
+        <div class="validity-badge">
+          <span class="validity-icon">✓</span>
+          <div>
+            <div class="validity-title">BILLET VALIDE</div>
+            <div class="validity-sub">Scan requis à l'entrée</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Loading -->
+<div *ngIf="loading" class="loading-screen">
+  <div class="spinner"></div>
+  <p>Génération de votre facture...</p>
+</div>

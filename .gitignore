@@ -1,3 +1,4 @@
+
 # =======================
 # Java / Spring Boot
 # =======================
@@ -32,3 +33,12 @@ yarn-error.log*
 # =======================
 .DS_Store
 Thumbs.db
+
+docs/CARPOOLING_TRIPS_API.md
+
+# Environment files
+.env
+**/.env
+.env.local
+**/.env.local
+

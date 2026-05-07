@@ -1,6 +1,7 @@
 package org.example.backend_tunisiahub.Services;
 
 import lombok.RequiredArgsConstructor;
+import org.example.backend_tunisiahub.Entities.Camping.Enums.ReservationStatus;
 import org.example.backend_tunisiahub.Entities.Event.Event;
 import org.example.backend_tunisiahub.Entities.Reservation;
 import org.example.backend_tunisiahub.Entities.ReservationType;
@@ -10,6 +11,7 @@ import org.example.backend_tunisiahub.Repositories.User.UserRepository;
 import org.example.backend_tunisiahub.Repositories.Event.EventRepository;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 @Service
@@ -74,8 +76,8 @@ public class ReservationEventService implements IReservationEventService {
         Reservation r = new Reservation();
         r.setUser(user);
         r.setEvent(event);
-        r.setStatus("PENDING"); // important
-        r.setTotalPrice(event.getPrice());
+      r.setStatus(ReservationStatus.PENDING); // important
+      r.setTotalPrice(BigDecimal.valueOf(event.getPrice()));
         r.setType(ReservationType.EventReservation);
 
         return reservationEventRepository.save(r);
@@ -95,7 +97,7 @@ public class ReservationEventService implements IReservationEventService {
         if (existing != null) {
             // 🔥 IMPORTANT FIX
             if ("CANCELLED".equals(existing.getStatus())) {
-                existing.setStatus("PENDING");
+                existing.setStatus(ReservationStatus.PENDING);
                 return reservationEventRepository.save(existing);
             }
             return existing;
@@ -104,8 +106,8 @@ public class ReservationEventService implements IReservationEventService {
         Reservation r = new Reservation();
         r.setUser(user);
         r.setEvent(event);
-        r.setStatus("PENDING");
-        r.setTotalPrice(event.getPrice());
+      r.setStatus(ReservationStatus.PENDING);
+      r.setTotalPrice(BigDecimal.valueOf(event.getPrice()));
         r.setType(ReservationType.EventReservation);
 
         return reservationEventRepository.save(r);
@@ -117,7 +119,7 @@ public class ReservationEventService implements IReservationEventService {
         Reservation r = reservationEventRepository.findById(reservationId)
                 .orElseThrow(() -> new RuntimeException("Reservation not found"));
 
-        r.setStatus("CONFIRMED");
+      r.setStatus(ReservationStatus.CONFIRMED);
 
         return reservationEventRepository.save(r);
     }

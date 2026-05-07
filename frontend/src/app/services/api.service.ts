@@ -21,4 +21,7 @@ export class ApiService {
   signup(user: any): Observable<any> {
     return this.http.post(`${this.BASE_URL}/api/auth/signup`, user);
   }
+
+
+
 }

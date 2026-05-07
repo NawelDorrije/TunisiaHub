@@ -1,0 +1,185 @@
+<div class="fo-page">
+
+  <!-- ── Top Nav ── -->
+  <nav class="fo-nav">
+    <div class="nav-brand">
+      <span class="brand-icon">🏕</span>
+      <span class="brand-name">TunisiaTour <em>Camping</em></span>
+    </div>
+    <div class="nav-links">
+      <a routerLink="/camping" routerLinkActive="active" [routerLinkActiveOptions]="{exact:true}">Explore</a>
+      <a routerLink="/camping/map">Map</a>
+      <a routerLink="/camping/my-reservations">My Trips</a>
+    </div>
+    <div class="nav-actions">
+      <button class="nav-btn-map" (click)="goToMap()">🗺 Map View</button>
+    </div>
+  </nav>
+
+  <!-- ── Hero ── -->
+  <section class="fo-hero">
+    <div class="hero-overlay"></div>
+    <div class="hero-inner">
+      <span class="eyebrow">🌿 Explore Tunisia's Nature</span>
+      <h1>Find Your Perfect <em>Escape</em></h1>
+      <p>{{ campings.length }} campings across all 24 governorates</p>
+    </div>
+  </section>
+
+  <!-- ── Filter Bar ── -->
+  <div class="filter-wrap">
+    <form [formGroup]="filterForm" class="filter-bar">
+      <div class="filter-field">
+        <span class="fi">🔍</span>
+        <input formControlName="keyword" placeholder="Search by name or location…" autocomplete="off"/>
+      </div>
+      <div class="filter-field">
+        <span class="fi">📍</span>
+        <select formControlName="governorate">
+          <option value="">All Governorates</option>
+          <option *ngFor="let g of governorates" [value]="g">{{ g }}</option>
+        </select>
+      </div>
+
+      <div class="filter-field narrow">
+        <span class="fi">👥</span>
+        <input formControlName="minCapacity" type="number" min="1" placeholder="Min guests"/>
+      </div>
+      <button type="button" class="btn-reset" (click)="resetFilters()" [class.has-filters]="hasActiveFilters">
+        <span *ngIf="!hasActiveFilters">Reset</span>
+        <span *ngIf="hasActiveFilters">✕ Clear</span>
+      </button>
+    </form>
+  </div>
+
+  <!-- ── Content ── -->
+  <div class="fo-container">
+
+    <!-- Results bar -->
+    <div class="results-bar" *ngIf="!loading">
+      <span class="results-count">
+        <strong>{{ filtered.length }}</strong> camping{{ filtered.length !== 1 ? 's' : '' }} found
+        <span *ngIf="hasActiveFilters" class="filter-tag"> · filtered</span>
+      </span>
+      <div class="view-toggle">
+        <button [class.active]="viewMode==='grid'" (click)="viewMode='grid'" title="Grid view">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+            <rect x="0" y="0" width="7" height="7" rx="1"/><rect x="9" y="0" width="7" height="7" rx="1"/>
+            <rect x="0" y="9" width="7" height="7" rx="1"/><rect x="9" y="9" width="7" height="7" rx="1"/>
+          </svg>
+        </button>
+        <button [class.active]="viewMode==='list'" (click)="viewMode='list'" title="List view">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+            <rect x="0" y="1" width="16" height="2.5" rx="1"/><rect x="0" y="6.5" width="16" height="2.5" rx="1"/>
+            <rect x="0" y="12" width="16" height="2.5" rx="1"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Error -->
+    <div class="fo-alert fo-alert-error" *ngIf="error">
+      <span>⚠️</span> {{ error }}
+      <button (click)="loadCampings()">Retry</button>
+    </div>
+
+    <!-- Skeleton loading -->
+    <div *ngIf="loading" class="skeleton-grid">
+      <div class="skeleton-card" *ngFor="let i of [1,2,3,4,5,6]">
+        <div class="sk-img"></div>
+        <div class="sk-body">
+          <div class="sk-line short"></div>
+          <div class="sk-line"></div>
+          <div class="sk-line medium"></div>
+          <div class="sk-line short"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Empty state -->
+    <div *ngIf="!loading && !error && filtered.length === 0" class="empty-state">
+      <div class="empty-visual">🏕️</div>
+      <h3>No campings match your search</h3>
+      <p>Try changing your filters or explore all available campings.</p>
+      <button class="btn-primary" (click)="resetFilters()">Clear all filters</button>
+    </div>
+
+    <!-- ── Grid View ── -->
+    <div *ngIf="!loading && !error && filtered.length > 0 && viewMode==='grid'"
+         class="campings-grid" role="list">
+      <article class="c-card" *ngFor="let c of filtered; trackBy: trackById"
+               role="listitem" (click)="goToDetail(c.id!)" tabindex="0"
+               (keydown.enter)="goToDetail(c.id!)">
+        <div class="c-img">
+          <img [src]="c.photos?.[0] || 'assets/images/camping-default.jpg'"
+               [alt]="c.name" loading="lazy"/>
+          <span class="c-badge" [ngClass]="getStatusClass(c.status)">{{ c.status }}</span>
+          <div class="c-overlay">
+            <button class="btn-overlay" (click)="goToDetail(c.id!)">View Details</button>
+          </div>
+        </div>
+        <div class="c-body">
+          <div class="c-location">📍 {{ c.governorate }}</div>
+          <h3 class="c-name">{{ c.name }}</h3>
+          <p class="c-desc" *ngIf="c.description">
+            {{ c.description.length > 85 ? (c.description | slice:0:85) + '…' : c.description }}
+          </p>
+          <!-- Star rating -->
+          <div class="c-rating" *ngIf="c.averageRating">
+            <span *ngFor="let star of getStars(c.averageRating!)"
+                  class="star" [ngClass]="'star-'+star">★</span>
+            <span class="rating-num">{{ c.averageRating | number:'1.1-1' }}</span>
+          </div>
+          <div class="c-footer">
+
+            <span class="c-capacity">👥 {{ c.maxCapacity }}</span>
+          </div>
+          <div class="c-actions">
+            <button class="btn-detail" (click)="goToDetail(c.id!); $event.stopPropagation()">
+              Details
+            </button>
+            <button class="btn-reserve" (click)="goToReserve($event, c.id!)">
+              Book Now
+            </button>
+          </div>
+        </div>
+      </article>
+    </div>
+
+    <!-- ── List View ── -->
+    <div *ngIf="!loading && !error && filtered.length > 0 && viewMode==='list'"
+         class="campings-list" role="list">
+      <article class="l-item" *ngFor="let c of filtered; trackBy: trackById"
+               role="listitem" (click)="goToDetail(c.id!)" tabindex="0"
+               (keydown.enter)="goToDetail(c.id!)">
+        <div class="l-img">
+          <img [src]="c.photos?.[0] || 'assets/images/camping-default.jpg'"
+               [alt]="c.name" loading="lazy"/>
+        </div>
+        <div class="l-body">
+          <div class="l-top">
+            <div>
+              <div class="c-location">📍 {{ c.governorate }} · {{ c.address }}</div>
+              <h3 class="c-name">{{ c.name }}</h3>
+            </div>
+            <span class="c-badge" [ngClass]="getStatusClass(c.status)">{{ c.status }}</span>
+          </div>
+          <p class="c-desc" *ngIf="c.description">
+            {{ c.description.length > 140 ? (c.description | slice:0:140) + '…' : c.description }}
+          </p>
+          <div class="l-meta">
+            <span *ngIf="c.checkInTime">🕐 Check-in {{ c.checkInTime }}</span>
+            <span *ngIf="c.checkOutTime">🕐 Check-out {{ c.checkOutTime }}</span>
+            <span>👥 {{ c.maxCapacity }} max guests</span>
+            <span *ngIf="c.numberOfSpots">🏕 {{ c.numberOfSpots }} spots</span>
+          </div>
+        </div>
+        <div class="l-price" (click)="$event.stopPropagation()">
+          <button class="btn-reserve" (click)="goToReserve($event, c.id!)">Book Now</button>
+          <button class="btn-detail" (click)="goToDetail(c.id!)">Details</button>
+        </div>
+      </article>
+    </div>
+
+  </div><!-- /container -->
+</div>

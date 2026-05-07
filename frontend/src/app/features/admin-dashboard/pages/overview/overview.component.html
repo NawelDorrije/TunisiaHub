@@ -1,0 +1,51 @@
+<div class="overview-container">
+  <h2>Dashboard Overview</h2>
+
+  <div *ngIf="error" class="alert alert-danger">
+    {{ error }}
+  </div>
+
+  <div *ngIf="isLoading" class="loading-spinner">
+    <div class="spinner"></div>
+    <p>Loading dashboard data...</p>
+  </div>
+
+  <div *ngIf="!isLoading" class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-icon">👥</div>
+      <div class="stat-content">
+        <h3>Total Users</h3>
+        <p class="stat-value">{{ stats.totalUsers }}</p>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon">🏪</div>
+      <div class="stat-content">
+        <h3>Total Shops</h3>
+        <p class="stat-value">{{ stats.totalShops }}</p>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon">📦</div>
+      <div class="stat-content">
+        <h3>Total Orders</h3>
+        <p class="stat-value">{{ stats.totalOrders }}</p>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon">⭐</div>
+      <div class="stat-content">
+        <h3>Total Reviews</h3>
+        <p class="stat-value">{{ stats.totalReviews }}</p>
+      </div>
+    </div>
+  </div>
+
+  <div *ngIf="!isLoading" class="info-box">
+    <h3>Welcome to Admin Dashboard</h3>
+    <p>Use the sidebar navigation to manage users, shops, orders, and reviews. For review insights, click the new Review Insights tab.</p>
+  </div>
+</div>
