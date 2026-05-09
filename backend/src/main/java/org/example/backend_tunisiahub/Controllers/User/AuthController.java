@@ -90,21 +90,16 @@ public class AuthController {
 
   // ================= ROLE HELPER =================
   private RoleUser resolveRegistrationRole(String roleValue) {
-
     if (roleValue == null || roleValue.isBlank()) {
       return RoleUser.CLIENT;
     }
 
     String normalized = roleValue.trim().toUpperCase(Locale.ROOT);
 
-    if ("ADMIN".equals(normalized)) {
-      return RoleUser.ADMIN;
-    }
-
-    if ("USER".equals(normalized) || "CLIENT".equals(normalized)) {
-      return RoleUser.CLIENT;
-    }
-
-    return RoleUser.CLIENT;
+    return switch (normalized) {
+      case "ADMIN"  -> RoleUser.ADMIN;
+      case "OWNER"  -> RoleUser.OWNER;  // ← manquait
+      default       -> RoleUser.CLIENT;
+    };
   }
 }
