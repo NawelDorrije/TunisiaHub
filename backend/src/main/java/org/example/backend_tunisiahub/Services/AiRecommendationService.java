@@ -7,12 +7,13 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.example.backend_tunisiahub.Configs.AiRecommendationProperties;
-import org.example.backend_tunisiahub.Controllers.dto.AiReservationSuggestionResponse;
-import org.example.backend_tunisiahub.Controllers.dto.HourlyReservationCountDto;
-import org.example.backend_tunisiahub.Entities.Reservation;
-import org.example.backend_tunisiahub.Entities.ReservationStatus;
-import org.example.backend_tunisiahub.Entities.ReservationType;
-import org.example.backend_tunisiahub.Repositories.ReservationRepository;
+import org.example.backend_tunisiahub.Controllers.dto.AiReservationRestaurantSuggestionResponse;
+import org.example.backend_tunisiahub.Controllers.dto.HourlyReservationRestaurantCountDto;
+import org.example.backend_tunisiahub.Entities.ReservationRestaurant;
+import org.example.backend_tunisiahub.Entities.Camping.ReservationStatus;
+import org.example.backend_tunisiahub.Entities.ReservationRestaurantStatus;
+import org.example.backend_tunisiahub.Entities.ReservationRestaurantType;
+import org.example.backend_tunisiahub.Repositories.ReservationRestaurantRepository;
 import org.example.backend_tunisiahub.Repositories.Restaurant.RestaurantRepository;
 import org.example.backend_tunisiahub.shared.exception.ApiException;
 import org.springframework.http.*;
@@ -46,30 +47,30 @@ public class AiRecommendationService {
             }
             """;
 
-    private final ReservationRepository reservationRepository;
+    private final ReservationRestaurantRepository reservationRepository;
     private final RestaurantRepository restaurantRepository;
     private final RestTemplate restTemplate;
     private final ObjectMapper objectMapper;
     private final AiRecommendationProperties properties;
 
-    public AiReservationSuggestionResponse suggestBestTime(Long restaurantId, LocalDate date) {
+    public AiReservationRestaurantSuggestionResponse suggestBestTime(Long restaurantId, LocalDate date) {
         validateInputs(restaurantId, date);
 
-        List<Reservation> reservations = reservationRepository.findForRestaurantSuggestionDay(
+        List<ReservationRestaurant> reservations = reservationRepository.findForRestaurantSuggestionDay(
                 restaurantId,
-                ReservationType.RestaurantReservation,
+                ReservationRestaurantType.RestaurantReservation,
                 date.atStartOfDay(),
                 date.plusDays(1).atStartOfDay(),
-                ReservationStatus.CANCELLED
+                ReservationRestaurantStatus.CANCELLED
         );
 
-        List<HourlyReservationCountDto> hourlyCounts = aggregateByHour(reservations);
+        List<HourlyReservationRestaurantCountDto> hourlyCounts = aggregateByHour(reservations);
         if (hourlyCounts.isEmpty()) {
-            return new AiReservationSuggestionResponse(null,
+            return new AiReservationRestaurantSuggestionResponse(null,
                     "No reservations found for this restaurant on " + date + ".");
         }
 
-        AiReservationSuggestionResponse fallback = buildFallbackSuggestion(hourlyCounts);
+        AiReservationRestaurantSuggestionResponse fallback = buildFallbackSuggestion(hourlyCounts);
 
         if (!StringUtils.hasText(properties.apiKey())) {
             log.warn("OPENAI_API_KEY is not configured. Using fallback reservation suggestion.");
@@ -99,10 +100,10 @@ public class AiRecommendationService {
         }
     }
 
-    private List<HourlyReservationCountDto> aggregateByHour(List<Reservation> reservations) {
+    private List<HourlyReservationRestaurantCountDto> aggregateByHour(List<ReservationRestaurant> reservations) {
         Map<LocalTime, Long> countsByHour = new TreeMap<>();
 
-        for (Reservation reservation : reservations) {
+        for (ReservationRestaurant reservation : reservations) {
             if (reservation.getDateTime() == null) {
                 continue;
             }
@@ -111,25 +112,25 @@ public class AiRecommendationService {
         }
 
         return countsByHour.entrySet().stream()
-                .map(entry -> new HourlyReservationCountDto(entry.getKey().format(HOUR_FORMATTER), entry.getValue()))
+                .map(entry -> new HourlyReservationRestaurantCountDto(entry.getKey().format(HOUR_FORMATTER), entry.getValue()))
                 .toList();
     }
 
-    private AiReservationSuggestionResponse buildFallbackSuggestion(List<HourlyReservationCountDto> hourlyCounts) {
-        HourlyReservationCountDto leastBusy = hourlyCounts.stream()
-                .min(Comparator.comparingLong(HourlyReservationCountDto::reservations)
-                        .thenComparing(HourlyReservationCountDto::hour))
+    private AiReservationRestaurantSuggestionResponse buildFallbackSuggestion(List<HourlyReservationRestaurantCountDto> hourlyCounts) {
+        HourlyReservationRestaurantCountDto leastBusy = hourlyCounts.stream()
+                .min(Comparator.comparingLong(HourlyReservationRestaurantCountDto::reservations)
+                        .thenComparing(HourlyReservationRestaurantCountDto::hour))
                 .orElseThrow();
 
-        return new AiReservationSuggestionResponse(
+        return new AiReservationRestaurantSuggestionResponse(
                 leastBusy.hour(),
                 leastBusy.hour() + " is currently the least busy time."
         );
     }
 
-    private AiReservationSuggestionResponse requestAiSuggestion(LocalDate date,
-                                                                List<HourlyReservationCountDto> hourlyCounts,
-                                                                AiReservationSuggestionResponse fallback) throws JsonProcessingException {
+    private AiReservationRestaurantSuggestionResponse requestAiSuggestion(LocalDate date,
+                                                                List<HourlyReservationRestaurantCountDto> hourlyCounts,
+                                                                AiReservationRestaurantSuggestionResponse fallback) throws JsonProcessingException {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         headers.setBearerAuth(properties.apiKey());
@@ -179,11 +180,11 @@ public class AiRecommendationService {
             return fallback;
         }
 
-        AiReservationSuggestionResponse aiResponse =
-                objectMapper.readValue(sanitizeJson(rawJson), AiReservationSuggestionResponse.class);
+        AiReservationRestaurantSuggestionResponse aiResponse =
+                objectMapper.readValue(sanitizeJson(rawJson), AiReservationRestaurantSuggestionResponse.class);
 
         Set<String> availableHours = hourlyCounts.stream()
-                .map(HourlyReservationCountDto::hour)
+                .map(HourlyReservationRestaurantCountDto::hour)
                 .collect(java.util.stream.Collectors.toSet());
 
         if (!StringUtils.hasText(aiResponse.bestTime())
@@ -195,12 +196,12 @@ public class AiRecommendationService {
         return aiResponse;
     }
 
-    private String buildUserPrompt(LocalDate date, List<HourlyReservationCountDto> hourlyCounts) {
+    private String buildUserPrompt(LocalDate date, List<HourlyReservationRestaurantCountDto> hourlyCounts) {
         StringBuilder prompt = new StringBuilder();
         prompt.append("Reservation date: ").append(date).append('\n');
         prompt.append("Based on the following reservation counts per hour, recommend the best time slot and explain why in a friendly and concise way.\n");
 
-        for (HourlyReservationCountDto count : hourlyCounts) {
+        for (HourlyReservationRestaurantCountDto count : hourlyCounts) {
             prompt.append(count.hour())
                     .append(" -> ")
                     .append(count.reservations())

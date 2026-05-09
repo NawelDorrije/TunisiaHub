@@ -7,7 +7,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.FieldDefaults;
-import org.example.backend_tunisiahub.Entities.Reservation;
+import org.example.backend_tunisiahub.Entities.ReservationRestaurant;
 
 import java.util.List;
 
@@ -36,8 +36,7 @@ public class Spot {
     @JsonIgnore
     Camping camping;
 
-    @OneToMany(mappedBy = "spot", cascade = CascadeType.ALL)
-    @JsonIgnore
-    List<Reservation> reservations;
+    // Note: Camping reservations are handled separately from restaurant reservations
+    // This association removed as ReservationRestaurant is for restaurant bookings only
 
 }

@@ -17,7 +17,7 @@ import com.lowagie.text.pdf.PdfPCell;
 import com.lowagie.text.pdf.PdfPTable;
 import com.lowagie.text.pdf.PdfWriter;
 import lombok.extern.slf4j.Slf4j;
-import org.example.backend_tunisiahub.Entities.Reservation;
+import org.example.backend_tunisiahub.Entities.ReservationRestaurant;
 import org.example.backend_tunisiahub.Entities.Restaurant.RestaurantTable;
 import org.example.backend_tunisiahub.Entities.User.User;
 import org.springframework.beans.factory.annotation.Value;
@@ -35,19 +35,18 @@ import java.util.stream.Collectors;
 
 @Slf4j
 @Service
-public class ReservationPdfService {
+public class ReservationRestaurantPdfService {
 
     private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
 
     @Value("${app.base-url:http://localhost:8089}")
     private String baseUrl;
 
-    public byte[] generateReservationPdf(Reservation reservation) {
+    public byte[] generateReservationPdf(ReservationRestaurant reservation) {
         try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
             Document document = new Document();
             PdfWriter.getInstance(document, outputStream);
             document.open();
-
             Font titleFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 18);
             Font bodyFont = FontFactory.getFont(FontFactory.HELVETICA, 12);
 
@@ -126,7 +125,7 @@ public class ReservationPdfService {
         return text.isEmpty() ? "-" : text;
     }
 
-    private String buildCheckInUrl(Reservation reservation) {
+    private String buildCheckInUrl(ReservationRestaurant reservation) {
         if (reservation == null || !StringUtils.hasText(reservation.getCheckInToken())) {
             return null;
         }

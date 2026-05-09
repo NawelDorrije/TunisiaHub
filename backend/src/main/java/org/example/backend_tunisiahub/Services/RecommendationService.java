@@ -4,13 +4,13 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.example.backend_tunisiahub.Controllers.Restaurant.dto.RestaurantRecommendationItemDto;
 import org.example.backend_tunisiahub.Controllers.Restaurant.dto.RestaurantRecommendationResponseDto;
-import org.example.backend_tunisiahub.Entities.Reservation;
-import org.example.backend_tunisiahub.Entities.ReservationStatus;
-import org.example.backend_tunisiahub.Entities.ReservationType;
+import org.example.backend_tunisiahub.Entities.ReservationRestaurant;
+import org.example.backend_tunisiahub.Entities.ReservationRestaurantStatus;
+import org.example.backend_tunisiahub.Entities.ReservationRestaurantType;
 import org.example.backend_tunisiahub.Entities.Restaurant.Cuisine;
 import org.example.backend_tunisiahub.Entities.Restaurant.Restaurant;
 import org.example.backend_tunisiahub.Entities.User.User;
-import org.example.backend_tunisiahub.Repositories.ReservationRepository;
+import org.example.backend_tunisiahub.Repositories.ReservationRestaurantRepository;
 import org.example.backend_tunisiahub.Repositories.Restaurant.RestaurantRepository;
 import org.example.backend_tunisiahub.shared.exception.ApiException;
 import org.springframework.data.domain.PageRequest;
@@ -42,7 +42,7 @@ public class RecommendationService {
     private static final int MAX_RESULTS = 10;
     private static final int RECENT_EXCLUSION_DAYS = 30;
 
-    private final ReservationRepository reservationRepository;
+    private final ReservationRestaurantRepository reservationRepository;
     private final RestaurantRepository restaurantRepository;
     private final AiService aiService;
 
@@ -54,10 +54,10 @@ public class RecommendationService {
         try {
             log.info("[Recommendations] Starting for userId={}", user.getId());
 
-            List<Reservation> history = reservationRepository.findRecommendationHistoryByUser(
+            List<ReservationRestaurant> history = reservationRepository.findRecommendationHistoryByUser(
                     user.getId(),
-                    ReservationType.RestaurantReservation,
-                    ReservationStatus.CANCELLED,
+                    ReservationRestaurantType.RestaurantReservation,
+                    ReservationRestaurantStatus.CANCELLED,
                     LocalDateTime.now()
             ).stream().filter(Objects::nonNull).toList();
 
@@ -78,12 +78,12 @@ public class RecommendationService {
 
             Set<Long> recentlyReservedRestaurantIds = reservationRepository.findRecentRestaurantReservationsByUser(
                             user.getId(),
-                            ReservationType.RestaurantReservation,
-                            ReservationStatus.CANCELLED,
+                            ReservationRestaurantType.RestaurantReservation,
+                            ReservationRestaurantStatus.CANCELLED,
                             LocalDateTime.now().minusDays(RECENT_EXCLUSION_DAYS)
                     ).stream()
                     .filter(Objects::nonNull)
-                    .map(Reservation::getRestaurant)
+                    .map(ReservationRestaurant::getRestaurant)
                     .filter(Objects::nonNull)
                     .map(Restaurant::getId)
                     .filter(Objects::nonNull)
@@ -208,20 +208,24 @@ public class RecommendationService {
         return List.of();
     }
 
-    private UserPreferenceProfile buildProfile(List<Reservation> history) {
+    private UserPreferenceProfile buildProfile(List<ReservationRestaurant> history) {
         Cuisine favoriteCuisine = mostFrequentCuisine(history);
         String preferredPriceRange = mostFrequentPriceRange(history);
         String preferredTime = mostFrequentTime(history);
         return new UserPreferenceProfile(favoriteCuisine, preferredPriceRange, preferredTime);
     }
 
-    private Cuisine mostFrequentCuisine(List<Reservation> history) {
+    private Cuisine mostFrequentCuisine(List<ReservationRestaurant> history) {
         return history.stream()
-                .map(Reservation::getRestaurant)
+                .map(ReservationRestaurant::getRestaurant)
                 .filter(Objects::nonNull)
                 .map(Restaurant::getCuisine)
                 .filter(Objects::nonNull)
-                .collect(Collectors.groupingBy(Function.identity(), () -> new EnumMap<>(Cuisine.class), Collectors.counting()))
+                .collect(Collectors.groupingBy(
+                        Function.identity(),
+                        () -> new EnumMap<>(Cuisine.class),
+                        Collectors.counting()
+                ))
                 .entrySet()
                 .stream()
                 .max(Map.Entry.<Cuisine, Long>comparingByValue()
@@ -230,9 +234,9 @@ public class RecommendationService {
                 .orElse(null);
     }
 
-    private String mostFrequentPriceRange(List<Reservation> history) {
+    private String mostFrequentPriceRange(List<ReservationRestaurant> history) {
         Map<String, Long> counts = new HashMap<>();
-        for (Reservation reservation : history) {
+        for (ReservationRestaurant reservation : history) {
             if (reservation == null) {
                 continue;
             }
@@ -248,9 +252,9 @@ public class RecommendationService {
                 .orElse(null);
     }
 
-    private String mostFrequentTime(List<Reservation> history) {
+    private String mostFrequentTime(List<ReservationRestaurant> history) {
         Map<String, Long> counts = new HashMap<>();
-        for (Reservation reservation : history) {
+        for (ReservationRestaurant reservation : history) {
             if (reservation == null || reservation.getDateTime() == null) {
                 continue;
             }

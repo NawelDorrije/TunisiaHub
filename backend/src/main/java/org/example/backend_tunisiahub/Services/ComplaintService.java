@@ -2,9 +2,9 @@ package org.example.backend_tunisiahub.Services;
 
 import lombok.RequiredArgsConstructor;
 import org.example.backend_tunisiahub.Entities.Complaint;
-import org.example.backend_tunisiahub.Entities.Reservation;
+import org.example.backend_tunisiahub.Entities.ReservationRestaurant;
 import org.example.backend_tunisiahub.Repositories.ComplaintRepository;
-import org.example.backend_tunisiahub.Repositories.ReservationRepository;
+import org.example.backend_tunisiahub.Repositories.ReservationRestaurantRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -14,7 +14,7 @@ import java.util.List;
 public class ComplaintService implements IComplaintService {
 
     private final ComplaintRepository complaintRepository;
-    private final ReservationRepository reservationRepository;
+    private final ReservationRestaurantRepository reservationRepository;
 
     @Override
     public List<Complaint> retrieveAllComplaints() {
@@ -28,7 +28,7 @@ public class ComplaintService implements IComplaintService {
         }
 
         if (reservationId != null) {
-            Reservation reservation = reservationRepository.findById(reservationId).orElse(null);
+            ReservationRestaurant reservation = reservationRepository.findById(reservationId).orElse(null);
             complaint.setReservation(reservation);
         }
 

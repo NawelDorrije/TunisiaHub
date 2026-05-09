@@ -4,9 +4,9 @@ import lombok.RequiredArgsConstructor;
 import org.example.backend_tunisiahub.Entities.Restaurant.Restaurant;
 import org.example.backend_tunisiahub.Entities.Restaurant.RestaurantTable;
 import org.example.backend_tunisiahub.Entities.Restaurant.TableStatus;
-import org.example.backend_tunisiahub.Entities.ReservationStatus;
-import org.example.backend_tunisiahub.Entities.ReservationType;
-import org.example.backend_tunisiahub.Repositories.ReservationRepository;
+import org.example.backend_tunisiahub.Entities.ReservationRestaurantStatus;
+import org.example.backend_tunisiahub.Entities.ReservationRestaurantType;
+import org.example.backend_tunisiahub.Repositories.ReservationRestaurantRepository;
 import org.example.backend_tunisiahub.Repositories.Restaurant.RestaurantRepository;
 import org.example.backend_tunisiahub.Repositories.Restaurant.RestaurantTableRepository;
 import org.example.backend_tunisiahub.shared.exception.ApiException;
@@ -22,12 +22,12 @@ import java.util.Set;
 @RequiredArgsConstructor
 public class RestaurantTableService implements IRestaurantTableService {
 
-    private static final Set<ReservationStatus> ACTIVE_RESTAURANT_STATUSES =
-            EnumSet.of(ReservationStatus.PENDING, ReservationStatus.CONFIRMED, ReservationStatus.ARRIVED);
+    private static final Set<ReservationRestaurantStatus> ACTIVE_RESTAURANT_STATUSES =
+            EnumSet.of(ReservationRestaurantStatus.PENDING, ReservationRestaurantStatus.CONFIRMED, ReservationRestaurantStatus.ARRIVED);
 
     private final RestaurantTableRepository restaurantTableRepository;
     private final RestaurantRepository restaurantRepository;
-    private final ReservationRepository reservationRepository;
+    private final ReservationRestaurantRepository reservationRepository;
 
     @Override
     public List<RestaurantTable> retrieveAllTables() {
@@ -51,9 +51,9 @@ public class RestaurantTableService implements IRestaurantTableService {
         if (dateTime != null) {
             // Check conflicts for all these tables at once
             List<Long> tableIds = tables.stream().map(RestaurantTable::getId).toList();
-            List<org.example.backend_tunisiahub.Entities.Reservation> conflicts = reservationRepository.findTableConflicts(
+            List<org.example.backend_tunisiahub.Entities.ReservationRestaurant> conflicts = reservationRepository.findTableConflicts(
                     restaurantId,
-                    ReservationType.RestaurantReservation,
+                    ReservationRestaurantType.RestaurantReservation,
                     dateTime,
                     ACTIVE_RESTAURANT_STATUSES,
                     tableIds,
@@ -61,7 +61,7 @@ public class RestaurantTableService implements IRestaurantTableService {
             );
 
             Set<Long> busyTableIds = new java.util.HashSet<>();
-            for (org.example.backend_tunisiahub.Entities.Reservation r : conflicts) {
+            for (org.example.backend_tunisiahub.Entities.ReservationRestaurant r : conflicts) {
                 if (r.getTables() != null) {
                     for (RestaurantTable t : r.getTables()) {
                         busyTableIds.add(t.getId());

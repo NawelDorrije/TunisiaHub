@@ -1,6 +1,6 @@
 package org.example.backend_tunisiahub.Entities;
 
-public enum ReservationType {
+public enum ReservationRestaurantType {
     CampingReservation,
     TripReservation,
     HotelReservation,

@@ -1,14 +1,14 @@
 package org.example.backend_tunisiahub.Services;
 
 import lombok.RequiredArgsConstructor;
-import org.example.backend_tunisiahub.Entities.Reservation;
-import org.example.backend_tunisiahub.Entities.ReservationStatus;
-import org.example.backend_tunisiahub.Entities.ReservationType;
+import org.example.backend_tunisiahub.Entities.ReservationRestaurant;
+import org.example.backend_tunisiahub.Entities.ReservationRestaurantStatus;
+import org.example.backend_tunisiahub.Entities.ReservationRestaurantType;
 import org.example.backend_tunisiahub.Entities.Restaurant.Restaurant;
 import org.example.backend_tunisiahub.Entities.Restaurant.RestaurantTable;
 import org.example.backend_tunisiahub.Entities.Restaurant.TableStatus;
 import org.example.backend_tunisiahub.Entities.User.User;
-import org.example.backend_tunisiahub.Repositories.ReservationRepository;
+import org.example.backend_tunisiahub.Repositories.ReservationRestaurantRepository;
 import org.example.backend_tunisiahub.Repositories.Restaurant.RestaurantRepository;
 import org.example.backend_tunisiahub.Repositories.Restaurant.RestaurantTableRepository;
 import org.example.backend_tunisiahub.Repositories.User.UserRepository;
@@ -30,32 +30,32 @@ import java.util.UUID;
 @Service
 @RequiredArgsConstructor
 @org.springframework.transaction.annotation.Transactional
-public class ReservationService implements IReservationService {
+public class ReservationRestaurantService implements IReservationRestaurantService {
 
-    private static final Set<ReservationStatus> ACTIVE_RESTAURANT_STATUSES =
-            EnumSet.of(ReservationStatus.PENDING, ReservationStatus.CONFIRMED, ReservationStatus.ARRIVED);
+    private static final Set<ReservationRestaurantStatus> ACTIVE_RESTAURANT_STATUSES =
+            EnumSet.of(ReservationRestaurantStatus.PENDING, ReservationRestaurantStatus.CONFIRMED, ReservationRestaurantStatus.ARRIVED);
 
-    private final ReservationRepository reservationRepository;
+    private final ReservationRestaurantRepository reservationRepository;
     private final RestaurantRepository restaurantRepository;
     private final RestaurantTableRepository restaurantTableRepository;
     private final UserRepository userRepository;
     private final EmailService emailService;
 
     @Override
-    public List<Reservation> retrieveAllReservations() {
+    public List<ReservationRestaurant> retrieveAllReservations() {
         return reservationRepository.findAll();
     }
 
     @Override
-    public Reservation retrieveReservation(Long id) {
+    public ReservationRestaurant retrieveReservation(Long id) {
         return reservationRepository.findById(id).orElse(null);
     }
 
     @Override
-    public Reservation addReservation(Reservation reservation) {
+    public ReservationRestaurant addReservation(ReservationRestaurant reservation) {
         attachCurrentUserIfMissing(reservation);
         normalizeReservation(reservation);
-        Reservation savedReservation = reservationRepository.save(reservation);
+        ReservationRestaurant savedReservation = reservationRepository.save(reservation);
         triggerRequestEmail(savedReservation);
         return savedReservation;
     }
@@ -66,22 +66,22 @@ public class ReservationService implements IReservationService {
     }
 
     @Override
-    public Reservation modifyReservation(Reservation reservation) {
-        ReservationStatus previousStatus = reservation.getId() == null
+    public ReservationRestaurant modifyReservation(ReservationRestaurant reservation) {
+        ReservationRestaurantStatus previousStatus = reservation.getId() == null
                 ? null
                 : reservationRepository.findById(reservation.getId())
-                .map(Reservation::getStatus)
+                .map(ReservationRestaurant::getStatus)
                 .orElse(null);
         normalizeReservation(reservation);
-        Reservation savedReservation = reservationRepository.save(reservation);
+        ReservationRestaurant savedReservation = reservationRepository.save(reservation);
         triggerConfirmationEmailIfNeeded(previousStatus, savedReservation);
         return savedReservation;
     }
 
     @Override
-    public List<Reservation> retrieveRestaurantReservations(Long restaurantId, ReservationStatus status) {
+    public List<ReservationRestaurant> retrieveRestaurantReservations(Long restaurantId, ReservationRestaurantStatus status) {
         if (restaurantId == null) {
-            return reservationRepository.findByTypeOrderByIdDesc(ReservationType.RestaurantReservation);
+            return reservationRepository.findByTypeOrderByIdDesc(ReservationRestaurantType.RestaurantReservation);
         }
         if (status == null) {
             return reservationRepository.findByRestaurant_IdOrderByDateTimeAsc(restaurantId);
@@ -90,7 +90,7 @@ public class ReservationService implements IReservationService {
     }
 
     @Override
-    public List<Reservation> retrieveReservationsByUser(Long userId) {
+    public List<ReservationRestaurant> retrieveReservationsByUser(Long userId) {
         if (userId == null) {
             throw new ApiException(HttpStatus.BAD_REQUEST, "userId is required");
         }
@@ -101,7 +101,7 @@ public class ReservationService implements IReservationService {
     }
 
     @Override
-    public List<Reservation> retrieveMyReservations() {
+    public List<ReservationRestaurant> retrieveMyReservations() {
         User currentUser = resolveCurrentUser();
         if (currentUser == null) {
             return new ArrayList<>();
@@ -110,9 +110,9 @@ public class ReservationService implements IReservationService {
     }
 
     @Override
-    public Reservation confirmRestaurantReservation(Long reservationId, List<Long> tableIds) {
-        Reservation reservation = getReservationOrThrow(reservationId);
-        ReservationStatus previousStatus = reservation.getStatus();
+    public ReservationRestaurant confirmRestaurantReservation(Long reservationId, List<Long> tableIds) {
+        ReservationRestaurant reservation = getReservationOrThrow(reservationId);
+        ReservationRestaurantStatus previousStatus = reservation.getStatus();
         validateRestaurantReservation(reservation);
 
         List<Long> effectiveTableIds = resolveEffectiveTableIds(reservation, tableIds);
@@ -125,9 +125,9 @@ public class ReservationService implements IReservationService {
 
         reservation.setTables(assignedTables);
         reservation.setTablePreSelected(true);
-        reservation.setStatus(ReservationStatus.CONFIRMED);
+        reservation.setStatus(ReservationRestaurantStatus.CONFIRMED);
         reservation.setLastTableAssignedBy(resolveCurrentUser());
-        Reservation savedReservation = reservationRepository.save(reservation);
+        ReservationRestaurant savedReservation = reservationRepository.save(reservation);
         triggerConfirmationEmailIfNeeded(previousStatus, savedReservation);
         return savedReservation;
     }
@@ -140,7 +140,7 @@ public class ReservationService implements IReservationService {
 
         return reservationRepository.findTableConflicts(
                 restaurantId,
-                ReservationType.RestaurantReservation,
+                ReservationRestaurantType.RestaurantReservation,
                 dateTime,
                 ACTIVE_RESTAURANT_STATUSES,
                 List.of(tableId),
@@ -149,34 +149,34 @@ public class ReservationService implements IReservationService {
     }
 
     @Override
-    public Reservation cancelReservation(Long reservationId) {
-        Reservation reservation = getReservationOrThrow(reservationId);
-        reservation.setStatus(ReservationStatus.CANCELLED);
+    public ReservationRestaurant cancelReservation(Long reservationId) {
+        ReservationRestaurant reservation = getReservationOrThrow(reservationId);
+        reservation.setStatus(ReservationRestaurantStatus.CANCELLED);
         return reservationRepository.save(reservation);
     }
 
     @Override
-    public Reservation completeReservation(Long reservationId) {
-        Reservation reservation = getReservationOrThrow(reservationId);
-        reservation.setStatus(ReservationStatus.COMPLETED);
+    public ReservationRestaurant completeReservation(Long reservationId) {
+        ReservationRestaurant reservation = getReservationOrThrow(reservationId);
+        reservation.setStatus(ReservationRestaurantStatus.COMPLETED);
         return reservationRepository.save(reservation);
     }
 
     @Override
-    public Reservation checkInReservation(String token) {
+    public ReservationRestaurant checkInReservation(String token) {
         if (!StringUtils.hasText(token)) {
             throw new ApiException(HttpStatus.BAD_REQUEST, "check-in token is required");
         }
 
-        Reservation reservation = reservationRepository.findByCheckInToken(token.trim())
+        ReservationRestaurant reservation = reservationRepository.findByCheckInToken(token.trim())
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Reservation not found for this check-in token"));
 
-        if (reservation.getStatus() != ReservationStatus.CONFIRMED && reservation.getStatus() != ReservationStatus.ARRIVED) {
+        if (reservation.getStatus() != ReservationRestaurantStatus.CONFIRMED && reservation.getStatus() != ReservationRestaurantStatus.ARRIVED) {
             throw new ApiException(HttpStatus.BAD_REQUEST, "Only confirmed reservations can be checked in");
         }
 
-        if (reservation.getStatus() != ReservationStatus.ARRIVED) {
-            reservation.setStatus(ReservationStatus.ARRIVED);
+        if (reservation.getStatus() != ReservationRestaurantStatus.ARRIVED) {
+            reservation.setStatus(ReservationRestaurantStatus.ARRIVED);
             reservation.setCheckedInAt(LocalDateTime.now());
         } else if (reservation.getCheckedInAt() == null) {
             reservation.setCheckedInAt(LocalDateTime.now());
@@ -185,12 +185,12 @@ public class ReservationService implements IReservationService {
         return reservationRepository.save(reservation);
     }
 
-    private void normalizeReservation(Reservation reservation) {
+    private void normalizeReservation(ReservationRestaurant reservation) {
         if (reservation == null) {
             throw new ApiException(HttpStatus.BAD_REQUEST, "Reservation payload is required");
         }
 
-        Reservation existingReservation = reservation.getId() == null
+        ReservationRestaurant existingReservation = reservation.getId() == null
                 ? null
                 : reservationRepository.findById(reservation.getId()).orElse(null);
 
@@ -205,20 +205,20 @@ public class ReservationService implements IReservationService {
         }
         ensureCheckInToken(reservation);
 
-        if (reservation.getType() == ReservationType.RestaurantReservation) {
+        if (reservation.getType() == ReservationRestaurantType.RestaurantReservation) {
             normalizeRestaurantReservation(reservation);
         } else if (reservation.getType() == null && reservation.getRestaurant() != null) {
-            reservation.setType(ReservationType.RestaurantReservation);
+            reservation.setType(ReservationRestaurantType.RestaurantReservation);
             normalizeRestaurantReservation(reservation);
         }
     }
 
-    private void normalizeRestaurantReservation(Reservation reservation) {
+    private void normalizeRestaurantReservation(ReservationRestaurant reservation) {
         if (reservation.getStatus() == null) {
-            reservation.setStatus(ReservationStatus.PENDING);
+            reservation.setStatus(ReservationRestaurantStatus.PENDING);
         }
 
-        Reservation existingReservation = reservation.getId() == null
+        ReservationRestaurant existingReservation = reservation.getId() == null
                 ? null
                 : reservationRepository.findById(reservation.getId()).orElse(null);
 
@@ -251,18 +251,18 @@ public class ReservationService implements IReservationService {
             }
         }
 
-        if (reservation.getStatus() == ReservationStatus.CONFIRMED && reservation.getTables().isEmpty()) {
+        if (reservation.getStatus() == ReservationRestaurantStatus.CONFIRMED && reservation.getTables().isEmpty()) {
             throw new ApiException(HttpStatus.BAD_REQUEST, "A confirmed restaurant reservation must have at least one table");
         }
     }
 
-    private Reservation getReservationOrThrow(Long reservationId) {
+    private ReservationRestaurant getReservationOrThrow(Long reservationId) {
         return reservationRepository.findById(reservationId)
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Reservation not found"));
     }
 
-    private void validateRestaurantReservation(Reservation reservation) {
-        if (reservation.getType() != ReservationType.RestaurantReservation) {
+    private void validateRestaurantReservation(ReservationRestaurant reservation) {
+        if (reservation.getType() != ReservationRestaurantType.RestaurantReservation) {
             throw new ApiException(HttpStatus.BAD_REQUEST, "This action is only supported for restaurant reservations");
         }
         if (reservation.getRestaurant() == null || reservation.getRestaurant().getId() == null) {
@@ -270,14 +270,14 @@ public class ReservationService implements IReservationService {
         }
     }
 
-    private List<Long> resolveEffectiveTableIds(Reservation reservation, List<Long> requestedTableIds) {
+    private List<Long> resolveEffectiveTableIds(ReservationRestaurant reservation, List<Long> requestedTableIds) {
         if (requestedTableIds != null && !requestedTableIds.isEmpty()) {
             return requestedTableIds.stream().filter(Objects::nonNull).distinct().toList();
         }
         return extractTableIds(reservation);
     }
 
-    private List<Long> extractTableIds(Reservation reservation) {
+    private List<Long> extractTableIds(ReservationRestaurant reservation) {
         if (reservation.getTables() == null || reservation.getTables().isEmpty()) {
             return List.of();
         }
@@ -288,7 +288,7 @@ public class ReservationService implements IReservationService {
                 .toList();
     }
 
-    private void validatePartySizeCoverage(Reservation reservation, List<RestaurantTable> tables) {
+    private void validatePartySizeCoverage(ReservationRestaurant reservation, List<RestaurantTable> tables) {
         if (reservation.getPartySize() == null) {
             return;
         }
@@ -304,7 +304,7 @@ public class ReservationService implements IReservationService {
         }
     }
 
-    private List<RestaurantTable> loadAndValidateTables(Reservation reservation, List<Long> tableIds, Long excludedReservationId) {
+    private List<RestaurantTable> loadAndValidateTables(ReservationRestaurant reservation, List<Long> tableIds, Long excludedReservationId) {
         validateRestaurantReservation(reservation);
         if (reservation.getDateTime() == null) {
             throw new ApiException(HttpStatus.BAD_REQUEST, "Reservation dateTime is required");
@@ -328,9 +328,9 @@ public class ReservationService implements IReservationService {
             }
         }
 
-        List<Reservation> conflicts = reservationRepository.findTableConflicts(
+        List<ReservationRestaurant> conflicts = reservationRepository.findTableConflicts(
                 restaurantId,
-                ReservationType.RestaurantReservation,
+                ReservationRestaurantType.RestaurantReservation,
                 reservation.getDateTime(),
                 ACTIVE_RESTAURANT_STATUSES,
                 tableIds,
@@ -352,7 +352,7 @@ public class ReservationService implements IReservationService {
     }
 
     /** Links the reservation to the logged-in user when creating a booking (client JWT). */
-    private void attachCurrentUserIfMissing(Reservation reservation) {
+    private void attachCurrentUserIfMissing(ReservationRestaurant reservation) {
         if (reservation.getUser() != null && reservation.getUser().getId() != null) {
             return;
         }
@@ -362,15 +362,15 @@ public class ReservationService implements IReservationService {
         }
     }
 
-    private void triggerRequestEmail(Reservation reservation) {
+    private void triggerRequestEmail(ReservationRestaurant reservation) {
         if (reservation.getId() != null) {
             reservationRepository.findDetailedById(reservation.getId())
                 .ifPresent(emailService::sendReservationRequest);
         }
     }
 
-    private void triggerConfirmationEmailIfNeeded(ReservationStatus previousStatus, Reservation reservation) {
-        if (previousStatus == ReservationStatus.PENDING && reservation.getStatus() == ReservationStatus.CONFIRMED) {
+    private void triggerConfirmationEmailIfNeeded(ReservationRestaurantStatus previousStatus, ReservationRestaurant reservation) {
+        if (previousStatus == ReservationRestaurantStatus.PENDING && reservation.getStatus() == ReservationRestaurantStatus.CONFIRMED) {
             if (reservation.getId() != null) {
                 reservationRepository.findDetailedById(reservation.getId())
                     .ifPresent(emailService::sendReservationConfirmation);
@@ -378,7 +378,7 @@ public class ReservationService implements IReservationService {
         }
     }
 
-    private void ensureCheckInToken(Reservation reservation) {
+    private void ensureCheckInToken(ReservationRestaurant reservation) {
         if (!StringUtils.hasText(reservation.getCheckInToken())) {
             reservation.setCheckInToken(UUID.randomUUID().toString());
         }

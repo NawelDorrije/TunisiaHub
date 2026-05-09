@@ -7,6 +7,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.FieldDefaults;
+import org.example.backend_tunisiahub.Entities.ReservationRestaurant;
 import java.util.List;
 
 @Entity
@@ -53,6 +54,6 @@ public class Restaurant {
     private String color;
     @OneToMany(mappedBy = "restaurant")
     @JsonIgnore
-    List<org.example.backend_tunisiahub.Entities.Reservation> reservations;
+    List<ReservationRestaurant> reservations;
 
 }

@@ -107,23 +107,23 @@ export class ApiService {
   }
 
   createReservation(reservation: any): Observable<any> {
-    return this.http.post(this.BASE_URL + '/api/reservations', reservation);
+    return this.http.post(this.BASE_URL + '/api/reservation-restaurants', reservation);
   }
 
   getAllReservations(): Observable<any[]> {
-    return this.http.get<any[]>(this.BASE_URL + '/api/reservations');
+    return this.http.get<any[]>(this.BASE_URL + '/api/reservation-restaurants');
   }
 
   confirmReservation(reservationId: number, tableIds: number[]): Observable<any> {
-    return this.http.patch(this.BASE_URL + '/api/reservations/' + reservationId + '/confirm', { tableIds });
+    return this.http.patch(this.BASE_URL + '/api/reservation-restaurants/' + reservationId + '/confirm', { tableIds });
   }
 
   cancelReservationById(reservationId: number): Observable<any> {
-    return this.http.patch(this.BASE_URL + '/api/reservations/' + reservationId + '/cancel', {});
+    return this.http.patch(this.BASE_URL + '/api/reservation-restaurants/' + reservationId + '/cancel', {});
   }
 
   getAiReservationSuggestion(restaurantId: number, date: string): Observable<any> {
-    return this.http.get(this.BASE_URL + '/api/reservations/ai-suggestions', {
+    return this.http.get(this.BASE_URL + '/api/reservation-restaurants/ai-suggestions', {
       params: { restaurantId: restaurantId.toString(), date }
     });
   }
@@ -159,10 +159,10 @@ export class ApiService {
   }
 
   getReservationsByUser(userId: number): Observable<any[]> {
-    return this.http.get<any[]>(this.BASE_URL + '/api/reservations/user/' + userId);
+    return this.http.get<any[]>(this.BASE_URL + '/api/reservation-restaurants/user/' + userId);
   }
 
   checkInByToken(token: string): Observable<any> {
-    return this.http.post(this.BASE_URL + '/api/reservations/checkin?token=' + encodeURIComponent(token), {});
+    return this.http.post(this.BASE_URL + '/api/reservation-restaurants/checkin?token=' + encodeURIComponent(token), {});
   }
 }

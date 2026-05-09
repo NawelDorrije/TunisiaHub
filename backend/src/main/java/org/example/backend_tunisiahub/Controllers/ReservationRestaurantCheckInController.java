@@ -1,8 +1,8 @@
 package org.example.backend_tunisiahub.Controllers;
 
 import lombok.RequiredArgsConstructor;
-import org.example.backend_tunisiahub.Entities.Reservation;
-import org.example.backend_tunisiahub.Services.IReservationService;
+import org.example.backend_tunisiahub.Entities.ReservationRestaurant;
+import org.example.backend_tunisiahub.Services.IReservationRestaurantService;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -11,15 +11,15 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequiredArgsConstructor
-public class ReservationCheckInController {
+public class ReservationRestaurantCheckInController {
 
-    private final IReservationService reservationService;
+    private final IReservationRestaurantService reservationService;
 
     @GetMapping(value = {"/checkin", "/checkin-public"}, produces = MediaType.TEXT_HTML_VALUE)
     @ResponseBody
     public String checkInPublic(@RequestParam String token) {
         try {
-            Reservation reservation = reservationService.checkInReservation(token);
+            ReservationRestaurant reservation = reservationService.checkInReservation(token);
             String restaurantName = reservation.getRestaurant() != null && reservation.getRestaurant().getName() != null
                     ? escapeHtml(reservation.getRestaurant().getName())
                     : "the restaurant";

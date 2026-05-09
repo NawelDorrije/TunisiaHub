@@ -3,7 +3,7 @@ package org.example.backend_tunisiahub.Services;
 import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.example.backend_tunisiahub.Entities.Reservation;
+import org.example.backend_tunisiahub.Entities.ReservationRestaurant;
 import org.example.backend_tunisiahub.Entities.User.User;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ByteArrayResource;
@@ -19,7 +19,7 @@ import org.springframework.util.StringUtils;
 public class EmailService {
 
     private final JavaMailSender mailSender;
-    private final ReservationPdfService reservationPdfService;
+    private final ReservationRestaurantPdfService reservationPdfService;
 
     @Value("${app.mail.from:}")
     private String mailFrom;
@@ -31,7 +31,7 @@ public class EmailService {
     private String mailPassword;
 
     @Async
-    public void sendReservationRequest(Reservation reservation) {
+    public void sendReservationRequest(ReservationRestaurant reservation) {
         try {
             if (!isMailConfigured()) {
                 log.warn("Skipping reservation request email because MAIL_USERNAME or MAIL_PASSWORD is not configured");
@@ -55,7 +55,7 @@ public class EmailService {
     }
 
     @Async
-    public void sendReservationConfirmation(Reservation reservation) {
+    public void sendReservationConfirmation(ReservationRestaurant reservation) {
         try {
             if (!isMailConfigured()) {
                 log.warn("Skipping reservation confirmation email because MAIL_USERNAME or MAIL_PASSWORD is not configured");
@@ -90,7 +90,7 @@ public class EmailService {
         }
     }
 
-    private String extractRecipient(Reservation reservation) {
+    private String extractRecipient(ReservationRestaurant reservation) {
         if (reservation == null) {
             return null;
         }
@@ -98,7 +98,7 @@ public class EmailService {
         return user != null ? user.getEmail() : null;
     }
 
-    private String buildRequestMailBody(Reservation reservation) {
+    private String buildRequestMailBody(ReservationRestaurant reservation) {
         String clientName = getClientName(reservation);
         String restaurantName = getRestaurantName(reservation);
 
@@ -111,7 +111,7 @@ public class EmailService {
                 + "Regards,\nTunisiaHub";
     }
 
-    private String buildConfirmationMailBody(Reservation reservation) {
+    private String buildConfirmationMailBody(ReservationRestaurant reservation) {
         String clientName = getClientName(reservation);
         String restaurantName = getRestaurantName(reservation);
 
@@ -122,7 +122,7 @@ public class EmailService {
                 + "Regards,\nTunisiaHub";
     }
 
-    private String getClientName(Reservation reservation) {
+    private String getClientName(ReservationRestaurant reservation) {
         if (reservation != null && reservation.getUser() != null) {
             String prenom = reservation.getUser().getPrenom() == null ? "" : reservation.getUser().getPrenom().trim();
             String nom = reservation.getUser().getNom() == null ? "" : reservation.getUser().getNom().trim();
@@ -133,7 +133,7 @@ public class EmailService {
         return "Customer";
     }
 
-    private String getRestaurantName(Reservation reservation) {
+    private String getRestaurantName(ReservationRestaurant reservation) {
         return reservation != null && reservation.getRestaurant() != null
                 && StringUtils.hasText(reservation.getRestaurant().getName())
                 ? reservation.getRestaurant().getName().trim()

@@ -1,91 +1,91 @@
 package org.example.backend_tunisiahub.Controllers;
 
 import lombok.RequiredArgsConstructor;
-import org.example.backend_tunisiahub.Controllers.dto.AiReservationSuggestionResponse;
-import org.example.backend_tunisiahub.Entities.Reservation;
-import org.example.backend_tunisiahub.Entities.ReservationStatus;
+import org.example.backend_tunisiahub.Controllers.dto.AiReservationRestaurantSuggestionResponse;
+import org.example.backend_tunisiahub.Entities.ReservationRestaurant;
+import org.example.backend_tunisiahub.Entities.ReservationRestaurantStatus;
 import org.example.backend_tunisiahub.Services.AiRecommendationService;
-import org.example.backend_tunisiahub.Services.IReservationService;
+import org.example.backend_tunisiahub.Services.IReservationRestaurantService;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/reservations")
+@RequestMapping("/api/reservation-restaurants")
 @RequiredArgsConstructor
-public class ReservationController {
+public class ReservationRestaurantController {
 
-    private final IReservationService reservationService;
+    private final IReservationRestaurantService reservationService;
     private final AiRecommendationService aiRecommendationService;
 
     @GetMapping
-    public List<Reservation> getAllReservations() {
+    public List<ReservationRestaurant> getAllReservations() {
         return reservationService.retrieveAllReservations();
     }
 
     @GetMapping("/my")
-    public List<Reservation> getMyReservations() {
+    public List<ReservationRestaurant> getMyReservations() {
         return reservationService.retrieveMyReservations();
     }
 
     @GetMapping("/user/{userId}")
-    public List<Reservation> getReservationsByUser(@PathVariable Long userId) {
+    public List<ReservationRestaurant> getReservationsByUser(@PathVariable Long userId) {
         return reservationService.retrieveReservationsByUser(userId);
     }
 
     @GetMapping("/{id}")
-    public Reservation getReservationById(@PathVariable Long id) {
+    public ReservationRestaurant getReservationById(@PathVariable Long id) {
         return reservationService.retrieveReservation(id);
     }
 
     @PostMapping
-    public Reservation createReservation(@RequestBody Reservation reservation) {
+    public ReservationRestaurant createReservation(@RequestBody ReservationRestaurant reservation) {
         return reservationService.addReservation(reservation);
     }
 
     @GetMapping("/restaurant")
-    public List<Reservation> getRestaurantReservations(@RequestParam(required = false) Long restaurantId,
-                                                       @RequestParam(required = false) ReservationStatus status) {
+    public List<ReservationRestaurant> getRestaurantReservations(@RequestParam(required = false) Long restaurantId,
+                                                       @RequestParam(required = false) ReservationRestaurantStatus status) {
         return reservationService.retrieveRestaurantReservations(restaurantId, status);
     }
 
     @GetMapping("/ai-suggestions")
-    public AiReservationSuggestionResponse getAiSuggestion(@RequestParam Long restaurantId,
+    public AiReservationRestaurantSuggestionResponse getAiSuggestion(@RequestParam Long restaurantId,
                                                            @RequestParam LocalDate date) {
         return aiRecommendationService.suggestBestTime(restaurantId, date);
     }
 
     @PutMapping
-    public Reservation updateReservation(@RequestBody Reservation reservation) {
+    public ReservationRestaurant updateReservation(@RequestBody ReservationRestaurant reservation) {
         return reservationService.modifyReservation(reservation);
     }
 
     @PatchMapping("/{id}/confirm")
-    public Reservation confirmRestaurantReservation(@PathVariable Long id,
+    public ReservationRestaurant confirmRestaurantReservation(@PathVariable Long id,
                                                     @RequestBody ConfirmReservationRequest request) {
         return reservationService.confirmRestaurantReservation(id, request.tableIds());
     }
 
     @PatchMapping("/{id}/cancel")
-    public Reservation cancelReservation(@PathVariable Long id) {
+    public ReservationRestaurant cancelReservation(@PathVariable Long id) {
         return reservationService.cancelReservation(id);
     }
 
     @PatchMapping("/{id}/complete")
-    public Reservation completeReservation(@PathVariable Long id) {
+    public ReservationRestaurant completeReservation(@PathVariable Long id) {
         return reservationService.completeReservation(id);
     }
 
     @PostMapping("/checkin")
-    public Reservation checkInReservation(@RequestParam String token) {
+    public ReservationRestaurant checkInReservation(@RequestParam String token) {
         return reservationService.checkInReservation(token);
     }
 
     @GetMapping(value = "/checkin-public", produces = "text/html")
     public String checkInPublic(@RequestParam String token) {
         try {
-            Reservation res = reservationService.checkInReservation(token);
+            ReservationRestaurant res = reservationService.checkInReservation(token);
             return "<html><head><meta name='viewport' content='width=device-width, initial-scale=1'>" +
                    "<style>body{font-family:sans-serif;text-align:center;padding:50px 20px;background:#f8fafc;}" +
                    ".card{background:white;padding:30px;border-radius:15px;box-shadow:0 4px 6px rgba(0,0,0,0.1);max-width:400px;margin:auto;}" +
@@ -116,8 +116,8 @@ public class ReservationController {
     }
 
     @GetMapping("/statuses")
-    public ReservationStatus[] getReservationStatuses() {
-        return ReservationStatus.values();
+    public ReservationRestaurantStatus[] getReservationStatuses() {
+        return ReservationRestaurantStatus.values();
     }
 
     @DeleteMapping("/{id}")

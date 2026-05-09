@@ -6,6 +6,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.FieldDefaults;
+import org.example.backend_tunisiahub.Entities.ReservationRestaurant;
 
 import java.util.Date;
 
@@ -30,5 +31,5 @@ public class Review {
 
     @OneToOne
     @JoinColumn(name = "reservation_id")
-    Reservation reservation;
+    ReservationRestaurant reservation;
 }

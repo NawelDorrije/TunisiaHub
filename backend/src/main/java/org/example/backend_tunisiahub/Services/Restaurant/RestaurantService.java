@@ -4,15 +4,17 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.example.backend_tunisiahub.Controllers.Restaurant.dto.AiSearchRequest;
+import org.example.backend_tunisiahub.Entities.Camping.ReservationStatus;
+import org.example.backend_tunisiahub.Entities.ReservationRestaurant;
+import org.example.backend_tunisiahub.Entities.ReservationRestaurantType;
 import org.example.backend_tunisiahub.Entities.Restaurant.Cuisine;
 import org.example.backend_tunisiahub.Entities.Restaurant.FloorPlanDto;
 import org.example.backend_tunisiahub.Entities.Restaurant.Restaurant;
 import org.example.backend_tunisiahub.Entities.Restaurant.RestaurantTable;
 import org.example.backend_tunisiahub.Entities.Restaurant.TableStatus;
 import org.example.backend_tunisiahub.Entities.Reservation;
-import org.example.backend_tunisiahub.Entities.ReservationStatus;
-import org.example.backend_tunisiahub.Entities.ReservationType;
-import org.example.backend_tunisiahub.Repositories.ReservationRepository;
+import org.example.backend_tunisiahub.Entities.ReservationRestaurantStatus;
+import org.example.backend_tunisiahub.Repositories.ReservationRestaurantRepository;
 import org.example.backend_tunisiahub.Repositories.Restaurant.RestaurantRepository;
 import org.example.backend_tunisiahub.Repositories.Restaurant.RestaurantTableRepository;
 import org.example.backend_tunisiahub.Services.MediaStorageService;
@@ -60,7 +62,7 @@ public class RestaurantService implements IRestaurantService {
 
     private final RestaurantRepository restaurantRepository;
     private final RestaurantTableRepository restaurantTableRepository;
-    private final ReservationRepository reservationRepository;
+    private final ReservationRestaurantRepository reservationRepository;
     private final MediaStorageService mediaStorageService;
     private final ObjectMapper objectMapper;
     private final HttpClient httpClient = HttpClient.newHttpClient();
@@ -199,15 +201,15 @@ public class RestaurantService implements IRestaurantService {
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Restaurant not found"));
         List<RestaurantTable> tables = restaurantTableRepository.findByRestaurant_IdAndActiveTrue(restaurantId);
 
-        List<Reservation> activeReservations = reservationRepository.findByRestaurant_IdAndTypeAndDateTimeAndStatusIn(
+        List<ReservationRestaurant> activeReservations = reservationRepository.findByRestaurant_IdAndTypeAndDateTimeAndStatusIn(
                 restaurantId,
-                ReservationType.RestaurantReservation,
+                ReservationRestaurantType.RestaurantReservation,
                 dateTime,
-                EnumSet.of(ReservationStatus.PENDING, ReservationStatus.CONFIRMED, ReservationStatus.ARRIVED)
+                EnumSet.of(ReservationRestaurantStatus.PENDING, ReservationRestaurantStatus.CONFIRMED, ReservationRestaurantStatus.ARRIVED)
         );
 
         Set<Long> unavailableTableIds = new HashSet<>();
-        for (Reservation reservation : activeReservations) {
+        for (ReservationRestaurant reservation : activeReservations) {
             if (reservation.getTables() == null) {
                 continue;
             }
