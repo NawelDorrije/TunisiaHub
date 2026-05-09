@@ -1,5 +1,11 @@
 package org.example.backend_tunisiahub.Entities;
 
+<<<<<<< HEAD
+=======
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
+
+>>>>>>> origin/feature/integrated-app-event
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -29,7 +35,22 @@ public class Complaint {
 
     String status;
 
+<<<<<<< HEAD
     @ManyToOne
     @JoinColumn(name = "reservation_id")
+=======
+    @Column(length = 1000)
+    String aiSummary;
+
+    @Column(length = 1000)
+    String aiKeywords;
+
+    @Column(length = 2000)
+    String aiSolutions;
+
+    @ManyToOne
+    @JoinColumn(name = "reservation_id")
+    @JsonIgnore
+>>>>>>> origin/feature/integrated-app-event
     Reservation reservation;
 }

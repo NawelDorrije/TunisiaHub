@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 <div class="container py-4">
 
   <div class="mb-4">
@@ -30,6 +31,48 @@
           [src]="accommodation.photos[0] || 'assets/images/placeholder.jpg'"
           class="card-img-top"
           alt="{{ accommodation.title }}"
+=======
+<div class="container py-4 user-accommodation-page luxury-page-bg">
+
+  <!-- Header -->
+  <div class="d-flex justify-content-center align-items-center mb-4 page-header gap-3">
+    <div class="text-center">
+      <h2 class="fw-bold mb-1 page-title persuasive-title">Book your dream stay in Tunisia today</h2>
+     <!--lass="text-muted mb-0 page-subtitle">
+        {{ filteredAccommodations.length }} accommodation{{ filteredAccommodations.length !== 1 ? 's' : '' }} found
+      </p>-->
+    </div>
+
+    <!-- Mobile filter toggle -->
+    <button
+      class="btn btn-outline-primary d-md-none page-filter-toggle"
+      (click)="toggleFilters()"
+    >
+      🔧 Filters
+      <span class="badge bg-primary ms-1" *ngIf="activeFiltersCount > 0">
+        {{ activeFiltersCount }}
+      </span>
+    </button>
+  </div>
+ <!-- AI Recommendations -->
+<div class="mb-4 recommendations-strip" *ngIf="authService.isLoggedIn() && recommendations.length > 0">
+  <div class="d-flex align-items-center justify-content-between mb-2">
+    <h4 class="fw-semibold mb-0 recommendations-title">Recommended for you</h4>
+  </div>
+<!--  <p class="text-muted small fst-italic mb-3" *ngIf="recommendationReasoning">{{ recommendationReasoning }}</p>-->
+  <div class="row g-3 recommendations-grid">
+    <div class="col-lg-3 col-md-4 col-sm-6" *ngFor="let rec of recommendations">
+      <a
+        class="card border-0 shadow-sm recommendation-card"
+        *ngIf="rec.id"
+        [routerLink]="['/accommodations/detail', rec.id]"
+      >
+        <img
+          [src]="rec.photos[0] || 'assets/images/placeholders/accommodation.jpg'"
+
+          class="card-img-top"
+          alt="{{ rec.title }}"
+>>>>>>> origin/feature/integrated-app-event
           style="height: 200px; object-fit: cover;"
         />
 
@@ -38,6 +81,7 @@
           class="badge bg-primary position-absolute m-2"
           style="top: 0; left: 0;"
         >
+<<<<<<< HEAD
           {{ accommodation.type }}
         </span>
 
@@ -54,24 +98,292 @@
 
           <p class="text-muted small mb-3">
             {{ accommodation.description | slice:0:100 }}...
+=======
+          {{ rec.type }}
+        </span>
+
+        <div class="card-body d-flex flex-column">
+          <h5 class="card-title fw-bold">{{ rec.title }}</h5>
+
+          <p class="text-muted small mb-1">
+            <i class="bi bi-geo-alt-fill"></i> {{ rec.adresse }}
+          </p>
+          
+          <p class="text-muted small mb-3">
+            <i class="bi bi-people-fill"></i> Capacity: {{ rec.capacite }} persons
+          </p>
+
+          <p class="text-muted small mb-3">
+            {{ rec.description | slice:0:100 }}...
+>>>>>>> origin/feature/integrated-app-event
           </p>
 
           <div class="d-flex justify-content-between align-items-center mt-auto">
             <span class="fw-bold text-primary fs-5">
+<<<<<<< HEAD
               {{ accommodation.price }} TND
+=======
+              {{ rec.price }} TND
+>>>>>>> origin/feature/integrated-app-event
               <small class="text-muted fs-6 fw-normal">/ night</small>
             </span>
             <button
               class="btn btn-primary btn-sm"
+<<<<<<< HEAD
               (click)="goToDetail(accommodation.id!)"
+=======
+              (click)="goToDetail(rec.id!)"
+>>>>>>> origin/feature/integrated-app-event
             >
               View details
             </button>
           </div>
         </div>
+<<<<<<< HEAD
 
+=======
+      </a>
+    </div>
+  </div>
+  <hr class="mt-4"/>
+</div>
+  <!-- Top search bar -->
+  <div class="card border-0 shadow-sm mb-4 search-card">
+    <div class="card-body py-2">
+      <div class="input-group">
+        <span class="input-group-text bg-white border-end-0">🔍</span>
+        <input
+          type="text"
+          class="form-control border-start-0"
+          placeholder="Search by name, location, description..."
+          [(ngModel)]="searchKeyword"
+          (input)="applyClientSideSearchAndSort()"
+        />
+        <button
+          class="btn btn-outline-secondary"
+          *ngIf="searchKeyword"
+          (click)="searchKeyword = ''; applyClientSideSearchAndSort()"
+        >✕</button>
+>>>>>>> origin/feature/integrated-app-event
       </div>
     </div>
   </div>
 
+<<<<<<< HEAD
 </div>
+=======
+  <div class="row g-3 main-layout-row">
+
+    <!-- Sidebar filters -->
+    <div class="col-md-3 filters-column" [class.d-none]="!showFilters" [class.d-md-block]="true">
+      <div class="card border-0 shadow-sm sticky-top filters-card">
+        <div class="card-body">
+
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h6 class="fw-bold mb-0">
+              🔧 Filters
+              <span class="badge bg-primary ms-1" *ngIf="activeFiltersCount > 0">
+                {{ activeFiltersCount }}
+              </span>
+            </h6>
+            <button
+              class="btn btn-link btn-sm text-muted p-0"
+              *ngIf="activeFiltersCount > 0"
+              (click)="resetFilters()"
+            >
+              Reset all
+            </button>
+          </div>
+
+          <hr class="my-2"/>
+
+          <!-- Type filter -->
+          <div class="mb-4">
+            <label class="form-label fw-semibold small text-uppercase text-muted">
+              Type
+            </label>
+            <div class="d-flex flex-wrap gap-2">
+              <button
+                class="btn btn-sm"
+                [class.btn-primary]="selectedType === ''"
+                [class.btn-outline-secondary]="selectedType !== ''"
+                (click)="selectedType = ''; applyFilters()"
+              >All</button>
+              <button
+                *ngFor="let type of accommodationTypes"
+                class="btn btn-sm"
+                [class.btn-primary]="selectedType === type"
+                [class.btn-outline-secondary]="selectedType !== type"
+                (click)="selectedType = type; applyFilters()"
+              >{{ type }}</button>
+            </div>
+          </div>
+
+          <hr class="my-2"/>
+
+          <!-- Max price filter -->
+          <div class="mb-4">
+            <label class="form-label fw-semibold small text-uppercase text-muted">
+              Min price per night
+            </label>
+            <input
+              type="number"
+              class="form-control form-control-sm"
+              placeholder="e.g. 100"
+              min="0"
+              [(ngModel)]="minPrice"
+              (input)="applyFilters()"
+            />
+          </div>
+
+          <hr class="my-2"/>
+
+          <div class="mb-4">
+            <label class="form-label fw-semibold small text-uppercase text-muted">
+              Max price per night
+            </label>
+            <div class="d-flex align-items-center gap-2 mb-2">
+              <span class="text-primary fw-bold">
+                {{ maxPrice ? maxPrice + ' TND' : 'Any' }}
+              </span>
+            </div>
+            <input
+              type="range"
+              class="form-range"
+              min="0"
+              max="1000"
+              step="50"
+              [(ngModel)]="maxPrice"
+              (input)="applyFilters()"
+            />
+            <div class="d-flex justify-content-between">
+              <small class="text-muted">0 TND</small>
+              <small class="text-muted">1000 TND</small>
+            </div>
+          </div>
+
+          <hr class="my-2"/>
+
+          <!-- Min capacity filter -->
+          <div class="mb-4">
+            <label class="form-label fw-semibold small text-uppercase text-muted">
+              Min capacity (persons)
+            </label>
+            <input
+              type="number"
+              class="form-control form-control-sm"
+              placeholder="e.g. 2"
+              min="1"
+              [(ngModel)]="minCapacity"
+              (input)="applyFilters()"
+            />
+          </div>
+
+          <hr class="my-2"/>
+
+          <!-- Sort -->
+          <div class="mb-3">
+            <label class="form-label fw-semibold small text-uppercase text-muted">
+              Sort by price
+            </label>
+            <div class="d-flex gap-2">
+              <button
+                class="btn btn-sm flex-fill"
+                [class.btn-primary]="sortOrder === 'asc'"
+                [class.btn-outline-secondary]="sortOrder !== 'asc'"
+                (click)="sortOrder = sortOrder === 'asc' ? '' : 'asc'; applyClientSideSearchAndSort()"
+              >↑ Low to High</button>
+              <button
+                class="btn btn-sm flex-fill"
+                [class.btn-primary]="sortOrder === 'desc'"
+                [class.btn-outline-secondary]="sortOrder !== 'desc'"
+                (click)="sortOrder = sortOrder === 'desc' ? '' : 'desc'; applyClientSideSearchAndSort()"
+              >↓ High to Low</button>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- Cards -->
+    <div class="col-md-9">
+
+      <!-- Loading -->
+      <div class="text-center py-5" *ngIf="isLoading">
+        <div class="spinner-border text-primary" role="status">
+          <span class="visually-hidden">Loading...</span>
+        </div>
+      </div>
+
+      <!-- Error -->
+      <div class="alert alert-danger" *ngIf="errorMessage">{{ errorMessage }}</div>
+
+      <!-- Empty state -->
+      <div class="text-center py-5" *ngIf="!isLoading && filteredAccommodations.length === 0">
+        <div style="font-size: 3rem;">🔍</div>
+        <h5 class="mt-3 fw-bold">No accommodations found</h5>
+        <p class="text-muted">Try adjusting your filters</p>
+        <button class="btn btn-outline-primary" (click)="resetFilters()">
+          Reset filters
+        </button>
+      </div>
+
+      <!-- Cards grid -->
+      <div class="row g-3 accommodations-grid" *ngIf="!isLoading && filteredAccommodations.length > 0">
+        <div class="col-xxl-3 col-xl-4 col-md-6" *ngFor="let accommodation of filteredAccommodations">
+          <div class="card shadow-sm h-100 border-0 accommodation-card compact-card">
+
+            <!-- Photo -->
+            <div class="position-relative">
+              <img
+                [src]="accommodation.photos[0] || 'assets/images/placeholder.jpg'"
+                class="card-img-top accommodation-image"
+                alt="{{ accommodation.title }}"
+              />
+              <span class="badge bg-primary position-absolute m-2" style="top: 0; left: 0;">
+                {{ accommodation.type }}
+              </span>
+            </div>
+
+            <div class="card-body d-flex flex-column">
+              <h6 class="card-title fw-bold mb-2">{{ accommodation.title }}</h6>
+
+              <p class="text-muted small mb-1">
+                <i class="bi bi-geo-alt-fill"></i> {{ accommodation.adresse }}
+              </p>
+
+              <p class="text-muted small mb-3">
+                <i class="bi bi-people-fill"></i> Up to {{ accommodation.capacite }} persons
+              </p>
+
+              <div class="d-flex align-items-center gap-1 mb-3 rating-line">
+                <span class="rating-star">★</span>
+                <small class="fw-bold text-dark">
+                  {{ ((accommodation.averageRating ?? accommodation.rating) || 0) > 0 ? ((accommodation.averageRating ?? accommodation.rating) | number:'1.1-1') + ' rate' : '0 rate' }}
+                </small>
+              </div>
+
+              <div class="d-flex justify-content-between align-items-center mt-auto">
+                <span class="fw-bold text-primary fs-6">
+                  {{ accommodation.price }} TND
+                  <small class="text-muted fw-normal">/ night</small>
+                </span>
+                <button
+                  class="btn btn-primary btn-sm"
+                  (click)="goToDetail(accommodation.id!)"
+                >
+                  View details
+                </button>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+>>>>>>> origin/feature/integrated-app-event

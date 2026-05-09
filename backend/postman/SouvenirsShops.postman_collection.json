@@ -1,0 +1,603 @@
+{
+  "info": {
+    "_postman_id": "8d878cd7-814d-45a0-b8cb-fdbd7a8d4e6c",
+    "name": "SouvenirsShops CRUD",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "1. Create User",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"nom\": \"Ben Ali\",\n  \"prenom\": \"Sami\",\n  \"email\": \"sami@test.com\",\n  \"motDePasse\": \"123456\",\n  \"role\": \"CLIENT\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/users",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "users"
+          ]
+        }
+      }
+    },
+    {
+      "name": "2. Create Shop",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Medina Shop\",\n  \"description\": \"Handmade Tunisian souvenirs\",\n  \"owner\": {\n    \"id\": {{userId}}\n  }\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/souvenir-shops/shops",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "souvenir-shops",
+            "shops"
+          ]
+        }
+      }
+    },
+    {
+      "name": "3. Create Product",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Olive Wood Bowl\",\n  \"description\": \"Handmade bowl\",\n  \"price\": 45.00,\n  \"stockQuantity\": 12,\n  \"shop\": {\n    \"id\": {{shopId}}\n  }\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/souvenir-shops/products",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "souvenir-shops",
+            "products"
+          ]
+        }
+      }
+    },
+    {
+      "name": "4. Create Order",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"user\": {\n    \"id\": {{userId}}\n  },\n  \"shop\": {\n    \"id\": {{shopId}}\n  },\n  \"status\": \"PENDING\",\n  \"totalAmount\": 90.00\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/souvenir-shops/orders",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "souvenir-shops",
+            "orders"
+          ]
+        }
+      }
+    },
+    {
+      "name": "5. Create OrderItem",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"order\": {\n    \"id\": {{orderId}}\n  },\n  \"product\": {\n    \"id\": {{productId}}\n  },\n  \"quantity\": 2,\n  \"unitPrice\": 45.00\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/souvenir-shops/order-items",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "souvenir-shops",
+            "order-items"
+          ]
+        }
+      }
+    },
+    {
+      "name": "6. Create Payment",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"order\": {\n    \"id\": {{orderId}}\n  },\n  \"status\": \"SUCCESS\",\n  \"method\": \"CARD\",\n  \"amount\": 90.00,\n  \"transactionReference\": \"TXN-001\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/souvenir-shops/payments",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "souvenir-shops",
+            "payments"
+          ]
+        }
+      }
+    },
+    {
+      "name": "7. Create Product Review",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"user\": {\n    \"id\": {{userId}}\n  },\n  \"reviewType\": \"PRODUCT\",\n  \"targetId\": {{productId}},\n  \"rating\": 5,\n  \"comment\": \"Excellent product\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/souvenir-shops/reviews",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "souvenir-shops",
+            "reviews"
+          ]
+        }
+      }
+    },
+    {
+      "name": "8. Create Shop Review",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"user\": {\n    \"id\": {{userId}}\n  },\n  \"reviewType\": \"SHOP\",\n  \"targetId\": {{shopId}},\n  \"rating\": 4,\n  \"comment\": \"Very good shop\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/souvenir-shops/reviews",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "souvenir-shops",
+            "reviews"
+          ]
+        }
+      }
+    },
+    {
+      "name": "9. Get All Shops",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{baseUrl}}/api/souvenir-shops/shops",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "souvenir-shops",
+            "shops"
+          ]
+        }
+      }
+    },
+    {
+      "name": "10. Get Shop By Id",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{baseUrl}}/api/souvenir-shops/shops/{{shopId}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "souvenir-shops",
+            "shops",
+            "{{shopId}}"
+          ]
+        }
+      }
+    },
+    {
+      "name": "11. Get Shop Products",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{baseUrl}}/api/souvenir-shops/shops/{{shopId}}/products",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "souvenir-shops",
+            "shops",
+            "{{shopId}}",
+            "products"
+          ]
+        }
+      }
+    },
+    {
+      "name": "12. Get Shop Orders",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{baseUrl}}/api/souvenir-shops/shops/{{shopId}}/orders",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "souvenir-shops",
+            "shops",
+            "{{shopId}}",
+            "orders"
+          ]
+        }
+      }
+    },
+    {
+      "name": "13. Get Shop Reviews",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{baseUrl}}/api/souvenir-shops/shops/{{shopId}}/reviews",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "souvenir-shops",
+            "shops",
+            "{{shopId}}",
+            "reviews"
+          ]
+        }
+      }
+    },
+    {
+      "name": "14. Get All Products",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{baseUrl}}/api/souvenir-shops/products",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "souvenir-shops",
+            "products"
+          ]
+        }
+      }
+    },
+    {
+      "name": "15. Get Product Reviews",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{baseUrl}}/api/souvenir-shops/products/{{productId}}/reviews",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "souvenir-shops",
+            "products",
+            "{{productId}}",
+            "reviews"
+          ]
+        }
+      }
+    },
+    {
+      "name": "16. Get All Orders",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{baseUrl}}/api/souvenir-shops/orders",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "souvenir-shops",
+            "orders"
+          ]
+        }
+      }
+    },
+    {
+      "name": "17. Get Order Items",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{baseUrl}}/api/souvenir-shops/orders/{{orderId}}/items",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "souvenir-shops",
+            "orders",
+            "{{orderId}}",
+            "items"
+          ]
+        }
+      }
+    },
+    {
+      "name": "18. Get Order Payment",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{baseUrl}}/api/souvenir-shops/orders/{{orderId}}/payment",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "souvenir-shops",
+            "orders",
+            "{{orderId}}",
+            "payment"
+          ]
+        }
+      }
+    },
+    {
+      "name": "19. Update Product",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"id\": {{productId}},\n  \"name\": \"Olive Wood Bowl Premium\",\n  \"description\": \"Updated description\",\n  \"price\": 55.00,\n  \"stockQuantity\": 8,\n  \"shop\": {\n    \"id\": {{shopId}}\n  }\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/souvenir-shops/products",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "souvenir-shops",
+            "products"
+          ]
+        }
+      }
+    },
+    {
+      "name": "20. Update Order",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"id\": {{orderId}},\n  \"user\": {\n    \"id\": {{userId}}\n  },\n  \"shop\": {\n    \"id\": {{shopId}}\n  },\n  \"status\": \"PAID\",\n  \"totalAmount\": 90.00\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/souvenir-shops/orders",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "souvenir-shops",
+            "orders"
+          ]
+        }
+      }
+    },
+    {
+      "name": "21. Delete Payment",
+      "request": {
+        "method": "DELETE",
+        "url": {
+          "raw": "{{baseUrl}}/api/souvenir-shops/payments/{{paymentId}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "souvenir-shops",
+            "payments",
+            "{{paymentId}}"
+          ]
+        }
+      }
+    },
+    {
+      "name": "22. Delete OrderItem",
+      "request": {
+        "method": "DELETE",
+        "url": {
+          "raw": "{{baseUrl}}/api/souvenir-shops/order-items/{{orderItemId}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "souvenir-shops",
+            "order-items",
+            "{{orderItemId}}"
+          ]
+        }
+      }
+    },
+    {
+      "name": "23. Delete Review",
+      "request": {
+        "method": "DELETE",
+        "url": {
+          "raw": "{{baseUrl}}/api/souvenir-shops/reviews/{{reviewId}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "souvenir-shops",
+            "reviews",
+            "{{reviewId}}"
+          ]
+        }
+      }
+    },
+    {
+      "name": "24. Delete Order",
+      "request": {
+        "method": "DELETE",
+        "url": {
+          "raw": "{{baseUrl}}/api/souvenir-shops/orders/{{orderId}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "souvenir-shops",
+            "orders",
+            "{{orderId}}"
+          ]
+        }
+      }
+    },
+    {
+      "name": "25. Delete Product",
+      "request": {
+        "method": "DELETE",
+        "url": {
+          "raw": "{{baseUrl}}/api/souvenir-shops/products/{{productId}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "souvenir-shops",
+            "products",
+            "{{productId}}"
+          ]
+        }
+      }
+    },
+    {
+      "name": "26. Delete Shop",
+      "request": {
+        "method": "DELETE",
+        "url": {
+          "raw": "{{baseUrl}}/api/souvenir-shops/shops/{{shopId}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "souvenir-shops",
+            "shops",
+            "{{shopId}}"
+          ]
+        }
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8089"
+    },
+    {
+      "key": "userId",
+      "value": "1"
+    },
+    {
+      "key": "shopId",
+      "value": "1"
+    },
+    {
+      "key": "productId",
+      "value": "1"
+    },
+    {
+      "key": "orderId",
+      "value": "1"
+    },
+    {
+      "key": "orderItemId",
+      "value": "1"
+    },
+    {
+      "key": "paymentId",
+      "value": "1"
+    },
+    {
+      "key": "reviewId",
+      "value": "1"
+    }
+  ]
+}

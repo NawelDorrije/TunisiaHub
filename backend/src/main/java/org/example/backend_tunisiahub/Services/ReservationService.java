@@ -1,13 +1,15 @@
-package org.example.backend_tunisiahub.Services;
+﻿package org.example.backend_tunisiahub.Services;
 
 import lombok.RequiredArgsConstructor;
+import org.example.backend_tunisiahub.Entities.Camping.Enums.ReservationStatus;
+import org.example.backend_tunisiahub.Entities.Carpooling.Trip;
 import org.example.backend_tunisiahub.Entities.Reservation;
-import org.example.backend_tunisiahub.Entities.ReservationStatus;
 import org.example.backend_tunisiahub.Entities.ReservationType;
 import org.example.backend_tunisiahub.Entities.Restaurant.Restaurant;
 import org.example.backend_tunisiahub.Entities.Restaurant.RestaurantTable;
 import org.example.backend_tunisiahub.Entities.Restaurant.TableStatus;
 import org.example.backend_tunisiahub.Entities.User.User;
+import org.example.backend_tunisiahub.Repositories.Carpooling.TripRepository;
 import org.example.backend_tunisiahub.Repositories.ReservationRepository;
 import org.example.backend_tunisiahub.Repositories.Restaurant.RestaurantRepository;
 import org.example.backend_tunisiahub.Repositories.Restaurant.RestaurantTableRepository;
@@ -19,6 +21,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.EnumSet;
@@ -30,17 +33,25 @@ import java.util.UUID;
 @Service
 @RequiredArgsConstructor
 @org.springframework.transaction.annotation.Transactional
-public class ReservationService implements IReservationService {
+public class ReservationService implements IReservationService, ITripReservationService {
 
-    private static final Set<ReservationStatus> ACTIVE_RESTAURANT_STATUSES =
-            EnumSet.of(ReservationStatus.PENDING, ReservationStatus.CONFIRMED, ReservationStatus.ARRIVED);
+    private static final Set<org.example.backend_tunisiahub.Entities.ReservationStatus> ACTIVE_RESTAURANT_STATUSES =
+            EnumSet.of(org.example.backend_tunisiahub.Entities.ReservationStatus.PENDING, org.example.backend_tunisiahub.Entities.ReservationStatus.CONFIRMED, org.example.backend_tunisiahub.Entities.ReservationStatus.ARRIVED);
+
+    private static final ReservationStatus STATUS_CONFIRMED = ReservationStatus.CONFIRMED;
+    private static final ReservationStatus STATUS_PENDING = ReservationStatus.PENDING;
+    private static final ReservationStatus STATUS_CANCELLED = ReservationStatus.CANCELLED;
+    private static final String BOOKING_MODE_INSTANT = "instant";
 
     private final ReservationRepository reservationRepository;
     private final RestaurantRepository restaurantRepository;
     private final RestaurantTableRepository restaurantTableRepository;
     private final UserRepository userRepository;
     private final EmailService emailService;
+    private final TripRepository tripRepository;
+    private final ReservationPricingService reservationPricingService;
 
+    // Restaurant reservation methods
     @Override
     public List<Reservation> retrieveAllReservations() {
         return reservationRepository.findAll();
@@ -79,7 +90,7 @@ public class ReservationService implements IReservationService {
     }
 
     @Override
-    public List<Reservation> retrieveRestaurantReservations(Long restaurantId, ReservationStatus status) {
+    public List<Reservation> retrieveRestaurantReservations(Long restaurantId, org.example.backend_tunisiahub.Entities.ReservationStatus status) {
         if (restaurantId == null) {
             return reservationRepository.findByTypeOrderByIdDesc(ReservationType.RestaurantReservation);
         }
@@ -125,7 +136,7 @@ public class ReservationService implements IReservationService {
 
         reservation.setTables(assignedTables);
         reservation.setTablePreSelected(true);
-        reservation.setStatus(ReservationStatus.CONFIRMED);
+        reservation.setStatus(org.example.backend_tunisiahub.Entities.ReservationStatus.CONFIRMED);
         reservation.setLastTableAssignedBy(resolveCurrentUser());
         Reservation savedReservation = reservationRepository.save(reservation);
         triggerConfirmationEmailIfNeeded(previousStatus, savedReservation);
@@ -151,14 +162,14 @@ public class ReservationService implements IReservationService {
     @Override
     public Reservation cancelReservation(Long reservationId) {
         Reservation reservation = getReservationOrThrow(reservationId);
-        reservation.setStatus(ReservationStatus.CANCELLED);
+        reservation.setStatus(org.example.backend_tunisiahub.Entities.ReservationStatus.CANCELLED);
         return reservationRepository.save(reservation);
     }
 
     @Override
     public Reservation completeReservation(Long reservationId) {
         Reservation reservation = getReservationOrThrow(reservationId);
-        reservation.setStatus(ReservationStatus.COMPLETED);
+        reservation.setStatus(org.example.backend_tunisiahub.Entities.ReservationStatus.COMPLETED);
         return reservationRepository.save(reservation);
     }
 
@@ -171,12 +182,12 @@ public class ReservationService implements IReservationService {
         Reservation reservation = reservationRepository.findByCheckInToken(token.trim())
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Reservation not found for this check-in token"));
 
-        if (reservation.getStatus() != ReservationStatus.CONFIRMED && reservation.getStatus() != ReservationStatus.ARRIVED) {
+        if (reservation.getStatus() != org.example.backend_tunisiahub.Entities.ReservationStatus.CONFIRMED && reservation.getStatus() != org.example.backend_tunisiahub.Entities.ReservationStatus.ARRIVED) {
             throw new ApiException(HttpStatus.BAD_REQUEST, "Only confirmed reservations can be checked in");
         }
 
-        if (reservation.getStatus() != ReservationStatus.ARRIVED) {
-            reservation.setStatus(ReservationStatus.ARRIVED);
+        if (reservation.getStatus() != org.example.backend_tunisiahub.Entities.ReservationStatus.ARRIVED) {
+            reservation.setStatus(org.example.backend_tunisiahub.Entities.ReservationStatus.ARRIVED);
             reservation.setCheckedInAt(LocalDateTime.now());
         } else if (reservation.getCheckedInAt() == null) {
             reservation.setCheckedInAt(LocalDateTime.now());
@@ -185,6 +196,79 @@ public class ReservationService implements IReservationService {
         return reservationRepository.save(reservation);
     }
 
+    // Carpooling reservation methods
+    @Override
+    public List<Reservation> retrieveReservationsByUserId(Long userId) {
+        return reservationRepository.findByReservedBy_Id(userId);
+    }
+
+    @Override
+    public List<Reservation> retrieveReservationsByTripId(Long tripId, Long currentUserId) {
+        if (tripId == null || currentUserId == null) {
+            return List.of();
+        }
+
+        Trip trip = tripRepository.findById(tripId).orElse(null);
+        if (trip == null || trip.getDriver() == null || !currentUserId.equals(trip.getDriver().getId())) {
+            return List.of();
+        }
+
+        return reservationRepository.findByTripIdOrderByIdDesc(tripId);
+    }
+
+    @Override
+    public ReservationQuote calculateTripQuote(Long tripId, Integer seatsRequested) {
+        Trip trip = tripRepository.findById(tripId).orElse(null);
+        if (trip == null) {
+            return new ReservationQuote(0, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO);
+        }
+
+        return reservationPricingService.calculateQuote(
+                trip.getPrice(),
+                seatsRequested == null ? 1 : seatsRequested
+        );
+    }
+
+    @Override
+    public Reservation addReservation(Reservation reservation, Long currentUserId) {
+        if (!prepareReservation(reservation, currentUserId)) {
+            return null;
+        }
+        applyTripReservationStatusOnCreate(reservation);
+        return reservationRepository.save(reservation);
+    }
+
+    @Override
+    public Reservation modifyReservation(Reservation reservation, Long currentUserId) {
+        if (!prepareReservation(reservation, currentUserId)) {
+            return null;
+        }
+        return reservationRepository.save(reservation);
+    }
+
+    @Override
+    public Reservation approveReservation(Long reservationId, Long currentUserId) {
+        Reservation reservation = reservationRepository.findByIdAndTrip_Driver_Id(reservationId, currentUserId);
+        if (!isPendingTripReservation(reservation)) {
+            return null;
+        }
+
+        reservation.setStatus(STATUS_CONFIRMED);
+        return reservationRepository.save(reservation);
+    }
+
+    @Override
+    public Reservation rejectReservation(Long reservationId, Long currentUserId) {
+        Reservation reservation = reservationRepository.findByIdAndTrip_Driver_Id(reservationId, currentUserId);
+        if (!isPendingTripReservation(reservation)) {
+            return null;
+        }
+
+        reservation.setStatus(STATUS_CANCELLED);
+        return reservationRepository.save(reservation);
+    }
+
+    // Helper methods
     private void normalizeReservation(Reservation reservation) {
         if (reservation == null) {
             throw new ApiException(HttpStatus.BAD_REQUEST, "Reservation payload is required");
@@ -215,7 +299,7 @@ public class ReservationService implements IReservationService {
 
     private void normalizeRestaurantReservation(Reservation reservation) {
         if (reservation.getStatus() == null) {
-            reservation.setStatus(ReservationStatus.PENDING);
+            reservation.setStatus(org.example.backend_tunisiahub.Entities.ReservationStatus.PENDING);
         }
 
         Reservation existingReservation = reservation.getId() == null
@@ -251,7 +335,7 @@ public class ReservationService implements IReservationService {
             }
         }
 
-        if (reservation.getStatus() == ReservationStatus.CONFIRMED && reservation.getTables().isEmpty()) {
+        if (reservation.getStatus() == org.example.backend_tunisiahub.Entities.ReservationStatus.CONFIRMED && reservation.getTables().isEmpty()) {
             throw new ApiException(HttpStatus.BAD_REQUEST, "A confirmed restaurant reservation must have at least one table");
         }
     }
@@ -351,7 +435,6 @@ public class ReservationService implements IReservationService {
         return userRepository.findByEmail(auth.getName());
     }
 
-    /** Links the reservation to the logged-in user when creating a booking (client JWT). */
     private void attachCurrentUserIfMissing(Reservation reservation) {
         if (reservation.getUser() != null && reservation.getUser().getId() != null) {
             return;
@@ -369,8 +452,8 @@ public class ReservationService implements IReservationService {
         }
     }
 
-    private void triggerConfirmationEmailIfNeeded(ReservationStatus previousStatus, Reservation reservation) {
-        if (previousStatus == ReservationStatus.PENDING && reservation.getStatus() == ReservationStatus.CONFIRMED) {
+    private void triggerConfirmationEmailIfNeeded(org.example.backend_tunisiahub.Entities.ReservationStatus previousStatus, Reservation reservation) {
+        if (previousStatus == org.example.backend_tunisiahub.Entities.ReservationStatus.PENDING && reservation.getStatus() == org.example.backend_tunisiahub.Entities.ReservationStatus.CONFIRMED) {
             if (reservation.getId() != null) {
                 reservationRepository.findDetailedById(reservation.getId())
                     .ifPresent(emailService::sendReservationConfirmation);
@@ -382,5 +465,110 @@ public class ReservationService implements IReservationService {
         if (!StringUtils.hasText(reservation.getCheckInToken())) {
             reservation.setCheckInToken(UUID.randomUUID().toString());
         }
+    }
+
+    private boolean prepareReservation(Reservation reservation, Long currentUserId) {
+        if (reservation == null) {
+            return false;
+        }
+
+        if (currentUserId == null) {
+            return false;
+        }
+
+        User user = userRepository.findById(currentUserId).orElse(null);
+        if (user == null) {
+            return false;
+        }
+        reservation.setReservedBy(user);
+
+        if (reservation.getNumberOfPeople() == null) {
+            if (reservation.getType() == ReservationType.TripReservation) {
+                reservation.setNumberOfPeople(1);
+            } else {
+                reservation.setNumberOfPeople(0);
+            }
+        }
+
+        if (reservation.getType() == ReservationType.TripReservation
+                && reservation.getTrip() != null
+                && reservation.getTrip().getId() != null) {
+            Trip trip = tripRepository.findById(reservation.getTrip().getId()).orElse(null);
+            if (trip == null) {
+                return false;
+            }
+
+            if (isActiveTripReservation(reservation)
+                    && !hasEnoughTripSeats(trip, reservation.getId(), reservation.getNumberOfPeople())) {
+                return false;
+            }
+
+            reservation.setTrip(trip);
+            ReservationQuote quote = reservationPricingService.calculateQuote(
+                    trip.getPrice(),
+                    reservation.getNumberOfPeople()
+            );
+                reservation.setTotalPrice(quote.totalAmount());
+        }
+
+        return true;
+    }
+
+    private void applyTripReservationStatusOnCreate(Reservation reservation) {
+        if (reservation == null || reservation.getType() != ReservationType.TripReservation) {
+            return;
+        }
+
+        Trip trip = reservation.getTrip();
+        if (trip == null) {
+            return;
+        }
+
+        String bookingMode = trip.getBookingMode() == null ? "" : trip.getBookingMode().trim();
+        if (BOOKING_MODE_INSTANT.equalsIgnoreCase(bookingMode)) {
+            reservation.setStatus(STATUS_CONFIRMED);
+            return;
+        }
+
+        reservation.setStatus(STATUS_PENDING);
+    }
+
+    private boolean hasEnoughTripSeats(Trip trip, Long reservationId, Integer requestedSeats) {
+        int seatsRequested = requestedSeats == null || requestedSeats < 1 ? 1 : requestedSeats;
+        int reservedSeats = reservationRepository.findByTripId(trip.getId()).stream()
+                .filter(this::isActiveTripReservation)
+                .filter(reservation -> reservationId == null || !reservationId.equals(reservation.getId()))
+                .mapToInt(this::getReservedPeopleCount)
+                .sum();
+        return trip.getSeatsTotal() - reservedSeats >= seatsRequested;
+    }
+
+    private boolean isActiveTripReservation(Reservation reservation) {
+        if (reservation == null) {
+            return false;
+        }
+
+        ReservationStatus status = reservation.getStatus();
+        return status != ReservationStatus.CANCELLED;
+    }
+
+    private boolean isPendingTripReservation(Reservation reservation) {
+        if (reservation == null) {
+            return false;
+        }
+
+        if (reservation.getType() != ReservationType.TripReservation || reservation.getTrip() == null) {
+            return false;
+        }
+
+        return reservation.getStatus() == ReservationStatus.PENDING;
+    }
+
+    private int getReservedPeopleCount(Reservation reservation) {
+        Integer numberOfPeople = reservation.getNumberOfPeople();
+        if (numberOfPeople == null || numberOfPeople < 1) {
+            return 1;
+        }
+        return numberOfPeople;
     }
 }

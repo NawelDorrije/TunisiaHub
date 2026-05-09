@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 <div class="container py-4" *ngIf="trip; else noTrip">
   <h2 class="mb-4">Book trip</h2>
 
@@ -28,10 +29,85 @@
           <input
             type="number"
             min="1"
+=======
+<div class="booking-page" *ngIf="trip; else noTrip">
+  <div class="booking-shell">
+    <div class="alert alert-danger mb-4" *ngIf="error">{{ error }}</div>
+    <div class="alert alert-success mb-4" *ngIf="success">{{ success }}</div>
+
+    <form
+      [formGroup]="bookingForm"
+      (ngSubmit)="confirmBooking()"
+      class="booking-card"
+    >
+      <h1 class="booking-title">{{ bookingTitle }}</h1>
+
+      <div class="booking-notice" *ngIf="bookingNotice">
+        <i class="bi bi-card-checklist"></i>
+        <span>{{ bookingNotice }}</span>
+      </div>
+
+      <div class="booking-section">
+        <h2 class="booking-date">
+          {{ formatTripDate(trip.departureDateTime) }}
+        </h2>
+
+        <div class="booking-timeline">
+          <div class="timeline-time-col">
+            <span>{{ formatTripTime(trip.departureDateTime) }}</span>
+            <span>{{ formatArrivalTime() }}</span>
+            <small class="next-day-label" *ngIf="isArrivalNextDay()">
+              (+1 day)
+            </small>
+          </div>
+
+          <div class="timeline-line-col">
+            <span class="timeline-dot top"></span>
+            <span class="timeline-line"></span>
+            <span class="timeline-dot bottom"></span>
+          </div>
+
+          <div class="timeline-stop-col">
+            <strong>{{ formatPlace(trip.departure) }}</strong>
+            <strong>{{ formatPlace(trip.destination) }}</strong>
+          </div>
+        </div>
+      </div>
+
+      <div class="booking-divider"></div>
+
+      <div class="booking-section">
+        <h3>Price summary</h3>
+
+        <button
+          type="button"
+          class="price-summary-card"
+          (click)="openPriceDetails()"
+        >
+          <div>
+            <strong>Total price</strong>
+            <small>{{ seatsLabel }}</small>
+          </div>
+
+          <div class="price-summary-side">
+            <div class="price-value">{{ formatPrice(totalPrice) }} TND</div>
+            <i class="bi bi-chevron-right"></i>
+          </div>
+        </button>
+
+        <div class="seat-field">
+          <label for="bookingSeats" class="form-label">Passengers</label>
+          <input
+            id="bookingSeats"
+            type="number"
+            min="1"
+            [max]="trip.seatsAvailable ?? trip.seatsTotal"
+>>>>>>> origin/feature/integrated-app-event
             class="form-control"
             formControlName="seats"
           />
         </div>
+<<<<<<< HEAD
         <div class="col-md-4">
           <label class="form-label">Total price</label>
           <input class="form-control" [value]="totalPrice + ' TND'" readonly />
@@ -52,6 +128,89 @@
       <div class="alert alert-success mt-3 mb-0" *ngIf="success">
         {{ success }}
       </div>
+=======
+      </div>
+
+      <div class="booking-divider"></div>
+
+      <div class="booking-section">
+        <h3>Send a message to {{ driverLabel }} to introduce yourself</h3>
+
+        <textarea
+          rows="5"
+          class="form-control booking-message"
+          formControlName="message"
+        ></textarea>
+      </div>
+
+      <div class="booking-actions">
+        <button
+          type="button"
+          class="btn btn-outline-secondary"
+          (click)="cancel()"
+        >
+          Back
+        </button>
+
+        <button type="submit" class="btn continue-button">
+          <i
+            class="bi"
+            [class.bi-lightning-charge]="trip.bookingMode === 'instant'"
+            [class.bi-card-checklist]="trip.bookingMode !== 'instant'"
+          ></i>
+          <span>Continue</span>
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <div
+    class="price-details-overlay"
+    *ngIf="showPriceDetails"
+    (click)="closePriceDetails()"
+  >
+    <div class="price-details-panel" (click)="$event.stopPropagation()">
+      <div class="price-details-header">
+        <h2>Price details</h2>
+        <button
+          type="button"
+          class="price-details-close"
+          (click)="closePriceDetails()"
+          aria-label="Close price details"
+        >
+          <i class="bi bi-x-lg"></i>
+        </button>
+      </div>
+
+      <div class="price-details-row">
+        <div>
+          <strong>Amount paid to the driver</strong>
+        </div>
+        <span>{{ formatPrice(driverPrice) }} TND</span>
+      </div>
+
+      <div class="price-details-row">
+        <div>
+          <strong>Service fee</strong>
+          <small>
+            This helps us keep the platform reliable, secure, and available for
+            all passengers.
+          </small>
+        </div>
+        <span>{{ formatPrice(serviceFee) }} TND</span>
+      </div>
+
+      <div class="price-details-separator"></div>
+
+      <div class="price-details-row total">
+        <div>
+          <strong>Total price</strong>
+          <small>{{ seatsLabel }}</small>
+        </div>
+        <span>{{ formatPrice(totalPrice) }} TND</span>
+      </div>
+
+>>>>>>> origin/feature/integrated-app-event
     </div>
   </div>
 </div>

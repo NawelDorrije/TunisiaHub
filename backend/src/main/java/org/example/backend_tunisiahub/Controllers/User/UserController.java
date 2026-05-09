@@ -2,7 +2,11 @@ package org.example.backend_tunisiahub.Controllers.User;
 
 import lombok.RequiredArgsConstructor;
 import org.example.backend_tunisiahub.Entities.User.User;
-import org.example.backend_tunisiahub.Services.Camping.IUserService;
+
+//import org.example.backend_tunisiahub.Services.Camping.IUserService;
+
+import org.example.backend_tunisiahub.Services.User.IUserService;
+
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;

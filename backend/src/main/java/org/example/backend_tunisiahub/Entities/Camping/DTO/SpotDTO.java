@@ -1,0 +1,124 @@
+package org.example.backend_tunisiahub.Entities.Camping.DTO;
+
+import jakarta.persistence.Column;
+import jakarta.validation.constraints.*;
+import lombok.*;
+import lombok.experimental.FieldDefaults;
+import org.example.backend_tunisiahub.Entities.Camping.Enums.SpotStatus;
+import org.example.backend_tunisiahub.Entities.Camping.Enums.SpotType;
+import org.example.backend_tunisiahub.Entities.Camping.Enums.ViewType;
+
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.List;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+@FieldDefaults(level = AccessLevel.PRIVATE)
+public class SpotDTO {
+
+    // ─────────────────────────────────────────
+    // Read-only fields
+    // ─────────────────────────────────────────
+
+    Long id;
+    LocalDateTime createdAt;
+
+    // ─────────────────────────────────────────
+    // Camping reference
+    // ─────────────────────────────────────────
+
+    @NotNull(message = "Camping ID is required")
+    Long campingId;
+
+    String campingName;
+
+    // ─────────────────────────────────────────
+    // Core fields
+    // ─────────────────────────────────────────
+
+    @NotBlank(message = "Name is required")
+    @Size(max = 50, message = "Name must not exceed 50 characters")
+    String name;
+
+    @NotNull(message = "Type is required")
+    SpotType type;
+
+    @NotNull(message = "Capacity is required")
+    @Positive(message = "Capacity must be positive")
+    Integer capacity;
+
+    @DecimalMin(
+            value = "0.0",
+            inclusive = false,
+            message = "Area must be positive"
+    )
+    BigDecimal area;
+
+    String description;
+
+    @NotNull(message = "Base price is required")
+    @DecimalMin(
+            value = "0.0",
+            inclusive = false,
+            message = "Base price must be positive"
+    )
+    BigDecimal basePrice;
+    BigDecimal maxPrice;  // Optional, set by owner. null = no upper limit.
+
+    @NotNull(message = "Status is required")
+    SpotStatus status;
+
+    BigDecimal positionX;
+    BigDecimal positionY;
+
+    ViewType viewType;
+
+    @NotNull
+    Boolean hasShade;
+
+    @NotNull
+    Boolean accessibleForDisabled;
+
+    @NotNull
+    Boolean active;
+
+    List<String> photos;
+
+    // ─────────────────────────────────────────
+    // Dynamic Pricing (NEW FIELDS)
+    // ─────────────────────────────────────────
+
+    /**
+     * AI-adjusted price.
+     * null if the spot has not been priced yet.
+     */
+    BigDecimal dynamicPrice;
+
+    /**
+     * Last time the price was recalculated.
+     */
+    LocalDateTime lastPricedAt;
+
+    // ─────────────────────────────────────────
+    // Effective Price Helper
+    // ─────────────────────────────────────────
+
+    /**
+     * Returns the price that should actually be used.
+     *
+     * Logic:
+     * if dynamicPrice exists → use it
+     * otherwise → use basePrice
+     */
+    @JsonIgnore
+    public BigDecimal getEffectivePrice() {
+        return dynamicPrice != null ? dynamicPrice : basePrice;
+    }
+
+}

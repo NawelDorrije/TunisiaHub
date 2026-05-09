@@ -1,136 +1,211 @@
-package org.example.backend_tunisiahub.carpooling.controller;
+package org.example.backend_tunisiahub.Controllers.Carpooling;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.validation.Valid;
-import jakarta.validation.constraints.DecimalMin;
-import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.example.backend_tunisiahub.carpooling.entity.Trip;
-import org.example.backend_tunisiahub.carpooling.entity.Vehicle;
-import org.example.backend_tunisiahub.carpooling.service.ITripService;
-import org.example.backend_tunisiahub.shared.exception.ApiException;
-import org.example.backend_tunisiahub.shared.security.CurrentUserResolver;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.http.HttpStatus;
+import lombok.AllArgsConstructor;
+import org.example.backend_tunisiahub.Entities.Carpooling.Trip;
+import org.example.backend_tunisiahub.Services.Carpooling.ITripService;
+import org.example.backend_tunisiahub.Services.Carpooling.RouteSuggestionService;
+import org.example.backend_tunisiahub.Services.Carpooling.TripPriceSuggestion;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/driver/trips")
-@RequiredArgsConstructor
-@Slf4j
+@AllArgsConstructor
 @Tag(name = "Driver Trips")
 public class TripController {
 
-    private final ITripService tripService;
-    private final CurrentUserResolver currentUserResolver;
+  ITripService tripService;
+  RouteSuggestionService routeSuggestionService;
+  private static final Logger logger = LoggerFactory.getLogger(TripController.class);
 
-    @PostMapping
-    @Operation(summary = "Publish a trip")
-    public ResponseEntity<Trip> createTrip(@Valid @RequestBody TripWriteRequest request,
-                                           HttpServletRequest httpRequest) {
-        Long currentUserId = currentUserResolver.getUserId(httpRequest);
-        ensureUserRole(httpRequest);
-        log.info("Create trip request received for driverId={}, departure={}, destination={}, departureTime={}",
-            currentUserId,
-            request.departurePoint(),
-            request.destination(),
-            request.departureDateTime());
-        Trip response = tripService.createTrip(toTrip(request), currentUserId);
-        log.info("Create trip succeeded for driverId={}, tripId={}", currentUserId, response.getId());
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+  @PostMapping
+  @Operation(summary = "Publish a trip")
+  public ResponseEntity<Trip> addTrip(@RequestBody Trip request, HttpServletRequest httpRequest) {
+    Long currentUserId = getCurrentUserId(httpRequest);
+    logger.debug("POST /api/driver/trips userId={} departure={} destination={}",
+      currentUserId,
+      request != null ? request.getDeparture() : null,
+      request != null ? request.getDestination() : null);
+    if (currentUserId == null) {
+      logger.warn("Trip creation rejected because X-USER-ID header is missing or invalid");
+      return ResponseEntity.badRequest().build();
     }
 
-    @GetMapping
-    @Operation(summary = "List current driver trips")
-    public Page<Trip> getMyTrips(HttpServletRequest request,
-                                 @RequestParam(defaultValue = "0") int page,
-                                 @RequestParam(defaultValue = "10") int size) {
-        Long currentUserId = currentUserResolver.getUserId(request);
-        ensureUserRole(request);
-        return tripService.getMyTrips(currentUserId, PageRequest.of(page, size));
+    Trip trip = tripService.addTrip(request, currentUserId);
+    if (trip == null) {
+      logger.warn("Trip creation failed for userId={}", currentUserId);
+      return ResponseEntity.badRequest().build();
     }
 
-    @GetMapping("/{id}")
-    @Operation(summary = "Get current driver trip details")
-    public Trip getTripById(@PathVariable Long id, HttpServletRequest request) {
-        Long currentUserId = currentUserResolver.getUserId(request);
-        ensureUserRole(request);
-        return tripService.getMyTripById(id, currentUserId);
+    logger.info("Trip created id={} driverId={}", trip.getId(), currentUserId);
+    return ResponseEntity.ok(trip);
+  }
+
+  @GetMapping
+  @Operation(summary = "List current driver trips")
+  public List<Trip> retrieveMyTrips(HttpServletRequest request) {
+    Long currentUserId = getCurrentUserId(request);
+    logger.debug("GET /api/driver/trips userId={}", currentUserId);
+    if (currentUserId == null) {
+      logger.warn("Trip list rejected because X-USER-ID header is missing or invalid");
+      return new ArrayList<>();
+    }
+    return tripService.retrieveMyTrips(currentUserId);
+  }
+
+  @GetMapping("/{id}")
+  @Operation(summary = "Get current driver trip details")
+  public ResponseEntity<Trip> retrieveTrip(@PathVariable Long id, HttpServletRequest request) {
+    Long currentUserId = getCurrentUserId(request);
+    logger.debug("GET /api/driver/trips/{} userId={}", id, currentUserId);
+    if (currentUserId == null) {
+      logger.warn("Trip details rejected for id={} because X-USER-ID header is missing or invalid", id);
+      return ResponseEntity.badRequest().build();
     }
 
-    @PatchMapping("/{id}/cancel")
-    @Operation(summary = "Cancel trip")
-    public Trip cancelTrip(@PathVariable Long id, HttpServletRequest request) {
-        Long currentUserId = currentUserResolver.getUserId(request);
-        ensureUserRole(request);
-        return tripService.cancelTrip(id, currentUserId);
+    Trip trip = tripService.retrieveMyTrip(id, currentUserId);
+    if (trip == null) {
+      logger.warn("Trip details not found or not owned id={} userId={}", id, currentUserId);
+      return ResponseEntity.notFound().build();
     }
 
-    @PutMapping("/{id}")
-    @Operation(summary = "Update trip")
-    public Trip updateTrip(@PathVariable Long id,
-                           @Valid @RequestBody TripWriteRequest payload,
-                           HttpServletRequest request) {
-        Long currentUserId = currentUserResolver.getUserId(request);
-        ensureUserRole(request);
-        return tripService.updateTrip(id, currentUserId, toTrip(payload));
+    return ResponseEntity.ok(trip);
+  }
+
+  @PutMapping("/{id}/cancel")
+  @Operation(summary = "Cancel trip")
+  public ResponseEntity<Trip> cancelTrip(@PathVariable Long id, HttpServletRequest request) {
+    Long currentUserId = getCurrentUserId(request);
+    logger.debug("PUT /api/driver/trips/{}/cancel userId={}", id, currentUserId);
+    if (currentUserId == null) {
+      logger.warn("Trip cancel rejected for id={} because X-USER-ID header is missing or invalid", id);
+      return ResponseEntity.badRequest().build();
     }
 
-    private Trip toTrip(TripWriteRequest payload) {
-        Trip trip = new Trip();
-        trip.setDeparturePoint(payload.departurePoint());
-        trip.setDestination(payload.destination());
-        trip.setDepartureDateTime(payload.departureDateTime());
-        trip.setPrice(payload.price());
-        trip.setSeatsTotal(payload.seatsTotal());
-        if (payload.vehicleId() != null) {
-            Vehicle vehicle = new Vehicle();
-            vehicle.setId(payload.vehicleId());
-            trip.setVehicle(vehicle);
-        }
-        return trip;
+    Trip trip = tripService.cancelTrip(id, currentUserId);
+    if (trip == null) {
+      logger.warn("Trip cancel failed id={} userId={}", id, currentUserId);
+      return ResponseEntity.notFound().build();
     }
 
+    logger.info("Trip canceled id={} userId={}", id, currentUserId);
+    return ResponseEntity.ok(trip);
+  }
 
-    private void ensureUserRole(HttpServletRequest request) {
-        String role = currentUserResolver.getRole(request);
-        if (!"USER".equals(role)) {
-            throw new ApiException(HttpStatus.FORBIDDEN, "Only users with USER role can perform this action");
-        }
+  @PutMapping("/{id}/available")
+  @Operation(summary = "Make trip available again")
+  public ResponseEntity<Trip> makeTripAvailable(@PathVariable Long id, HttpServletRequest request) {
+    Long currentUserId = getCurrentUserId(request);
+    logger.debug("PUT /api/driver/trips/{}/available userId={}", id, currentUserId);
+    if (currentUserId == null) {
+      logger.warn("Trip availability restore rejected for id={} because X-USER-ID header is missing or invalid", id);
+      return ResponseEntity.badRequest().build();
     }
 
-    private record TripWriteRequest(
-            @NotBlank String departurePoint,
-            @NotBlank String destination,
-            @NotNull LocalDateTime departureDateTime,
-            @NotNull @DecimalMin(value = "0.0", inclusive = true) BigDecimal price,
-            @Min(1) int seatsTotal,
-            Long vehicleId
-    ) {
+    Trip trip = tripService.makeTripAvailable(id, currentUserId);
+    if (trip == null) {
+      logger.warn("Trip availability restore failed id={} userId={}", id, currentUserId);
+      return ResponseEntity.notFound().build();
     }
 
-    private record TripView(
-            Long id,
-            String departurePoint,
-            String destination,
-            LocalDateTime departureDateTime,
-            BigDecimal price,
-            int seatsTotal,
-            int seatsAvailable,
-            String status,
-            LocalDateTime createdAt,
-            String createdBy,
-            Long vehicleId
-    ) {
+    logger.info("Trip restored id={} userId={}", id, currentUserId);
+    return ResponseEntity.ok(trip);
+  }
+
+  @PutMapping("/{id}/complete")
+  @Operation(summary = "Mark trip as completed")
+  public ResponseEntity<Trip> completeTrip(@PathVariable Long id, HttpServletRequest request) {
+    Long currentUserId = getCurrentUserId(request);
+    logger.debug("PUT /api/driver/trips/{}/complete userId={}", id, currentUserId);
+    if (currentUserId == null) {
+      logger.warn("Trip complete rejected for id={} because X-USER-ID header is missing or invalid", id);
+      return ResponseEntity.badRequest().build();
     }
+
+    Trip trip = tripService.completeTrip(id, currentUserId);
+    if (trip == null) {
+      logger.warn("Trip complete failed id={} userId={}", id, currentUserId);
+      return ResponseEntity.badRequest().build();
+    }
+
+    logger.info("Trip completed id={} userId={}", id, currentUserId);
+    return ResponseEntity.ok(trip);
+  }
+
+  @PutMapping("/{id}")
+  @Operation(summary = "Update trip")
+  public ResponseEntity<Trip> modifyTrip(@PathVariable Long id,
+                                         @RequestBody Trip payload,
+                                         HttpServletRequest request) {
+    Long currentUserId = getCurrentUserId(request);
+    logger.debug("PUT /api/driver/trips/{} userId={}", id, currentUserId);
+    if (currentUserId == null) {
+      logger.warn("Trip update rejected for id={} because X-USER-ID header is missing or invalid", id);
+      return ResponseEntity.badRequest().build();
+    }
+
+    Trip trip = tripService.modifyTrip(id, payload, currentUserId);
+    if (trip == null) {
+      logger.warn("Trip update failed id={} userId={}", id, currentUserId);
+      return ResponseEntity.badRequest().build();
+    }
+
+    logger.info("Trip updated id={} userId={}", id, currentUserId);
+    return ResponseEntity.ok(trip);
+  }
+
+  @GetMapping("/route-suggestions")
+  @Operation(summary = "Get route suggestions between two points")
+  public List<Map<String, Object>> getRouteSuggestions(
+    @RequestParam double startLat,
+    @RequestParam double startLng,
+    @RequestParam double endLat,
+    @RequestParam double endLng
+  ) {
+    return routeSuggestionService.getRouteSuggestions(startLat, startLng, endLat, endLng);
+  }
+
+  @GetMapping("/price-suggestion")
+  @Operation(summary = "Get suggested trip price")
+  public ResponseEntity<TripPriceSuggestion> retrievePriceSuggestion(
+    @RequestParam String departure,
+    @RequestParam String destination,
+    @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate departureDate,
+    @RequestParam Integer durationMinutes
+  ) {
+    TripPriceSuggestion suggestion = tripService.retrievePriceSuggestion(
+      departure,
+      destination,
+      departureDate,
+      durationMinutes
+    );
+    if (suggestion == null) {
+      return ResponseEntity.notFound().build();
+    }
+    return ResponseEntity.ok(suggestion);
+  }
+
+  private Long getCurrentUserId(HttpServletRequest request) {
+    String value = request.getHeader("X-USER-ID");
+    if (value == null || value.isBlank()) {
+      return null;
+    }
+
+    try {
+      return Long.valueOf(value);
+    } catch (NumberFormatException exception) {
+      return null;
+    }
+  }
 }

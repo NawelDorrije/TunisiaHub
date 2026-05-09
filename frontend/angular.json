@@ -20,63 +20,76 @@
       "sourceRoot": "src",
       "prefix": "app",
       "architect": {
-     "build": {
-  "builder": "@angular-devkit/build-angular:application",
-  "options": {
-    "outputPath": "dist/frontend",
-    "index": "src/index.html",
-    "browser": "src/main.ts",
-    "polyfills": [
-      "zone.js"
-    ],
-    "tsConfig": "tsconfig.app.json",
-    "assets": [
-      {
-        "glob": "**/*",
-        "input": "public"
-      }
-    ],
-   "styles": [
-  "node_modules/bootstrap/dist/css/bootstrap.min.css",
-  "node_modules/bootstrap-icons/font/bootstrap-icons.css",
-  "src/styles.css"
-],
-    "scripts": [
-      "node_modules/bootstrap/dist/js/bootstrap.bundle.min.js"
-    ],
-    "server": "src/main.server.ts",
-    "prerender": true,
-    "ssr": {
-      "entry": "server.ts"
-    }
-  },
-  "configurations": {
-    "production": {
-      "budgets": [
-        {
-          "type": "initial",
-          "maximumWarning": "5MB",
-          "maximumError": "12MB"
+        "build": {
+          "builder": "@angular-devkit/build-angular:application",
+          "options": {
+            "outputPath": "dist/frontend",
+            "index": "src/index.html",
+            "browser": "src/main.ts",
+            "polyfills": [
+              "zone.js"
+            ],
+            "tsConfig": "tsconfig.app.json",
+            "assets": [
+              {
+                "glob": "**/*",
+                "input": "public"
+              },
+              {
+                "glob": "**/*",
+                "input": "src/assets",
+                "output": "assets"
+              }
+            ],
+            "styles": [
+              "node_modules/bootstrap/dist/css/bootstrap.min.css",
+              "node_modules/bootstrap-icons/font/bootstrap-icons.css",
+              "src/styles.css"
+            ],
+            "scripts": [
+              "node_modules/bootstrap/dist/js/bootstrap.bundle.min.js",
+              "node_modules/chart.js/dist/chart.umd.js"
+            ],
+            "server": "src/main.server.ts",
+            "prerender": true,
+            "ssr": {
+              "entry": "server.ts"
+            }
+          },
+          "configurations": {
+            "production": {
+              "budgets": [
+                {
+                  "type": "initial",
+                  "maximumWarning": "5MB",
+                  "maximumError": "12MB"
+                },
+                {
+                  "type": "anyComponentStyle",
+                  "maximumWarning": "20kB",
+                  "maximumError": "50kB"
+                }
+              ],
+              "outputHashing": "all"
+            },
+            "development": {
+              "optimization": false,
+              "extractLicenses": false,
+              "sourceMap": true
+            }
+          },
+          "defaultConfiguration": "production"
         },
-        {
-          "type": "anyComponentStyle",
-          "maximumWarning": "2kB",
-          "maximumError": "4kB"
-        }
-      ],
-      "outputHashing": "all"
-    },
-    "development": {
-      "optimization": false,
-      "extractLicenses": false,
-      "sourceMap": true
-    }
-  },
-  "defaultConfiguration": "production"
-},
         "serve": {
           "builder": "@angular-devkit/build-angular:dev-server",
-
+          "options": {
+            "host": "0.0.0.0",
+            "port": 4200,
+            "allowedHosts": [
+              "dictation-ahead-statistic.ngrok-free.dev",
+              "all"
+            ]
+          },
           "configurations": {
             "production": {
               "buildTarget": "frontend:build:production"
@@ -102,6 +115,11 @@
               {
                 "glob": "**/*",
                 "input": "public"
+              },
+              {
+                "glob": "**/*",
+                "input": "src/assets",
+                "output": "assets"
               }
             ],
             "styles": [

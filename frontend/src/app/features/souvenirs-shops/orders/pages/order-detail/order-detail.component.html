@@ -1,0 +1,207 @@
+<div class="order-detail-page">
+
+  <!-- Header -->
+  <div class="page-header">
+    <div>
+      <button class="back-btn" (click)="backToOrders()">← Back to orders</button>
+      <!-- <h1 class="page-title">Order #{{ order?.id || '...' }}</h1> -->
+      <p class="page-subtitle">Review order details, items, and payment actions.</p>
+    </div>
+    <div class="header-actions">
+      <button *ngIf="canClientCancel"
+              class="action-btn danger-btn"
+              (click)="cancelOrder()">
+        Cancel order
+      </button>
+      <button *ngIf="authService.isClient() && order?.status === OrderStatus.PENDING"
+              class="action-btn danger-btn"
+              (click)="cancelOrder()">
+        Cancel order
+      </button>
+      <button *ngIf="canProcessOrder"
+              class="action-btn purple-btn"
+              (click)="updateOrderStatus(OrderStatus.PROCESSING, 'PROCESSING')">
+        Mark Processing
+      </button>
+      <button *ngIf="canCompleteOrder"
+              class="action-btn success-btn"
+              (click)="updateOrderStatus(OrderStatus.COMPLETED, 'COMPLETED')">
+        Mark Completed
+      </button>
+      <button *ngIf="canOwnerCancel"
+              class="action-btn danger-btn"
+              (click)="cancelOrder()">
+        {{ ownerCancelLabel }}
+      </button>
+    </div>
+  </div>
+
+  <!-- Loading -->
+  <div *ngIf="isLoading" class="loading-state">
+    <div class="spinner"></div>
+    <p>Loading order details...</p>
+  </div>
+
+  <!-- Messages -->
+  <div *ngIf="!isLoading && errorMessage" class="msg-error">{{ errorMessage }}</div>
+  <div *ngIf="!isLoading && actionMessage" class="msg-success">✓ {{ actionMessage }}</div>
+
+  <div *ngIf="!isLoading && order" class="detail-layout">
+
+    <!-- LEFT column -->
+    <div class="left-col">
+
+      <!-- Order summary -->
+      <div class="info-card">
+        <h6 class="card-section-title">Order Summary</h6>
+
+        <div class="summary-status-row">
+          <span class="status-badge" [ngClass]="getStatusClass(order.status)">
+            {{ order.status }}
+          </span>
+          <span *ngIf="isOrderRefunded" class="status-badge payment-refunded">
+            REFUNDED
+          </span>
+        </div>
+
+        <!-- AI Status Message - Only for Clients -->
+        <div *ngIf="showAiMessage" class="ai-message-block">
+          <div class="ai-message-header">
+            <span class="ai-icon">✨</span>
+            <span class="ai-label">Order Status Update</span>
+          </div>
+          <div class="ai-message-content">
+            {{ getAiMessage() }}
+          </div>
+        </div>
+
+        <div class="info-row">
+          <span class="info-label">Shop</span>
+          <span class="info-val">{{ order.shop?.name || 'Shop #' + order.shop?.id }}</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Customer</span>
+          <span class="info-val">{{ order.user?.email || '—' }}</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Total</span>
+          <span class="info-val price">{{ order.totalAmount | currency:'TND':'symbol':'1.2-2' }}</span>
+        </div>
+        <div class="info-row" *ngIf="order.createdAt">
+          <span class="info-label">Placed on</span>
+          <span class="info-val">{{ order.createdAt | date:'mediumDate' }}</span>
+        </div>
+      </div>
+
+      <!-- Payment history -->
+      <div class="info-card">
+        <h6 class="card-section-title">Payment History</h6>
+
+        <div *ngIf="paymentHistory.length === 0" class="empty-section">
+          No payment attempts yet.
+        </div>
+
+        <div *ngFor="let payment of paymentHistory" class="payment-item">
+          <div class="payment-item-left">
+            <span class="payment-method-badge">{{ payment.method }}</span>
+            <span class="payment-ref">{{ payment.transactionReference || 'No reference' }}</span>
+            <span class="payment-date">{{ payment.createdAt | date:'mediumDate' }}</span>
+          </div>
+          <div class="payment-item-right">
+            <span class="payment-amount">{{ payment.amount | currency:'TND':'symbol':'1.2-2' }}</span>
+            <span class="status-badge" [ngClass]="getPaymentClass(payment.status)">
+              {{ payment.status }}
+            </span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- RIGHT column -->
+    <div class="right-col">
+
+      <!-- Order items -->
+      <div class="info-card">
+        <h6 class="card-section-title">Order Items</h6>
+
+        <div *ngIf="items.length === 0" class="empty-section">
+          No items attached to this order.
+        </div>
+
+        <div *ngFor="let item of items" class="order-item">
+          <div class="order-item-img">
+            <img *ngIf="item.product?.photoUrl"
+                 [src]="item.product?.photoUrl"
+                 [alt]="item.product?.name"
+                 class="item-thumb" />
+            <div *ngIf="!item.product?.photoUrl" class="item-thumb-placeholder">
+              <i class="bi bi-box-seam"></i>
+            </div>
+          </div>
+          <div class="order-item-info">
+            <p class="item-name">{{ item.product?.name || 'Product #' + item.product?.id }}</p>
+            <p class="item-qty">Qty: {{ item.quantity }}</p>
+          </div>
+          <div class="order-item-price">
+            <p class="item-unit">{{ item.unitPrice | currency:'TND':'symbol':'1.2-2' }} each</p>
+            <p class="item-subtotal">{{ (item.unitPrice || 0) * item.quantity | currency:'TND':'symbol':'1.2-2' }}</p>
+          </div>
+        </div>
+
+        <div *ngIf="items.length > 0" class="items-total-row">
+          <span>Total</span>
+          <span class="items-total-val">{{ order.totalAmount | currency:'TND':'symbol':'1.2-2' }}</span>
+        </div>
+      </div>
+
+      <!-- Payment actions -->
+      <div class="info-card" *ngIf="canPayOrder || canRetryPayment">
+        <h6 class="card-section-title">Payment Actions</h6>
+
+        <div class="payment-method-select" *ngIf="canPayOrder">
+          <label class="select-label">Payment method</label>
+          <div class="method-options">
+            <label class="method-option" [class.selected]="selectedMethod === paymentMethods.CARD">
+              <input type="radio" [value]="paymentMethods.CARD" [(ngModel)]="selectedMethod" />
+              💳 Card
+            </label>
+            <label class="method-option" [class.selected]="selectedMethod === paymentMethods.CASH">
+              <input type="radio" [value]="paymentMethods.CASH" [(ngModel)]="selectedMethod" />
+              💵 Cash
+            </label>
+          </div>
+        </div>
+
+        <div class="payment-action-btns">
+          <button *ngIf="canPayOrder" class="pay-btn" (click)="payOrder()">
+            Pay {{ order.totalAmount | currency:'TND':'symbol':'1.2-2' }}
+          </button>
+          <button *ngIf="canRetryPayment" class="retry-btn" (click)="retryPayment()">
+            Retry failed payment
+          </button>
+        </div>
+      </div>
+
+      <!-- Status info for client -->
+      <div *ngIf="!canPayOrder && !canRetryPayment && authService.isClient()" class="status-info-box">
+        <ng-container *ngIf="order?.status === OrderStatus.PENDING">
+          ⏳ Your order is pending payment.
+        </ng-container>
+        <ng-container *ngIf="order?.status === OrderStatus.PAID">
+          ✅ Payment received — waiting for the owner to confirm.
+        </ng-container>
+        <ng-container *ngIf="order?.status === OrderStatus.PROCESSING">
+          📦 Your order is being prepared.
+        </ng-container>
+        <ng-container *ngIf="order?.status === OrderStatus.CANCELLED">
+          ❌ This order has been cancelled.
+        </ng-container>
+        <ng-container *ngIf="order?.status === OrderStatus.COMPLETED">
+          🎉 Order completed successfully.
+        </ng-container>
+      </div>
+
+    </div>
+  </div>
+</div>

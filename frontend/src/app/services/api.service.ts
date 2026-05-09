@@ -1,13 +1,18 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+<<<<<<< HEAD
 import { Observable, of } from 'rxjs';
 import { delay } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
+=======
+import { Observable } from 'rxjs';
+>>>>>>> origin/feature/integrated-app-event
 
 @Injectable({
   providedIn: 'root'
 })
 export class ApiService {
+<<<<<<< HEAD
   private BASE_URL = environment.apiUrlBase;
   constructor(private http: HttpClient) { }
 
@@ -165,4 +170,24 @@ export class ApiService {
   checkInByToken(token: string): Observable<any> {
     return this.http.post(this.BASE_URL + '/api/reservations/checkin?token=' + encodeURIComponent(token), {});
   }
+=======
+  private BASE_URL = 'http://localhost:8089';
+
+  constructor(private http: HttpClient) { }
+
+  getCampings(): Observable<any> {
+    return this.http.get(`${this.BASE_URL}/api/campings`);
+  }
+
+  login(credentials: any): Observable<any> {
+    return this.http.post(`${this.BASE_URL}/api/auth/login`, credentials);
+  }
+
+  signup(user: any): Observable<any> {
+    return this.http.post(`${this.BASE_URL}/api/auth/signup`, user);
+  }
+
+
+
+>>>>>>> origin/feature/integrated-app-event
 }

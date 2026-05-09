@@ -11,4 +11,9 @@ public class RegisterRequest {
     private String prenom;
     private String email;
     private String password;
+<<<<<<< HEAD
 }
+=======
+    private String role;
+}
+>>>>>>> origin/feature/integrated-app-event

@@ -1,0 +1,243 @@
+<div class="product-detail-page">
+  <!-- Back Button -->
+  <div class="page-header mb-4 d-flex justify-content-between align-items-center">
+    <a href="#" class="back-btn" (click)="backToProductList($event)">
+      ← Back to products
+    </a>
+    <button *ngIf="canManageProducts" type="button" class="btn btn-outline-secondary btn-sm" (click)="editProduct()">
+      <i class="bi bi-pencil me-2"></i> Edit product
+    </button>
+  </div>
+
+  <div *ngIf="isLoading" class="text-center py-5">
+    <div class="spinner-border text-primary" role="status"></div>
+    <p class="mt-3">Loading product details...</p>
+  </div>
+
+  <div *ngIf="errorMessage" class="alert alert-danger">{{ errorMessage }}</div>
+
+  <!-- Main Content: Photo + Info Side by Side -->
+  <div *ngIf="product" class="row g-5 align-items-start">
+    
+    <!-- Left Column: Product Photo -->
+    <div class="col-lg-6">
+      <div class="product-image-container">
+        <img 
+          [src]="product.photoUrl" 
+          [alt]="product.name"
+          class="product-image"
+          (click)="openImageViewer(product.photoUrl)">
+      </div>
+    </div>
+
+    <!-- Right Column: Product Info (exactly like your screenshot) -->
+    <div class="col-lg-6">
+      <span class="category-badge">{{ product.category || 'LEATHER' }}</span>
+      
+      <h1 class="product-title">{{ product.name }}</h1>
+      
+      <p class="product-description">
+        {{ product.description }}
+      </p>
+
+      <div class="price-section">
+        <span class="price">{{ product.price | currency:'TND':'symbol':'1.2-2' }}</span>
+        <span class="stock-badge" *ngIf="product.stockQuantity > 0">
+          Only {{ product.stockQuantity }} left
+        </span>
+      </div>
+
+      <div *ngIf="authService.isOwner()" class="owner-product-details-card">
+        <div class="info-card owner-info-card">
+          <h5>PRODUCT DETAILS</h5>
+          <div class="info-item"><strong>Price:</strong> {{ product.price | currency:'TND' }}</div>
+          <div class="info-item"><strong>Stock:</strong> {{ product.stockQuantity }} units</div>
+          <div class="info-item"><strong>Added:</strong> {{ product.createdAt | date:'mediumDate' }}</div>
+          <div class="info-item"><strong>Category:</strong> {{ product.category || 'Leather' }}</div>
+        </div>
+      </div>
+
+      <!-- Quantity + Add to Cart -->
+      <ng-container *ngIf="canAddToCart">
+        <div class="quantity-add-section">
+          <div class="quantity-label">Quantity</div>
+          <div class="quantity-control">
+            <button class="quantity-btn" (click)="decreaseQty()">−</button>
+            <span class="quantity-value">{{ quantity }}</span>
+            <button class="quantity-btn" (click)="increaseQty()">+</button>
+          </div>
+
+          <button 
+            class="add-to-cart-btn"
+            (click)="addToCart()"
+            [disabled]="quantity < 1 || quantity > product.stockQuantity">
+            Add to cart
+          </button>
+
+          <div *ngIf="cartMessage" class="cart-success-message">
+            {{ cartMessage }}
+          </div>
+        </div>
+      </ng-container>
+
+      <!-- Sold By -->
+      <div class="sold-by-section">
+        <div class="sold-by-label">SOLD BY</div>
+        <div class="shop-name">
+          <span class="shop-icon">⊚</span>
+          Leather Shop →
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Reviews Section -->
+  <div *ngIf="product && canSeeReviews" class="reviews-section mt-5">
+    <div class="reviews-card">
+      <div class="reviews-header">
+        <h3>Reviews</h3>
+        <span class="reviews-count">{{ reviews.length }} reviews</span>
+      </div>
+
+      <div *ngIf="reviews.length > 0" class="reviews-list">
+        <div *ngFor="let review of reviews" class="review-item">
+          <div class="review-header">
+            <div class="review-user">
+              <span class="user-name">{{ review.user?.prenom || 'Anonymous' }} {{ review.user?.nom || '' }}</span>
+              <span class="review-date">{{ review.createdAt | date:'mediumDate' }}</span>
+            </div>
+            <div class="review-rating">
+              <div class="stars">
+                <span *ngFor="let star of [1,2,3,4,5]" 
+                      class="star" 
+                      [class.filled]="star <= review.rating">★</span>
+              </div>
+            </div>
+            <div *ngIf="canManageReview(review)" class="review-actions">
+              <button class="btn-edit" (click)="startEditReview(review)" title="Edit review">
+                <i class="bi bi-pencil"></i>
+              </button>
+              <button class="btn-delete" (click)="deleteReview(review)" title="Delete review">
+                <i class="bi bi-trash"></i>
+              </button>
+            </div>
+          </div>
+
+          <div *ngIf="editingReview?.id !== review.id" class="review-content">
+            <p>{{ review.comment }}</p>
+          </div>
+
+          <div *ngIf="editingReview?.id === review.id" class="edit-review-form">
+            <div class="form-group">
+              <label>Rating:</label>
+              <div class="rating-input">
+                <button *ngFor="let r of [1,2,3,4,5]" 
+                        type="button" 
+                        class="star-btn"
+                        [class.active]="r <= editRating"
+                        (click)="editRating = r">★</button>
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="edit-comment">Comment:</label>
+              <textarea id="edit-comment" 
+                        [(ngModel)]="editComment" 
+                        placeholder="Update your review..."
+                        rows="3"></textarea>
+            </div>
+            <div class="form-actions">
+              <button class="btn-cancel" (click)="cancelEditReview()">Cancel</button>
+              <button class="btn-save" 
+                      (click)="updateReview()" 
+                      [disabled]="isUpdatingReview || !editComment.trim()">
+                {{ isUpdatingReview ? 'Updating...' : 'Update Review' }}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Add yours button for clients who haven't reviewed yet -->
+      <div *ngIf="reviews.length > 0 && canWriteReview && !hasUserReview && authService.isClient()" class="add-review-prompt">
+        <button class="btn-write-review add-yours-btn" (click)="openReviewForm()">Add yours</button>
+      </div>
+
+      <div *ngIf="reviews.length === 0" class="no-reviews">
+        <div class="no-reviews-icon">⭐</div>
+        <h4>No reviews yet</h4>
+        <p>Be the first to share your experience with this product.</p>
+        <!-- Only show write review button for eligible clients, not for owners -->
+        <button class="btn-write-review" 
+                (click)="openReviewForm()" 
+                *ngIf="canWriteReview && !hasUserReview && authService.isClient()">
+          Write a Review
+        </button>
+      </div>
+
+      <!-- Write Review Form - Only for eligible clients -->
+      <div *ngIf="showReviewForm && canWriteReview && !hasUserReview && authService.isClient()" class="write-review-form">
+        <h4>Write a Review</h4>
+        <div class="form-group">
+          <label>Rating:</label>
+          <div class="rating-input">
+            <button *ngFor="let r of [1,2,3,4,5]" 
+                    type="button" 
+                    class="star-btn"
+                    [class.active]="r <= newReviewRating"
+                    (click)="newReviewRating = r">★</button>
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="review-comment">Comment:</label>
+          <textarea id="review-comment" 
+                    [(ngModel)]="newReviewComment" 
+                    placeholder="Share your experience with this product..."
+                    rows="4"></textarea>
+        </div>
+        <div class="form-actions">
+          <button class="btn-cancel" (click)="closeReviewForm()">Cancel</button>
+          <button class="btn-submit" 
+                  (click)="submitReview()" 
+                  [disabled]="isSubmittingReview || !newReviewComment.trim()">
+            {{ isSubmittingReview ? 'Submitting...' : 'Submit Review' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Reviews Access Message -->
+  <div *ngIf="product && !canSeeReviews && authService.isClient()" class="reviews-section mt-5">
+    <div class="reviews-card">
+      <div class="reviews-header">
+        <h3>Reviews</h3>
+      </div>
+      <div class="no-reviews">
+        <div class="no-reviews-icon">🔒</div>
+        <h4>Reviews Available After Purchase</h4>
+        <p>Complete an order for this product to view and write reviews.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bottom Info Grid (Product Details + Shop Info) -->
+  <div *ngIf="product && authService.isAdmin()" class="info-grid mt-5">
+    <div class="info-card">
+      <h5>PRODUCT DETAILS</h5>
+      <div class="info-item"><strong>ID:</strong> {{ product.id }}</div>
+      <div class="info-item"><strong>Price:</strong> {{ product.price | currency:'TND' }}</div>
+      <div class="info-item"><strong>Stock:</strong> {{ product.stockQuantity }} units</div>
+      <div class="info-item"><strong>Added:</strong> {{ product.createdAt | date:'mediumDate' }}</div>
+    </div>
+
+    <div class="info-card">
+      <h5>SHOP INFO</h5>
+      <div class="info-item"><strong>Shop:</strong> Leather Shop</div>
+      <div class="info-item"><strong>City:</strong> El Mehiri</div>
+      <div class="info-item"><strong>Owner:</strong> nour chok</div>
+      <div class="info-item"><strong>Category:</strong> Leather</div>
+    </div>
+  </div>
+
+  
+  

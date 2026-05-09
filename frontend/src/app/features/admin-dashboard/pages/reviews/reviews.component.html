@@ -1,0 +1,38 @@
+<div class="reviews-container">
+  <div class="reviews-header">
+    <h2>Manage Reviews</h2>
+  </div>
+
+  <div *ngIf="error" class="alert alert-danger">
+    {{ error }}
+  </div>
+
+  <div *ngIf="isLoading" class="loading">
+    <div class="spinner"></div>
+    Loading reviews...
+  </div>
+
+  <div *ngIf="!isLoading && reviews.length === 0" class="no-data">
+    <p>No reviews found.</p>
+  </div>
+
+  <div *ngIf="!isLoading && reviews.length > 0" class="reviews-list">
+    <div *ngFor="let review of reviews" class="review-card">
+      <div class="review-header">
+        <div class="review-info">
+          <h3>{{ review.shop?.name || 'Shop Review' }}</h3>
+          <p class="review-author">By {{ review.user?.nom }} {{ review.user?.prenom }} • {{ review.createdAt | date: 'short' }}</p>
+        </div>
+        <div class="review-rating">
+          <span class="stars">
+            <span *ngFor="let star of getStars(review.rating)">{{ star }}</span>
+          </span>
+        </div>
+      </div>
+      <p class="review-comment">{{ review.comment }}</p>
+      <div class="review-actions">
+        <button class="btn btn-sm btn-danger" (click)="deleteReview(review.id)">Delete</button>
+      </div>
+    </div>
+  </div>
+</div>

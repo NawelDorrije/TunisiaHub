@@ -1,0 +1,465 @@
+.reservations-container {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 32px 20px;
+}
+
+.page-header { margin-bottom: 28px; }
+.page-header h1 { font-size: 1.8rem; font-weight: 700; color: #1a1a2e; margin: 0; }
+.page-header p { color: #6c757d; margin: 4px 0 0; }
+
+.reservations-grid {
+  display: grid;
+  gap: 16px;
+}
+
+.reservation-card {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 2px 16px rgba(0,0,0,0.08);
+  overflow: hidden;
+  border: 1px solid #f0f0f0;
+}
+
+.card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 20px 24px 12px;
+  background: linear-gradient(135deg, #f8f9ff, #fff);
+}
+
+.activite-info h3 {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #1a1a2e;
+  margin: 0 0 4px;
+}
+
+.lieu-name { font-size: 0.85rem; color: #6c757d; margin: 0; }
+
+.statut-badge {
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.statut-attente { background: #fff3cd; color: #856404; }
+.statut-confirmee { background: #d4edda; color: #155724; }
+.statut-annulee { background: #f8d7da; color: #721c24; }
+
+.card-details {
+  padding: 16px 24px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  border-top: 1px solid #f0f0f0;
+}
+
+.detail-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.9rem;
+  color: #6c757d;
+  padding: 6px 0;
+}
+
+.detail-row strong { color: #1a1a2e; }
+
+.prix-row {
+  grid-column: 1 / -1;
+  border-top: 1px dashed #dee2e6;
+  padding-top: 10px;
+  margin-top: 4px;
+}
+
+.prix { font-size: 1.1rem; color: #0f3460; }
+
+.card-actions {
+  padding: 12px 24px 16px;
+  border-top: 1px solid #f0f0f0;
+}
+
+.btn-annuler {
+  background: none;
+  border: 2px solid #dc3545;
+  color: #dc3545;
+  padding: 8px 18px;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  font-size: 0.88rem;
+  transition: all 0.2s;
+}
+
+.btn-annuler:hover { background: #dc3545; color: white; }
+
+.confirm-annulation p { font-size: 0.9rem; color: #495057; margin: 0 0 8px; font-weight: 500; }
+.confirm-btns { display: flex; gap: 8px; }
+
+.btn-oui {
+  background: #dc3545; color: white; border: none;
+  padding: 7px 18px; border-radius: 8px; font-weight: 600; cursor: pointer;
+}
+
+.btn-non {
+  background: #f8f9fa; color: #495057; border: 2px solid #dee2e6;
+  padding: 7px 18px; border-radius: 8px; font-weight: 600; cursor: pointer;
+}
+
+.empty-state {
+  text-align: center; padding: 60px 20px; color: #6c757d;
+}
+.empty-state span { font-size: 3rem; display: block; margin-bottom: 12px; }
+
+.loading { display: flex; flex-direction: column; align-items: center; padding: 60px; color: #6c757d; }
+.spinner { width: 40px; height: 40px; border: 4px solid #e9ecef; border-top-color: #0f3460; border-radius: 50%; animation: spin 0.8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.alert-success { background: #d4edda; color: #155724; padding: 12px 16px; border-radius: 8px; margin-bottom: 16px; font-weight: 500; }
+
+.btn-payer {
+  background: linear-gradient(135deg, #28a745, #20c997);
+  color: white;
+  border: none;
+  padding: 8px 18px;
+  border-radius: 8px;
+  font-weight: 700;
+  cursor: pointer;
+  font-size: 0.88rem;
+  margin-right: 8px;
+  transition: opacity 0.2s;
+}
+.btn-payer:hover { opacity: 0.9; }
+
+.btn-payer-tranche {
+  background: linear-gradient(135deg, #007bff, #0056b3);
+  color: white;
+  border: none;
+  padding: 8px 18px;
+  border-radius: 8px;
+  font-weight: 700;
+  cursor: pointer;
+  font-size: 0.88rem;
+  margin-right: 8px;
+  transition: opacity 0.2s, transform 0.1s;
+}
+.btn-payer-tranche:hover { 
+  opacity: 0.9; 
+  transform: translateY(-1px);
+}
+.statut-payee { 
+  background: #cce5ff; 
+  color: #004085; 
+}
+
+
+/* ===== DATE ÉVÉNEMENT ===== */
+.card-top { display: flex; justify-content: space-between; align-items: flex-start; padding: 20px 24px 12px; }
+.card-top-right { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
+
+.event-date {
+  font-size: 0.82rem;
+  color: #0f3460;
+  font-weight: 600;
+  margin: 4px 0 0;
+  background: #e8f0fe;
+  padding: 3px 8px;
+  border-radius: 6px;
+  display: inline-block;
+}
+
+/* ===== BOUTON NOTIFICATION ===== */
+.btn-notif {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: none;
+  border: 1px solid #dee2e6;
+  border-radius: 20px;
+  padding: 4px 10px;
+  font-size: 0.78rem;
+  cursor: pointer;
+  color: #495057;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.btn-notif:hover { background: #f8f9fa; border-color: #0f3460; color: #0f3460; }
+.notif-label { font-size: 0.72rem; }
+
+/* ===== BARRE TRANCHES ===== */
+.tranche-bar {
+  padding: 10px 24px;
+  background: #f8f9ff;
+  border-top: 1px solid #f0f0f0;
+}
+
+.tranche-bar-label {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.78rem;
+  color: #6c757d;
+  margin-bottom: 5px;
+}
+
+.tranche-bar-track {
+  height: 6px;
+  background: #e9ecef;
+  border-radius: 3px;
+  overflow: hidden;
+  margin-bottom: 4px;
+}
+
+.tranche-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #0f3460, #1a5276);
+  border-radius: 3px;
+  transition: width 0.5s;
+}
+
+.tranche-amounts {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.75rem;
+}
+
+.paid-amount { color: #28a745; font-weight: 600; }
+.rest-amount { color: #dc3545; font-weight: 600; }
+
+/* ===== MODAL NOTIFICATION ===== */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  padding: 20px;
+  backdrop-filter: blur(3px);
+}
+
+.notif-modal {
+  background: white;
+  border-radius: 20px;
+  width: 100%;
+  max-width: 420px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+  overflow: hidden;
+}
+
+.notif-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 24px;
+  background: linear-gradient(135deg, #0f3460, #1a1a2e);
+  color: white;
+}
+
+.notif-modal-header h2 { font-size: 1.1rem; font-weight: 700; margin: 0; }
+
+.close-btn {
+  background: rgba(255,255,255,0.2);
+  border: none;
+  color: white;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.notif-modal-body { padding: 24px; }
+
+.notif-desc { font-size: 0.88rem; color: #6c757d; margin-bottom: 20px; }
+
+/* Toggle switch */
+.notif-toggle-section {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 0;
+  border-bottom: 1px solid #f0f0f0;
+  margin-bottom: 16px;
+}
+
+.toggle-label { font-size: 0.95rem; font-weight: 600; color: #1a1a2e; }
+
+.toggle-switch {
+  width: 48px;
+  height: 26px;
+  background: #dee2e6;
+  border-radius: 13px;
+  cursor: pointer;
+  position: relative;
+  transition: background 0.2s;
+}
+
+.toggle-switch.active { background: #0f3460; }
+
+.toggle-thumb {
+  width: 20px;
+  height: 20px;
+  background: white;
+  border-radius: 50%;
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  transition: left 0.2s;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+}
+
+.toggle-switch.active .toggle-thumb { left: 25px; }
+
+/* Délai options */
+.delay-label { font-size: 0.85rem; font-weight: 600; color: #495057; margin-bottom: 10px; }
+
+.delay-options { display: flex; gap: 10px; margin-bottom: 16px; }
+
+.delay-opt {
+  flex: 1;
+  border: 2px solid #dee2e6;
+  border-radius: 12px;
+  padding: 14px 8px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.delay-opt:hover { border-color: #0f3460; }
+
+.delay-opt.selected {
+  border-color: #0f3460;
+  background: #f0f4ff;
+}
+
+.delay-num {
+  display: block;
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: #1a1a2e;
+  line-height: 1;
+}
+
+.delay-opt.selected .delay-num { color: #0f3460; }
+
+.delay-text {
+  display: block;
+  font-size: 0.72rem;
+  color: #6c757d;
+  margin-top: 4px;
+}
+
+.notif-preview {
+  display: flex;
+  gap: 10px;
+  background: #e8f0fe;
+  border-radius: 10px;
+  padding: 12px 14px;
+  font-size: 0.82rem;
+  color: #0f3460;
+  align-items: center;
+}
+
+.notif-preview span { font-size: 1.2rem; }
+
+.notif-off-msg {
+  display: flex;
+  gap: 10px;
+  background: #f8f9fa;
+  border-radius: 10px;
+  padding: 12px 14px;
+  font-size: 0.82rem;
+  color: #6c757d;
+  align-items: center;
+}
+
+.notif-success {
+  background: #d4edda;
+  color: #155724;
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin-top: 12px;
+  text-align: center;
+}
+
+/* Footer modal */
+.notif-modal-footer {
+  display: flex;
+  gap: 10px;
+  padding: 16px 24px;
+  border-top: 1px solid #f0f0f0;
+  justify-content: flex-end;
+}
+
+.btn-cancel {
+  background: #f8f9fa;
+  color: #495057;
+  border: 1px solid #dee2e6;
+  padding: 10px 18px;
+  border-radius: 10px;
+  font-weight: 600;
+  cursor: pointer;
+  font-size: 0.88rem;
+}
+
+.btn-save-notif {
+  background: linear-gradient(135deg, #0f3460, #1a5276);
+  color: white;
+  border: none;
+  padding: 10px 22px;
+  border-radius: 10px;
+  font-weight: 700;
+  cursor: pointer;
+  font-size: 0.88rem;
+  transition: opacity 0.2s;
+}
+
+.btn-save-notif:disabled { opacity: 0.6; cursor: not-allowed; }
+.btn-save-notif:hover:not(:disabled) { opacity: 0.9; }
+
+/* Bouton payer tranche */
+.btn-payer-tranche {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #cce5ff;
+  color: #004085;
+  border: 1px solid #b8daff;
+  padding: 8px 14px;
+  border-radius: 8px;
+  font-weight: 700;
+  cursor: pointer;
+  font-size: 0.85rem;
+  transition: all 0.2s;
+}
+
+.btn-payer-tranche:hover { background: #b8daff; }
+.tranche-montant { font-size: 0.75rem; opacity: 0.8; }
+
+/* CSS à ajouter */
+.btn-facture {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: linear-gradient(135deg, #f8f9ff, #e8f0fe);
+  color: #0f3460;
+  border: 1px solid #c5d8ff;
+  padding: 8px 14px;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 0.82rem;
+  cursor: pointer;
+  text-decoration: none;
+  transition: all 0.2s;
+}
+.btn-facture:hover { background: #e8f0fe; }

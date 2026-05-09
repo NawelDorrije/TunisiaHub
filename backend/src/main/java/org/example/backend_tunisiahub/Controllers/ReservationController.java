@@ -1,11 +1,18 @@
-package org.example.backend_tunisiahub.Controllers;
+﻿package org.example.backend_tunisiahub.Controllers;
 
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.example.backend_tunisiahub.Controllers.dto.AiReservationSuggestionResponse;
+import org.example.backend_tunisiahub.Entities.Camping.DTO.ReservationDTO;
 import org.example.backend_tunisiahub.Entities.Reservation;
 import org.example.backend_tunisiahub.Entities.ReservationStatus;
 import org.example.backend_tunisiahub.Services.AiRecommendationService;
-import org.example.backend_tunisiahub.Services.IReservationService;
+import org.example.backend_tunisiahub.Services.ICampingReservationService;
+import org.example.backend_tunisiahub.Services.ITripReservationService;
+import org.example.backend_tunisiahub.Services.ReservationQuote;
+import org.example.backend_tunisiahub.Services.ReservationServiceImpl;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
@@ -18,7 +25,10 @@ public class ReservationController {
 
     private final IReservationService reservationService;
     private final AiRecommendationService aiRecommendationService;
+    private final ITripReservationService tripReservationService;
+    private final ICampingReservationService campingReservationService;
 
+    // Restaurant reservation endpoints
     @GetMapping
     public List<Reservation> getAllReservations() {
         return reservationService.retrieveAllReservations();
@@ -126,4 +136,159 @@ public class ReservationController {
     }
 
     private record ConfirmReservationRequest(List<Long> tableIds) {}
+
+    // Camping reservation endpoints
+    @PostMapping("/camping")
+    public ResponseEntity<ReservationDTO> createCampingReservation(@Valid @RequestBody ReservationDTO dto) {
+        return ResponseEntity.ok(campingReservationService.createReservation(dto));
+    }
+
+    @GetMapping("/camping/{id}")
+    public ResponseEntity<ReservationDTO> getCampingReservationById(@PathVariable Long id) {
+        return ResponseEntity.ok(campingReservationService.getById(id));
+    }
+
+    @GetMapping("/camping")
+    public ResponseEntity<List<ReservationDTO>> getAllCampingReservations() {
+        return ResponseEntity.ok(campingReservationService.getAll());
+    }
+
+    @GetMapping("/camping/user/{userId}")
+    public ResponseEntity<List<ReservationDTO>> getCampingReservationsByUser(@PathVariable Long userId) {
+        return ResponseEntity.ok(campingReservationService.getByUser(userId));
+    }
+
+    @GetMapping("/camping/spot/{spotId}")
+    public ResponseEntity<List<ReservationDTO>> getCampingReservationsBySpot(@PathVariable Long spotId) {
+        return ResponseEntity.ok(campingReservationService.getBySpot(spotId));
+    }
+
+    @GetMapping("/camping/status")
+    public ResponseEntity<List<ReservationDTO>> getCampingReservationsByStatus(
+            @RequestParam org.example.backend_tunisiahub.Entities.Camping.Enums.ReservationStatus status) {
+        return ResponseEntity.ok(campingReservationService.getByStatus(status));
+    }
+
+    @PatchMapping("/camping/{id}/status")
+    public ResponseEntity<ReservationDTO> updateCampingReservationStatus(
+            @PathVariable Long id,
+            @RequestParam org.example.backend_tunisiahub.Entities.Camping.Enums.ReservationStatus status) {
+        return ResponseEntity.ok(campingReservationService.updateStatus(id, status));
+    }
+
+    @DeleteMapping("/camping/{id}/cancel")
+    public ResponseEntity<Void> cancelCampingReservation(@PathVariable Long id) {
+        campingReservationService.cancelReservation(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    // Carpooling reservation endpoints
+    @GetMapping("/carpooling")
+    public List<Reservation> getAllCarpoolingReservations() {
+        return tripReservationService.retrieveAllReservations();
+    }
+
+    @GetMapping("/carpooling/user/{userId}")
+    public List<Reservation> getCarpoolingReservationsByUserId(@PathVariable Long userId) {
+        return tripReservationService.retrieveReservationsByUserId(userId);
+    }
+
+    @GetMapping("/carpooling/trip/{tripId}")
+    public ResponseEntity<List<Reservation>> getReservationsByTripId(@PathVariable Long tripId,
+                                                                     HttpServletRequest request) {
+        Long currentUserId = getCurrentUserId(request);
+        if (currentUserId == null) {
+            return ResponseEntity.badRequest().build();
+        }
+
+        return ResponseEntity.ok(tripReservationService.retrieveReservationsByTripId(tripId, currentUserId));
+    }
+
+    @GetMapping("/carpooling/quote")
+    public ReservationQuote getTripReservationQuote(
+            @RequestParam Long tripId,
+            @RequestParam(defaultValue = "1") Integer seats
+    ) {
+        return tripReservationService.calculateTripQuote(tripId, seats);
+    }
+
+    @GetMapping("/carpooling/{id}")
+    public Reservation getCarpoolingReservationById(@PathVariable Long id) {
+        return tripReservationService.retrieveReservation(id);
+    }
+
+    @PostMapping("/carpooling")
+    public ResponseEntity<Reservation> createCarpoolingReservation(@RequestBody Reservation reservation,
+                                                                   HttpServletRequest request) {
+        Long currentUserId = getCurrentUserId(request);
+        if (currentUserId == null) {
+            return ResponseEntity.badRequest().build();
+        }
+
+        Reservation savedReservation = tripReservationService.addReservation(reservation, currentUserId);
+        if (savedReservation == null) {
+            return ResponseEntity.badRequest().build();
+        }
+        return ResponseEntity.ok(savedReservation);
+    }
+
+    @PutMapping("/carpooling")
+    public ResponseEntity<Reservation> updateCarpoolingReservation(@RequestBody Reservation reservation,
+                                                                   HttpServletRequest request) {
+        Long currentUserId = getCurrentUserId(request);
+        if (currentUserId == null) {
+            return ResponseEntity.badRequest().build();
+        }
+
+        Reservation savedReservation = tripReservationService.modifyReservation(reservation, currentUserId);
+        if (savedReservation == null) {
+            return ResponseEntity.badRequest().build();
+        }
+        return ResponseEntity.ok(savedReservation);
+    }
+
+    @PutMapping("/carpooling/{id}/approve")
+    public ResponseEntity<Reservation> approveCarpoolingReservation(@PathVariable Long id,
+                                                                    HttpServletRequest request) {
+        Long currentUserId = getCurrentUserId(request);
+        if (currentUserId == null) {
+            return ResponseEntity.badRequest().build();
+        }
+
+        Reservation reservation = tripReservationService.approveReservation(id, currentUserId);
+        if (reservation == null) {
+            return ResponseEntity.badRequest().build();
+        }
+
+        return ResponseEntity.ok(reservation);
+    }
+
+    @PutMapping("/carpooling/{id}/reject")
+    public ResponseEntity<Reservation> rejectCarpoolingReservation(@PathVariable Long id,
+                                                                   HttpServletRequest request) {
+        Long currentUserId = getCurrentUserId(request);
+        if (currentUserId == null) {
+            return ResponseEntity.badRequest().build();
+        }
+
+        Reservation reservation = tripReservationService.rejectReservation(id, currentUserId);
+        if (reservation == null) {
+            return ResponseEntity.badRequest().build();
+        }
+
+        return ResponseEntity.ok(reservation);
+    }
+
+    private Long getCurrentUserId(HttpServletRequest request) {
+        String value = request.getHeader("X-USER-ID");
+        if (value == null || value.isBlank()) {
+            return null;
+        }
+
+        try {
+            return Long.valueOf(value);
+        } catch (NumberFormatException exception) {
+            return null;
+        }
+    }
 }

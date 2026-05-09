@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 <div class="container py-4">
   <h2 class="mb-4">Search rides</h2>
 
@@ -61,4 +62,284 @@
   <ng-template #noResult>
     <div class="alert alert-info">No rides match the selected filters.</div>
   </ng-template>
+=======
+<div class="search-rides-page py-4">
+  <div class="search-rides-container">
+    <div class="mb-4">
+      <app-carpooling-search-bar
+        [searchForm]="searchForm"
+        [departureSuggestions]="departureSuggestions"
+        [destinationSuggestions]="destinationSuggestions"
+        [showDepartureSuggestions]="showDepartureSuggestions"
+        [showDestinationSuggestions]="showDestinationSuggestions"
+        [loadingLocations]="loadingLocations"
+        [locationError]="locationError"
+        (searchSubmitted)="search()"
+        (swapLocations)="swapLocations()"
+        (locationInput)="onLocationInput($event)"
+        (suggestionOpen)="openSuggestions($event)"
+        (suggestionClose)="closeSuggestions($event)"
+        (suggestionSelected)="selectSuggestion($event.field, $event.suggestion)"
+      ></app-carpooling-search-bar>
+    </div>
+
+    <div class="results-layout">
+      <aside class="filters-panel">
+        <div class="filters-header">
+          <h3>Sort by</h3>
+          <button type="button" class="clear-button" (click)="clearFilters()">
+            Clear all
+          </button>
+        </div>
+
+        <button
+          type="button"
+          class="sort-item"
+          *ngFor="let option of sortOptions"
+          [class.active]="activeSort === option.key"
+          (click)="setSort(option.key)"
+        >
+          <span class="sort-radio">
+            <span
+              class="sort-radio-dot"
+              *ngIf="activeSort === option.key"
+            ></span>
+          </span>
+          <span class="sort-label">{{ option.label }}</span>
+          <i [class]="option.icon"></i>
+        </button>
+
+        <div class="filters-separator"></div>
+
+        <div class="time-section">
+          <h4>Departure time</h4>
+
+          <button
+            type="button"
+            class="time-item"
+            *ngFor="let option of timeSlotOptions"
+            (click)="toggleTimeSlot(option.key)"
+          >
+            <span
+              class="time-check"
+              [class.active]="isTimeSlotSelected(option.key)"
+            >
+              <i
+                class="bi bi-check-lg"
+                *ngIf="isTimeSlotSelected(option.key)"
+              ></i>
+            </span>
+            <span class="time-label">{{ option.label }}</span>
+            <span class="time-count">{{ getTimeSlotCount(option.key) }}</span>
+          </button>
+        </div>
+
+        <div class="filters-separator"></div>
+
+        <div class="advanced-section" [formGroup]="searchForm">
+          <h4>Advanced search</h4>
+
+          <label class="advanced-label" for="status">Status</label>
+          <select
+            id="status"
+            class="form-select advanced-input"
+            formControlName="status"
+          >
+            <option value="">Default scheduled</option>
+            <option value="scheduled">Scheduled</option>
+            <option value="canceled">Canceled</option>
+          </select>
+
+          <label class="advanced-label" for="bookingMode">Booking mode</label>
+          <select
+            id="bookingMode"
+            class="form-select advanced-input"
+            formControlName="bookingMode"
+          >
+            <option value="">All modes</option>
+            <option value="instant">Instant booking</option>
+            <option value="manual">Manual approval</option>
+          </select>
+
+          <label class="advanced-label" for="minDriverRating"
+            >Minimum driver rating</label
+          >
+          <select
+            id="minDriverRating"
+            class="form-select advanced-input"
+            formControlName="minDriverRating"
+          >
+            <option [ngValue]="null">All ratings</option>
+            <option [ngValue]="5">5 stars only</option>
+            <option [ngValue]="4">4 stars and above</option>
+            <option [ngValue]="3">3 stars and above</option>
+            <option [ngValue]="2">2 stars and above</option>
+            <option [ngValue]="1">1 star and above</option>
+          </select>
+
+          <label class="advanced-label" for="minPrice">Minimum price</label>
+          <input
+            id="minPrice"
+            type="number"
+            min="0"
+            class="form-control advanced-input"
+            formControlName="minPrice"
+          />
+
+          <label class="advanced-label" for="maxPrice">Maximum price</label>
+          <input
+            id="maxPrice"
+            type="number"
+            min="1"
+            class="form-control advanced-input"
+            formControlName="maxPrice"
+          />
+
+          <label class="advanced-label" for="durationMax"
+            >Maximum duration (min)</label
+          >
+          <input
+            id="durationMax"
+            type="number"
+            min="1"
+            class="form-control advanced-input"
+            formControlName="durationMax"
+          />
+
+          <button
+            type="button"
+            class="btn advanced-apply-button"
+            (click)="search()"
+          >
+            Apply search filters
+          </button>
+        </div>
+      </aside>
+
+      <section class="results-panel">
+        <div class="results-summary">
+          <div>
+            <strong>{{ getSearchDateLabel() }}</strong>
+            <span>{{ getResultsTitle() }}</span>
+          </div>
+          <div class="results-meta">
+            {{ getResultsCountLabel() }} · {{ getPassengersLabel() }}
+          </div>
+        </div>
+
+        <div
+          *ngIf="displayedRides.length > 0; else noResult"
+          class="rides-list"
+        >
+          <button
+            type="button"
+            class="ride-card shadow-sm"
+            *ngFor="let ride of displayedRides"
+            (click)="viewDetails(ride.id)"
+          >
+            <div class="ride-main">
+              <div class="ride-date">
+                {{ formatRideDate(ride.departureDateTime) }}
+              </div>
+
+              <div class="ride-timeline">
+                <div class="ride-time-block">
+                  <strong>{{ formatRideTime(ride.departureDateTime) }}</strong>
+                  <span>{{ formatPlace(ride.departure) }}</span>
+                </div>
+
+                <div class="ride-line-wrapper">
+                  <span class="ride-dot"></span>
+                  <span class="ride-line"></span>
+                  <span class="ride-duration">{{ formatDuration(ride) }}</span>
+                  <span class="ride-line"></span>
+                  <span class="ride-dot"></span>
+                </div>
+
+                <div class="ride-time-block align-end">
+                  <strong>{{ formatArrivalTime(ride) }}</strong>
+                  <small class="next-day-label" *ngIf="isArrivalNextDay(ride)">
+                    (+1 day)
+                  </small>
+                  <span>{{ formatPlace(ride.destination) }}</span>
+                </div>
+              </div>
+
+              <div class="ride-driver-row">
+                <i class="bi bi-car-front ride-mode-icon"></i>
+                <span class="driver-avatar">
+                  {{ getDriverInitials(ride) }}
+                </span>
+                <span class="driver-name">{{ getDriverName(ride) }}</span>
+                <span
+                  class="ride-chip ride-status-chip"
+                  [class.canceled]="ride.status === 'CANCELED'"
+                  [class.completed]="ride.status === 'COMPLETED'"
+                >
+                  {{ getRideStatusLabel(ride) }}
+                </span>
+                <span class="ride-chip" *ngIf="ride.bookingMode === 'instant'">
+                  Instant booking
+                </span>
+                <span
+                  class="ride-chip ride-rating-chip"
+                  [class.empty]="!hasDriverReviews(ride)"
+                >
+                  {{ getDriverReviewLabel(ride) }}
+                </span>
+                <span class="ride-info">
+                  {{ ride.seatsAvailable }} / {{ ride.seatsTotal }} seats
+                </span>
+              </div>
+            </div>
+
+            <div class="ride-side">
+              <div class="ride-price">
+                {{ ride.pricePerSeat | number: "1.0-2" }} TND
+              </div>
+              <div
+                class="ride-availability"
+                [class.warning]="
+                  ride.seatsAvailable !== undefined && ride.seatsAvailable <= 1
+                "
+              >
+                {{ getRideAvailabilityLabel(ride) }}
+              </div>
+            </div>
+          </button>
+        </div>
+
+        <div class="results-pagination" *ngIf="filteredRides.length > pageSize">
+          <div class="results-pagination-label">
+            Showing {{ getPaginationLabel() }}
+          </div>
+          <div class="results-pagination-controls">
+            <button
+              type="button"
+              class="pagination-button"
+              (click)="previousPage()"
+              [disabled]="!hasPreviousPage()"
+            >
+              Previous
+            </button>
+            <button
+              type="button"
+              class="pagination-button primary"
+              (click)="nextPage()"
+              [disabled]="!hasNextPage()"
+            >
+              Next
+            </button>
+          </div>
+        </div>
+
+        <ng-template #noResult>
+          <div class="alert alert-info no-results-card">
+            No trip matches the selected filters.
+          </div>
+        </ng-template>
+      </section>
+    </div>
+  </div>
+>>>>>>> origin/feature/integrated-app-event
 </div>

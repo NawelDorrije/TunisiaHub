@@ -6,3 +6,7 @@ platformBrowserDynamic().bootstrapModule(AppModule, {
   ngZoneEventCoalescing: true
 })
   .catch(err => console.error(err));
+<<<<<<< HEAD
+=======
+
+>>>>>>> origin/feature/integrated-app-event

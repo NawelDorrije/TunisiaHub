@@ -12,10 +12,23 @@ import { AccommodationsRoutingModule } from './accommodations-routing.module';
 import { ReviewListComponent } from './components/review-list/review-list.component';
 import { ReviewItemComponent } from './components/review-item/review-item.component';
 import { ReviewFormComponent } from './components/review-form/review-form.component';
+<<<<<<< HEAD
+=======
+import { MapPickerComponent } from './components/map-picker/map-picker.component';
+import { MapWeatherComponent } from './components/map-weather/map-weather.component';
+import { ReservationFormComponent } from './components/reservation-form/reservation-form.component';
+import { FormsModule } from '@angular/forms';
+import { FeedbackPopupComponent } from './components/feedback-popup/feedback-popup.component';
+import { AccommodationStatisticsComponent } from './components/accommodation-statistics/accommodation-statistics.component';
+import { NgApexchartsModule } from 'ng-apexcharts';
+import { AdminDashboardComponent } from './components/admin-dashboard/admin-dashboard.component';
+
+>>>>>>> origin/feature/integrated-app-event
 
 
 @NgModule({
   declarations: [
+<<<<<<< HEAD
     AddAccommodationComponent,
     EditAccommodationComponent,
     DetailsAccommodationComponent,
@@ -31,6 +44,32 @@ import { ReviewFormComponent } from './components/review-form/review-form.compon
     RouterModule,
     AccommodationsRoutingModule
   ],
+=======
+  AddAccommodationComponent,
+  EditAccommodationComponent,
+  DetailsAccommodationComponent,
+  AdminListAccommodationComponent,
+  UserListAccommodationComponent,
+  ReviewListComponent,
+  ReviewItemComponent,
+  ReviewFormComponent,   // ← moved here from imports
+  MapPickerComponent,
+  MapWeatherComponent,
+  AccommodationStatisticsComponent,
+  AdminDashboardComponent
+],
+
+imports: [
+  CommonModule,
+  ReactiveFormsModule,
+  ReservationFormComponent,   // stays here (standalone)
+  FeedbackPopupComponent,     // stays here (standalone)
+  RouterModule,
+  FormsModule,
+  AccommodationsRoutingModule,
+  NgApexchartsModule
+],
+>>>>>>> origin/feature/integrated-app-event
   providers:[
     provideHttpClient()
   ]

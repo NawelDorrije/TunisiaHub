@@ -7,4 +7,11 @@ export interface Accommodation {
   price: number;
   capacite: number;
   photos: string[];
+<<<<<<< HEAD
+=======
+  rating?: number;
+  averageRating?: number;
+  latitude?: number;
+  longitude?: number;
+>>>>>>> origin/feature/integrated-app-event
 }

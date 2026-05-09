@@ -1,0 +1,119 @@
+<div class="page-shell">
+  <div class="layout-wrap">
+
+    <!-- Back link -->
+    <a class="back-link" (click)="goBack()">
+      <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+      Back to equipment
+    </a>
+
+    <!-- Header -->
+    <div class="page-header">
+      <div>
+        <h1 class="page-title">{{ isEditMode ? 'Edit Equipment' : 'New Equipment' }}</h1>
+        <p class="page-subtitle">{{ isEditMode ? 'Update the equipment details' : 'Fill in the details to add new equipment' }}</p>
+      </div>
+    </div>
+
+    <!-- Error -->
+    <div *ngIf="errorMessage" class="alert-error">
+      <svg style="width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;flex-shrink:0" viewBox="0 0 24 24">
+        <circle cx="12" cy="12" r="10"/>
+        <line x1="12" y1="8" x2="12" y2="12"/>
+        <line x1="12" y1="16" x2="12.01" y2="16"/>
+      </svg>
+      {{ errorMessage }}
+    </div>
+
+    <form [formGroup]="form" (ngSubmit)="onSubmit()" novalidate>
+
+      <!-- CARD 1: Basic Information -->
+      <div class="card">
+        <p class="section-label">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          Basic Information
+        </p>
+
+        <div class="form-field">
+          <label class="form-label" for="name">Equipment Name <span class="required-star">*</span></label>
+          <input id="name" type="text" class="form-control" formControlName="name"
+                 placeholder="e.g. Tent, BBQ Grill, Kayak..." maxlength="100" />
+          <span class="error-text" *ngIf="f['name'].invalid && f['name'].touched">
+            Name is required
+          </span>
+        </div>
+
+        <div class="form-row">
+          <div class="form-field">
+            <label class="form-label" for="quantity">Quantity <span class="required-star">*</span></label>
+            <input id="quantity" type="number" class="form-control" formControlName="quantity"
+                   min="1" placeholder="Number of items" />
+            <span class="error-text" *ngIf="f['quantity'].invalid && f['quantity'].touched">
+              Quantity must be at least 1
+            </span>
+          </div>
+
+          <div class="form-field">
+            <label class="form-label" for="condition">Condition <span class="required-star">*</span></label>
+            <select id="condition" class="form-control" formControlName="condition">
+              <option value="" disabled selected>Select condition...</option>
+              <option value="GOOD">Good</option>
+              <option value="DAMAGED">Damaged</option>
+              <option value="UNDER_REPAIR">Under Repair</option>
+            </select>
+            <span class="error-text" *ngIf="f['condition'].invalid && f['condition'].touched">
+              Please select a condition
+            </span>
+          </div>
+        </div>
+
+        <div class="form-field">
+          <label class="form-label" for="description">Description</label>
+          <textarea id="description" class="form-control" formControlName="description"
+                    rows="4" placeholder="Additional details about this equipment..."></textarea>
+        </div>
+      </div>
+
+      <!-- CARD 2: Assignment & Status -->
+      <div class="card">
+        <p class="section-label">
+          <svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+          Assignment & Availability
+        </p>
+
+        <div class="form-field">
+          <label class="form-label" for="spotId">Assign to Spot <span class="required-star">*</span></label>
+          <select id="spotId" class="form-control" formControlName="spotId">
+            <option value="" disabled selected>Select a spot...</option>
+            <option *ngFor="let spot of spots" [value]="spot.id">
+              {{ spot.name }} ({{ spot.type }})
+            </option>
+          </select>
+          <span class="error-text" *ngIf="f['spotId'].invalid && f['spotId'].touched">
+            Please assign this equipment to a spot
+          </span>
+        </div>
+
+        <div class="toggle-row" style="margin-top: 1.25rem;">
+          <label class="toggle">
+            <input type="checkbox" formControlName="available" />
+            <span class="toggle__slider"></span>
+          </label>
+          <span class="toggle-label">Available for use</span>
+          <span class="toggle-sublabel">
+            {{ form.value.available ? 'Equipment is ready to be used' : 'Currently not available' }}
+          </span>
+        </div>
+      </div>
+
+      <!-- Actions -->
+      <div class="form-actions">
+        <button type="button" class="btn btn-secondary" (click)="goBack()">Cancel</button>
+        <button type="submit" class="btn btn-primary" [disabled]="isSubmitting">
+          {{ isSubmitting ? 'Saving...' : (isEditMode ? 'Update Equipment' : 'Create Equipment') }}
+        </button>
+      </div>
+
+    </form>
+  </div>
+</div>

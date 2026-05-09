@@ -4,7 +4,11 @@ import lombok.RequiredArgsConstructor;
 import org.example.backend_tunisiahub.Entities.Complaint;
 import org.example.backend_tunisiahub.Entities.Reservation;
 import org.example.backend_tunisiahub.Repositories.ComplaintRepository;
+<<<<<<< HEAD
 import org.example.backend_tunisiahub.Repositories.ReservationRepository;
+=======
+import org.example.backend_tunisiahub.Repositories.ReservationEventRepository;
+>>>>>>> origin/feature/integrated-app-event
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -14,7 +18,11 @@ import java.util.List;
 public class ComplaintService implements IComplaintService {
 
     private final ComplaintRepository complaintRepository;
+<<<<<<< HEAD
     private final ReservationRepository reservationRepository;
+=======
+    private final ReservationEventRepository reservationRepository;
+>>>>>>> origin/feature/integrated-app-event
 
     @Override
     public List<Complaint> retrieveAllComplaints() {

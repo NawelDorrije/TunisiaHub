@@ -1,0 +1,149 @@
+.review-page {
+  background: #ffffff;
+  min-height: calc(100vh - 110px);
+  padding: 1.1rem 0.8rem 2rem;
+}
+
+.review-shell {
+  max-width: 660px;
+  margin: 0 auto;
+}
+
+.review-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.review-title {
+  color: #11254c;
+  font-size: 2.35rem;
+  font-weight: 800;
+  line-height: 1.1;
+  margin: 0 0 0.85rem;
+  text-align: center;
+}
+
+.review-notice {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  color: #68738f;
+  font-size: 0.88rem;
+  font-weight: 600;
+  margin-bottom: 0.8rem;
+}
+
+.review-section {
+  padding: 0.15rem 0;
+}
+
+.review-section-title {
+  color: #15264c;
+  font-size: 1rem;
+  font-weight: 800;
+  margin: 0 0 0.65rem;
+}
+
+.review-reference-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.review-reference-card {
+  border-radius: 1.2rem;
+  background: #eef1f7;
+  padding: 0.9rem 1rem;
+}
+
+.review-label {
+  color: #6c7690;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.review-reference-card strong {
+  color: #17233d;
+  font-size: 1rem;
+  font-weight: 800;
+}
+
+.review-divider {
+  height: 5px;
+  border-radius: 999px;
+  background: #ececec;
+  margin: 0.8rem 0;
+}
+
+.review-input,
+.review-textarea {
+  border: 0;
+  border-radius: 1.4rem;
+  background: #eef1f7;
+  color: #1d2844;
+  box-shadow: none;
+}
+
+.review-input {
+  height: 46px;
+  padding: 0.65rem 0.9rem;
+  font-size: 0.92rem;
+  font-weight: 600;
+}
+
+.review-textarea {
+  min-height: 120px;
+  padding: 0.8rem 0.95rem;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  resize: vertical;
+}
+
+.review-input:focus,
+.review-textarea:focus {
+  box-shadow: none;
+  background: #e8edf7;
+}
+
+.review-actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  margin-top: 1.1rem;
+}
+
+.review-submit-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  border: 0;
+  border-radius: 999px;
+  background: #3a6fe4;
+  color: #ffffff;
+  font-size: 0.92rem;
+  font-weight: 800;
+  padding: 0.8rem 1.3rem;
+}
+
+.review-submit-button:hover,
+.review-submit-button:focus {
+  background: #2d61d7;
+  color: #ffffff;
+}
+
+@media (max-width: 767.98px) {
+  .review-title {
+    font-size: 1.95rem;
+  }
+
+  .review-reference-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .review-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}

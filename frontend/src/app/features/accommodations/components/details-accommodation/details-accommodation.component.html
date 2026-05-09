@@ -1,20 +1,30 @@
+<<<<<<< HEAD
 <div class="container py-4">
 
   <!-- Loading -->
+=======
+<div class="container py-4 detail-page-wrap">
+
+>>>>>>> origin/feature/integrated-app-event
   <div class="text-center py-5" *ngIf="isLoading">
     <div class="spinner-border text-primary" role="status">
       <span class="visually-hidden">Loading...</span>
     </div>
   </div>
 
+<<<<<<< HEAD
   <!-- Error -->
   <div *ngIf="errorMessage && !isLoading" class="alert alert-warning">
+=======
+  <div *ngIf="errorMessage && !isLoading" class="alert alert-warning detail-alert">
+>>>>>>> origin/feature/integrated-app-event
     {{ errorMessage }}
     <button class="btn btn-outline-primary ms-3" (click)="goBack()">
       Back to list
     </button>
   </div>
 
+<<<<<<< HEAD
   <!-- Content -->
   <div *ngIf="accommodation && !isLoading">
 
@@ -33,6 +43,27 @@
         </button>
         <button
           class="btn btn-primary"
+=======
+  <div *ngIf="accommodation && !isLoading" class="detail-content">
+    <div class="detail-hero mb-4">
+      <div>
+        <p class="text-uppercase small text-muted mb-1 tracking-label">Stay details</p>
+        <h2 class="fw-bold mb-2 detail-title">{{ accommodation.title }}</h2>
+        <div class="d-flex align-items-center gap-2 flex-wrap">
+          <span class="badge detail-badge">{{ accommodation.type }}</span>
+          <span class="rating-pill">
+            ★ {{ ((accommodation.averageRating ?? accommodation.rating) || 0) > 0 ? ((accommodation.averageRating ?? accommodation.rating) | number:'1.1-1') : '0.0' }} rate
+          </span>
+        </div>
+      </div>
+      <div class="d-flex gap-2">
+        <button class="btn btn-outline-secondary detail-action-btn" (click)="goBack()">
+          Back
+        </button>
+        <button
+          class="btn btn-primary detail-action-btn"
+          *ngIf="authService.isAdmin()"
+>>>>>>> origin/feature/integrated-app-event
           (click)="goToEdit(accommodation.id!)"
         >
           Edit
@@ -40,6 +71,7 @@
       </div>
     </div>
 
+<<<<<<< HEAD
     <div class="row g-4">
 
       <!-- Left — Photos -->
@@ -85,10 +117,48 @@
               <p class="text-muted small mb-1">Address</p>
               <p class="fw-semibold">
                 <i class="bi bi-geo-alt-fill text-primary"></i>
+=======
+    <div class="row g-4 align-items-start">
+      <div class="col-lg-7">
+        <div class="card border-0 detail-glass-card gallery-card h-100">
+          <img
+            [src]="selectedPhoto"
+            class="detail-main-photo"
+            alt="{{ accommodation.title }}"
+          />
+
+          <div class="card-body pt-3" *ngIf="accommodation.photos.length > 0">
+            <div class="d-flex gap-2 flex-wrap thumbnail-strip">
+              <img
+                *ngFor="let photo of accommodation.photos"
+                [src]="photo"
+                (click)="selectPhoto(photo)"
+                [class.selected-thumb]="photo === selectedPhoto"
+                class="thumb-photo"
+                alt="thumbnail"
+              />
+            </div>
+          </div>
+
+          <div class="card-body text-muted" *ngIf="!accommodation.photos.length">
+            No photos available.
+          </div>
+        </div>
+      </div>
+
+      <div class="col-lg-5">
+        <div class="card border-0 detail-glass-card h-100 detail-info-card">
+          <div class="card-body d-flex flex-column gap-3">
+            <div class="detail-info-row">
+              <p class="text-muted small mb-1">Address</p>
+              <p class="fw-semibold mb-0">
+                <i class="bi bi-geo-alt-fill text-primary me-1"></i>
+>>>>>>> origin/feature/integrated-app-event
                 {{ accommodation.adresse }}
               </p>
             </div>
 
+<<<<<<< HEAD
             <hr class="my-0"/>
 
             <!-- Price -->
@@ -107,10 +177,29 @@
               <p class="text-muted small mb-1">Capacity</p>
               <p class="fw-semibold">
                 <i class="bi bi-people-fill text-primary"></i>
+=======
+            <div class="detail-divider"></div>
+
+            <div class="detail-info-row">
+              <p class="text-muted small mb-1">Price per night</p>
+              <p class="fw-bold text-primary detail-price mb-0">
+                {{ accommodation.price }} TND
+                <small class="text-muted fw-normal">/ night</small>
+              </p>
+            </div>
+
+            <div class="detail-divider"></div>
+
+            <div class="detail-info-row">
+              <p class="text-muted small mb-1">Capacity</p>
+              <p class="fw-semibold mb-0">
+                <i class="bi bi-people-fill text-primary me-1"></i>
+>>>>>>> origin/feature/integrated-app-event
                 {{ accommodation.capacite }} persons
               </p>
             </div>
 
+<<<<<<< HEAD
             <hr class="my-0"/>
 
             <!-- Description -->
@@ -128,4 +217,80 @@
 
   </div>
 
+=======
+            <div class="detail-divider"></div>
+
+            <div class="detail-info-row">
+              <p class="text-muted small mb-1">Description</p>
+              <p class="text-secondary mb-0">{{ accommodation.description }}</p>
+            </div>
+
+            <div class="mt-2" *ngIf="accommodation.latitude && accommodation.longitude">
+              <app-map-weather
+                [latitude]="accommodation.latitude!"
+                [longitude]="accommodation.longitude!"
+                [locationName]="accommodation.title"
+              ></app-map-weather>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="mt-4 section-card" *ngIf="authService.isLoggedIn() && !authService.isAdmin()">
+      <h4 class="fw-bold mb-3">Reserve this accommodation</h4>
+      <app-reservation-form
+        [accommodationId]="accommodation.id!"
+        [pricePerNight]="accommodation.price"
+        [accommodationTitle]="accommodation.title"
+      ></app-reservation-form>
+    </div>
+
+    <div class="mt-4 section-card" *ngIf="!authService.isLoggedIn()">
+      <h4 class="fw-bold mb-2">Reserve this accommodation</h4>
+      <p class="text-muted mb-3">Create your account to continue to reservation and payment.</p>
+      <button class="btn btn-primary" (click)="goToSignUpForReservation()">
+        Sign up to reserve
+      </button>
+    </div>
+
+    <div class="mt-4 section-card" *ngIf="authService.isLoggedIn() && recommendations.length > 0">
+      <div class="d-flex align-items-center justify-content-between mb-3">
+        <h5 class="fw-bold mb-0">Recommended for you</h5>
+        <span class="badge bg-light text-primary border">Smart picks</span>
+      </div>
+
+      <div class="row g-3">
+        <div class="col-lg-4 col-md-6" *ngFor="let rec of recommendations">
+          <a
+            class="card border-0 shadow-sm h-100 recommendation-card"
+            *ngIf="rec.id"
+            [routerLink]="['/accommodations/detail', rec.id]"
+            (click)="goToDetail(rec.id!)"
+          >
+            <img
+              [src]="rec.photos[0] || 'assets/images/placeholder.jpg'"
+              class="card-img-top recommendation-photo"
+              alt="{{ rec.title }}"
+            />
+            <div class="card-body p-2">
+              <h6 class="fw-bold mb-1">{{ rec.title }}</h6>
+              <p class="text-muted small mb-1">
+                <i class="bi bi-geo-alt-fill"></i> {{ rec.adresse }}
+              </p>
+              <div class="d-flex justify-content-between align-items-center">
+                <span class="badge bg-secondary">{{ rec.type }}</span>
+                <span class="fw-bold text-primary small">{{ rec.price }} TND/night</span>
+              </div>
+            </div>
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <div class="mt-4 section-card">
+      <app-review-list [accommodationId]="accommodation.id!"></app-review-list>
+    </div>
+  </div>
+>>>>>>> origin/feature/integrated-app-event
 </div>

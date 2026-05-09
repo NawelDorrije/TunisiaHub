@@ -5,6 +5,7 @@ import java.util.List;
 
 public interface IReviewService {
 
+<<<<<<< HEAD
     List<AccommodationReview> retrieveAllReviews();
 
     AccommodationReview retrieveReview(Long reviewId);
@@ -16,4 +17,16 @@ public interface IReviewService {
     AccommodationReview modifyReview(Long id, AccommodationReview accommodationReview);
 
     List<AccommodationReview> getReviewsByAccommodation(Long accommodationId);
+=======
+  List<AccommodationReview> retrieveAllReviews();
+
+  AccommodationReview retrieveReview(Long reviewId);
+
+  AccommodationReview addReview(Long accommodationId, AccommodationReview review, String email);
+  void removeReview(Long reviewId);
+
+  AccommodationReview modifyReview(Long id, AccommodationReview accommodationReview);
+
+  List<AccommodationReview> getReviewsByAccommodation(Long accommodationId);
+>>>>>>> origin/feature/integrated-app-event
 }

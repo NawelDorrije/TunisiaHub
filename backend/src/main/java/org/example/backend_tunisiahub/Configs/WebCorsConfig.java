@@ -27,6 +27,23 @@ public class WebCorsConfig implements WebMvcConfigurer {
                 .allowedHeaders("*")
                 .exposedHeaders("*")
                 .allowCredentials(true)
+//fix code
+@Configuration
+public class WebCorsConfig implements WebMvcConfigurer {
+
+    @Override
+    public void addCorsMappings(CorsRegistry registry) {
+        registry.addMapping("/api/**")
+                .allowedOriginPatterns("*")                    // Utilise uniquement ceci pour le développement
+                .allowedOriginPatterns(
+                        "http://localhost:4200",
+                        "https://*.ngrok-free.app",
+                        "https://*.ngrok-free.dev"
+                )
+                .allowedMethods("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
+                .allowedHeaders("*")
+                .exposedHeaders("*")
+                .allowCredentials(true)                        // Garde true si tu utilises JWT ou cookies
                 .maxAge(3600);
     }
 
@@ -42,5 +59,11 @@ public class WebCorsConfig implements WebMvcConfigurer {
                 .map(String::trim)
                 .filter(pattern -> !pattern.isEmpty())
                 .toArray(String[]::new);
+    }
+}
+        Path uploadPath = Paths.get("uploads");
+
+        registry.addResourceHandler("/uploads/**")
+                .addResourceLocations("file:" + uploadPath.toAbsolutePath() + "/");
     }
 }

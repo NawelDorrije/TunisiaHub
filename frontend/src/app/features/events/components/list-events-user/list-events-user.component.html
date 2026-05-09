@@ -1,0 +1,501 @@
+<div class="page">
+  <div class="hdr">
+    <div class="hdr-left">
+      <div class="hdr-eyebrow"><div class="hdr-dot"></div>Discover</div>
+      <h1 class="hdr-title">Explore Events</h1>
+      <p class="hdr-sub">Find and book your next experience</p>
+    </div>
+    <div class="hdr-right">
+      <button class="cal-open-btn" (click)="openCalendar()">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+          <rect x="1" y="2" width="14" height="13" rx="2"
+                stroke="currentColor" stroke-width="1.4"/>
+          <path d="M5 1v2M11 1v2M1 6h14"
+                stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+        </svg>
+        Calendar
+      </button>
+      <div class="search-wrap">
+        <svg width="13" height="13" viewBox="0 0 16 16" fill="none">
+          <circle cx="7" cy="7" r="5" stroke="currentColor" stroke-width="1.5"/>
+          <path d="M11 11L15 15" stroke="currentColor" stroke-width="1.5"/>
+        </svg>
+        <input [(ngModel)]="searchQuery" (ngModelChange)="filterEvents()"
+               placeholder="Search events..."/>
+      </div>
+    </div>
+  </div>
+
+  <section class="welcome-hero">
+    <div class="welcome-copy">
+      <span class="welcome-kicker">Welcome to our DiscoverTunisia</span>
+      <h2>Welcome to Tunisia. Explore events, enjoy with us, and discover your next unforgettable moment.</h2>
+      <p>
+        From festivals and conferences to sport experiences, DiscoverTunisia helps you find colorful events, check the weather, and reserve the best moments around you.
+      </p>
+
+      <div class="welcome-tags">
+        <span>Explore Events</span>
+        <span>Welcome To Tunisia</span>
+        <span>Enjoy With Us</span>
+      </div>
+    </div>
+
+    <div class="welcome-panel">
+      <div class="welcome-panel-card">
+        <span class="welcome-panel-label">Live selection</span>
+        <strong>{{ filteredEvents.length }} events available now</strong>
+        <p>Search quickly, open the calendar, and browse upcoming experiences in a more visual way.</p>
+      </div>
+    </div>
+  </section>
+
+  <div class="wx-section">
+    <div class="sh">
+      <span class="sl">Weekly Forecast</span>
+      <span class="st">Tunis, TN</span>
+    </div>
+
+    <div class="wx-outer wx-skeleton-outer" *ngIf="weatherLoading">
+      <div class="wx-skel-top">
+        <div class="wx-skel-block wide"></div>
+        <div class="wx-skel-block"></div>
+        <div class="wx-skel-block"></div>
+      </div>
+      <div class="wx-skel-strip">
+        <div class="wx-skel-day" *ngFor="let x of [1,2,3,4,5,6,7]"></div>
+      </div>
+    </div>
+
+    <div class="wx-error" *ngIf="weatherError && !weatherLoading">
+      <svg width="15" height="15" viewBox="0 0 16 16" fill="none">
+        <circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.3"/>
+        <path d="M8 5v3M8 10v1" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+      </svg>
+      Unable to load weather data.
+      <button (click)="loadWeather()">Retry</button>
+    </div>
+
+    <div class="wx-outer" *ngIf="!weatherLoading && !weatherError && weekForecast.length > 0">
+      <div class="wx-top" *ngIf="selectedDay">
+        <div class="wx-main">
+          <div class="wx-main-lbl">{{ selectedDay.day }} · {{ selectedDay.date }}</div>
+          <div class="wx-main-city">Tunis, Tunisia</div>
+          <div class="wx-main-temp">
+            {{ selectedDay.tempHi }}<span class="wx-deg">°C</span>
+          </div>
+          <div class="wx-main-feel">
+            Low {{ selectedDay.tempLo }}° · Feels {{ selectedDay.feelsLike }}°
+          </div>
+        </div>
+
+        <div class="wx-vdiv"></div>
+
+        <div class="wx-stats">
+          <div class="wxs">
+            <div class="wxs-ico">
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+                <path d="M8 2C8 2 5 5.5 5 8.5a3 3 0 006 0C11 5.5 8 2 8 2z"
+                      fill="rgba(96,165,250,0.8)"/>
+              </svg>
+            </div>
+            <div class="wxs-lbl">Humidity</div>
+            <div class="wxs-val">{{ selectedDay.humidity }}%</div>
+          </div>
+          <div class="wxs">
+            <div class="wxs-ico">
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+                <path d="M2 8c2-4 4-4 5-4s3 0 5 4"
+                      stroke="rgba(96,165,250,0.8)" stroke-width="1.4" stroke-linecap="round" fill="none"/>
+              </svg>
+            </div>
+            <div class="wxs-lbl">Wind</div>
+            <div class="wxs-val">{{ selectedDay.windSpeed }} km/h</div>
+          </div>
+          <div class="wxs">
+            <div class="wxs-ico">
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+                <circle cx="8" cy="8" r="4" fill="rgba(251,191,36,0.8)"/>
+                <path d="M8 1v2M8 13v2M1 8h2M13 8h2"
+                      stroke="rgba(251,191,36,0.8)" stroke-width="1.3" stroke-linecap="round"/>
+              </svg>
+            </div>
+            <div class="wxs-lbl">Condition</div>
+            <div class="wxs-val">{{ selectedDay.description | titlecase }}</div>
+          </div>
+        </div>
+
+        <div class="wx-ico-big">
+          <img [src]="'https://openweathermap.org/img/wn/' + selectedDay.iconCode + '@2x.png'"
+               [alt]="selectedDay.description" width="72" height="72"/>
+        </div>
+      </div>
+
+      <div class="wx-scroll-wrap">
+        <div class="wx-scroll">
+          <div class="wxd"
+               *ngFor="let d of weekForecast"
+               [class.active]="selectedDay === d"
+               (click)="selectDay(d)">
+            <div class="wxd-date">{{ d.date }}</div>
+            <div class="wxd-name">{{ d.day }}</div>
+            <div class="wxd-ico-wrap">
+              <img [src]="'https://openweathermap.org/img/wn/' + d.iconCode + '.png'"
+                   [alt]="d.description" width="40" height="40"/>
+            </div>
+            <div class="wxd-hi">{{ d.tempHi }}°</div>
+            <div class="wxd-lo">{{ d.tempLo }}°</div>
+            <div class="wxd-bar">
+              <div class="wxd-fill"
+                   [style.width.%]="d.barPct"
+                   [style.background]="d.icon === 'rain' || d.icon === 'storm' ? '#60a5fa'
+                                     : d.icon === 'snow'  ? '#bfdbfe'
+                                     : d.tempHi > 28      ? '#FBBF24'
+                                     : '#4db88a'">
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="sh" style="margin-top:8px">
+    <span class="sl">Upcoming Events</span>
+    <span class="st">{{ filteredEvents.length }} found</span>
+  </div>
+
+  <div class="empty-state" *ngIf="filteredEvents.length === 0">
+    <div class="er">
+      <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+        <circle cx="14" cy="14" r="12" stroke="currentColor" stroke-width="1.4"/>
+        <path d="M14 9v5M14 17v2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+      </svg>
+    </div>
+    <p class="et">No events found</p>
+    <p class="es">Try adjusting your search query</p>
+  </div>
+
+  <div class="events-grid" *ngIf="filteredEvents.length > 0">
+    <div class="ec"
+         *ngFor="let event of filteredEvents; trackBy: trackByEventId"
+         [class.completed]="isCompleted(event)">
+      <div class="ec-img"
+           [style.background-image]="getEventCardBackgroundImage(event.image)">
+        <div class="ec-overlay"></div>
+        <div class="ec-badges">
+          <span class="b-type">{{ event.type }}</span>
+          <span class="b-full" *ngIf="isCompleted(event)">Completed</span>
+          <span class="b-price" *ngIf="!isCompleted(event)">{{ event.price }} TND</span>
+        </div>
+        <div class="ec-stamp" *ngIf="isCompleted(event)">Sold Out</div>
+      </div>
+
+      <div class="ec-body">
+        <div class="ec-topline">
+          <span class="ec-date">{{ event.startDate | date:'dd MMM yyyy' }}</span>
+          <span class="ec-capacity">{{ event.capacity }} seats</span>
+        </div>
+        <div class="ec-title">{{ event.title }}</div>
+        <div class="ec-desc">{{ event.description | slice:0:90 }}...</div>
+        <div class="ec-meta">
+          <span class="ec-loc">
+            <svg width="10" height="10" viewBox="0 0 12 12" fill="currentColor">
+              <path d="M6 0C3.79 0 2 1.79 2 4c0 3 4 8 4 8s4-5 4-8C10 1.79 8.21 0 6 0zm0 5.5C5.17 5.5 4.5 4.83 4.5 4S5.17 2.5 6 2.5 7.5 3.17 7.5 4 6.83 5.5 6 5.5z"/>
+            </svg>
+            {{ event.lieu }}
+          </span>
+          <span class="ec-status" [ngClass]="getStatusClass(event.status)">
+            {{ event.status }}
+          </span>
+        </div>
+        <div class="card-actions">
+          <a class="btn btn-view" (click)="goToDetails(event.id)">Details</a>
+          <button class="btn btn-reserve"
+                  [disabled]="isCompleted(event)"
+                  (click)="reserveEvent(event)">
+            {{ isCompleted(event) ? 'Full' : 'Reserve' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="cal-popup-bg" *ngIf="showCalendarPopup" (click)="closeCalendar()">
+    <div class="cal-popup" (click)="$event.stopPropagation()">
+      <div class="cal-popup-hdr">
+        <div class="cal-popup-title">
+          <svg width="15" height="15" viewBox="0 0 16 16" fill="none">
+            <rect x="1" y="2" width="14" height="13" rx="2"
+                  stroke="currentColor" stroke-width="1.4"/>
+            <path d="M5 1v2M11 1v2M1 6h14"
+                  stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+          </svg>
+          Event Calendar
+        </div>
+        <button class="cal-close-btn" (click)="closeCalendar()">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+            <path d="M2 2l12 12M14 2L2 14"
+                  stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+          </svg>
+        </button>
+      </div>
+
+      <div class="cal-popup-body">
+        <div class="cal-left">
+          <div class="cal-nav">
+            <button class="cal-nav-btn" (click)="prevMonth()">
+              <svg width="11" height="11" viewBox="0 0 12 12" fill="none">
+                <path d="M7 2L3 6l4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+              </svg>
+            </button>
+            <span class="cal-month-label">{{ currentMonthLabel }}</span>
+            <button class="cal-nav-btn" (click)="nextMonth()">
+              <svg width="11" height="11" viewBox="0 0 12 12" fill="none">
+                <path d="M5 2l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+              </svg>
+            </button>
+            <button class="cal-today-btn" (click)="goToToday()">Today</button>
+          </div>
+
+          <div class="cal-dow-row">
+            <div class="cal-dow" *ngFor="let d of dayLabels">{{ d }}</div>
+          </div>
+
+          <div class="cal-grid">
+            <div class="cal-cell"
+                 *ngFor="let cell of calendarCells"
+                 [class.other]="!cell.isCurrentMonth"
+                 [class.today]="cell.isToday"
+                 [class.selected]="selectedCalendarDate && cell.date &&
+                                   isSameDay(cell.date, selectedCalendarDate)"
+                 [class.has-ev]="cell.events.length > 0"
+                 (click)="selectCalDay(cell)">
+              <div class="cal-cell-num">{{ cell.day }}</div>
+
+              <div class="cal-cell-dots" *ngIf="cell.events.length > 0">
+                <div class="cal-chip"
+                     *ngFor="let ev of cell.events.slice(0,2)"
+                     [class.chip-done]="ev.status === 'COMPLETED'">
+                  <span class="chip-dot"></span>
+                  <span class="chip-txt">{{ ev.title }}</span>
+                </div>
+                <div class="cal-more" *ngIf="cell.events.length > 2">
+                  +{{ cell.events.length - 2 }}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="cal-right">
+          <div class="cal-no-select" *ngIf="!selectedCalendarDate">
+            <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
+              <circle cx="18" cy="18" r="16" stroke="currentColor" stroke-width="1.3" opacity=".3"/>
+              <path d="M18 12v7M18 22v2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" opacity=".4"/>
+            </svg>
+            <p>Select a date to see events</p>
+          </div>
+
+          <div class="cal-day-panel" *ngIf="selectedCalendarDate && !selectedEventDetail">
+            <div class="cdp-hdr">
+              <div class="cdp-date-num">{{ selectedCalendarDate | date:'d' }}</div>
+              <div>
+                <div class="cdp-weekday">{{ selectedCalendarDate | date:'EEEE' }}</div>
+                <div class="cdp-month">{{ selectedCalendarDate | date:'MMMM yyyy' }}</div>
+              </div>
+              <div class="cdp-count" *ngIf="selectedDayEvents.length > 0">
+                {{ selectedDayEvents.length }} event{{ selectedDayEvents.length > 1 ? 's' : '' }}
+              </div>
+            </div>
+
+            <div class="cdp-empty" *ngIf="selectedDayEvents.length === 0">
+              <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+                <circle cx="14" cy="14" r="12" stroke="currentColor" stroke-width="1.3" opacity=".3"/>
+                <path d="M9 14h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" opacity=".4"/>
+              </svg>
+              <p>No events on this day</p>
+            </div>
+
+            <div class="cdp-list">
+              <div class="cdp-ev-card"
+                   *ngFor="let ev of selectedDayEvents"
+                   [class.cdp-ev-done]="ev.status === 'COMPLETED'"
+                   (click)="selectEventDetail(ev)">
+                <div class="cdp-accent"
+                     [style.background]="ev.status === 'COMPLETED' ? '#c0392b' : '#1D9E75'">
+                </div>
+                <div class="cdp-ev-body">
+                  <div class="cdp-ev-top">
+                    <span class="cdp-ev-type">{{ ev.type }}</span>
+                    <span class="cdp-ev-status"
+                          [class.st-done]="ev.status === 'COMPLETED'">
+                      {{ ev.status }}
+                    </span>
+                  </div>
+                  <div class="cdp-ev-title">{{ ev.title }}</div>
+                  <div class="cdp-ev-loc" *ngIf="ev.lieu">
+                    <svg width="9" height="9" viewBox="0 0 12 12" fill="currentColor">
+                      <path d="M6 0C3.79 0 2 1.79 2 4c0 3 4 8 4 8s4-5 4-8C10 1.79 8.21 0 6 0zm0 5.5C5.17 5.5 4.5 4.83 4.5 4S5.17 2.5 6 2.5 7.5 3.17 7.5 4 6.83 5.5 6 5.5z"/>
+                    </svg>
+                    {{ ev.lieu }}
+                  </div>
+                  <div class="cdp-ev-price">{{ ev.price }} TND</div>
+                </div>
+                <div class="cdp-arrow">
+                  <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                    <path d="M4 2l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                  </svg>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="cdp-detail" *ngIf="selectedEventDetail">
+            <button class="cdp-back" (click)="selectedEventDetail = null">
+              <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                <path d="M7 2L3 6l4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+              </svg>
+              Back
+            </button>
+
+            <div class="cdp-det-img"
+                 [style.background-image]="getEventCardBackgroundImage(selectedEventDetail.image)">
+              <div class="cdp-det-overlay"></div>
+              <div class="cdp-det-badges">
+                <span class="b-type">{{ selectedEventDetail.type }}</span>
+                <span class="b-full" *ngIf="isCompleted(selectedEventDetail)">Sold Out</span>
+                <span class="b-price" *ngIf="!isCompleted(selectedEventDetail)">
+                  {{ selectedEventDetail.price }} TND
+                </span>
+              </div>
+            </div>
+
+            <div class="cdp-det-body">
+              <div class="cdp-det-status"
+                   [class.st-done]="isCompleted(selectedEventDetail)">
+                {{ selectedEventDetail.status }}
+              </div>
+              <h3 class="cdp-det-title">{{ selectedEventDetail.title }}</h3>
+              <p class="cdp-det-desc">{{ selectedEventDetail.description }}</p>
+
+              <div class="cdp-det-row" *ngIf="selectedEventDetail.lieu">
+                <svg width="13" height="13" viewBox="0 0 12 12" fill="currentColor">
+                  <path d="M6 0C3.79 0 2 1.79 2 4c0 3 4 8 4 8s4-5 4-8C10 1.79 8.21 0 6 0zm0 5.5C5.17 5.5 4.5 4.83 4.5 4S5.17 2.5 6 2.5 7.5 3.17 7.5 4 6.83 5.5 6 5.5z"/>
+                </svg>
+                {{ selectedEventDetail.lieu }}
+              </div>
+
+              <div class="cdp-det-row" *ngIf="selectedEventDetail.startDate">
+                <svg width="13" height="13" viewBox="0 0 16 16" fill="none">
+                  <circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.3"/>
+                  <path d="M8 5v3l2 2" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+                </svg>
+                {{ selectedEventDetail.startDate | date:'dd MMM yyyy · HH:mm' }}
+              </div>
+
+              <div class="cdp-det-actions">
+                <a class="ab primary" (click)="goToDetails(selectedEventDetail.id); closeCalendar()">
+                  View Details
+                </a>
+                <button class="ab reserve"
+                        [disabled]="isCompleted(selectedEventDetail)"
+                        (click)="reserveEvent(selectedEventDetail); closeCalendar()">
+                  {{ isCompleted(selectedEventDetail) ? 'Full' : 'Reserve' }}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="popup-bg" *ngIf="showPopup">
+    <div class="popup-box">
+      <div class="popup-icon">
+        <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+          <path d="M11 2L19.1 17H2.9L11 2Z"
+                stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+          <path d="M11 9v4M11 15v1"
+                stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <div class="popup-title">Warning</div>
+      <p class="popup-msg">{{ errorMessage }}</p>
+      <button class="popup-btn" (click)="closePopup()">Got it</button>
+    </div>
+  </div>
+
+  <div class="ai-chat-shell">
+    <button class="ai-chat-toggle" [class.open]="isChatOpen" (click)="toggleChat()">
+      <span *ngIf="!isChatOpen">AI</span>
+      <span *ngIf="isChatOpen">×</span>
+    </button>
+
+    <div class="ai-chat-panel" *ngIf="isChatOpen">
+      <div class="ai-chat-header">
+        <div>
+          <div class="ai-chat-kicker">Smart Recommendations</div>
+          <h3>Event AI Assistant</h3>
+        </div>
+        <div class="ai-chat-status">
+          <span class="ai-chat-status-dot"></span>
+          Real database events
+        </div>
+      </div>
+
+      <div class="ai-chat-prompts">
+        <button *ngFor="let prompt of suggestedPrompts" (click)="useSuggestedPrompt(prompt)">
+          {{ prompt }}
+        </button>
+      </div>
+
+      <div class="ai-chat-messages" #chatScrollContainer>
+        <div class="ai-message"
+             *ngFor="let message of chatMessages"
+             [class.user]="message.role === 'user'">
+          <div class="ai-avatar">{{ message.role === 'assistant' ? 'AI' : 'You' }}</div>
+          <div class="ai-bubble">
+            <p>{{ message.text }}</p>
+
+            <div class="ai-event-list" *ngIf="message.events?.length">
+              <div class="ai-event-card" *ngFor="let event of message.events; trackBy: trackByEventId">
+                <div class="ai-event-top">
+                  <span class="ai-event-type">{{ event.type }}</span>
+                  <span class="ai-event-price">{{ getChatEventDate(event.startDate) }}</span>
+                </div>
+                <h4>{{ event.title }}</h4>
+                <p>{{ getChatEventDescription(event.description) }}</p>
+                <div class="ai-event-meta">
+                  <span>{{ event.type }}</span>
+                  <span>{{ event.lieu || 'Location available on details' }}</span>
+                </div>
+                <button class="ai-details-btn" (click)="goToDetails(event.id)">View details</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="ai-message" *ngIf="aiLoading">
+          <div class="ai-avatar">AI</div>
+          <div class="ai-bubble ai-thinking">
+            <span></span>
+            <span></span>
+            <span></span>
+            <strong>AI is thinking...</strong>
+          </div>
+        </div>
+      </div>
+
+      <div class="ai-chat-input">
+        <input
+          [(ngModel)]="aiPrompt"
+          (keydown.enter)="sendAiMessage()"
+          placeholder="Ask for outdoor, sport, music, festival..."
+        />
+        <button (click)="sendAiMessage()" [disabled]="aiLoading || !aiPrompt.trim()">Send</button>
+      </div>
+    </div>
+  </div>
+</div>
