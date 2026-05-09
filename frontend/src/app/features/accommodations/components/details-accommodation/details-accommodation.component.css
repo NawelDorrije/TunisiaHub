@@ -1,2 +1,146 @@
-@import '../../accommodations-shared.css';
+:host ::ng-deep .md-drppicker {
+  z-index: 9999 !important;
+}
 
+:host .container {
+  max-width: 100% !important;
+  padding-left: 2rem !important;
+  padding-right: 2rem !important;
+}
+
+:host .detail-page-wrap {
+  background: linear-gradient(180deg, #f6f8fb 0%, #ffffff 100%);
+  min-height: calc(100vh - 120px);
+}
+
+:host .detail-content {
+  display: grid;
+  gap: 1rem;
+}
+
+:host .detail-hero {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+  border-radius: 14px;
+  background: #fff;
+  border: 1px solid #e8edf5;
+}
+
+:host .tracking-label {
+  letter-spacing: 0.08em;
+}
+
+:host .detail-title {
+  color: #1b2b44;
+}
+
+:host .detail-badge {
+  background: #e9f1ff;
+  color: #0b5ed7;
+}
+
+:host .rating-pill {
+  padding: 0.25rem 0.65rem;
+  border-radius: 999px;
+  background: #fff7e6;
+  color: #8a5b00;
+  font-weight: 600;
+  font-size: 0.85rem;
+}
+
+:host .detail-action-btn {
+  min-width: 100px;
+}
+
+:host .detail-glass-card {
+  border-radius: 14px;
+  background: #fff;
+  border: 1px solid #e8edf5;
+  box-shadow: 0 8px 20px rgba(15, 45, 90, 0.06);
+}
+
+:host .gallery-card {
+  overflow: hidden;
+}
+
+:host .detail-main-photo {
+  width: 100%;
+  height: 420px;
+  object-fit: cover;
+  display: block;
+}
+
+:host .thumbnail-strip {
+  margin-top: 0.25rem;
+}
+
+:host .thumb-photo {
+  width: 82px;
+  height: 62px;
+  object-fit: cover;
+  border-radius: 8px;
+  cursor: pointer;
+  border: 2px solid transparent;
+}
+
+:host .thumb-photo.selected-thumb {
+  border-color: #0d6efd;
+}
+
+:host .detail-info-card .card-body {
+  padding: 1.15rem 1.25rem;
+}
+
+:host .detail-divider {
+  height: 1px;
+  background: #eef2f7;
+}
+
+:host .detail-price {
+  font-size: 1.35rem;
+}
+
+:host .section-card {
+  padding: 1rem 1.15rem;
+  border-radius: 14px;
+  border: 1px solid #e8edf5;
+  background: #fff;
+}
+
+:host .recommendation-card {
+  text-decoration: none;
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+
+:host .recommendation-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 22px rgba(20, 43, 78, 0.12) !important;
+}
+
+:host .recommendation-photo {
+  height: 160px;
+  object-fit: cover;
+}
+
+:host .detail-alert {
+  border-radius: 12px;
+}
+
+@media (max-width: 991.98px) {
+  :host .detail-main-photo {
+    height: 300px;
+  }
+}
+
+@media (max-width: 575.98px) {
+  :host .detail-hero {
+    flex-direction: column;
+  }
+
+  :host .detail-main-photo {
+    height: 230px;
+  }
+}

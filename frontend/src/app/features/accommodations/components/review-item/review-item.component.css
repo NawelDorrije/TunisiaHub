@@ -1,2 +1,9 @@
-@import '../../accommodations-shared.css';
+:host ::ng-deep .md-drppicker {
+  z-index: 9999 !important;
+}
 
+:host .container {
+  max-width: 100% !important;
+  padding-left: 2rem !important;
+  padding-right: 2rem !important;
+}

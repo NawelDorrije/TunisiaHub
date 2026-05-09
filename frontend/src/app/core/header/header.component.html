@@ -107,10 +107,10 @@
           <a class="nav-link nav-link-lux" routerLink="/my-reservations" routerLinkActive="active">Reservations</a>
         </li>
 
-        <!-- Admin dashboard
+        <!-- Accommodations admin dashboard -->
         <li class="nav-item" *ngIf="vm.user?.role === 'ADMIN'">
-          <a class="nav-link nav-link-lux" routerLink="/admin-dashboard" routerLinkActive="active">Dashboard</a>
-        </li> -->
+          <a class="nav-link nav-link-lux" routerLink="/accommodations/dashboard" routerLinkActive="active">Accommodations Dashboard</a>
+        </li>
 
         <!-- Owner dashboard -->
         <li class="nav-item" *ngIf="vm.user?.role === 'OWNER'">
