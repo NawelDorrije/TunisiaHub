@@ -1,7 +1,12 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { Accommodation } from '../../../models/accommodations/accommodation.model';
+import { PriceRecommendation } from '../../../models/accommodations/price-recommendation.model';
+import { DescriptionRecommendation } from '../../../models/accommodations/description-recommendation.model';
+import { RecommendationResponse } from '../../../models/accommodations/recommendation.model';
+import { AccommodationStats } from '../../../models/accommodations/statistics.model';
 @Injectable({
   providedIn: 'root'
 })
@@ -13,6 +18,30 @@ export class AccommodationService {
 
   getAllAccommodations(): Observable<Accommodation[]> {
     return this.http.get<Accommodation[]>(`${this.baseUrl}/getAll`);
+  }
+
+  getFilteredAccommodations(
+    type?: string,
+    minPrice?: number,
+    maxPrice?: number,
+    minCapacity?: number
+  ): Observable<Accommodation[]> {
+    let params = new HttpParams();
+
+    if (type && type.trim()) {
+      params = params.set('type', type.trim());
+    }
+    if (minPrice !== undefined && minPrice !== null) {
+      params = params.set('minPrice', minPrice.toString());
+    }
+    if (maxPrice !== undefined && maxPrice !== null) {
+      params = params.set('maxPrice', maxPrice.toString());
+    }
+    if (minCapacity !== undefined && minCapacity !== null) {
+      params = params.set('minCapacity', minCapacity.toString());
+    }
+
+    return this.http.get<Accommodation[]>(`${this.baseUrl}/filter`, { params });
   }
 
   getAccommodationById(id: number): Observable<Accommodation> {
@@ -29,5 +58,36 @@ export class AccommodationService {
 
   deleteAccommodation(id: number): Observable<string> {
     return this.http.delete(`${this.baseUrl}/delete/${id}`, { responseType: 'text' });
+  }
+  suggestPrice(type: string, adresse: string, capacite: number): Observable<PriceRecommendation> {
+  return this.http.post<PriceRecommendation>('http://localhost:8089/api/ai/suggest-price', {
+    type,
+    adresse,
+    capacite
+  });
 }
+  generateDescription(
+  title: string,
+  type: string,
+  adresse: string,
+  capacite: number,
+  price: number
+): Observable<DescriptionRecommendation> {
+  return this.http.post<DescriptionRecommendation>(
+    'http://localhost:8089/api/ai/generate-description',
+    { title, type, adresse, capacite, price }
+  );
+}
+  trackView(accommodationId: number): Observable<void> {
+  return this.http.post<void>(
+    `http://localhost:8089/api/history/track/${accommodationId}`, {}
+  );
+}
+
+getRecommendations(): Observable<RecommendationResponse> {
+  return this.http.get<RecommendationResponse>(
+    'http://localhost:8089/api/ai/recommendations'
+  );
+}
+
 }

@@ -1,12 +1,14 @@
 package org.example.backend_tunisiahub.Entities;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
+
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.FieldDefaults;
-import org.example.backend_tunisiahub.Entities.ReservationRestaurant;
 
 import java.util.Date;
 
@@ -17,20 +19,30 @@ import java.util.Date;
 @NoArgsConstructor
 public class Complaint {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    Long id;
+  @Id
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
+  Long id;
 
-    String description;
+  String description;
 
-    @Temporal(TemporalType.DATE)
-    Date date;
+  @Temporal(TemporalType.DATE)
+  Date date;
 
-    String reportedByUserId;
+  String reportedByUserId;
 
-    String status;
+  String status;
 
-    @ManyToOne
-    @JoinColumn(name = "reservation_id")
-    ReservationRestaurant reservation;
+  @Column(length = 1000)
+  String aiSummary;
+
+  @Column(length = 1000)
+  String aiKeywords;
+
+  @Column(length = 2000)
+  String aiSolutions;
+
+  @ManyToOne
+  @JoinColumn(name = "reservation_id")
+  @JsonIgnore
+  Reservation reservation;
 }

@@ -1,0 +1,287 @@
+<div class="owner-dashboard">
+  <!-- Subtle background -->
+  <div class="background-overlay"></div>
+
+  <!-- Floating Stats Button -->
+  <button class="floating-stats-btn" (click)="scrollToStatistics()" title="View Order Patterns">
+    <span class="stats-icon">📊</span>
+  </button>
+
+  <!-- Loading state -->
+  <div *ngIf="isLoading" class="loading-container">
+    <div class="spinner"></div>
+    <p>Loading your dashboard...</p>
+  </div>
+
+  <!-- Error message -->
+  <div *ngIf="!isLoading && errorMessage" class="alert alert-danger">
+    {{ errorMessage }}
+  </div>
+
+  <!-- Dashboard content -->
+  <div *ngIf="!isLoading && !errorMessage" class="dashboard-container">
+    
+    <!-- Header -->
+    <div class="dashboard-header">
+      <div class="header-content">
+        <h1 class="dashboard-title">Welcome back, {{ ownerName }}</h1>
+        <p class="dashboard-subtitle">Here's your business overview</p>
+      </div>
+    </div>
+
+    <!-- Statistics Grid -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-card-header">
+          <span class="stat-icon-box">🏪</span>
+          <h3 class="stat-label">Your Shops</h3>
+        </div>
+        <p class="stat-value">{{ shopStats.totalShops }}</p>
+        <p class="stat-description">Active storefronts</p>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-card-header">
+          <span class="stat-icon-box">📦</span>
+          <h3 class="stat-label">Total Products</h3>
+        </div>
+        <p class="stat-value">{{ shopStats.totalProducts }}</p>
+        <p class="stat-description">Items in catalog</p>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-card-header">
+          <span class="stat-icon-box">💵</span>
+          <h3 class="stat-label">Total Revenue</h3>
+        </div>
+        <p class="stat-value">{{ shopStats.totalRevenue | number:'1.2-2' }} TND</p>
+        <p class="stat-description">Lifetime earnings</p>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-card-header">
+          <span class="stat-icon-box">📊</span>
+          <h3 class="stat-label">Total Orders</h3>
+        </div>
+        <p class="stat-value">{{ shopStats.totalOrders }}</p>
+        <p class="stat-description">Orders received</p>
+      </div>
+    </div>
+
+    <div *ngIf="insightsLoading" class="loading-alert">
+      <p>Loading review insights...</p>
+    </div>
+
+    <div *ngIf="reviewInsights" class="insights-section" data-tour="ai-insights">
+      <h2 class="section-title">Review Insights</h2>
+      
+      <div class="info-box" style="margin-bottom: 2rem;">
+        <h3 style="margin:0 0 10px 0; font-size:1.2rem; color:white;">Overview</h3>
+        <p style="margin:0; opacity:0.9; line-height:1.5;">{{ reviewInsights.summary }}</p>
+      </div>
+
+      <div class="stats-grid" style="margin-bottom: 2rem;">
+        <div class="stat-card">
+          <div class="stat-card-header">
+            <span class="stat-icon-box">📊</span>
+            <h3 class="stat-label">Total Reviews</h3>
+          </div>
+          <p class="stat-value">{{ reviewInsights.totalReviews }}</p>
+        </div>
+        
+        <div class="stat-card">
+          <div class="stat-card-header">
+            <span class="stat-icon-box">🏪</span>
+            <h3 class="stat-label">Shop Reviews</h3>
+          </div>
+          <p class="stat-value">{{ reviewInsights.shopReviewCount }}</p>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-card-header">
+            <span class="stat-icon-box">📦</span>
+            <h3 class="stat-label">Product Reviews</h3>
+          </div>
+          <p class="stat-value">{{ reviewInsights.productReviewCount }}</p>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-card-header">
+            <span class="stat-icon-box">⭐</span>
+            <h3 class="stat-label">Avg Shop Rating</h3>
+          </div>
+          <p class="stat-value">{{ reviewInsights.averageShopRating | number:'1.1-2' }}</p>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-card-header">
+            <span class="stat-icon-box">🌟</span>
+            <h3 class="stat-label">Avg Product Rating</h3>
+          </div>
+          <p class="stat-value">{{ reviewInsights.averageProductRating | number:'1.1-2' }}</p>
+        </div>
+      </div>
+
+      <div class="details-grid">
+        <div class="detail-card">
+          <h4 class="detail-title">Main Problem</h4>
+          <p class="detail-text">{{ reviewInsights.mainProblem || 'No dominant problem identified.' }}</p>
+        </div>
+        
+        <div class="detail-card">
+          <h4 class="detail-title">Most Frequent Problem</h4>
+          <p class="detail-text">{{ reviewInsights.mostFrequentProblem || 'No frequent problem identified.' }}</p>
+        </div>
+        
+        <div class="detail-card feature-list">
+          <h4 class="detail-title">Best Features</h4>
+          <ul *ngIf="reviewInsights.bestFeatures?.length; else noFeatures">
+            <li *ngFor="let feature of reviewInsights.bestFeatures">
+              <span class="check-icon">✓</span> {{ feature }}
+            </li>
+          </ul>
+          <ng-template #noFeatures>
+            <p class="detail-text">No best features identified.</p>
+          </ng-template>
+        </div>
+      </div>
+      
+      <div class="ai-note">
+        <small>✨ {{ reviewInsights.generatedWithAi ? 'Insights generated with AI analysis.' : 'Insights based on raw review data.' }}</small>
+      </div>
+    </div>
+
+    <div *ngIf="insightsError && !insightsLoading" class="alert alert-warning">
+      {{ insightsError }}
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="actions-section">
+      <h2 class="section-title">Quick Actions</h2>
+      <div class="actions-grid">
+        <button class="action-btn action-btn-primary" (click)="navigateToCreateShop()">
+          <span class="btn-icon">+</span>
+          <span class="btn-text">Create Shop</span>
+        </button>
+        <button class="action-btn action-btn-secondary" (click)="navigateToCreateProduct()">
+          <span class="btn-icon">+</span>
+          <span class="btn-text">Add Product</span>
+        </button>
+        <button class="action-btn action-btn-secondary" (click)="navigateToShops()">
+          <span class="btn-icon">→</span>
+          <span class="btn-text">View All Shops</span>
+        </button>
+        <button class="action-btn action-btn-secondary" (click)="navigateToProducts()">
+          <span class="btn-icon">→</span>
+          <span class="btn-text">Manage Products</span>
+        </button>
+        <button class="action-btn action-btn-accent" (click)="navigateToPromotions()" data-tour="promote-btn">
+          <span class="btn-icon">✨</span>
+          <span class="btn-text">AI Promotions</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Your Shops Section -->
+    <div class="shops-section" *ngIf="ownerShops.length > 0">
+      <h2 class="section-title">Your Shops</h2>
+      <div class="shops-grid">
+        <div *ngFor="let shop of ownerShops" class="shop-card" (click)="navigateToEditShop(shop.id)">
+          <div class="shop-image-container">
+            <img *ngIf="shop.photoUrl" [src]="shop.photoUrl" [alt]="shop.name" class="shop-image" />
+            <div *ngIf="!shop.photoUrl" class="shop-image-placeholder">📷</div>
+          </div>
+          <div class="shop-card-content">
+            <h4 class="shop-name">{{ shop.name }}</h4>
+            <p class="shop-category">{{ shop.category }}</p>
+            <p class="shop-location">📍 {{ shop.city }}</p>
+            <button class="edit-btn">Edit Shop</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Recent Orders Section -->
+    <div class="recent-orders-section" *ngIf="recentOrders.length > 0">
+      <h2 class="section-title" data-tour="orders">Recent Orders</h2>
+      <div class="orders-table">
+        <div class="table-header">
+          <div class="col col-customer">Customer</div>
+          <div class="col col-amount">Amount</div>
+          <div class="col col-status">Status</div>
+          <div class="col col-date">Date</div>
+        </div>
+        <div *ngFor="let order of recentOrders" class="table-row">
+          <div class="col col-customer">Customer</div>
+          <div class="col col-amount">{{ order.totalAmount | number:'1.2-2' }} TND</div>
+          <div class="col col-status">
+            <span class="status-badge" [ngClass]="'status-' + (order.status || 'pending') | lowercase">
+              {{ order.status || 'Pending' }}
+            </span>
+          </div>
+          <div class="col col-date">{{ order.createdAt | date:'short' }}</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Order Patterns Section (Months & Seasons) -->
+    <div id="order-patterns-stats" class="patterns-section" *ngIf="monthlyStats.length > 0 || seasonalStats.length > 0">
+      <h2 class="section-title">Order Patterns & Statistics</h2>
+      
+      <div class="patterns-grid">
+        <!-- Monthly Patterns Chart -->
+        <div class="pattern-card chart-card">
+          <h3 class="pattern-title">Monthly Orders Chart</h3>
+          <div class="chart-container">
+            <div *ngFor="let month of monthlyStats" class="chart-bar-wrapper">
+              <div class="chart-bar" [style.height.%]="(month.count / maxMonthlyCount) * 100" [title]="month.name + ': ' + month.count + ' orders'">
+                <span class="bar-value">{{ month.count }}</span>
+              </div>
+              <span class="bar-label">{{ month.name | slice:0:3 }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Seasonal Patterns Chart -->
+        <div class="pattern-card chart-card">
+          <h3 class="pattern-title">Seasonal Trends Chart</h3>
+          <div class="chart-container">
+            <div *ngFor="let season of seasonalStats" class="chart-bar-wrapper">
+              <div class="chart-bar season-bar" [style.height.%]="(season.count / maxSeasonalCount) * 100" [title]="season.name + ': ' + season.count + ' orders'"
+                   [ngClass]="'bar-' + season.name.toLowerCase()">
+                <span class="bar-value">{{ season.count }}</span>
+              </div>
+              <span class="bar-label">
+                <span [ngSwitch]="season.name">
+                  <span *ngSwitchCase="'Winter'">❄️</span>
+                  <span *ngSwitchCase="'Spring'">🌸</span>
+                  <span *ngSwitchCase="'Summer'">☀️</span>
+                  <span *ngSwitchCase="'Autumn'">🍂</span>
+                </span>
+                {{ season.name }}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Empty state -->
+    <div *ngIf="ownerShops.length === 0" class="empty-state">
+      <div class="empty-icon">🏪</div>
+      <h3>No Shops Yet</h3>
+      <p>Begin your journey by creating your first shop to showcase your handcrafted treasures.</p>
+      <button class="btn-primary" (click)="navigateToCreateShop()">Create Your First Shop</button>
+    </div>
+
+  </div>
+  <!-- Promotion Panel -->
+  <app-promote 
+    [isVisible]="showPromotePanel" 
+    [targetType]="promotionTargetType"
+    [targetId]="promotionTargetId"
+    [shopData]="promotionShopData"
+    [ownerShops]="ownerShops"
+    (close)="hidePromotionPanel()">
+  </app-promote>
+</div>

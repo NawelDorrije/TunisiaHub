@@ -16,7 +16,7 @@ public class WebCorsConfig implements WebMvcConfigurer {
     @Value("${app.upload.dir:uploads}")
     private String uploadDir;
 
-    @Value("${app.cors.allowed-origin-patterns:http://localhost:4200,http://127.0.0.1:4200,https://*.ngrok-free.app,https://*.ngrok.io}")
+    @Value("${app.cors.allowed-origin-patterns:http://localhost:4200,http://127.0.0.1:4200,https://*.ngrok-free.app,https://*.ngrok-free.dev,https://*.ngrok.io}")
     private String[] allowedOriginPatterns;
 
     @Override

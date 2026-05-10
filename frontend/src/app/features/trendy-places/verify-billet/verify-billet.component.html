@@ -1,0 +1,45 @@
+<div class="verify-page">
+  <div *ngIf="loading" class="loading">
+    <div class="spinner"></div>
+    <p>Vérification en cours...</p>
+  </div>
+
+  <div *ngIf="!loading && result" class="result-card" [class.valid]="result.valide" [class.invalid]="!result.valide">
+    
+    <!-- Icône résultat -->
+    <div class="result-icon">
+      {{ result.valide ? '✅' : '❌' }}
+    </div>
+
+    <h1 class="result-title">{{ result.message }}</h1>
+    <div class="result-code">{{ result.code }}</div>
+
+    <div *ngIf="result.nom" class="result-details">
+      <div class="detail-row">
+        <span>👤 Client</span>
+        <strong>{{ result.nom }}</strong>
+      </div>
+      <div class="detail-row">
+        <span>🎯 Activité</span>
+        <strong>{{ result.activite }}</strong>
+      </div>
+      <div class="detail-row">
+        <span>📍 Lieu</span>
+        <strong>{{ result.lieu }}</strong>
+      </div>
+      <div class="detail-row">
+        <span>📅 Date</span>
+        <strong>{{ result.dateEvenement }}</strong>
+      </div>
+      <div class="detail-row">
+        <span>👥 Personnes</span>
+        <strong>{{ result.nombrePersonnes }}</strong>
+      </div>
+      <div class="detail-row">
+        <span>💰 Montant</span>
+        <strong>{{ result.montantPaye }} TND</strong>
+      </div>
+    </div>
+
+  </div>
+</div>

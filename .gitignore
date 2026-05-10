@@ -1,1 +1,45 @@
 docs/CARPOOLING_TRIPS_API.md
+
+# =======================
+# Java / Spring Boot
+# =======================
+HELP.md
+target/
+.mvn/
+*.iml
+.classpath
+.project
+.settings/
+.idea/
+
+# =======================
+# Angular / Node
+# =======================
+node_modules/
+dist/
+.angular/
+out-tsc/
+coverage/
+npm-debug.log*
+yarn-error.log*
+
+# =======================
+# VS Code
+# =======================
+.vscode/
+.history/
+
+# =======================
+# System files
+# =======================
+.DS_Store
+Thumbs.db
+
+docs/CARPOOLING_TRIPS_API.md
+
+# Environment files
+.env
+**/.env
+.env.local
+**/.env.local
+

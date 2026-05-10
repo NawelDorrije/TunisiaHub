@@ -1,0 +1,24 @@
+<!-- my-campings.component.html -->
+<div class="space-y-8">
+  <div class="flex justify-between items-baseline">
+    <h1 class="section-header">My Campings</h1>
+    <button routerLink="/new" class="px-8 py-3 bg-[var(--accent)] text-white font-semibold rounded-3xl flex items-center gap-x-2 hover:bg-[var(--accent2)] transition-colors">
+      <span class="text-xl">+</span> Add New Camping
+    </button>
+  </div>
+  <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+    <!-- Repeat dummy cards -->
+    <div class="bg-white rounded-3xl overflow-hidden border border-[var(--border)] hover:shadow-xl transition-all">
+      <div class="h-48 bg-gradient-to-br from-[var(--accent)] to-[var(--accent2)] flex items-center justify-center text-7xl">🏝️</div>
+      <div class="p-6">
+        <h3 class="font-semibold text-xl">La Palmeraie</h3>
+        <p class="text-gray-500 text-sm">Tunis • 42 spots • 92% occupancy</p>
+        <div class="flex gap-3 mt-6">
+          <button routerLink="/1/edit" class="flex-1 py-3 text-sm font-medium border border-[var(--border)] rounded-3xl">Edit</button>
+          <button routerLink="/1/spots" class="flex-1 py-3 text-sm font-medium bg-[var(--accent)] text-white rounded-3xl">Manage Spots</button>
+        </div>
+      </div>
+    </div>
+    <!-- Add more cards as needed -->
+  </div>
+</div>

@@ -54,6 +54,19 @@
         <div class="invalid-feedback">Password must be at least 6 characters.</div>
       </div>
 
+      <div class="mb-3">
+        <label class="form-label">Role</label>
+        <select
+          class="form-select"
+          formControlName="role"
+        >
+          <option value="CLIENT">Client</option>
+          <option value="OWNER">Owner</option>
+          <option value="ADMIN">Admin</option>
+        </select>
+        <div class="invalid-feedback">Please choose a role.</div>
+      </div>
+
       <button
         type="submit"
         class="btn btn-primary w-100"
@@ -66,7 +79,10 @@
     </form>
 
     <p class="text-center mt-3">
-      Already have an account? <a routerLink="/sign-in">Sign In</a>
+
+      Already have an account?
+      <a [routerLink]="['/auth/sign-in']" [queryParams]="{ returnUrl: returnUrl }">Sign In</a>
+
     </p>
   </div>
 </div>

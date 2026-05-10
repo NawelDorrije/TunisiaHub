@@ -12,11 +12,9 @@ import { BookTripComponent } from './book-trip/book-trip.component';
 import { MyBookingsComponent } from './my-bookings/my-bookings.component';
 import { PassengerListComponent } from './passenger-list/passenger-list.component';
 import { ReportComplaintComponent } from './report-complaint/report-complaint.component';
-import { AdminDashboardComponent } from './admin-dashboard/admin-dashboard.component';
-import { AllBookingsComponent } from './all-bookings/all-bookings.component';
-import { ComplaintsManagementComponent } from './complaints-management/complaints-management.component';
-import { UsersSummaryComponent } from './users-summary/users-summary.component';
-import { VehicleManagementComponent } from './vehicle-management/vehicle-management.component';
+import { CarpoolingSearchBarComponent } from './shared/carpooling-search-bar/carpooling-search-bar.component';
+import { ReviewDriverComponent } from './review-driver/review-driver.component';
+import { AdminCarpoolingComponent } from './admin-carpooling/admin-carpooling.component';
 
 @NgModule({
   declarations: [
@@ -30,11 +28,9 @@ import { VehicleManagementComponent } from './vehicle-management/vehicle-managem
     MyBookingsComponent,
     PassengerListComponent,
     ReportComplaintComponent,
-    AdminDashboardComponent,
-    AllBookingsComponent,
-    ComplaintsManagementComponent,
-    UsersSummaryComponent,
-    VehicleManagementComponent,
+    CarpoolingSearchBarComponent,
+    ReviewDriverComponent,
+    AdminCarpoolingComponent,
   ],
   imports: [
     CommonModule,

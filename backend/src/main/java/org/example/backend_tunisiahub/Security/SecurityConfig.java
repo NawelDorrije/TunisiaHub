@@ -1,6 +1,8 @@
 package org.example.backend_tunisiahub.Security;
 
 import lombok.RequiredArgsConstructor;
+import org.example.backend_tunisiahub.Entities.User.User;
+import org.example.backend_tunisiahub.Repositories.User.UserRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -8,6 +10,8 @@ import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
@@ -26,9 +30,10 @@ import java.util.List;
 public class SecurityConfig {
 
     private final JwtFilter jwtFilter;
+    private final UserRepository userRepository;
 
-    @Value("${app.cors.allowed-origin-patterns:http://localhost:4200,http://127.0.0.1:4200,https://*.ngrok-free.app,https://*.ngrok.io}")
-    private String[] allowedOriginPatterns;
+    @Value("${app.cors.allowed-origin-patterns:http://localhost:*,http://127.0.0.1:*}")
+    private String allowedOriginPatternsProperty;
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
@@ -38,35 +43,41 @@ public class SecurityConfig {
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
+                        // PUBLIC ENDPOINTS
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers("/api/auth/**").permitAll()
+                        .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
+                  .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
+
+                        // STATIC RESOURCES
                         .requestMatchers(HttpMethod.GET, "/uploads/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/uploads/**").permitAll()
-                        .requestMatchers("/api/restaurant-tables/**").permitAll()
-                        .requestMatchers("/api/reservation-restaurants/**").permitAll()
-                        .requestMatchers("/api/restaurants/recommendations/**").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/checkin", "/checkin-public").permitAll()
-                        .requestMatchers("/api/accommodations/getAll").permitAll()
-                        .requestMatchers("/api/accommodations/get/**").permitAll()
-                        .requestMatchers("/api/reviews/getAll").permitAll()
-                        .requestMatchers("/api/reviews/get/**").permitAll()
-                        .requestMatchers("/api/reviews/accommodation/**").permitAll()
-                        .requestMatchers("/api/reviews/add/**").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/restaurants/recommendations").permitAll()
+
+                        // RESTAURANT ENDPOINTS
                         .requestMatchers(HttpMethod.GET, "/api/restaurants", "/api/restaurants/**").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/menus", "/api/menus/**").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/menu-items", "/api/menu-items/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/restaurants/recommendations").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/restaurants/add").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/api/restaurants/update").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/api/restaurants/delete/**").hasRole("ADMIN")
+
+                        // MENU ENDPOINTS
+                        .requestMatchers(HttpMethod.GET, "/api/menus", "/api/menus/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/menus/add").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/api/menus/update").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/api/menus/delete/**").hasRole("ADMIN")
+
+                        // MENU ITEMS ENDPOINTS
+                        .requestMatchers(HttpMethod.GET, "/api/restaurants").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/menu-items/add").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/api/menu-items/update").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/api/menu-items/delete/**").hasRole("ADMIN")
+
+                        // RESTAURANT TABLES ENDPOINTS
+                        .requestMatchers("/api/restaurant-tables/**").permitAll()
+
+                        // RESERVATION ENDPOINTS
+                        .requestMatchers("/api/reservation-restaurants/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/reservation-restaurants").hasRole("CLIENT")
-                        .requestMatchers(HttpMethod.POST, "/api/reservation-restaurants/checkin").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/reservation-restaurants/my").hasAnyRole("CLIENT", "ADMIN")
                         .requestMatchers(HttpMethod.GET, "/api/reservation-restaurants/user/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.GET, "/api/reservation-restaurants", "/api/reservation-restaurants/**").hasRole("ADMIN")
@@ -78,23 +89,50 @@ public class SecurityConfig {
                                 .hasAnyRole("CLIENT", "ADMIN")
                         .requestMatchers(new AntPathRequestMatcher("/api/reservation-restaurants/*/complete", "PATCH"))
                                 .hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.GET, "/api/restaurant-tables", "/api/restaurant-tables/**")
-                                .permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/restaurant-tables/add").permitAll()
-                        .requestMatchers(HttpMethod.PUT, "/api/restaurant-tables/update").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.DELETE, "/api/restaurant-tables/delete/**")
-                                .hasRole("ADMIN")
+
+                        // ACCOMMODATION ENDPOINTS
+                        .requestMatchers("/api/accommodations/getAll").permitAll()
+                        .requestMatchers("/api/accommodations/get/**").permitAll()
                         .requestMatchers("/api/accommodations/add").hasRole("ADMIN")
                         .requestMatchers("/api/accommodations/update/**").hasRole("ADMIN")
                         .requestMatchers("/api/accommodations/delete/**").hasRole("ADMIN")
-                        .requestMatchers("/api/users/**").hasRole("ADMIN")
+
+                        // REVIEW ENDPOINTS
+                        .requestMatchers("/api/reviews/getAll").permitAll()
+                        .requestMatchers("/api/reviews/get/**").permitAll()
+                        .requestMatchers("/api/reviews/accommodation/**").permitAll()
+                        .requestMatchers("/api/reviews/add/**").permitAll()
                         .requestMatchers("/api/reviews/update/**").hasAnyRole("CLIENT", "ADMIN")
                         .requestMatchers("/api/reviews/delete/**").hasAnyRole("CLIENT", "ADMIN")
+
+                        // CHECKIN ENDPOINTS
+                        .requestMatchers(HttpMethod.GET, "/checkin", "/checkin-public").permitAll()
+
+                        // USER MANAGEMENT
+                        .requestMatchers("/api/users/**").hasRole("ADMIN")
+
+                        // SECURE ALL OTHER ENDPOINTS
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
+    }
+
+    @Bean
+    public UserDetailsService userDetailsService() {
+        return email -> {
+            User user = userRepository.findByEmail(email);
+            if (user == null) {
+                throw new UsernameNotFoundException("User not found: " + email);
+            }
+
+            return org.springframework.security.core.userdetails.User
+                    .withUsername(user.getEmail())
+                    .password(user.getMotDePasse())
+                    .roles(user.getRole().name())
+                    .build();
+        };
     }
 
     @Bean
@@ -105,10 +143,7 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOriginPatterns(Arrays.stream(allowedOriginPatterns)
-                .map(String::trim)
-                .filter(pattern -> !pattern.isEmpty())
-                .toList());
+        config.setAllowedOriginPatterns(resolveAllowedOriginPatterns());
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
         config.setAllowedHeaders(List.of("*"));
         config.setAllowCredentials(true);
@@ -116,5 +151,12 @@ public class SecurityConfig {
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", config);
         return source;
+    }
+
+    private List<String> resolveAllowedOriginPatterns() {
+        return Arrays.stream(allowedOriginPatternsProperty.split(","))
+                .map(String::trim)
+                .filter(s -> !s.isBlank())
+                .toList();
     }
 }

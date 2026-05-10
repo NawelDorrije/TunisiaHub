@@ -1,0 +1,44 @@
+<section class="ai-rec-shell" *ngIf="loading || error || result">
+  <div class="ai-rec-header">
+    <div>
+      <p>AI schedule assistant</p>
+      <h3>Smart date & time recommendations</h3>
+    </div>
+    <span class="ai-badge">AI</span>
+  </div>
+
+  <div class="ai-loading" *ngIf="loading">Analyzing engagement potential...</div>
+  <div class="ai-error" *ngIf="!loading && error">{{ error }}</div>
+
+  <ng-container *ngIf="!loading && result">
+    <div class="choice-status" [ngClass]="statusClass">
+      <strong>Your choice:</strong> {{ result.originalEngagement }} (Score {{ result.originalScore }})
+    </div>
+
+    <div class="card-grid">
+      <article
+        class="rec-card"
+        *ngFor="let rec of result.recommendations; let i = index"
+        [ngClass]="{
+          'tone-best': getCardTone(i) === 'best',
+          'tone-medium': getCardTone(i) === 'medium',
+          'tone-poor': getCardTone(i) === 'poor'
+        }">
+        <div class="rec-top">
+          <div>
+            <span class="rec-kicker">Suggestion {{ i + 1 }}</span>
+            <h4>{{ rec.date }} at {{ rec.time }}</h4>
+          </div>
+          <span class="score-pill">Score {{ rec.score }}</span>
+        </div>
+
+        <p class="engagement">{{ rec.engagement }}</p>
+        <p class="reason">{{ rec.reason }}</p>
+        <p class="improve" *ngIf="rec.improvementPercent >= 0">+{{ rec.improvementPercent }}% better than your choice</p>
+        <p class="improve improve-negative" *ngIf="rec.improvementPercent < 0">{{ rec.improvementPercent }}% vs your choice</p>
+
+        <button type="button" class="use-btn" (click)="onUse(rec)">Use this</button>
+      </article>
+    </div>
+  </ng-container>
+</section>

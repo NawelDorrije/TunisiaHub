@@ -75,13 +75,8 @@ public class ReservationRestaurant {
     @JsonIgnoreProperties({"restaurant", "reservations"})
     List<RestaurantTable> tables;
 
-    @OneToMany(mappedBy = "reservation")
-    @JsonIgnore
-    List<Complaint> complaints;
 
-    @OneToOne(mappedBy = "reservation")
-    @JsonIgnore
-    Review review;
+
 
     @Column(nullable = false)
     boolean tablePreSelected = false;

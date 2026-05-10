@@ -1,0 +1,176 @@
+/* BACKDROP */
+.popup {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 999;
+}
+
+/* DARK OVERLAY */
+.popup-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.65);
+  backdrop-filter: blur(6px);
+}
+
+/* MODAL */
+.popup-content {
+  position: relative;
+  width: 420px;
+  background: #ffffff;
+  border-radius: 20px;
+  padding: 26px;
+  box-shadow: 0 30px 80px rgba(0,0,0,0.25);
+  animation: pop 0.25s ease;
+  z-index: 2;
+}
+
+/* HEADER */
+.header {
+  text-align: center;
+  margin-bottom: 18px;
+}
+
+.lock {
+  font-weight: 700;
+  font-size: 18px;
+  color: #111827;
+}
+
+.subtitle {
+  font-size: 13px;
+  color: #6b7280;
+}
+
+/* AMOUNT CARD */
+.amount-card {
+  background: linear-gradient(135deg, #4f46e5, #6366f1);
+  color: white;
+  padding: 14px;
+  border-radius: 14px;
+  text-align: center;
+  margin-bottom: 18px;
+}
+
+.amount {
+  font-size: 22px;
+  font-weight: bold;
+}
+
+.amount small {
+  font-size: 12px;
+  opacity: 0.8;
+}
+
+/* FORM */
+.form label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #374151;
+  margin-top: 10px;
+  display: block;
+}
+
+/* STRIPE INPUT */
+.stripe-input {
+  border: 1px solid #e5e7eb;
+  padding: 12px;
+  border-radius: 12px;
+  margin-top: 6px;
+  background: #f9fafb;
+  transition: 0.2s;
+}
+
+.stripe-input:focus-within {
+  border-color: #4f46e5;
+  box-shadow: 0 0 0 3px rgba(79,70,229,0.15);
+}
+
+/* ROW */
+.row {
+  display: flex;
+  gap: 12px;
+}
+
+.col {
+  flex: 1;
+}
+
+/* INPUT */
+input {
+  width: 100%;
+  padding: 12px;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+  margin-top: 6px;
+  background: #f9fafb;
+  outline: none;
+}
+
+input:focus {
+  border-color: #4f46e5;
+  box-shadow: 0 0 0 3px rgba(79,70,229,0.15);
+}
+
+/* ERROR */
+.error {
+  color: #ef4444;
+  font-size: 13px;
+  margin-top: 10px;
+  text-align: center;
+}
+
+/* PAY BUTTON */
+.pay-btn {
+  width: 100%;
+  margin-top: 16px;
+  padding: 14px;
+  border-radius: 14px;
+  border: none;
+  background: linear-gradient(135deg, #4f46e5, #6366f1);
+  color: white;
+  font-weight: 700;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.pay-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px rgba(79,70,229,0.3);
+}
+
+.pay-btn:disabled {
+  background: #9ca3af;
+  cursor: not-allowed;
+}
+
+/* CANCEL */
+.cancel-btn {
+  width: 100%;
+  margin-top: 10px;
+  padding: 12px;
+  border-radius: 12px;
+  border: none;
+  background: #f3f4f6;
+  color: #111827;
+  cursor: pointer;
+}
+
+.cancel-btn:hover {
+  background: #e5e7eb;
+}
+
+/* ANIMATION */
+@keyframes pop {
+  from {
+    transform: scale(0.9);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}

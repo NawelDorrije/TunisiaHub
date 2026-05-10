@@ -4,6 +4,7 @@ import { Observable, of } from 'rxjs';
 import { delay } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
 
+
 @Injectable({
   providedIn: 'root'
 })
@@ -38,9 +39,7 @@ export class ApiService {
     return this.http.post(this.BASE_URL + '/api/auth/register', user);
   }
 
-  getCampings(): Observable<any> {
-    return this.http.get(this.BASE_URL + '/api/campings');
-  }
+
 
   getRestaurants(): Observable<any> {
     return this.http.get(this.BASE_URL + '/api/restaurants');
@@ -165,4 +164,15 @@ export class ApiService {
   checkInByToken(token: string): Observable<any> {
     return this.http.post(this.BASE_URL + '/api/reservation-restaurants/checkin?token=' + encodeURIComponent(token), {});
   }
+
+
+
+  getCampings(): Observable<any> {
+    return this.http.get(`${this.BASE_URL}/api/campings`);
+  }
+
+
+
+
+
 }

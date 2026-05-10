@@ -1,0 +1,48 @@
+<!-- admin-dashboard.component.html -->
+<div class="adm-root">
+
+  <!-- ── Header ── -->
+  <div class="adm-header">
+    <div class="adm-header-bg">
+      <div class="adm-blob b1"></div>
+      <div class="adm-blob b2"></div>
+    </div>
+    <div class="adm-header-content">
+      <span class="adm-eyebrow">Control Center</span>
+      <h1 class="adm-title">Admin <em>Dashboard</em></h1>
+      <p class="adm-sub">Full platform visibility and management across all services.</p>
+      <div class="adm-stat-row">
+        <div class="adm-stat"><span class="adm-sn">{{ cards.length }}</span><span class="adm-sl">Modules</span></div>
+        <div class="adm-sdiv"></div>
+        <div class="adm-stat"><span class="adm-sn">24/7</span><span class="adm-sl">Access</span></div>
+        <div class="adm-sdiv"></div>
+        <div class="adm-stat"><span class="adm-sn">Live</span><span class="adm-sl">Status</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Grid ── -->
+  <div class="adm-section">
+    <div class="adm-section-label">Platform modules</div>
+    <div class="adm-grid">
+      <a *ngFor="let card of cards; let i = index"
+         [routerLink]="card.route"
+         class="adm-card"
+         [attr.data-i]="i">
+        <div class="adm-card-top">
+          <div class="adm-icon-wrap">
+            <i [class]="card.icon"></i>
+          </div>
+          <div class="adm-live-dot" title="Active"></div>
+        </div>
+        <h3 class="adm-card-title">{{ card.title }}</h3>
+        <p class="adm-card-desc">{{ card.description }}</p>
+        <div class="adm-card-footer">
+          <span class="adm-cta-text">{{ card.cta }}</span>
+          <div class="adm-arrow"><i class="bi bi-arrow-right"></i></div>
+        </div>
+      </a>
+    </div>
+  </div>
+
+</div>

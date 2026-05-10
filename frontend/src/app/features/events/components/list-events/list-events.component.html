@@ -1,0 +1,179 @@
+<div class="events-page">
+  <div class="page-shell">
+    <div class="hero-section">
+      <div class="hero-copy">
+        <p class="hero-kicker">Event management</p>
+        <h1 class="hero-title">Events Dashboard</h1>
+        <p class="hero-subtitle">
+          Manage, review and update all your events from a cleaner and more modern workspace.
+        </p>
+      </div>
+
+      <div class="hero-side">
+        <div class="hero-panel">
+          <span class="hero-panel-label">Live overview</span>
+          <strong>{{ events.length }} events in your catalog</strong>
+          <p>Switch between cards and list view, filter by type and jump directly into editing.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="toolbar-card">
+      <div class="search-bar">
+        <span class="search-icon">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+            <circle cx="7" cy="7" r="5" stroke="currentColor" stroke-width="1.5"/>
+            <path d="M11 11L15 15" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+          </svg>
+        </span>
+        <input
+          type="text"
+          class="search-input"
+          placeholder="Search events..."
+          [(ngModel)]="searchQuery"
+          (keyup.enter)="onSearch()"
+        />
+      </div>
+
+      <div class="filters-section">
+        <div class="filters-wrapper">
+          <div class="filter-box">
+            <span class="filter-label">Category</span>
+            <select class="filter-select" [(ngModel)]="activeFilter" (change)="setFilter(activeFilter)">
+              <option *ngFor="let f of filters" [value]="f">{{ f }}</option>
+            </select>
+          </div>
+
+          <div class="view-toggle">
+            <button class="view-btn" [class.active]="viewMode === 'cards'" (click)="setView('cards')">Cards</button>
+            <button class="view-btn" [class.active]="viewMode === 'list'" (click)="setView('list')">List</button>
+          </div>
+
+          <div class="toolbar-meta">
+            <span class="results-count">{{ filteredEvents.length }} events</span>
+            <a routerLink="/events/add" class="add-btn">
+              <span class="add-btn-plus">+</span>
+              Add Event
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="stats-grid">
+      <div class="stat-card blue">
+        <span class="stat-label">Total</span>
+        <h3>{{ events.length }}</h3>
+        <p>Events available</p>
+      </div>
+
+      <div class="stat-card green">
+        <span class="stat-label">Open</span>
+        <h3>{{ activeEventsCount }}</h3>
+        <p>Currently active</p>
+      </div>
+
+      <div class="stat-card purple">
+        <span class="stat-label">Completed</span>
+        <h3>{{ completedEventsCount }}</h3>
+        <p>Archived events</p>
+      </div>
+
+      <div class="stat-card orange">
+        <span class="stat-label">Visible</span>
+        <h3>{{ filteredEvents.length }}</h3>
+        <p>Results displayed</p>
+      </div>
+    </div>
+
+    <div *ngIf="filteredEvents.length === 0" class="empty-state">
+      <div class="empty-icon">No results</div>
+      <h3>No events found</h3>
+      <p>Try another search term or change the selected category.</p>
+    </div>
+
+    <div class="cards-grid" *ngIf="viewMode === 'cards' && filteredEvents.length > 0">
+      <div class="event-card" *ngFor="let event of filteredEvents">
+        <div class="card-image">
+          <img
+            class="card-image-el"
+            [src]="getCardImageSrc(event.image)"
+            alt="Event image"
+            loading="lazy"
+            decoding="async"
+            (error)="onCardImageError($event)"
+          />
+          <div class="card-overlay"></div>
+
+          <div class="card-top">
+            <div class="card-badges">
+              <div class="badge">{{ event.type }}</div>
+              <div class="badge price-badge">{{ event.price }} TND</div>
+            </div>
+          </div>
+
+          <div class="card-date" *ngIf="event.startDate">
+            <span>{{ event.startDate | date:'dd' }}</span>
+            <small>{{ event.startDate | date:'MMM' }}</small>
+          </div>
+        </div>
+
+        <div class="card-content">
+          <div class="card-headline">
+            <span class="mini-label">Event</span>
+            <span class="status" [ngClass]="event.status.toLowerCase()">
+              {{ event.status }}
+            </span>
+          </div>
+
+          <h3 class="title">{{ event.title }}</h3>
+          <p class="desc">{{ event.description | slice:0:90 }}...</p>
+
+          <div class="card-meta">
+            <span>{{ event.startDate | date:'dd MMM yyyy' }}</span>
+            <span>{{ event.capacity }} seats</span>
+          </div>
+
+          <div class="actions">
+            <a class="btn view" (click)="goToDetails(event.id)">View</a>
+            <a class="btn edit" [routerLink]="['/events/edit', event.id]">Edit</a>
+            <button class="btn delete" (click)="deleteEvent(event.id!)">Delete</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="list-view" *ngIf="viewMode === 'list' && filteredEvents.length > 0">
+      <div class="list-row header">
+        <div>Event</div>
+        <div>Type</div>
+        <div>Status</div>
+        <div>Price</div>
+        <div>Actions</div>
+      </div>
+
+      <div class="list-row" *ngFor="let event of filteredEvents">
+        <div class="list-event">
+          <strong>{{ event.title }}</strong>
+          <small>{{ event.description | slice:0:60 }}...</small>
+        </div>
+
+        <div>{{ event.type }}</div>
+
+        <div>
+          <span class="status" [ngClass]="event.status.toLowerCase()">
+            {{ event.status }}
+          </span>
+        </div>
+
+        <div>{{ event.price }} TND</div>
+
+        <div class="actions">
+          <a class="btn view" (click)="goToDetails(event.id)">View</a>
+          <a class="btn edit" [routerLink]="['/events/edit', event.id]">Edit</a>
+          <button class="btn delete" (click)="deleteEvent(event.id!)">Delete</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

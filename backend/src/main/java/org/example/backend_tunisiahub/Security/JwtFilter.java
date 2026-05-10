@@ -5,6 +5,10 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import org.example.backend_tunisiahub.Entities.User.User;
+import org.example.backend_tunisiahub.Repositories.User.UserRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -19,6 +23,9 @@ import java.util.List;
 public class JwtFilter extends OncePerRequestFilter {
 
     private final JwtUtil jwtUtil;
+    private final UserRepository userRepository;
+
+    private static final Logger logger = LoggerFactory.getLogger(JwtFilter.class);
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
@@ -27,6 +34,7 @@ public class JwtFilter extends OncePerRequestFilter {
             throws ServletException, IOException {
 
         String authHeader = request.getHeader("Authorization");
+        String path = request.getRequestURI();
 
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
             String token = authHeader.substring(7);
@@ -35,17 +43,34 @@ public class JwtFilter extends OncePerRequestFilter {
                 String email = jwtUtil.extractEmail(token);
                 String role = jwtUtil.extractRole(token);
 
-                UsernamePasswordAuthenticationToken authentication =
-                        new UsernamePasswordAuthenticationToken(
-                                email,
-                                null,
-                                List.of(new SimpleGrantedAuthority("ROLE_" + role))
-                        );
+                User user = userRepository.findByEmail(email);
 
-                SecurityContextHolder.getContext().setAuthentication(authentication);
+                if (user != null) {
+                    // inject custom headers
+                    MutableHttpServletRequest mutableRequest =
+                            new MutableHttpServletRequest(request);
+
+                    mutableRequest.putHeader("X-USER-ID", String.valueOf(user.getId()));
+                    mutableRequest.putHeader("X-ROLE", role);
+
+                    UsernamePasswordAuthenticationToken authentication =
+                            new UsernamePasswordAuthenticationToken(
+                                    email,
+                                    null,
+                                    List.of(new SimpleGrantedAuthority("ROLE_" + role))
+                            );
+
+                    SecurityContextHolder.getContext().setAuthentication(authentication);
+
+                    filterChain.doFilter(mutableRequest, response);
+                    return;
+                }
             }
+        } else {
+            logger.debug("No JWT token provided for path={}", path);
         }
 
         filterChain.doFilter(request, response);
     }
 }
+

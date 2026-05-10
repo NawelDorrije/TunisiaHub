@@ -1,214 +1,958 @@
-<div class="container py-4">
-  <div class="row mb-4">
-    <div class="col-md-8">
-      <h2>Publish a trip</h2>
-    </div>
-    <div class="col-md-4 text-end">
-      <a class="btn btn-outline-primary" routerLink="/carpooling/vehicles">
-        <i class="bi bi-car-front"></i> Manage Vehicles
-      </a>
-    </div>
-  </div>
+<div class="publish-wizard-page">
+  <div
+    class="wizard-shell"
+    [class.pickup-shell]="isPickupStep() || isDropoffStep() || isRouteStep()"
+    [class.verification-shell]="isVerificationStep()"
+  >
+    <aside class="wizard-sidebar">
+      <span class="section-label">{{ pageModeLabel() }}</span>
 
-  <div class="card shadow-sm">
-    <div class="card-body">
-      <form [formGroup]="publishForm" (ngSubmit)="publish()" class="row g-3">
-        <!-- Trip Details Section -->
-        <div class="col-12">
-          <h5 class="border-bottom pb-2">Trip Details</h5>
+      <div class="progress-card">
+        <div class="progress-header">
+          <span>Step {{ currentStepIndex + 1 }}</span>
+          <span>{{ wizardSteps.length }}</span>
         </div>
+        <div class="progress-track">
+          <span
+            class="progress-value"
+            [style.width.%]="progressPercent()"
+          ></span>
+        </div>
+      </div>
 
-        <div class="col-md-6">
-          <label class="form-label"
-            >Departure point <span class="text-danger">*</span></label
-          >
-          <input class="form-control" formControlName="departure" />
+      <div class="step-list">
+        <div
+          class="step-item"
+          *ngFor="let step of wizardSteps; let i = index"
+          [class.active]="i === currentStepIndex"
+          [class.completed]="isStepCompleted(step)"
+          [class.clickable]="canOpenStep(i)"
+          (click)="openStep(i)"
+        >
+          <span class="step-index">{{ i + 1 }}</span>
+          <div class="step-copy">
+            <strong>{{ step.label }}</strong>
+            <small>{{ step.helper }}</small>
+          </div>
         </div>
-        <div class="col-md-6">
-          <label class="form-label"
-            >Destination <span class="text-danger">*</span></label
-          >
-          <input class="form-control" formControlName="destination" />
-        </div>
-        <div class="col-md-6">
-          <label class="form-label"
-            >Departure date and time <span class="text-danger">*</span></label
-          >
-          <input
-            type="datetime-local"
-            class="form-control"
-            formControlName="departureDateTime"
-          />
-        </div>
-        <div class="col-md-3">
-          <label class="form-label"
-            >Price per seat <span class="text-danger">*</span></label
-          >
-          <input
-            type="number"
-            min="0"
-            class="form-control"
-            formControlName="pricePerSeat"
-          />
-        </div>
-        <div class="col-md-3">
-          <label class="form-label"
-            >Total seats <span class="text-danger">*</span></label
-          >
-          <input
-            type="number"
-            min="1"
-            class="form-control"
-            formControlName="seatsTotal"
-          />
-        </div>
-        <div class="col-md-6">
-          <label class="form-label">Meeting point (optional)</label>
-          <input class="form-control" formControlName="meetingPoint" />
-        </div>
+      </div>
+    </aside>
 
-        <!-- Vehicle Section -->
-        <div class="col-12 mt-4">
-          <h5 class="border-bottom pb-2">Vehicle Information</h5>
-        </div>
+    <section
+      class="wizard-panel"
+      [class.pickup-panel]="isPickupStep() || isDropoffStep() || isRouteStep()"
+      [class.verification-panel]="isVerificationStep()"
+    >
+      <ng-container *ngIf="!loadingTrip && !loadError; else wizardStateBlock">
+        <ng-container *ngIf="isDepartureStep(); else pickupStepBlock">
+          <h2 class="question-title">Where are you leaving from?</h2>
+          <p class="helper-text">
+            Type a city or country name to search. Once you select a location,
+            you'll then move to the next step.
+          </p>
 
-        <!-- Vehicle Selection/Loading -->
-        <div class="col-12" *ngIf="loadingVehicles">
-          <div class="alert alert-info">Loading your vehicles...</div>
-        </div>
+          <div class="field-card">
+            <label class="field-label" for="departureSearch">Departure</label>
+            <input
+              id="departureSearch"
+              type="text"
+              class="search-input"
+              [(ngModel)]="departureSearch"
+              placeholder="Search your departure city"
+              autocomplete="off"
+              (input)="onDepartureInput()"
+              (focus)="openDepartureSuggestions()"
+              (blur)="closeDepartureSuggestions()"
+            />
+          </div>
 
-        <!-- Vehicle Dropdown (if vehicles exist) -->
-        <div class="col-md-6" *ngIf="!loadingVehicles && vehicles.length > 0">
-          <label class="form-label">Your vehicles</label>
-          <select
-            class="form-select"
-            [(ngModel)]="selectedVehicleId"
-            [ngModelOptions]="{ standalone: true }"
-          >
-            <option [value]="null">-- Select a vehicle --</option>
-            <option *ngFor="let vehicle of vehicles" [value]="vehicle.id">
-              {{ vehicle.model }} ({{ vehicle.plateNumber }}) -
-              {{ vehicle.color }}
-            </option>
-          </select>
-        </div>
+          <div class="suggestions-panel" *ngIf="showDepartureSuggestions">
+            <button
+              type="button"
+              class="suggestion-item"
+              *ngFor="let suggestion of departureSuggestions"
+              (mousedown)="selectDepartureSuggestion(suggestion)"
+            >
+              <span>{{ suggestion.label }}</span>
+              <small>{{ suggestion.type }}</small>
+            </button>
 
-        <!-- Add New Vehicle Button -->
-        <div class="col-md-6" *ngIf="!loadingVehicles">
-          <button
-            type="button"
-            class="btn btn-outline-success w-100 mt-4"
-            (click)="toggleAddVehicleForm()"
-            [disabled]="creatingVehicle"
-          >
-            <i class="bi bi-plus-circle"></i>
-            {{ showAddVehicleForm ? "Cancel" : "Add New Vehicle" }}
-          </button>
-        </div>
+            <div class="suggestion-state" *ngIf="loadingLocations">
+              Searching locations...
+            </div>
 
-        <!-- Add Vehicle Form (collapsible) -->
-        <div class="col-12" *ngIf="showAddVehicleForm && !loadingVehicles">
-          <div class="card border-secondary mt-3">
-            <div class="card-body">
-              <h6 class="card-title mb-3">Add a New Vehicle</h6>
-              <div [formGroup]="vehicleForm" class="row g-3">
-                <div class="col-md-4">
-                  <label class="form-label"
-                    >Model <span class="text-danger">*</span></label
+            <div class="suggestion-state error" *ngIf="locationError">
+              {{ locationError }}
+            </div>
+
+            <div class="suggestion-state" *ngIf="shouldShowNoResults()">
+              No city or country found.
+            </div>
+          </div>
+
+          <div class="cta-row">
+            <button type="button" class="ghost-cta" routerLink="/carpooling">
+              Cancel
+            </button>
+            <button
+              type="button"
+              class="primary-cta"
+              [disabled]="!departureValue"
+            >
+              Departure selected
+            </button>
+          </div>
+        </ng-container>
+
+        <ng-template #pickupStepBlock>
+          <ng-container *ngIf="isPickupStep(); else destinationStepBlock">
+            <div class="pickup-step-layout">
+              <div class="pickup-copy">
+                <h2 class="question-title">
+                  Where should you pick up your passengers?
+                </h2>
+
+                <div class="pickup-chip" [class.empty]="!pickupConfirmed">
+                  <span class="pickup-chip-value">{{
+                    pickupConfirmed
+                      ? pickupPoint
+                      : "Choose an exact pickup point"
+                  }}</span>
+                  <button
+                    type="button"
+                    class="pickup-chip-clear"
+                    (click)="clearPickupPoint()"
                   >
-                  <input
-                    type="text"
-                    class="form-control"
-                    formControlName="model"
-                    placeholder="e.g., Toyota Prius"
-                  />
+                    <i class="bi bi-x-lg"></i>
+                  </button>
                 </div>
-                <div class="col-md-4">
-                  <label class="form-label"
-                    >Plate Number <span class="text-danger">*</span></label
+
+                <div class="cta-row">
+                  <button
+                    type="button"
+                    class="ghost-cta"
+                    (click)="goToPreviousStep()"
                   >
-                  <input
-                    type="text"
-                    class="form-control text-uppercase"
-                    formControlName="plateNumber"
-                    placeholder="e.g., TN123ABC"
-                  />
-                </div>
-                <div class="col-md-4">
-                  <label class="form-label"
-                    >Color <span class="text-danger">*</span></label
+                    Back
+                  </button>
+                  <button
+                    type="button"
+                    class="primary-cta"
+                    [disabled]="!pickupConfirmed"
+                    (click)="goToNextStep()"
                   >
-                  <input
-                    type="text"
-                    class="form-control"
-                    formControlName="color"
-                    placeholder="e.g., Blue"
-                  />
+                    Continue
+                  </button>
                 </div>
               </div>
-              <div class="d-flex gap-2 mt-3">
+
+              <div class="pickup-map-preview">
+                <div class="pickup-map-search">
+                  <input
+                    type="text"
+                    class="pickup-map-search-input"
+                    [(ngModel)]="pickupSearch"
+                    placeholder="Search a pickup place"
+                    (input)="onPickupSearchInput()"
+                    (focus)="openPickupSuggestions()"
+                    (blur)="closePickupSuggestions()"
+                    (keyup.enter)="searchPickupLocation(true)"
+                  />
+                  <button
+                    type="button"
+                    class="pickup-map-search-button"
+                    (click)="searchPickupLocation(true)"
+                  >
+                    <i class="bi bi-search"></i>
+                  </button>
+                </div>
+                <div
+                  class="pickup-map-suggestions"
+                  *ngIf="showPickupSuggestions && pickupSuggestions.length > 0"
+                >
+                  <button
+                    type="button"
+                    class="pickup-map-suggestion"
+                    *ngFor="let suggestion of pickupSuggestions"
+                    (mousedown)="selectPickupSuggestion(suggestion)"
+                  >
+                    <span>{{ suggestion.label }}</span>
+                    <small *ngIf="suggestion.helper">{{
+                      suggestion.helper
+                    }}</small>
+                  </button>
+                </div>
+                <div class="pickup-map-search-error" *ngIf="pickupSearchError">
+                  {{ pickupSearchError }}
+                </div>
+                <div #pickupMap class="pickup-map-canvas"></div>
+              </div>
+            </div>
+          </ng-container>
+        </ng-template>
+
+        <ng-template #destinationStepBlock>
+          <ng-container *ngIf="isDestinationStep(); else dropoffStepBlock">
+            <h2 class="question-title">Where are you going?</h2>
+
+            <div class="summary-card">
+              <span class="section-label">Departure</span>
+              <p class="summary-value">{{ departureValue }}</p>
+              <p class="body-text">
+                Pickup:
+                {{ pickupConfirmed ? pickupPoint : "Choose a pickup point" }}
+              </p>
+            </div>
+
+            <div class="field-card">
+              <label class="field-label" for="destinationSearch"
+                >Destination</label
+              >
+              <input
+                id="destinationSearch"
+                type="text"
+                class="search-input"
+                [(ngModel)]="destinationSearch"
+                placeholder="Search your destination city"
+                autocomplete="off"
+                (input)="onDestinationInput()"
+                (focus)="openDestinationSuggestions()"
+                (blur)="closeDestinationSuggestions()"
+              />
+            </div>
+
+            <div class="suggestions-panel" *ngIf="showDestinationSuggestions">
+              <button
+                type="button"
+                class="suggestion-item"
+                *ngFor="let suggestion of destinationSuggestions"
+                (mousedown)="selectDestinationSuggestion(suggestion)"
+              >
+                <span>{{ suggestion.label }}</span>
+                <small>{{ suggestion.type }}</small>
+              </button>
+
+              <div class="suggestion-state" *ngIf="loadingLocations">
+                Searching locations...
+              </div>
+
+              <div class="suggestion-state error" *ngIf="locationError">
+                {{ locationError }}
+              </div>
+
+              <div
+                class="suggestion-state"
+                *ngIf="shouldShowNoDestinationResults()"
+              >
+                No city or country found.
+              </div>
+            </div>
+
+            <div class="cta-row">
+              <button
+                type="button"
+                class="ghost-cta"
+                (click)="goToPreviousStep()"
+              >
+                Back
+              </button>
+              <button
+                type="button"
+                class="primary-cta"
+                [disabled]="!destinationValue"
+              >
+                Destination selected
+              </button>
+            </div>
+          </ng-container>
+        </ng-template>
+
+        <ng-template #dropoffStepBlock>
+          <ng-container *ngIf="isDropoffStep(); else routeStepBlock">
+            <div class="pickup-step-layout">
+              <div class="pickup-copy">
+                <h2 class="question-title">Where should passengers get off?</h2>
+
+                <div class="pickup-chip" [class.empty]="!dropoffConfirmed">
+                  <span class="pickup-chip-value">{{
+                    dropoffConfirmed
+                      ? dropoffPoint
+                      : "Choose an exact dropoff point"
+                  }}</span>
+                  <button
+                    type="button"
+                    class="pickup-chip-clear"
+                    (click)="clearDropoffPoint()"
+                  >
+                    <i class="bi bi-x-lg"></i>
+                  </button>
+                </div>
+
+                <div class="cta-row">
+                  <button
+                    type="button"
+                    class="ghost-cta"
+                    (click)="goToPreviousStep()"
+                  >
+                    Back
+                  </button>
+                  <button
+                    type="button"
+                    class="primary-cta"
+                    [disabled]="!dropoffConfirmed"
+                    (click)="goToNextStep()"
+                  >
+                    Continue
+                  </button>
+                </div>
+              </div>
+
+              <div class="pickup-map-preview">
+                <div class="pickup-map-search">
+                  <input
+                    type="text"
+                    class="pickup-map-search-input"
+                    [(ngModel)]="dropoffSearch"
+                    placeholder="Search a dropoff place"
+                    (input)="onDropoffSearchInput()"
+                    (focus)="openDropoffSuggestions()"
+                    (blur)="closeDropoffSuggestions()"
+                    (keyup.enter)="searchDropoffLocation(true)"
+                  />
+                  <button
+                    type="button"
+                    class="pickup-map-search-button"
+                    (click)="searchDropoffLocation(true)"
+                  >
+                    <i class="bi bi-search"></i>
+                  </button>
+                </div>
+                <div
+                  class="pickup-map-suggestions"
+                  *ngIf="
+                    showDropoffSuggestions && dropoffSuggestions.length > 0
+                  "
+                >
+                  <button
+                    type="button"
+                    class="pickup-map-suggestion"
+                    *ngFor="let suggestion of dropoffSuggestions"
+                    (mousedown)="selectDropoffSuggestion(suggestion)"
+                  >
+                    <span>{{ suggestion.label }}</span>
+                    <small *ngIf="suggestion.helper">{{
+                      suggestion.helper
+                    }}</small>
+                  </button>
+                </div>
+                <div class="pickup-map-search-error" *ngIf="dropoffSearchError">
+                  {{ dropoffSearchError }}
+                </div>
+                <div #dropoffMap class="pickup-map-canvas"></div>
+              </div>
+            </div>
+          </ng-container>
+        </ng-template>
+
+        <ng-template #routeStepBlock>
+          <ng-container *ngIf="isRouteStep(); else dateStepBlock">
+            <div class="pickup-step-layout route-step-layout">
+              <div class="pickup-copy route-copy">
+                <h2 class="question-title">Which route will you take?</h2>
+
+                <div
+                  class="route-options"
+                  *ngIf="!routeLoading && routeSuggestions.length > 0"
+                >
+                  <button
+                    type="button"
+                    class="route-option"
+                    *ngFor="let route of routeSuggestions; let i = index"
+                    [class.active]="i === selectedRouteIndex"
+                    (click)="selectRouteSuggestion(i)"
+                  >
+                    <span class="route-option-radio"></span>
+                    <div class="route-option-copy">
+                      <strong>{{ route.label }}</strong>
+                      <small>{{ route.helper }}</small>
+                    </div>
+                  </button>
+                </div>
+
+                <div class="suggestion-state" *ngIf="routeLoading">
+                  Calculating routes...
+                </div>
+
+                <div class="suggestion-state error" *ngIf="routeError">
+                  {{ routeError }}
+                </div>
+
+                <div
+                  class="trip-demand-card"
+                  *ngIf="driverDemandError || shouldShowDriverDemandAlert()"
+                >
+                  <p class="trip-demand-text" *ngIf="driverDemandError">
+                    {{ driverDemandError }}
+                  </p>
+
+                  <div
+                    class="trip-demand-header"
+                    *ngIf="shouldShowDriverDemandAlert()"
+                  >
+                    <span
+                      class="trip-demand-badge"
+                      [class.high]="
+                        driverDemandAlert &&
+                        (driverDemandAlert.demandLevel === 'high' ||
+                          driverDemandAlert.holidayCriticalWarning)
+                      "
+                    >
+                      {{ getDriverDemandLevelLabel() }}
+                    </span>
+                    <p class="trip-demand-text">
+                      {{ driverDemandAlert?.driverAlert }}
+                    </p>
+                  </div>
+                </div>
+
+                <div class="route-actions">
+                  <button
+                    type="button"
+                    class="ghost-cta"
+                    (click)="goToPreviousStep()"
+                  >
+                    Back
+                  </button>
+                  <button
+                    type="button"
+                    class="primary-cta"
+                    [disabled]="routeSuggestions.length === 0"
+                    (click)="goToNextStep()"
+                  >
+                    Continue
+                  </button>
+                </div>
+              </div>
+
+              <div class="pickup-map-preview route-map-preview">
+                <div #routeMap class="pickup-map-canvas"></div>
+              </div>
+            </div>
+          </ng-container>
+        </ng-template>
+
+        <ng-template #dateStepBlock>
+          <ng-container *ngIf="isDateStep(); else nextStepPlaceholder">
+            <div class="date-step-layout">
+              <h2 class="question-title">When are you leaving?</h2>
+
+              <div class="calendar-navigation">
                 <button
                   type="button"
-                  class="btn btn-success"
-                  (click)="addVehicle()"
-                  [disabled]="vehicleForm.invalid || creatingVehicle"
+                  class="calendar-nav-button"
+                  [disabled]="!canGoToPreviousCalendarMonth()"
+                  (click)="previousCalendarMonth()"
                 >
-                  <span *ngIf="!creatingVehicle">
-                    <i class="bi bi-check-lg"></i> Add Vehicle
-                  </span>
-                  <span *ngIf="creatingVehicle">
-                    <span class="spinner-border spinner-border-sm me-2"></span>
-                    Adding...
-                  </span>
+                  <i class="bi bi-arrow-left"></i>
                 </button>
                 <button
                   type="button"
-                  class="btn btn-outline-secondary"
-                  (click)="toggleAddVehicleForm()"
-                  [disabled]="creatingVehicle"
+                  class="calendar-nav-button"
+                  (click)="nextCalendarMonth()"
                 >
-                  Cancel
+                  <i class="bi bi-arrow-right"></i>
+                </button>
+              </div>
+
+              <div class="calendar-months">
+                <div
+                  class="calendar-month"
+                  *ngFor="let month of calendarMonths; let i = index"
+                >
+                  <div class="calendar-month-header">
+                    <h3>{{ month.monthLabel }} {{ month.year }}</h3>
+                  </div>
+
+                  <div class="calendar-weekdays">
+                    <span *ngFor="let dayLabel of dayLabels">{{
+                      dayLabel
+                    }}</span>
+                  </div>
+
+                  <div class="calendar-days">
+                    <button
+                      type="button"
+                      class="calendar-day"
+                      *ngFor="let day of month.days"
+                      [class.empty]="day.empty"
+                      [class.disabled]="day.disabled"
+                      [class.selected]="isSelectedDate(day)"
+                      [disabled]="day.empty || day.disabled"
+                      (click)="selectDate(day)"
+                    >
+                      {{ day.dayNumber }}
+                    </button>
+                  </div>
+                </div>
+              </div>
+              <p class="helper-text">And choose the time:</p>
+              <div class="time-picker-wrap">
+                <select class="time-picker" [(ngModel)]="departureTime">
+                  <option *ngFor="let time of timeOptions" [value]="time">
+                    {{ time }}
+                  </option>
+                </select>
+              </div>
+
+              <div
+                class="trip-demand-card"
+                *ngIf="driverDemandError || shouldShowDriverDemandAlert()"
+              >
+                <p class="trip-demand-text" *ngIf="driverDemandError">
+                  {{ driverDemandError }}
+                </p>
+
+                <div
+                  class="trip-demand-header"
+                  *ngIf="shouldShowDriverDemandAlert()"
+                >
+                  <span
+                    class="trip-demand-badge"
+                    [class.high]="
+                      driverDemandAlert &&
+                      (driverDemandAlert.demandLevel === 'high' ||
+                        driverDemandAlert.holidayCriticalWarning)
+                    "
+                  >
+                    {{ getDriverDemandLevelLabel() }}
+                  </span>
+                  <p class="trip-demand-text">
+                    {{ driverDemandAlert?.driverAlert }}
+                  </p>
+                </div>
+              </div>
+
+              <div class="cta-row date-step-actions">
+                <button
+                  type="button"
+                  class="ghost-cta"
+                  (click)="goToPreviousStep()"
+                >
+                  Back
+                </button>
+                <button
+                  type="button"
+                  class="primary-cta"
+                  [disabled]="!departureDate || !departureTime"
+                  (click)="goToNextStep()"
+                >
+                  Continue to price
                 </button>
               </div>
             </div>
-          </div>
-        </div>
+          </ng-container>
+        </ng-template>
 
-        <!-- Error Messages -->
-        <div class="col-12" *ngIf="error">
-          <div class="alert alert-danger py-2 mb-0">
-            <i class="bi bi-exclamation-circle"></i> {{ error }}
-          </div>
-        </div>
+        <ng-template #nextStepPlaceholder>
+          <ng-container *ngIf="isPriceStep(); else seatsStepPlaceholder">
+            <div class="price-step-layout">
+              <h2 class="question-title question-title-wide">
+                Set your price per seat
+              </h2>
 
-        <div class="col-12" *ngIf="success">
-          <div class="alert alert-success py-2 mb-0">
-            <i class="bi bi-check-circle"></i> {{ success }}
-          </div>
-        </div>
+              <div class="price-selector">
+                <button
+                  type="button"
+                  class="price-adjust secondary"
+                  [disabled]="pricePerSeat <= 1"
+                  (click)="decreasePrice()"
+                >
+                  <i class="bi bi-dash"></i>
+                </button>
 
-        <!-- Submit Buttons -->
-        <div class="col-12 d-flex gap-2 mt-4">
-          <button
-            type="submit"
-            class="btn btn-success"
-            [disabled]="
-              publishingTrip || publishForm.invalid || loadingVehicles
-            "
+                <div class="price-value">
+                  <span class="price-number">{{ pricePerSeat }}</span>
+                  <span class="price-currency">TND</span>
+                </div>
+
+                <button
+                  type="button"
+                  class="price-adjust primary"
+                  (click)="increasePrice()"
+                >
+                  <i class="bi bi-plus"></i>
+                </button>
+              </div>
+
+              <div class="price-tip" *ngIf="priceSuggestionLoading">
+                Calculating suggested price...
+              </div>
+
+              <div
+                class="price-tip"
+                *ngIf="!priceSuggestionLoading && priceSuggestion"
+              >
+                Suggested price: {{ priceSuggestion.suggestedPrice }} TND
+              </div>
+
+              <div
+                class="price-tip"
+                *ngIf="
+                  !priceSuggestionLoading &&
+                  !priceSuggestion &&
+                  priceSuggestionError
+                "
+              >
+                {{ priceSuggestionError }}
+              </div>
+
+              <p class="price-helper" *ngIf="priceSuggestion">
+                {{ priceSuggestion.message }}
+              </p>
+
+              <p class="price-helper" *ngIf="!priceSuggestion">
+                Think about sharing your trip costs fairly so passengers can
+                book quickly.
+              </p>
+
+              <div class="price-actions">
+                <button
+                  type="button"
+                  class="ghost-cta"
+                  (click)="goToPreviousStep()"
+                >
+                  Back
+                </button>
+                <button
+                  type="button"
+                  class="primary-cta"
+                  (click)="goToNextStep()"
+                >
+                  Continue
+                </button>
+              </div>
+            </div>
+          </ng-container>
+        </ng-template>
+
+        <ng-template #seatsStepPlaceholder>
+          <ng-container *ngIf="isSeatsStep(); else messageStepPlaceholder">
+            <div class="seats-step-layout">
+              <h2 class="question-title question-title-wide">
+                How many passengers can you accept?
+              </h2>
+
+              <div class="seats-selector">
+                <button
+                  type="button"
+                  class="seats-adjust"
+                  [disabled]="seatsTotal <= 1"
+                  (click)="decreaseSeats()"
+                >
+                  <i class="bi bi-dash"></i>
+                </button>
+
+                <div class="seats-value">{{ seatsTotal }}</div>
+
+                <button
+                  type="button"
+                  class="seats-adjust"
+                  [disabled]="seatsTotal >= 8"
+                  (click)="increaseSeats()"
+                >
+                  <i class="bi bi-plus"></i>
+                </button>
+              </div>
+
+              <div class="price-actions">
+                <button
+                  type="button"
+                  class="ghost-cta"
+                  (click)="goToPreviousStep()"
+                >
+                  Back
+                </button>
+                <button
+                  type="button"
+                  class="primary-cta"
+                  (click)="goToNextStep()"
+                >
+                  Continue
+                </button>
+              </div>
+            </div>
+          </ng-container>
+        </ng-template>
+
+        <ng-template #messageStepPlaceholder>
+          <ng-container *ngIf="isMessageStep(); else bookingStepPlaceholder">
+            <div class="message-step-layout">
+              <h2 class="question-title question-title-wide">
+                Ready to publish your trip?
+              </h2>
+
+              <p class="price-helper">
+                Anything to say to your future passengers?
+              </p>
+              <textarea
+                class="message-box"
+                [(ngModel)]="messageText"
+                placeholder="Are you flexible about the meeting place or time? Do you avoid the highway? Is luggage space limited? Keep your passengers informed."
+              ></textarea>
+
+              <div class="suggestion-state error" *ngIf="publishError">
+                {{ publishError }}
+              </div>
+
+              <div class="price-actions">
+                <button
+                  type="button"
+                  class="ghost-cta"
+                  (click)="goToPreviousStep()"
+                >
+                  Back
+                </button>
+                <button
+                  type="button"
+                  class="primary-cta"
+                  (click)="goToNextStep()"
+                >
+                  Continue
+                </button>
+              </div>
+            </div>
+          </ng-container>
+        </ng-template>
+
+        <ng-template #bookingStepPlaceholder>
+          <ng-container
+            *ngIf="isBookingStep(); else verificationStepPlaceholder"
           >
-            <span *ngIf="!publishingTrip">
-              <i class="bi bi-check-circle"></i> Publish trip
-            </span>
-            <span *ngIf="publishingTrip">
-              <span class="spinner-border spinner-border-sm me-2"></span>
-              Publishing...
-            </span>
-          </button>
-          <a class="btn btn-outline-secondary" routerLink="/carpooling"
-            >Cancel</a
-          >
+            <div class="booking-step-layout">
+              <div class="booking-illustration-wrap">
+                <div class="booking-illustration">
+                  <div class="booking-illustration-cloud"></div>
+                  <div class="booking-illustration-core">
+                    <i class="bi bi-lightning-charge-fill"></i>
+                  </div>
+                </div>
+              </div>
+
+              <div class="booking-copy">
+                <h2 class="question-title question-title-wide">
+                  Enable instant booking for your passengers
+                </h2>
+
+                <div class="booking-feature-list">
+                  <div class="booking-feature">
+                    <i class="bi bi-bell"></i>
+                    <div>
+                      <strong>More practical</strong>
+                      <small
+                        >No need to review every passenger request before it
+                        expires.</small
+                      >
+                    </div>
+                  </div>
+
+                  <div class="booking-feature">
+                    <i class="bi bi-lightning-charge"></i>
+                    <div>
+                      <strong>Attract more passengers</strong>
+                      <small
+                        >Passengers usually prefer an immediate answer.</small
+                      >
+                    </div>
+                  </div>
+                </div>
+
+                <div class="booking-choice-list">
+                  <button
+                    type="button"
+                    class="booking-choice"
+                    [class.active]="bookingMode === 'instant'"
+                    (click)="selectBookingMode('instant')"
+                  >
+                    <span>Enable instant booking</span>
+                    <i class="bi bi-chevron-right"></i>
+                  </button>
+
+                  <button
+                    type="button"
+                    class="booking-choice"
+                    [class.active]="bookingMode === 'manual'"
+                    (click)="selectBookingMode('manual')"
+                  >
+                    <span>Review each passenger request manually</span>
+                    <i class="bi bi-chevron-right"></i>
+                  </button>
+                </div>
+
+                <div class="suggestion-state error" *ngIf="publishError">
+                  {{ publishError }}
+                </div>
+
+                <div class="route-actions">
+                  <button
+                    type="button"
+                    class="ghost-cta"
+                    (click)="goToPreviousStep()"
+                  >
+                    Back
+                  </button>
+                </div>
+              </div>
+            </div>
+          </ng-container>
+        </ng-template>
+
+        <ng-template #verificationStepPlaceholder>
+          <ng-container *ngIf="isVerificationStep()">
+            <div class="verification-step-layout">
+              <div class="verification-copy">
+                <h2 class="question-title question-title-wide">
+                  Review trip details and verification
+                </h2>
+
+                <p class="helper-text">
+                  Check the main trip information before
+                  {{ editMode ? "updating" : "publishing" }} your ride.
+                </p>
+
+                <div class="verification-note-list">
+                  <div class="booking-feature">
+                    <i class="bi bi-shield-check"></i>
+                    <div>
+                      <strong>Verification ready</strong>
+                      <small
+                        >Your booking preference has been saved for this
+                        trip.</small
+                      >
+                    </div>
+                  </div>
+
+                  <div class="booking-feature">
+                    <i class="bi bi-phone"></i>
+                    <div>
+                      <strong>Contact step simplified</strong>
+                      <small
+                        >Passengers will receive the trip details after booking
+                        confirmation.</small
+                      >
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="verification-summary-card">
+                <span class="section-label">Trip details</span>
+                <div class="verification-trip-preview">
+                  <h3 class="verification-trip-date">
+                    {{ formatVerificationDate() }}
+                  </h3>
+
+                  <div class="verification-trip-timeline">
+                    <div class="verification-time-col">
+                      <span>{{ departureTime }}</span>
+                      <span>{{ formatArrivalTime() }}</span>
+                      <small class="next-day-label" *ngIf="isArrivalNextDay()">
+                        (+1 day)
+                      </small>
+                    </div>
+
+                    <div class="verification-line-col">
+                      <span class="verification-line-dot top"></span>
+                      <span class="verification-line-rail"></span>
+                      <span class="verification-line-dot bottom"></span>
+                    </div>
+
+                    <div class="verification-stop-col">
+                      <div class="verification-stop">
+                        <div class="verification-stop-title">
+                          <strong>{{
+                            formatMainPlaceName(departureValue)
+                          }}</strong>
+                          <i class="bi bi-map"></i>
+                        </div>
+                        <small>{{ pickupPoint || departureValue }}</small>
+                      </div>
+
+                      <div class="verification-stop">
+                        <div class="verification-stop-title">
+                          <strong>{{
+                            formatMainPlaceName(destinationValue)
+                          }}</strong>
+                          <i class="bi bi-map"></i>
+                        </div>
+                        <small>{{ dropoffPoint || destinationValue }}</small>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="verification-meta-grid">
+                  <div class="verification-meta-item">
+                    <strong>Price</strong>
+                    <span>{{ pricePerSeat }} TND</span>
+                  </div>
+                  <div class="verification-meta-item">
+                    <strong>Seats</strong>
+                    <span>{{ seatsTotal }}</span>
+                  </div>
+                  <div class="verification-meta-item">
+                    <strong>Booking</strong>
+                    <span>{{
+                      bookingMode === "instant"
+                        ? "Instant booking"
+                        : "Manual approval"
+                    }}</span>
+                  </div>
+                  <div
+                    class="verification-meta-item verification-meta-item-full"
+                  >
+                    <strong>Message</strong>
+                    <span>{{ messageText || "No message added" }}</span>
+                  </div>
+                </div>
+
+                <div class="suggestion-state error" *ngIf="publishError">
+                  {{ publishError }}
+                </div>
+
+                <div class="route-actions">
+                  <button
+                    type="button"
+                    class="ghost-cta"
+                    (click)="goToPreviousStep()"
+                  >
+                    Back
+                  </button>
+                  <button
+                    type="button"
+                    class="primary-cta"
+                    [disabled]="publishingTrip"
+                    (click)="publishTrip()"
+                  >
+                    <span *ngIf="!publishingTrip">{{
+                      editMode ? "Save changes" : "Publish trip"
+                    }}</span>
+                    <span *ngIf="publishingTrip">{{
+                      editMode ? "Saving..." : "Publishing..."
+                    }}</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </ng-container>
+        </ng-template>
+      </ng-container>
+
+      <ng-template #wizardStateBlock>
+        <div class="suggestion-state" *ngIf="loadingTrip">Loading trip...</div>
+        <div class="suggestion-state error" *ngIf="loadError">
+          {{ loadError }}
         </div>
-      </form>
-    </div>
+      </ng-template>
+    </section>
   </div>
 </div>

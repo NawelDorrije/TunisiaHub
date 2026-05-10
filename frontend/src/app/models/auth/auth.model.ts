@@ -1,3 +1,7 @@
+// auth.model.ts
+
+export type UserRole = 'ADMIN' | 'CLIENT' | 'OWNER';
+
 export interface LoginRequest {
   email: string;
   password: string;
@@ -8,13 +12,28 @@ export interface RegisterRequest {
   prenom: string;
   email: string;
   password: string;
+  role: UserRole;
 }
 
 export interface AuthResponse {
-  token: string;
-  role: string;
-  email: string;
-  nom: string;
-  prenom: string;
+
   id: number;
+
+  token: string;
+
+  role: UserRole;
+
+  email: string;
+
+  nom: string;
+
+  prenom: string;
+
+  userId?: number;
+
+  user?: {
+    id: number;
+    email: string;
+    role: UserRole;
+  };
 }

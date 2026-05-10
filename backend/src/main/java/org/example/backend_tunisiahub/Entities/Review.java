@@ -1,21 +1,22 @@
 package org.example.backend_tunisiahub.Entities;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.FieldDefaults;
-import org.example.backend_tunisiahub.Entities.ReservationRestaurant;
+import org.example.backend_tunisiahub.Entities.Reservation;
 
 import java.util.Date;
 
-@Entity
+@Entity(name = "ReservationReview")
+@Table(name = "reservation_reviews")
 @Getter
 @Setter
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @NoArgsConstructor
-
 public class Review {
 
     @Id
@@ -31,5 +32,6 @@ public class Review {
 
     @OneToOne
     @JoinColumn(name = "reservation_id")
-    ReservationRestaurant reservation;
+    @JsonIgnore
+    Reservation reservation;
 }

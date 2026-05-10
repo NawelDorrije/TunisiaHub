@@ -5,15 +5,14 @@ import java.util.List;
 
 public interface IReviewService {
 
-    List<AccommodationReview> retrieveAllReviews();
+  List<AccommodationReview> retrieveAllReviews();
 
-    AccommodationReview retrieveReview(Long reviewId);
+  AccommodationReview retrieveReview(Long reviewId);
 
-    AccommodationReview addReview(Long accommodationId, AccommodationReview accommodationReview);
+  AccommodationReview addReview(Long accommodationId, AccommodationReview review, String email);
+  void removeReview(Long reviewId);
 
-    void removeReview(Long reviewId);
+  AccommodationReview modifyReview(Long id, AccommodationReview accommodationReview);
 
-    AccommodationReview modifyReview(Long id, AccommodationReview accommodationReview);
-
-    List<AccommodationReview> getReviewsByAccommodation(Long accommodationId);
+  List<AccommodationReview> getReviewsByAccommodation(Long accommodationId);
 }

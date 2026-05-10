@@ -1,9 +1,9 @@
 package org.example.backend_tunisiahub.Services.User;
 
 import lombok.RequiredArgsConstructor;
+import org.example.backend_tunisiahub.Entities.User.RoleUser;
 import org.example.backend_tunisiahub.Entities.User.User;
 import org.example.backend_tunisiahub.Repositories.User.UserRepository;
-import org.example.backend_tunisiahub.Services.Camping.IUserService;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -26,6 +26,14 @@ public class UserService implements IUserService {
 
     @Override
     public User addUser(User user) {
+        if (userRepository.existsByEmail(user.getEmail())) {
+            throw new RuntimeException("Email already exists");
+        }
+
+        if (user.getRole() == null) {
+            user.setRole(RoleUser.CLIENT);
+        }
+
         return userRepository.save(user);
     }
 
@@ -39,3 +47,4 @@ public class UserService implements IUserService {
         return userRepository.save(user);
     }
 }
+

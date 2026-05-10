@@ -90,11 +90,16 @@ export class RestaurantsComponent implements OnInit {
   lastCheckedDate = '';
 
   ngOnInit(): void {
+    console.log('Restaurants component initializing...');
     this.api.getRestaurants().subscribe({
       next: (data) => {
+        console.log('Restaurants data received:', data);
         this.restaurants = Array.isArray(data) ? data : [];
+        console.log('Restaurants array set:', this.restaurants);
       },
-      error: (err) => console.error(err),
+      error: (err) => {
+        console.error('Error fetching restaurants:', err);
+      },
     });
 
     this.loadRestaurantCuisines();

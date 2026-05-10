@@ -1,0 +1,69 @@
+<div class="bo-page">
+  <div class="bo-header">
+    <div class="bo-header__left">
+      <a class="back-link" routerLink="/camping/backoffice/owner/my-campings">← My Campings</a>
+      <h1>Equipment — {{ camping?.name ?? '…' }}</h1>
+      <p>Manage the equipment available at this camping</p>
+    </div>
+    <a class="btn btn--primary" [routerLink]="['/camping/backoffice/owner', campingId, 'equipment', 'new']">
+      + Add Equipment
+    </a>
+  </div>
+
+  <div class="alert alert--success" *ngIf="successMsg" role="alert">✓ {{ successMsg }}</div>
+  <div class="alert alert--error"   *ngIf="errorMsg"   role="alert">✕ {{ errorMsg }}</div>
+
+  <!-- Loading -->
+  <div class="spots-grid" *ngIf="loading">
+    <div class="skeleton" style="height:200px" *ngFor="let i of [1,2,3,4]"></div>
+  </div>
+
+  <!-- Empty State -->
+  <div class="empty-state" *ngIf="!loading && equipments.length === 0">
+    <div class="empty-state__icon">🛠️</div>
+    <h3>No equipment yet</h3>
+    <p>Add equipment to manage inventory for this camping.</p>
+    <a class="btn btn--primary" [routerLink]="['/camping/backoffice/owner', campingId, 'equipment', 'new']">
+      Add First Equipment
+    </a>
+  </div>
+
+  <!-- Equipment Grid -->
+  <div class="spots-grid" *ngIf="!loading && equipments.length > 0">
+    <div class="spot-card" *ngFor="let eq of equipments" [class.inactive]="!eq.available">
+      <div class="spot-card__header">
+        <div>
+          <span class="spot-type-badge">{{ eq.condition }}</span>
+          <h3 class="spot-card__name">{{ eq.name }}</h3>
+        </div>
+        <label class="toggle" [title]="eq.available ? 'Mark as Unavailable' : 'Mark as Available'">
+          <input type="checkbox" [checked]="eq.available" (change)="toggleAvailable(eq)" />
+          <span class="toggle__slider"></span>
+        </label>
+      </div>
+
+      <p class="spot-card__desc">{{ eq.description || 'No description provided.' }}</p>
+
+      <div class="spot-card__meta">
+        <div class="meta-item"><span>📦</span>Qty: {{ eq.quantity }}</div>
+        <div class="meta-item"><span>📍</span>{{ eq.spotName || 'No spot assigned' }}</div>
+        <div class="meta-item" [class.condition-good]="eq.condition === 'GOOD'"
+                             [class.condition-damaged]="eq.condition === 'DAMAGED'"
+                             [class.condition-repair]="eq.condition === 'UNDER_REPAIR'">
+          <span>🔧</span>{{ eq.condition }}
+        </div>
+      </div>
+
+      <div class="spot-card__actions">
+        <a class="btn btn--ghost btn--sm"
+           [routerLink]="['/camping/backoffice/owner', campingId, 'equipment', eq.id, 'edit']">
+          ✏️ Edit
+        </a>
+        <!-- Bouton Delete avec confirm simple -->
+        <button class="btn btn--danger btn--sm" (click)="deleteEquipment(eq)">
+          🗑 Delete
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

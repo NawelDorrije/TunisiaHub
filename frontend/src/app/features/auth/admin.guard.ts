@@ -1,25 +1,51 @@
 import { Injectable } from '@angular/core';
 import { CanActivate, Router } from '@angular/router';
+
 import { AuthService } from './services/auth.service';
 
 @Injectable({
-  providedIn: 'root',
+  providedIn: 'root'
 })
 export class AdminGuard implements CanActivate {
+
   constructor(
-    private auth: AuthService,
-    private router: Router,
+    private authService: AuthService,
+    private router: Router
   ) {}
 
   canActivate(): boolean {
-    if (!this.auth.isLoggedIn()) {
-      this.router.navigate(['/auth', 'sign-in']);
+
+    // ✅ Admin can access
+    if (this.authService.isAdmin()) {
+      return true;
+    }
+
+    // ✅ If not logged in → redirect to sign in
+    if (!this.authService.isLoggedIn()) {
+
+      this.router.navigate(
+        ['/auth/sign-in'],
+        {
+          queryParams: {
+            returnUrl: this.router.url
+          }
+        }
+      );
+
       return false;
     }
-    if (!this.auth.isAdmin()) {
-      this.router.navigate(['/restaurants']);
+
+    // ✅ Owner redirect
+    if (this.authService.isOwner()) {
+
+      this.router.navigate(['/camping/backoffice/owner']);
+
       return false;
     }
-    return true;
+
+    // ✅ Normal user redirect
+    this.router.navigate(['/events/user/events']);
+
+    return false;
   }
 }

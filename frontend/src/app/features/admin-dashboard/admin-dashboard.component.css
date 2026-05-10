@@ -1,0 +1,132 @@
+.admin-dashboard-container {
+  display: flex;
+  min-height: 100vh;
+  background-color: #FFF8F0;
+}
+
+.admin-sidebar {
+  width: 250px;
+  background-color: #c94b2c;
+  color: white;
+  padding: 20px;
+  box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.sidebar-header {
+  border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+  padding-bottom: 15px;
+  margin-bottom: 20px;
+}
+
+.sidebar-header h3 {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.admin-name {
+  margin: 8px 0 0 0;
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.sidebar-nav {
+  flex: 1;
+}
+
+.nav-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.nav-list li {
+  margin-bottom: 10px;
+}
+
+.nav-list a {
+  display: flex;
+  align-items: center;
+  padding: 12px 15px;
+  color: rgba(9, 0, 0, 0.8);
+  text-decoration: none;
+  border-radius: 6px;
+  transition: all 0.3s ease;
+}
+
+.nav-list a:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  color: rgb(20, 19, 19);
+}
+
+.nav-list a.active {
+  background-color: #FFF8F0;
+  color: rgb(12, 12, 12);
+  font-weight: 600;
+}
+
+.nav-icon {
+  margin-right: 10px;
+  font-size: 1.2rem;
+}
+
+.sidebar-footer {
+  border-top: 2px solid rgba(255, 255, 255, 0.2);
+  padding-top: 15px;
+}
+
+.sidebar-footer .btn {
+  background-color: #e74c3c;
+  border: none;
+  border-radius: 6px;
+  padding: 10px;
+  color: white;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.sidebar-footer .btn:hover {
+  background-color: #c0392b;
+}
+
+.admin-main-content {
+  flex: 1;
+  padding: 30px;
+  overflow-y: auto;
+}
+
+.content-header {
+  margin-bottom: 30px;
+  padding-bottom: 20px;
+  border-bottom: 2px solid #dee2e6;
+}
+
+.content-header h1 {
+  margin: 0;
+  color: #715860;
+  font-size: 2rem;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .admin-dashboard-container {
+    flex-direction: column;
+  }
+
+  .admin-sidebar {
+    width: 100%;
+    height: auto;
+    position: relative;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  }
+
+  .admin-main-content {
+    padding: 20px;
+  }
+}
