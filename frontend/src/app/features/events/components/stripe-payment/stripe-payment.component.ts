@@ -1,4 +1,4 @@
-import { Component, Input, OnInit, } from '@angular/core';
+import { Component, Input, OnInit } from '@angular/core';
 import { loadStripe } from '@stripe/stripe-js';
 import { StripeService } from '../../services/stripe.service';
 import { HttpClient } from '@angular/common/http';
@@ -7,7 +7,6 @@ import { HttpClient } from '@angular/common/http';
   selector: 'app-stripe-payment',
   templateUrl: './stripe-payment.component.html',
   styleUrls: ['./stripe-payment.component.css'],
-  
 })
 export class StripePaymentComponent implements OnInit {
 
@@ -22,6 +21,7 @@ export class StripePaymentComponent implements OnInit {
   cardCvc: any;
 
   clientSecret!: string;
+  paymentIntentId!: string;
 
   show = true;
   loading = false;
@@ -33,104 +33,156 @@ export class StripePaymentComponent implements OnInit {
     private http: HttpClient
   ) {}
 
- async ngOnInit() {
+  async ngOnInit() {
 
-  if (!this.reservationId) {
-    this.errorMessage = "Reservation ID missing ❌";
-    return;
+    if (!this.reservationId) {
+      this.errorMessage = "Reservation ID missing ❌";
+      return;
+    }
+
+    // ✅ SAME STRIPE ACCOUNT AS BACKEND
+    this.stripe = await loadStripe(
+      'pk_test_51QTVvtKtpFAVI9EO8iUpNoxS14eNIMAAMsKOkmUG98AmIaWds7aHQ9P7Ha2JUryiRX3stofXJb0OF6ZPcmo9utyr00yEKUBWqj'
+    );
+
+    // ✅ CREATE PAYMENT INTENT
+    this.stripeService
+      .createPaymentIntent(this.reservationId, this.amount)
+      .subscribe({
+
+        next: (res: any) => {
+
+          console.log("Stripe Response:", res);
+
+          this.clientSecret = res.clientSecret;
+          this.paymentIntentId = res.paymentIntentId;
+
+          this.elements = this.stripe.elements();
+
+          const style = {
+            base: {
+              fontSize: '16px',
+              color: '#333'
+            }
+          };
+
+          this.cardNumber = this.elements.create('cardNumber', { style });
+          this.cardExpiry = this.elements.create('cardExpiry', { style });
+          this.cardCvc = this.elements.create('cardCvc', { style });
+
+          setTimeout(() => {
+            this.cardNumber.mount('#card-number');
+            this.cardExpiry.mount('#card-expiry');
+            this.cardCvc.mount('#card-cvc');
+          }, 300);
+        },
+
+        error: (err) => {
+
+          console.log(err);
+
+          this.errorMessage = "❌ Error initializing payment";
+        }
+      });
   }
-
-  this.stripe = await loadStripe('pk_test_51TJg2RHUNUFSod92tW2RxPBHymLtzObWJrfucLAZxXqg0OmQmR7FiNfD8kgPCrA4APSGJUwKy82mqE87zJkjtqYD00pCTRcPit');
-
-  this.stripeService.createPaymentIntent(this.reservationId, this.amount)
-    .subscribe({
-      next: (res) => {
-
-        this.clientSecret = res.clientSecret;
-
-        this.elements = this.stripe.elements();
-
-        const style = {
-          base: {
-            fontSize: '16px',
-            color: '#333'
-          }
-        };
-
-        this.cardNumber = this.elements.create('cardNumber', { style });
-        this.cardExpiry = this.elements.create('cardExpiry', { style });
-        this.cardCvc = this.elements.create('cardCvc', { style });
-
-        setTimeout(() => {
-          this.cardNumber.mount('#card-number');
-          this.cardExpiry.mount('#card-expiry');
-          this.cardCvc.mount('#card-cvc');
-        }, 300);
-      },
-
-      error: () => {
-        this.errorMessage = "Error initializing payment";
-      }
-    });
-}
 
   async pay() {
 
-  if (!this.clientSecret) {
-    this.errorMessage = "❌ Payment not initialized";
-    return;
-  }
+    if (!this.clientSecret) {
+      this.errorMessage = "❌ Payment not initialized";
+      return;
+    }
 
-  this.loading = true;
-  this.errorMessage = '';
+    this.loading = true;
+    this.errorMessage = '';
 
-  const result = await this.stripe.confirmCardPayment(this.clientSecret, {
-    payment_method: {
-      card: this.cardNumber,
-      billing_details: {
-        address: {
-          postal_code: this.postalCode
+    try {
+
+      // ✅ STRIPE PAYMENT
+      const result = await this.stripe.confirmCardPayment(
+        this.clientSecret,
+        {
+          payment_method: {
+            card: this.cardNumber,
+            billing_details: {
+              address: {
+                postal_code: this.postalCode
+              }
+            }
+          }
         }
+      );
+
+      console.log("Stripe Result:", result);
+
+      // ❌ STRIPE ERROR
+      if (result.error) {
+
+        this.errorMessage = result.error.message;
+        this.loading = false;
+
+        return;
       }
-    }
-  });
 
-  if (result.error) {
-    this.errorMessage = result.error.message;
-    this.loading = false;
-    return;
+      // ✅ PAYMENT SUCCEEDED
+      if (result.paymentIntent &&
+          result.paymentIntent.status === 'succeeded') {
+
+        const paymentIntentId = result.paymentIntent.id;
+
+        console.log("PaymentIntent ID:", paymentIntentId);
+
+        // ✅ BACKEND CONFIRMATION
+        this.http.post(
+
+          `http://localhost:8089/api/payments/stripe/confirm/${paymentIntentId}`,
+
+          {
+            reservationId: this.reservationId,
+            depositPercent: 100,
+            method: "CREDIT_CARD",
+            remainingMethod: "NONE",
+            clientEmail: "test@test.com",
+            totalAmount: this.amount
+          }
+
+        ).subscribe({
+
+          next: (response) => {
+
+            console.log("Backend confirmation:", response);
+
+            this.loading = false;
+
+            alert("✅ Payment successful");
+
+            this.close();
+
+            window.location.href = "/events";
+          },
+
+          error: (err) => {
+
+            console.log("Backend Error:", err);
+
+            this.loading = false;
+
+            this.errorMessage =
+              err.error?.message ||
+              "❌ Backend payment confirmation failed";
+          }
+        });
+      }
+
+    } catch (err) {
+
+      console.log(err);
+
+      this.loading = false;
+
+      this.errorMessage = "❌ Payment failed";
+    }
   }
-
-  // ✅ SAVE PAYMENT
-  this.http.post("http://localhost:8089/payment/pay", {
-    reservationId: this.reservationId,
-    amount: this.amount
-  }).subscribe({
-
-    next: () => {
-
-      // 🔥 CONFIRM RESERVATION
-      this.http.post(
-        `http://localhost:8089/api/reservations/confirm/${this.reservationId}`,
-        {}
-      ).subscribe();
-
-      // 🔥 EMAIL
-      this.http.get(
-        `http://localhost:8089/email/send?reservationId=${this.reservationId}`
-      ).subscribe();
-
-      alert("✅ Payment successful");
-
-      this.close();
-      window.location.href = "/events";
-    },
-
-    error: () => {
-      this.errorMessage = "Payment failed";
-    }
-  });
-}
 
   close() {
     this.show = false;

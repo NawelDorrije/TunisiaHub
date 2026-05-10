@@ -40,7 +40,6 @@ public class ReservationDTO {
     @NotNull(message = "checkOut date is required")
     LocalDate checkOut;
 
-    @NotNull(message = "Number of guests is required")
     @Min(value = 1, message = "At least 1 guest required")
     Integer numberOfGuests;
 

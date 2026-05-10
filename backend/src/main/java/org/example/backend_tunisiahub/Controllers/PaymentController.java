@@ -60,6 +60,8 @@ public class PaymentController {
         }
     }
 
+
+
     /**
      * Étape 2 : vérifie le statut d'un PaymentIntent (polling après paiement).
      */
@@ -79,14 +81,19 @@ public class PaymentController {
      */
     @PostMapping("/stripe/confirm/{paymentIntentId}")
     public ResponseEntity<StripeConfirmResponse> confirmStripePayment(
-            @PathVariable String paymentIntentId,
-            @RequestBody PaymentIntentRequest request) {
-        try {
-            return ResponseEntity.ok(
-                    paymentService.confirmStripeAndFinalize(paymentIntentId, request));
-        } catch (StripeException e) {
-            throw new RuntimeException("Erreur confirmation Stripe : " + e.getMessage(), e);
-        }
+      @PathVariable String paymentIntentId,
+      @RequestBody PaymentIntentRequest request) {
+
+      System.out.println("PAYMENT INTENT ID = " + paymentIntentId);
+      System.out.println("REQUEST = " + request);
+
+      try {
+        return ResponseEntity.ok(
+          paymentService.confirmStripeAndFinalize(paymentIntentId, request));
+      } catch (Exception e) {
+        e.printStackTrace(); // 🔥 IMPORTANT
+        throw new RuntimeException("Stripe confirm failed: " + e.getMessage(), e);
+      }
     }
 
     // ══════════════════════════════════════════════════════════════════════════

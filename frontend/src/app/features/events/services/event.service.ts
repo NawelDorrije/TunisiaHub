@@ -56,13 +56,13 @@ export class EventService {
   }
   reserveEvent(userId: number, eventId: number): Observable<any> {
   return this.http.post<any>(
-    `http://localhost:8089/api/reservations/reserve?userId=${userId}&eventId=${eventId}`,
+    `http://localhost:8089/api/event-reservations/reserve?userId=${userId}&eventId=${eventId}`,
     {}
   );
 }
 createPendingReservation(userId: number, eventId: number) {
   return this.http.post(
-    `http://localhost:8089/api/reservations/create-pending?userId=${userId}&eventId=${eventId}`,
+    `http://localhost:8089/api/event-reservations/create-pending?userId=${userId}&eventId=${eventId}`,
     {}
   );
 }
@@ -76,7 +76,7 @@ createPendingReservation(userId: number, eventId: number) {
 
  getUserReservation(userId: number, eventId: number) {
   return this.http.get<any>(
-    `http://localhost:8089/api/reservations/user/${userId}/event/${eventId}`
+    `http://localhost:8089/api/event-reservations/user/${userId}/event/${eventId}`
   ).pipe(
     catchError(() => of(null))
   );
